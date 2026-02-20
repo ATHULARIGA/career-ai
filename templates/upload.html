@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="max-width: 600px; margin: 80px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+    <h2 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 8px; color: #0f172a;">Upload Resume</h2>
+    <p style="color: #64748b; margin-bottom: 32px;">Get instant AI feedback and ATS optimization tips.</p>
+    
+    <form action="/upload" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="border: 2px dashed #e2e8f0; padding: 40px; border-radius: 12px; text-align: center; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='#e2e8f0'">
+            <input type="file" name="file" id="file" style="display: none;" onchange="document.getElementById('file-name').textContent = this.files[0].name" required>
+            <label for="file" style="cursor: pointer;">
+                <div style="font-size: 40px; margin-bottom: 12px;">📄</div>
+                <div style="font-weight: 600; color: #1e293b;">Click to upload or drag and drop</div>
+                <div style="font-size: 0.875rem; color: #94a3b8; margin-top: 4px;">PDF or DOCX (Max 10MB)</div>
+                <div id="file-name" style="margin-top: 12px; font-size: 0.875rem; color: #4f46e5; font-weight: 500;"></div>
+            </label>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">Analyze Resume →</button>
+    </form>
+</div>
+{% endblock %}

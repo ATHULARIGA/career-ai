@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="max-width: 800px; margin: 60px auto; padding: 0 20px;">
+    <div style="text-align: center; margin-bottom: 48px;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 16px;">AI Mock Interview</h1>
+        <p style="color: #64748b; font-size: 1.125rem;">Practice with realistic questions tailored to your field.</p>
+    </div>
+
+    <div style="background: white; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 32px;">
+        <form action="/generate" method="post" style="display: flex; gap: 16px; align-items: flex-end;">
+            <div style="flex-grow: 1;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 8px;">Select Interview Topic</label>
+                <select name="topic" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 1rem;">
+                    <option>Python</option>
+                    <option>SQL</option>
+                    <option>React</option>
+                    <option>System Design</option>
+                    <option>Behavioral</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary" style="border: none; cursor: pointer; height: 48px; white-space: nowrap;">Generate Questions</button>
+        </form>
+    </div>
+
+    {% if questions %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b;">Your Practice Questions</h2>
+        {% for q in questions %}
+        <div style="background: #f1f5f9; padding: 24px; border-radius: 12px; border-left: 4px solid #4f46e5;">
+            <p style="margin: 0; font-weight: 500; color: #334155; line-height: 1.6;">{{q}}</p>
+        </div>
+        {% endfor %}
+        
+        <div style="margin-top: 32px; background: white; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0;">
+            <h3 style="margin-top: 0; margin-bottom: 16px;">Ready to answer?</h3>
+            <form action="/evaluate" method="post">
+                <textarea name="answer" placeholder="Type your answer here..." style="width: 100%; height: 150px; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 16px; font-family: inherit; font-size: 1rem;"></textarea>
+                <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">Get Instant Feedback →</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if report %}
+    <div style="margin-top: 32px; background: #ecfdf5; padding: 32px; border-radius: 16px; border: 1px solid #a7f3d0;">
+        <h3 style="color: #065f46; margin-top: 0;">Evaluation Report</h3>
+        <p style="color: #065f46; line-height: 1.6;">{{ report }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="hero">
+
+    <div class="badge">AI-Powered Career Prep</div>
+
+    <h1>
+        Master your interview <br>
+        <span>before it happens.</span>
+    </h1>
+
+    <p>
+        Get instant AI feedback on your resume and practice mock interviews
+        with real-time scoring and professional insights.
+    </p>
+
+    <div class="buttons">
+        <a href="/resume" class="btn-primary">Start for Free →</a>
+        <a href="/interview" class="btn-secondary">View Demo</a>
+    </div>
+
+    <!-- FLOATING RESUME SCORE -->
+    <div class="float-card resume-card">
+        <div class="icon green">✓</div>
+        <div>
+            <h4>Resume Score</h4>
+            <p>Just now</p>
+            <div class="progress">
+                <div class="bar"></div>
+            </div>
+            <span class="score">9.2/10</span>
+        </div>
+    </div>
+
+    <!-- FLOATING MOCK INTERVIEW -->
+    <div class="float-card interview-card">
+        <div class="icon purple">💬</div>
+        <div>
+            <h4>Mock Interview</h4>
+            <p>"Great answer on scalability..."</p>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- FEATURE CARDS -->
+
+<div class="features">
+
+    <div class="feature-card">
+        <div class="feature-icon blue">📄</div>
+        <h3>Resume Analysis</h3>
+        <p>Upload your PDF/DOCX and get deep ATS-based scoring and improvement tips.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon purple">💬</div>
+        <h3>AI Mock Interviews</h3>
+        <p>Practice behavioral & technical questions with an AI that adapts to your field.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon green">📹</div>
+        <h3>1:1 Mentorship</h3>
+        <p>Schedule live sessions with industry experts via seamless video calls.</p>
+    </div>
+
+</div>
+
+{% endblock %}
