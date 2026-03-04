@@ -23,14 +23,13 @@
 <script>
 
 async function generateMindmap() {
-
     const roleInput = document.getElementById("roleInput");
     const button = document.getElementById("generateBtn");
     const status = document.getElementById("mindmap-status");
 
     const role = roleInput.value.trim();
 
-    if(!role){
+    if (!role) {
         status.innerHTML = "Please enter a career role.";
         return;
     }
@@ -40,156 +39,154 @@ async function generateMindmap() {
     status.innerHTML = "AI is building your roadmap...";
     document.getElementById("mindmap").innerHTML = "";
 
-    try{
+    try {
+        const formData = new FormData();
+        formData.append("role", role);
 
-        const response = await fetch("/mindmap",{
-            method:"POST",
-            headers:{"Content-Type":"application/x-www-form-urlencoded"},
-            body:`role=${encodeURIComponent(role)}`
+        const response = await fetch("/mindmap", {
+            method: "POST",
+            body: formData
         });
 
+        if (!response.ok) throw new Error("Server error: " + response.status);
+        
         const data = await response.json();
+        
+        if (data.error) {
+            status.innerHTML = "Error: " + data.error;
+            return;
+        }
 
         renderGraph(data);
-
         status.innerHTML = "Roadmap generated successfully.";
-
-    }catch(error){
-
+    } catch (error) {
         status.innerHTML = "Something went wrong.";
         console.error(error);
-
-    }finally{
-
+    } finally {
         button.disabled = false;
         button.innerText = "Generate";
-
     }
 }
 
-    function renderGraph(data){
+function renderGraph(data) {
+    if (!data) return;
+    document.getElementById("mindmap").innerHTML = "";
 
-        document.getElementById("mindmap").innerHTML="";
+    const width = document.getElementById("mindmap").clientWidth || 800;
+    const height = 800;
 
-        const width = document.getElementById("mindmap").clientWidth;
-        const height = 800;
+    const svg = d3.select("#mindmap")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
-        const svg = d3.select("#mindmap")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
+    const g = svg.append("g");
 
-        const g = svg.append("g");
-
-        const zoom = d3.zoom()
-            .scaleExtent([0.1, 4])
-            .on("zoom", (event) => {
-                g.attr("transform", event.transform);
-            });
-
-        svg.call(zoom);
-
-        // ---------- FLATTEN DATA ----------
-
-        const nodes = [];
-        const links = [];
-
-        function traverse(node, parent = null) {
-            if (!node.id) node.id = Math.random().toString(36).substr(2, 9);
-            nodes.push(node);
-
-            if (parent) {
-                links.push({
-                    source: parent.id,
-                    target: node.id
-                });
-            }
-
-            if (node.children) {
-                node.children.forEach(child => traverse(child, node));
-            }
-        }
-
-        traverse(data);
-
-        // ---------- FORCE SIMULATION ----------
-
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(150))
-            .force("charge", d3.forceManyBody().strength(-1000))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collision", d3.forceCollide().radius(80));
-
-        // Fix root node at center
-        const root = nodes[0];
-        root.fx = width / 2;
-        root.fy = height / 2;
-
-        const link = g.append("g")
-            .selectAll("line")
-            .data(links)
-            .enter()
-            .append("line")
-            .attr("stroke", "#94a3b8")
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", 2);
-
-        const node = g.append("g")
-            .selectAll(".node")
-            .data(nodes)
-            .enter()
-            .append("g")
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-
-        node.append("circle")
-            .attr("r", d => d === root ? 20 : 12)
-            .attr("fill", d => d === root ? "#4f46e5" : "#6366f1")
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 2);
-
-        node.append("text")
-            .attr("dy", d => d === root ? 35 : 25)
-            .attr("text-anchor", "middle")
-            .style("font-size", d => d === root ? "16px" : "12px")
-            .style("font-weight", d => d === root ? "bold" : "normal")
-            .style("fill", "#1e293b")
-            .text(d => d.name);
-
-        simulation.on("tick", () => {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-
-            node
-                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
         });
 
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
+    svg.call(zoom);
+
+    // ---------- FLATTEN DATA ----------
+    const nodes = [];
+    const links = [];
+
+    function traverse(node, parent = null) {
+        if (!node.id) node.id = Math.random().toString(36).substr(2, 9);
+        nodes.push(node);
+
+        if (parent) {
+            links.push({
+                source: parent.id,
+                target: node.id
+            });
         }
 
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            if (d !== root) {
-                d.fx = null;
-                d.fy = null;
-            }
+        if (node.children) {
+            node.children.forEach(child => traverse(child, node));
         }
     }
 
+    traverse(data);
+
+    // ---------- FORCE SIMULATION ----------
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(150))
+        .force("charge", d3.forceManyBody().strength(-1000))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(80));
+
+    // Fix root node at center
+    const root = nodes[0];
+    root.fx = width / 2;
+    root.fy = height / 2;
+
+    const link = g.append("g")
+        .selectAll("line")
+        .data(links)
+        .enter()
+        .append("line")
+        .attr("stroke", "#94a3b8")
+        .attr("stroke-opacity", 0.6)
+        .attr("stroke-width", 2);
+
+    const node = g.append("g")
+        .selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("circle")
+        .attr("r", d => d === root ? 20 : 12)
+        .attr("fill", d => d === root ? "#4f46e5" : "#6366f1")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2);
+
+    node.append("text")
+        .attr("dy", d => d === root ? 35 : 25)
+        .attr("text-anchor", "middle")
+        .style("font-size", d => d === root ? "16px" : "12px")
+        .style("font-weight", d => d === root ? "bold" : "normal")
+        .style("fill", "#1e293b")
+        .text(d => d.name);
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x}, ${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        if (d !== root) {
+            d.fx = null;
+            d.fy = null;
+        }
+    }
 }
 
 </script>

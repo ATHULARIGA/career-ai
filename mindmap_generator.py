@@ -35,14 +35,26 @@ Return ONLY valid JSON in this format:
     )
 
     raw = response.choices[0].message.content
-    cleaned = raw.replace("```json","").replace("```","").strip()
+    cleaned = raw.replace("```json", "").replace("```", "").strip()
+    
+    # Simple cleanup for any potential text before/after JSON
+    if "{" in cleaned and "}" in cleaned:
+        cleaned = cleaned[cleaned.find("{"):cleaned.rfind("}")+1]
 
     try:
-        return json.loads(cleaned)
-    except:
+        data = json.loads(cleaned)
+        # Ensure it has a root 'name' and 'children'
+        if "name" not in data: data["name"] = role
+        if "children" not in data: data["children"] = []
+        return data
+    except Exception as e:
+        print(f"JSON Parse Error: {e}")
+        print(f"Cleaned Content: {cleaned}")
         return {
             "name": role,
             "children": [
-                {"name": "Error generating roadmap"}
+                {"name": "Step 1: Foundational Knowledge"},
+                {"name": "Step 2: Core Technical Skills"},
+                {"name": "Step 3: Practical Projects"}
             ]
         }

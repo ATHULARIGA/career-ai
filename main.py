@@ -196,8 +196,12 @@ def career_map_page(request: Request):
 
 @app.post("/mindmap")
 async def create_mindmap(role: str = Form(...)):
-    data = generate_mindmap(role)
-    return JSONResponse(content=data)
+    try:
+        data = generate_mindmap(role)
+        return JSONResponse(content=data)
+    except Exception as e:
+        print(f"Error generating mindmap: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 # ADMIN
