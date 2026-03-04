@@ -14,15 +14,16 @@
         </div>
 
         <div id="mindmap-status"></div>
-        <div id="mindmap"></div>
+        <div id="mindmap"></div
+        
     </div>
 </section>
-
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
 
 async function generateMindmap() {
+
     const roleInput = document.getElementById("roleInput");
     const button = document.getElementById("generateBtn");
     const status = document.getElementById("mindmap-status");
@@ -40,6 +41,7 @@ async function generateMindmap() {
     document.getElementById("mindmap").innerHTML = "";
 
     try {
+
         const formData = new FormData();
         formData.append("role", role);
 
@@ -48,28 +50,31 @@ async function generateMindmap() {
             body: formData
         });
 
-        if (!response.ok) throw new Error("Server error: " + response.status);
-        
+        if (!response.ok) throw new Error("Server error");
+
         const data = await response.json();
-        
-        if (data.error) {
-            status.innerHTML = "Error: " + data.error;
-            return;
-        }
 
         renderGraph(data);
+
         status.innerHTML = "Roadmap generated successfully.";
+
     } catch (error) {
+
         status.innerHTML = "Something went wrong.";
         console.error(error);
+
     } finally {
+
         button.disabled = false;
         button.innerText = "Generate";
+
     }
+
 }
 
+
 function renderGraph(data) {
-    if (!data) return;
+
     document.getElementById("mindmap").innerHTML = "";
 
     const width = document.getElementById("mindmap").clientWidth || 800;
@@ -90,105 +95,183 @@ function renderGraph(data) {
 
     svg.call(zoom);
 
-    // ---------- FLATTEN DATA ----------
-    const nodes = [];
-    const links = [];
+    // collapse deeper levels initially
+    function collapse(node, depth = 0) {
 
-    function traverse(node, parent = null) {
-        if (!node.id) node.id = Math.random().toString(36).substr(2, 9);
-        nodes.push(node);
+        // collapse everything deeper than level 1
+        if (depth === 1 && node.children) {
 
-        if (parent) {
-            links.push({
-                source: parent.id,
-                target: node.id
-            });
+            node._children = node.children
+            node.children = null
+            return
+
         }
 
         if (node.children) {
-            node.children.forEach(child => traverse(child, node));
+            node.children.forEach(child => collapse(child, depth + 1))
         }
+
     }
 
-    traverse(data);
+    collapse(data)
 
-    // ---------- FORCE SIMULATION ----------
+    let nodes = []
+    let links = []
+
+    function buildGraph(node, parent = null) {
+
+        nodes.push(node)
+
+        if (parent) {
+            links.push({
+                source: parent,
+                target: node
+            })
+        }
+
+        if (node.children) {
+            node.children.forEach(child => buildGraph(child, node))
+        }
+
+    }
+
+    buildGraph(data)
+
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(150))
-        .force("charge", d3.forceManyBody().strength(-1000))
+        .force("link", d3.forceLink(links).distance(d => d.source.depth === 0 ? 220 : 140))
+        .force("charge", d3.forceManyBody().strength(-900))
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius(80));
+        .force("collision", d3.forceCollide().radius(70))
 
-    // Fix root node at center
-    const root = nodes[0];
-    root.fx = width / 2;
-    root.fy = height / 2;
+    const root = nodes[0]
+    root.fx = width / 2
+    root.fy = height / 2
 
-    const link = g.append("g")
-        .selectAll("line")
-        .data(links)
-        .enter()
-        .append("line")
-        .attr("stroke", "#94a3b8")
-        .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", 2);
+    const linkGroup = g.append("g")
+    const nodeGroup = g.append("g")
 
-    const node = g.append("g")
-        .selectAll(".node")
-        .data(nodes)
-        .enter()
-        .append("g")
-        .attr("class", "node")
-        .call(d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
+    function update() {
 
-    node.append("circle")
-        .attr("r", d => d === root ? 20 : 12)
-        .attr("fill", d => d === root ? "#4f46e5" : "#6366f1")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 2);
+        const link = linkGroup
+            .selectAll("line")
+            .data(links)
 
-    node.append("text")
-        .attr("dy", d => d === root ? 35 : 25)
-        .attr("text-anchor", "middle")
-        .style("font-size", d => d === root ? "16px" : "12px")
-        .style("font-weight", d => d === root ? "bold" : "normal")
-        .style("fill", "#1e293b")
-        .text(d => d.name);
+        link.enter()
+            .append("line")
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-width", 2)
+
+        link.exit().remove()
+
+        const node = nodeGroup
+            .selectAll(".node")
+            .data(nodes)
+
+        const nodeEnter = node.enter()
+            .append("g")
+            .attr("class", "node")
+            .on("click", (event,d) => {
+
+                toggleNode(event,d)
+                showSkillInfo(d)
+
+            })
+            .call(
+                d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+            )
+
+        nodeEnter.append("circle")
+            .attr("r", d => d === root ? 30 : 12)
+            .attr("fill", d => d === root ? "#4f46e5" : "#6366f1")
+            .attr("stroke", d => d._children ? "#f59e0b" : "#fff")
+            .attr("stroke-width", d => d._children ? 3 : 2)
+            .attr("stroke-width", 2)
+
+        nodeEnter.append("text")
+            .attr("dy", d => d === root ? 35 : 25)
+            .attr("text-anchor", "middle")
+            .style("font-size", d => d === root ? "16px" : "12px")
+            .style("font-weight", d => d === root ? "bold" : "normal")
+            .text(d => d.name)
+
+        node.exit().remove()
+
+        simulation.nodes(nodes)
+        simulation.force("link").links(links)
+        simulation.alpha(1).restart()
+
+    }
 
     simulation.on("tick", () => {
-        link
+
+        g.selectAll("line")
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
+            .attr("y2", d => d.target.y)
 
-        node
-            .attr("transform", d => `translate(${d.x}, ${d.y})`);
-    });
+        g.selectAll(".node")
+            .attr("transform", d => `translate(${d.x},${d.y})`)
+
+    })
+
+
+    function toggleNode(event, d) {
+
+        event.stopPropagation()
+
+        if (d.children) {
+            d._children = d.children
+            d.children = null
+        } else if (d._children) {
+            d.children = d._children
+            d._children = null
+        }
+
+        nodes = []
+        links = []
+
+        buildGraph(data)
+
+        update()
+
+    }
+
 
     function dragstarted(event, d) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
+
+        if (!event.active) simulation.alphaTarget(0.3).restart()
+
+        d.fx = d.x
+        d.fy = d.y
+
     }
 
     function dragged(event, d) {
-        d.fx = event.x;
-        d.fy = event.y;
+
+        d.fx = event.x
+        d.fy = event.y
+
     }
 
     function dragended(event, d) {
-        if (!event.active) simulation.alphaTarget(0);
+
+        if (!event.active) simulation.alphaTarget(0)
+
         if (d !== root) {
-            d.fx = null;
-            d.fy = null;
+            d.fx = null
+            d.fy = null
         }
+
     }
+
+    update()
+
 }
 
 </script>
 
-{% endblock %}
+{% endblock %} 

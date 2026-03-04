@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse
 
 
 
+
 def normalize_question(q):
 
     if isinstance(q, dict):
