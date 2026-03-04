@@ -1,22 +1,13 @@
 entrypoint = "main.py"
+
 modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["python313Packages.uvicorn", "yakut"]
-
-[unitTest]
-language = "python3"
-
-[gitHubImport]
-requiredFiles = [".replit", "replit.nix"]
+packages = ["glibcLocales", "python311", "python311Packages.pip"]
 
 [deployment]
-run = ["python3", "main.py"]
-deploymentTarget = "cloudrun"
-
-[agent]
-expertMode = true
+run = ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
 
 [[ports]]
 localPort = 5000
@@ -24,12 +15,10 @@ externalPort = 80
 
 [[ports]]
 localPort = 8000
-externalPort = 80
+externalPort = 8000
 
-[userenv]
-
-[userenv.shared]
-OPENAI_API_KEY = "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"
+[agent]
+expertMode = true
 
 [workflows]
 runButton = "Project"
@@ -41,16 +30,12 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "dev-server-final-fixed"
+args = "Run App"
 
 [[workflows.workflow]]
-name = "dev-server-final-fixed"
+name = "Run App"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 -m uvicorn main:app --host 0.0.0.0 --port 5000 --reload"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "python -m uvicorn main:app --host 0.0.0.0 --port 8000"

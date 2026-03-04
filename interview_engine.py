@@ -11,36 +11,18 @@ def generate_questions(topic):
 
     prompt = f"""
 Generate 5 interview questions on {topic}.
-Return numbered list.
-"""
 
-    response = client.chat.completions.create(
-        model="mistralai/mistral-7b-instruct",
-        messages=[{"role":"user","content":prompt}]
-    )
-
-    return {"questions": response.choices[0].message.content}
-
-
-def evaluate_answer(answer):
-
-    prompt = f"""
-Evaluate this interview answer out of 10 for:
-
-Confidence
-TechnicalDepth
-Communication
-
-Return JSON:
+Return ONLY this JSON format:
 
 {{
-"Confidence":0,
-"TechnicalDepth":0,
-"Communication":0
+"questions":[
+"Question 1",
+"Question 2",
+"Question 3",
+"Question 4",
+"Question 5"
+]
 }}
-
-Answer:
-{answer}
 """
 
     response = client.chat.completions.create(
@@ -49,9 +31,11 @@ Answer:
     )
 
     raw = response.choices[0].message.content
-    cleaned = raw.replace("```json", "").replace("```", "").strip()
+    cleaned = raw.replace("```json","").replace("```","").strip()
 
     try:
-        return json.loads(cleaned)
+        parsed = json.loads(cleaned)
+        return parsed["questions"]   # ← LIST
     except:
-        return {"Error": cleaned}
+        return ["AI JSON FAILED"]
+

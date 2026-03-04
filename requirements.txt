@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+pypdf
+openai
+sentence-transformers
+scikit-learn
+numpy
+torch
+itsdangerous
+starlette

@@ -6,6 +6,34 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENAI_API_KEY"),
 )
+def call_ai_with_fallback(prompt):
+
+    models = [
+        "openai/gpt-4o-mini",
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it"
+    ]
+    
+    last_error = None
+    
+    for model in models:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0,
+                messages=[{"role": "user", "content": prompt}]
+            )
+    
+            print(f"AI SUCCESS using {model}")
+    
+            return response
+    
+        except Exception as e:
+    
+            print(f"AI FAILED using {model}")
+            last_error = e
+    
+    raise Exception(f"All AI models failed: {last_error}")
 
 def score_resume(text):
 
@@ -44,10 +72,8 @@ Resume:
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="mistralai/mistral-7b-instruct",
-        messages=[{"role":"user","content":prompt}]
-    )
+    response = call_ai_with_fallback(prompt)
+    print("MODEL USED:", response.model)
 
     raw = response.choices[0].message.content
     cleaned = raw.replace("```json", "").replace("```", "").strip()
@@ -72,5 +98,5 @@ Resume:
 
         return scores
 
-    except:
-        return {"Error": cleaned}
+    except Exception as e:
+        return {"Error": str(e), "Raw": cleaned}
