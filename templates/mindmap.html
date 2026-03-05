@@ -14,16 +14,28 @@
         </div>
 
         <div id="mindmap-status"></div>
-        <div id="mindmap"></div
+        <div id="mindmap"></div>
         
+        <!-- Skill Detail Panel -->
+        <div id="skill-panel" style="display:none; margin-top: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: left;">
+            <h3 id="panel-title" style="margin-top:0; color: #4f46e5;">Skill Details</h3>
+            <div id="panel-content" style="color: #475569; line-height: 1.6;">
+                Click a skill to see more information.
+            </div>
+            <div id="panel-resources" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">Learning Resources</h4>
+                <ul id="resource-list" style="padding-left: 20px; margin: 0;">
+                </ul>
+            </div>
+        </div>
     </div>
 </section>
+
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
 
 async function generateMindmap() {
-
     const roleInput = document.getElementById("roleInput");
     const button = document.getElementById("generateBtn");
     const status = document.getElementById("mindmap-status");
@@ -39,9 +51,9 @@ async function generateMindmap() {
     button.innerText = "Generating...";
     status.innerHTML = "AI is building your roadmap...";
     document.getElementById("mindmap").innerHTML = "";
+    document.getElementById("skill-panel").style.display = "none";
 
     try {
-
         const formData = new FormData();
         formData.append("role", role);
 
@@ -53,28 +65,18 @@ async function generateMindmap() {
         if (!response.ok) throw new Error("Server error");
 
         const data = await response.json();
-
         renderGraph(data);
-
         status.innerHTML = "Roadmap generated successfully.";
-
     } catch (error) {
-
         status.innerHTML = "Something went wrong.";
         console.error(error);
-
     } finally {
-
         button.disabled = false;
         button.innerText = "Generate";
-
     }
-
 }
 
-
 function renderGraph(data) {
-
     document.getElementById("mindmap").innerHTML = "";
 
     const width = document.getElementById("mindmap").clientWidth || 800;
@@ -95,183 +97,182 @@ function renderGraph(data) {
 
     svg.call(zoom);
 
-    // collapse deeper levels initially
+    // Initial collapse
     function collapse(node, depth = 0) {
-
-        // collapse everything deeper than level 1
         if (depth === 1 && node.children) {
-
-            node._children = node.children
-            node.children = null
-            return
-
+            node._children = node.children;
+            node.children = null;
+            return;
         }
-
         if (node.children) {
-            node.children.forEach(child => collapse(child, depth + 1))
+            node.children.forEach(child => collapse(child, depth + 1));
         }
-
     }
 
-    collapse(data)
+    collapse(data);
 
-    let nodes = []
-    let links = []
+    let nodes = [];
+    let links = [];
 
     function buildGraph(node, parent = null) {
-
-        nodes.push(node)
-
+        nodes.push(node);
         if (parent) {
-            links.push({
-                source: parent,
-                target: node
-            })
+            links.push({ source: parent, target: node });
         }
-
         if (node.children) {
-            node.children.forEach(child => buildGraph(child, node))
+            node.children.forEach(child => buildGraph(child, node));
         }
-
     }
 
-    buildGraph(data)
+    buildGraph(data);
 
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).distance(d => d.source.depth === 0 ? 220 : 140))
-        .force("charge", d3.forceManyBody().strength(-900))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius(70))
+        .force("link", d3.forceLink(links).distance(d => {
+            if(d.source.depth === 0) return 180;
+            return 120;
+        }))
+        .force("charge", d3.forceManyBody().strength(-800))
+        .force("center", d3.forceCenter(width/2, height/2))
+        .force("collision", d3.forceCollide().radius(70));
 
-    const root = nodes[0]
-    root.fx = width / 2
-    root.fy = height / 2
+    const root = nodes[0];
+    root.fx = width / 2;
+    root.fy = height / 2;
 
-    const linkGroup = g.append("g")
-    const nodeGroup = g.append("g")
+    const linkGroup = g.append("g");
+    const nodeGroup = g.append("g");
 
     function update() {
-
-        const link = linkGroup
-            .selectAll("line")
-            .data(links)
-
+        const link = linkGroup.selectAll("line").data(links, d => d.target.name + d.source.name);
+        
         link.enter()
             .append("line")
             .attr("stroke", "#94a3b8")
             .attr("stroke-width", 2)
+            .attr("stroke-opacity", 0.6);
+            
+        link.exit().remove();
 
-        link.exit().remove()
-
-        const node = nodeGroup
-            .selectAll(".node")
-            .data(nodes)
+        const node = nodeGroup.selectAll(".node").data(nodes, d => d.name);
 
         const nodeEnter = node.enter()
             .append("g")
             .attr("class", "node")
-            .on("click", (event,d) => {
-
-                toggleNode(event,d)
-                showSkillInfo(d)
-
+            .on("click", (event, d) => {
+                if (event.defaultPrevented) return;
+                toggleNode(event, d);
+                showSkillInfo(d);
             })
-            .call(
-                d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended)
-            )
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
 
         nodeEnter.append("circle")
-            .attr("r", d => d === root ? 30 : 12)
-            .attr("fill", d => d === root ? "#4f46e5" : "#6366f1")
-            .attr("stroke", d => d._children ? "#f59e0b" : "#fff")
-            .attr("stroke-width", d => d._children ? 3 : 2)
+            .attr("r", d => d === root ? 30 : 15)
+            .attr("fill", d => d === root ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"))
+            .attr("stroke", "#fff")
             .attr("stroke-width", 2)
+            .style("cursor", "pointer");
 
         nodeEnter.append("text")
-            .attr("dy", d => d === root ? 35 : 25)
+            .attr("dy", d => d === root ? 45 : 30)
             .attr("text-anchor", "middle")
             .style("font-size", d => d === root ? "16px" : "12px")
-            .style("font-weight", d => d === root ? "bold" : "normal")
-            .text(d => d.name)
+            .style("font-weight", d => d === root ? "bold" : "500")
+            .style("fill", "#1e293b")
+            .text(d => d.name);
 
-        node.exit().remove()
+        node.select("circle")
+            .attr("fill", d => d === root ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"));
 
-        simulation.nodes(nodes)
-        simulation.force("link").links(links)
-        simulation.alpha(1).restart()
+        node.exit().remove();
 
+        simulation.nodes(nodes);
+        simulation.force("link").links(links);
+        simulation.alpha(0.3).restart();
     }
 
     simulation.on("tick", () => {
-
-        g.selectAll("line")
+        linkGroup.selectAll("line")
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y)
+            .attr("y2", d => d.target.y);
 
-        g.selectAll(".node")
-            .attr("transform", d => `translate(${d.x},${d.y})`)
-
-    })
-
+        nodeGroup.selectAll(".node")
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
 
     function toggleNode(event, d) {
-
-        event.stopPropagation()
-
         if (d.children) {
-            d._children = d.children
-            d.children = null
+            d._children = d.children;
+            d.children = null;
         } else if (d._children) {
-            d.children = d._children
-            d._children = null
+            d.children = d._children;
+            d._children = null;
+        } else {
+            return; // Leaf node
         }
 
-        nodes = []
-        links = []
-
-        buildGraph(data)
-
-        update()
-
+        nodes = [];
+        links = [];
+        buildGraph(data);
+        update();
     }
 
+    async function showSkillInfo(d) {
+        const panel = document.getElementById("skill-panel");
+        const title = document.getElementById("panel-title");
+        const content = document.getElementById("panel-content");
+        const resList = document.getElementById("resource-list");
+
+        panel.style.display = "block";
+        title.innerText = d.name;
+        content.innerText = "Loading details...";
+        resList.innerHTML = "";
+
+        try {
+            const resp = await fetch("/skill-info", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `skill=${encodeURIComponent(d.name)}`
+            });
+            const info = await resp.json();
+            content.innerText = info.description;
+            
+            info.resources.forEach(res => {
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="${res.url}" target="_blank" style="color: #4f46e5; text-decoration: none;">${res.label}</a>`;
+                resList.appendChild(li);
+            });
+        } catch (e) {
+            content.innerText = "Failed to load skill details.";
+        }
+    }
 
     function dragstarted(event, d) {
-
-        if (!event.active) simulation.alphaTarget(0.3).restart()
-
-        d.fx = d.x
-        d.fy = d.y
-
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
     }
 
     function dragged(event, d) {
-
-        d.fx = event.x
-        d.fy = event.y
-
+        d.fx = event.x;
+        d.fy = event.y;
     }
 
     function dragended(event, d) {
-
-        if (!event.active) simulation.alphaTarget(0)
-
+        if (!event.active) simulation.alphaTarget(0);
         if (d !== root) {
-            d.fx = null
-            d.fy = null
+            d.fx = null;
+            d.fy = null;
         }
-
     }
 
-    update()
-
+    update();
 }
 
 </script>
 
-{% endblock %} 
+{% endblock %}

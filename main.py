@@ -204,6 +204,19 @@ async def create_mindmap(role: str = Form(...)):
         print(f"Error generating mindmap: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.post("/skill-info")
+async def skill_info(skill: str = Form(...)):
+    from mindmap_generator import client
+    prompt = f"Provide a brief 2-sentence description of the skill '{skill}' and 3 learning resource links (Label and URL) in JSON format: {{'description': '...', 'resources': [{{'label': '...', 'url': '...'}}]}}"
+    
+    response = client.chat.completions.create(
+        model="openai/gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        response_format={ "type": "json_object" }
+    )
+    import json
+    return JSONResponse(content=json.loads(response.choices[0].message.content))
+
 
 # ADMIN
 @app.get("/admin", response_class=HTMLResponse)
