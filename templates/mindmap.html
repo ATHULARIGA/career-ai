@@ -99,6 +99,7 @@ function renderGraph(data) {
 
     // Initial collapse
     function collapse(node, depth = 0) {
+        node.depth = depth;
         if (depth === 1 && node.children) {
             node._children = node.children;
             node.children = null;
@@ -135,7 +136,7 @@ function renderGraph(data) {
         .force("center", d3.forceCenter(width/2, height/2))
         .force("collision", d3.forceCollide().radius(70));
 
-    const root = nodes[0];
+    const root = data;
     root.fx = width / 2;
     root.fy = height / 2;
 
@@ -143,7 +144,8 @@ function renderGraph(data) {
     const nodeGroup = g.append("g");
 
     function update() {
-        const link = linkGroup.selectAll("line").data(links, d => d.target.name + d.source.name);
+        const link = linkGroup.selectAll("line")
+            .data(links, d => d.target.name + "-" + d.source.name);
         
         link.enter()
             .append("line")
@@ -153,7 +155,8 @@ function renderGraph(data) {
             
         link.exit().remove();
 
-        const node = nodeGroup.selectAll(".node").data(nodes, d => d.name);
+        const node = nodeGroup.selectAll(".node")
+            .data(nodes, d => d.name);
 
         const nodeEnter = node.enter()
             .append("g")
@@ -169,22 +172,22 @@ function renderGraph(data) {
                 .on("end", dragended));
 
         nodeEnter.append("circle")
-            .attr("r", d => d === root ? 30 : 15)
-            .attr("fill", d => d === root ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"))
+            .attr("r", d => d.depth === 0 ? 30 : 15)
+            .attr("fill", d => d.depth === 0 ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"))
             .attr("stroke", "#fff")
             .attr("stroke-width", 2)
             .style("cursor", "pointer");
 
         nodeEnter.append("text")
-            .attr("dy", d => d === root ? 45 : 30)
+            .attr("dy", d => d.depth === 0 ? 45 : 30)
             .attr("text-anchor", "middle")
-            .style("font-size", d => d === root ? "16px" : "12px")
-            .style("font-weight", d => d === root ? "bold" : "500")
+            .style("font-size", d => d.depth === 0 ? "16px" : "12px")
+            .style("font-weight", d => d.depth === 0 ? "bold" : "500")
             .style("fill", "#1e293b")
             .text(d => d.name);
 
         node.select("circle")
-            .attr("fill", d => d === root ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"));
+            .attr("fill", d => d.depth === 0 ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"));
 
         node.exit().remove();
 
@@ -264,7 +267,7 @@ function renderGraph(data) {
 
     function dragended(event, d) {
         if (!event.active) simulation.alphaTarget(0);
-        if (d !== root) {
+        if (d.depth !== 0) {
             d.fx = null;
             d.fy = null;
         }
