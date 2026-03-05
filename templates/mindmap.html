@@ -65,6 +65,21 @@ async function generateMindmap() {
         if (!response.ok) throw new Error("Server error");
 
         const data = await response.json();
+        
+        // Ensure every node has a unique ID to prevent D3 object reference issues
+        let idCounter = 0;
+        function assignIds(node, depth = 0) {
+            node.id = "node-" + (idCounter++);
+            node.depth = depth;
+            if (node.children) {
+                node.children.forEach(c => assignIds(c, depth + 1));
+            }
+            if (node._children) {
+                node._children.forEach(c => assignIds(c, depth + 1));
+            }
+        }
+        assignIds(data);
+        
         renderGraph(data);
         status.innerHTML = "Roadmap generated successfully.";
     } catch (error) {
@@ -97,19 +112,15 @@ function renderGraph(data) {
 
     svg.call(zoom);
 
-    // Initial collapse
-    function collapse(node, depth = 0) {
-        node.depth = depth;
-        if (depth === 1 && node.children) {
+    // Initial collapse: hide everything deeper than categories
+    function collapse(node) {
+        if (node.depth === 1 && node.children) {
             node._children = node.children;
             node.children = null;
-            return;
-        }
-        if (node.children) {
-            node.children.forEach(child => collapse(child, depth + 1));
+        } else if (node.children) {
+            node.children.forEach(collapse);
         }
     }
-
     collapse(data);
 
     let nodes = [];
@@ -125,38 +136,39 @@ function renderGraph(data) {
         }
     }
 
-    buildGraph(data);
-
-    const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).distance(d => {
-            if(d.source.depth === 0) return 180;
-            return 120;
+    const simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id).distance(d => {
+            return d.source.depth === 0 ? 200 : 120;
         }))
-        .force("charge", d3.forceManyBody().strength(-800))
+        .force("charge", d3.forceManyBody().strength(-1000))
         .force("center", d3.forceCenter(width/2, height/2))
-        .force("collision", d3.forceCollide().radius(70));
-
-    const root = data;
-    root.fx = width / 2;
-    root.fy = height / 2;
+        .force("collision", d3.forceCollide().radius(80));
 
     const linkGroup = g.append("g");
     const nodeGroup = g.append("g");
 
     function update() {
+        nodes = [];
+        links = [];
+        buildGraph(data);
+
+        // Update Links
         const link = linkGroup.selectAll("line")
-            .data(links, d => d.target.name + "-" + d.source.name);
+            .data(links, d => d.target.id);
         
-        link.enter()
+        link.exit().remove();
+        
+        const linkEnter = link.enter()
             .append("line")
             .attr("stroke", "#94a3b8")
             .attr("stroke-width", 2)
             .attr("stroke-opacity", 0.6);
-            
-        link.exit().remove();
 
+        // Update Nodes
         const node = nodeGroup.selectAll(".node")
-            .data(nodes, d => d.name);
+            .data(nodes, d => d.id);
+
+        node.exit().remove();
 
         const nodeEnter = node.enter()
             .append("g")
@@ -172,28 +184,38 @@ function renderGraph(data) {
                 .on("end", dragended));
 
         nodeEnter.append("circle")
-            .attr("r", d => d.depth === 0 ? 30 : 15)
-            .attr("fill", d => d.depth === 0 ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"))
+            .attr("r", d => d.depth === 0 ? 35 : 18)
             .attr("stroke", "#fff")
             .attr("stroke-width", 2)
             .style("cursor", "pointer");
 
         nodeEnter.append("text")
-            .attr("dy", d => d.depth === 0 ? 45 : 30)
+            .attr("dy", d => d.depth === 0 ? 55 : 35)
             .attr("text-anchor", "middle")
-            .style("font-size", d => d.depth === 0 ? "16px" : "12px")
-            .style("font-weight", d => d.depth === 0 ? "bold" : "500")
             .style("fill", "#1e293b")
-            .text(d => d.name);
+            .style("pointer-events", "none");
 
-        node.select("circle")
+        // Merge enter and update
+        const nodeCombined = nodeEnter.merge(node);
+        
+        nodeCombined.select("circle")
             .attr("fill", d => d.depth === 0 ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"));
 
-        node.exit().remove();
+        nodeCombined.select("text")
+            .text(d => d.name)
+            .style("font-size", d => d.depth === 0 ? "18px" : "13px")
+            .style("font-weight", d => d.depth === 0 ? "800" : "600");
+
+        // Fix root node
+        const root = nodes.find(d => d.depth === 0);
+        if (root) {
+            root.fx = width / 2;
+            root.fy = height / 2;
+        }
 
         simulation.nodes(nodes);
         simulation.force("link").links(links);
-        simulation.alpha(0.3).restart();
+        simulation.alpha(0.5).restart();
     }
 
     simulation.on("tick", () => {
@@ -217,10 +239,6 @@ function renderGraph(data) {
         } else {
             return; // Leaf node
         }
-
-        nodes = [];
-        links = [];
-        buildGraph(data);
         update();
     }
 
