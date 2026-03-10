@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="al-page">
+  <div class="al-card">
+    <p class="al-eyebrow">Welcome Back</p>
+    <h1>Login</h1>
+    {% if error %}
+    <p class="al-error">{{ error }}</p>
+    {% endif %}
+    <form class="al-form" method="post" action="/login">
+      <label for="email">Email or Admin Username</label>
+      <input id="email" name="email" type="text" placeholder="you@example.com or admin username" required>
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" placeholder="••••••••" required>
+
+      <button class="btn-primary" type="submit">Login</button>
+    </form>
+    <p style="margin:12px 0 0;color:#6b7280;font-size:0.9rem;">New here? <a href="/signup">Create an account</a></p>
+  </div>
+</section>
+{% endblock %}

@@ -1,111 +1,204 @@
 {% extends "layout.html" %}
 {% block content %}
-<div style="max-width: 800px; margin: 60px auto; padding: 0 20px;">
+<section class="mi-page">
+    <div class="mi-container">
+        <header class="mi-header">
+            <p class="mi-eyebrow">Mock Interview 2.0</p>
+            <h1>Adaptive interview simulator</h1>
+            <p>
+                Company-style rounds with dynamic follow-ups, live rubric scoring, STAR coaching,
+                pace analysis, red-team pressure mode, and hiring decision simulation.
+            </p>
+        </header>
 
-    <div style="text-align: center; margin-bottom: 48px;">
-        <h1 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 16px;">
-            AI Mock Interview
-        </h1>
-        <p style="color: #64748b; font-size: 1.125rem;">
-            Practice with realistic questions tailored to your field.
-        </p>
-    </div>
+        <section class="mi-panel">
+            <h2>Session Setup</h2>
+            <form action="/generate" method="post" class="mi-form-grid">
+                <div class="mi-field">
+                    <label for="topic">Topic</label>
+                    <select id="topic" name="topic">
+                        <option>Python</option>
+                        <option>SQL</option>
+                        <option>React</option>
+                        <option>System Design</option>
+                        <option>Behavioral</option>
+                    </select>
+                </div>
 
-    <!-- TOPIC SELECT -->
-    <div style="background: white; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 32px;">
-        <form action="/generate" method="post" style="display: flex; gap: 16px; align-items: flex-end;">
-            <div style="flex-grow: 1;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 8px;">
-                    Select Interview Topic
+                <div class="mi-field">
+                    <label for="role">Target role</label>
+                    <input id="role" name="role" type="text" placeholder="Backend Engineer">
+                </div>
+
+                <div class="mi-field">
+                    <label for="company">Company style</label>
+                    <input id="company" name="company" type="text" placeholder="Vercel / Stripe / FAANG">
+                </div>
+
+                <div class="mi-field">
+                    <label for="round_type">Round type</label>
+                    <select id="round_type" name="round_type">
+                        <option value="technical">Technical</option>
+                        <option value="behavioral">Behavioral</option>
+                        <option value="system_design">System Design</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </div>
+
+                <div class="mi-field">
+                    <label for="difficulty">Starting difficulty</label>
+                    <select id="difficulty" name="difficulty">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <div class="mi-field">
+                    <label for="max_rounds">Rounds</label>
+                    <select id="max_rounds" name="max_rounds">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+
+                <label class="mi-check">
+                    <input type="checkbox" name="red_team" value="true">
+                    <span>Enable Red-Team mode (pressure + contradiction checks)</span>
                 </label>
-                <select name="topic" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 1rem;">
-                    <option>Python</option>
-                    <option>SQL</option>
-                    <option>React</option>
-                    <option>System Design</option>
-                    <option>Behavioral</option>
-                </select>
+
+                <div class="mi-actions">
+                    <button type="submit" class="btn-primary mi-button">Start Interview</button>
+                </div>
+            </form>
+        </section>
+
+        {% if questions %}
+        {% set max_rounds = config.max_rounds or questions|length %}
+        <section class="mi-panel">
+            <div class="mi-q-header">
+                <h2>Current Question</h2>
+                <p>Round {{ current + 1 }} / {{ max_rounds }}</p>
             </div>
 
-            <button type="submit" class="btn-primary"
-                style="border: none; cursor: pointer; height: 48px; white-space: nowrap;">
-                Generate Questions
-            </button>
-        </form>
-    </div>
+            <p class="mi-question">{{ questions[current] }}</p>
 
-    <!-- SHOW ONE QUESTION ONLY -->
-    {% if questions %}
+            {% if next_followup %}
+            <div class="mi-followup">
+                <span>Next follow-up candidate</span>
+                <p>{{ next_followup }}</p>
+            </div>
+            {% endif %}
 
-    <div style="background: #f1f5f9; padding: 32px; border-radius: 16px; border-left: 4px solid #4f46e5;">
-        <h3 style="margin-bottom:10px;">
-            Question {{current+1}} of {{questions|length}}
-        </h3>
-
-        <p style="font-size:18px; font-weight:500;">
-            {{questions[current]}}
-        </p>
-    </div>
-
-    <div style="margin-top: 32px; background: white; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0;">
-
-        {% if not finished %}
-        <form action="/evaluate" method="post">     
-            <input type="hidden" name="question" value="{{questions[current]}}">
-            <textarea name="answer"
-                placeholder="Type your answer here..."
-                style="width: 100%; height: 150px; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 16px; font-family: inherit; font-size: 1rem;">
-            </textarea>
-
-            <button type="submit"
-                class="btn-primary"
-                style="width:100%; border:none; cursor:pointer;">
-                Submit Answer →
-            </button>
-        </form>
+            {% if not finished %}
+            <form action="/evaluate" method="post" id="answerForm" class="mi-answer-form">
+                <input type="hidden" name="question" value="{{ questions[current] }}">
+                <input type="hidden" name="answer_time_sec" id="answer_time_sec" value="0">
+                <textarea name="answer" placeholder="Type your answer with concrete decisions, tradeoffs, and measurable impact..." required></textarea>
+                <div class="mi-actions">
+                    <button type="submit" class="btn-primary mi-button">Submit Answer</button>
+                </div>
+            </form>
+            {% endif %}
+        </section>
         {% endif %}
 
-    </div>
+        {% if feedback %}
+        <section class="mi-panel">
+            <h2>Live Rubric Scoring</h2>
+            <div class="mi-score-grid">
+                <article><p>Overall</p><h3>{{ "%.1f"|format(feedback.overall) }}</h3></article>
+                <article><p>Correctness</p><h3>{{ "%.1f"|format(feedback.rubric.correctness) }}</h3></article>
+                <article><p>Structure</p><h3>{{ "%.1f"|format(feedback.rubric.structure) }}</h3></article>
+                <article><p>Clarity</p><h3>{{ "%.1f"|format(feedback.rubric.clarity) }}</h3></article>
+                <article><p>Tech Depth</p><h3>{{ "%.1f"|format(feedback.rubric.technical_depth) }}</h3></article>
+                <article><p>Impact</p><h3>{{ "%.1f"|format(feedback.rubric.impact) }}</h3></article>
+            </div>
 
-    {% endif %}
+            <div class="mi-grid-2">
+                <article class="mi-subpanel">
+                    <h3>Strengths</h3>
+                    <ul>
+                        {% for item in feedback.strengths %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+                <article class="mi-subpanel">
+                    <h3>Improve Next</h3>
+                    <ul>
+                        {% for item in feedback.improvements %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+            </div>
 
-    <!-- FEEDBACK -->
-    {% if feedback %}
-    <div style="margin-top:20px; padding:20px; background:#ecfdf5; border-radius:12px; text-align:center;">
-        <h3>Correctness Score</h3>
+            <div class="mi-grid-2">
+                <article class="mi-subpanel">
+                    <h3>STAR Coach</h3>
+                    {% if config.round_type == "behavioral" %}
+                    <p class="mi-mono">Missing: {{ feedback.star_coach.missing|join(", ") if feedback.star_coach.missing else "None" }}</p>
+                    {% endif %}
+                    <p>{{ feedback.star_coach.tip }}</p>
+                </article>
 
-        <h1 style="font-size:48px; margin:10px 0; color:#059669;">
-            {{ "%.1f"|format(feedback.correctness) }} / 10
-        </h1>
+                <article class="mi-subpanel">
+                    <h3>Voice + Pace Analysis</h3>
+                    <p class="mi-mono">WPM: {{ feedback.voice_pace.wpm }} · Pace: {{ feedback.voice_pace.pace_band }}</p>
+                    <p class="mi-mono">Filler hits: {{ feedback.voice_pace.filler_hits }} ({{ feedback.voice_pace.filler_density_pct }}%)</p>
+                    <p class="mi-mono">Answer time: {{ feedback.voice_pace.answer_time_sec }}s · Words: {{ feedback.voice_pace.word_count }}</p>
+                </article>
+            </div>
+        </section>
+        {% endif %}
 
-        {% if feedback.correctness >= 7 %}
-            <p style="color:#16a34a; font-weight:600;">✔ Good Answer</p>
-        {% else %}
-            <p style="color:#dc2626; font-weight:600;">✖ Needs Improvement</p>
+        {% if timeline %}
+        <section class="mi-panel">
+            <h2>Session Replay Timeline</h2>
+            <div class="mi-timeline">
+                {% for item in timeline %}
+                <article class="mi-time-item">
+                    <div>
+                        <p class="mi-mono">Round {{ loop.index }}</p>
+                        <p class="mi-time-question">{{ item.question }}</p>
+                        <p class="mi-muted">{{ item.answer_preview }}</p>
+                    </div>
+                    <strong>{{ "%.1f"|format(item.overall) }}/10</strong>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if finished %}
+        <section class="mi-panel mi-final">
+            <h2>Hiring Decision Simulator</h2>
+            <p class="mi-final-score">Overall Session Score: <strong>{{ "%.1f"|format(final_score) }}/10</strong></p>
+            <p class="mi-final-decision">Decision: <strong>{{ hiring_result.decision }}</strong> ({{ hiring_result.confidence }} confidence)</p>
+            <p>{{ hiring_result.summary }}</p>
+            <ul>
+                {% for note in hiring_result.panel_notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </section>
         {% endif %}
     </div>
-    {% endif %}
+</section>
 
-
-    <!-- FINAL RESULT -->
-    {% if finished %}
-    <div style="margin-top:30px; padding:30px; background:#eef2ff; border-radius:16px; text-align:center;">
-
-        <h2>Interview Completed 🎉</h2>
-
-        <h3 style="margin-top:20px;">Overall Performance</h3>
-
-        <h1 style="font-size:56px; margin:10px 0; color:#4f46e5;">
-            {{ "%.1f"|format(final_score) }} / 10
-        </h1>
-
-        {% if final_score >= 7 %}
-            <p style="color:#16a34a; font-weight:600;">✔ Interview Ready</p>
-        {% else %}
-            <p style="color:#dc2626; font-weight:600;">✖ Needs Improvement</p>
-        {% endif %}
-
-    </div>
-    {% endif %}
-</div>
+<script>
+(function() {
+    const form = document.getElementById("answerForm");
+    if (!form) return;
+    const startedAt = Date.now();
+    form.addEventListener("submit", function() {
+        const sec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        const target = document.getElementById("answer_time_sec");
+        if (target) target.value = sec;
+    });
+})();
+</script>
 {% endblock %}

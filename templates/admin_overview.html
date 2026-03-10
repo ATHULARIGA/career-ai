@@ -1,0 +1,50 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+<section class="ad-section">
+  <div class="ad-section-head">
+    <h2>Overview</h2>
+    <p>Platform health and core business signals.</p>
+  </div>
+  <div class="ad-grid-3">
+    <section class="ad-panel">
+      <h2>AI quality monitor</h2>
+      <div class="ad-kv-row"><span>Success rate</span><strong>{{ admin.model_health.success_rate }}%</strong></div>
+      <div class="ad-kv-row"><span>Avg latency</span><strong>{{ admin.model_health.avg_latency_ms }} ms</strong></div>
+      <div class="ad-kv-row"><span>Fallback usage</span><strong>{{ admin.model_health.fallback_rate }}%</strong></div>
+      <div class="ad-mini-table">
+        <div class="ad-mini-head"><span>Feature</span><span>Model</span><span>Status</span><span>Latency</span></div>
+        {% for r in admin.model_health.recent[:8] %}
+        <div class="ad-mini-row">
+          <span>{{ r[0] }}</span>
+          <span>{{ r[1] }}</span>
+          <span>{{ "OK" if r[2] == 1 else "Fail" }}</span>
+          <span>{{ "%.0f"|format(r[3]) }} ms</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="ad-panel">
+      <h2>Conversion</h2>
+      <div class="ad-kv-row"><span>Resume Reviews</span><strong>{{ admin.conversion.resume_reviews }}</strong></div>
+      <div class="ad-kv-row"><span>Interview Started</span><strong>{{ admin.conversion.interview_started }}</strong></div>
+      <div class="ad-kv-row"><span>Interview Completed</span><strong>{{ admin.conversion.interview_completed }}</strong></div>
+      <div class="ad-kv-row"><span>Mentor Bookings</span><strong>{{ admin.conversion.mentor_bookings }}</strong></div>
+    </section>
+
+    <section class="ad-panel">
+      <h2>Cohorts + Mentor Ops</h2>
+      <div class="ad-list">
+        {% for c in admin.cohorts %}
+        <div class="ad-list-item"><strong>{{ c[0] or "unknown" }}</strong><em>{{ c[1] }} users</em></div>
+        {% endfor %}
+      </div>
+      <h3>Mentor operations</h3>
+      <div class="ad-kv-row"><span>Calendar load</span><strong>{{ admin.mentor_ops.calendar_load_pct.value }}%</strong></div>
+      <div class="ad-kv-row"><span>No-show rate</span><strong>{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong></div>
+      <div class="ad-kv-row"><span>Mentor quality</span><strong>{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong></div>
+      <div class="ad-kv-row"><span>Reschedule rate</span><strong>{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong></div>
+    </section>
+  </div>
+</section>
+{% endblock %}

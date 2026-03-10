@@ -1,20 +1,80 @@
 {% extends "layout.html" %}
 {% block content %}
-<div style="max-width: 600px; margin: 80px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
-    <h2 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 8px; color: #0f172a;">Upload Resume</h2>
-    <p style="color: #64748b; margin-bottom: 32px;">Get instant AI feedback and ATS optimization tips.</p>
-    
-    <form action="/upload" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 24px;">
-        <div style="border: 2px dashed #e2e8f0; padding: 40px; border-radius: 12px; text-align: center; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='#e2e8f0'">
-            <input type="file" name="file" id="file" style="display: none;" onchange="document.getElementById('file-name').textContent = this.files[0].name" required>
-            <label for="file" style="cursor: pointer;">
-                <div style="font-size: 40px; margin-bottom: 12px;">📄</div>
-                <div style="font-weight: 600; color: #1e293b;">Click to upload or drag and drop</div>
-                <div style="font-size: 0.875rem; color: #94a3b8; margin-top: 4px;">PDF or DOCX (Max 10MB)</div>
-                <div id="file-name" style="margin-top: 12px; font-size: 0.875rem; color: #4f46e5; font-weight: 500;"></div>
-            </label>
+<section class="rr-page">
+    <div class="rr-container">
+        <div class="rr-header">
+            <p class="rr-eyebrow">Resume Review 2.0</p>
+            <h1>Role-targeted resume analysis</h1>
+            <p>
+                Review your resume against a specific role with evidence-backed scoring,
+                rewrite suggestions, keyword gap priorities, and recruiter-style feedback.
+            </p>
+            <div class="rr-chip-row">
+                <span class="rr-chip">ATS + recruiter lens</span>
+                <span class="rr-chip">Keyword priority engine</span>
+                <span class="rr-chip">Interview handoff ready</span>
+            </div>
         </div>
-        <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">Analyze Resume →</button>
-    </form>
-</div>
+
+        <form action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
+            <div class="rr-field rr-file-field">
+                <label for="file">Resume PDF</label>
+                <input
+                    type="file"
+                    name="file"
+                    id="file"
+                    accept=".pdf,application/pdf"
+                    required
+                >
+                <p>Single-page or multi-page PDF supported.</p>
+            </div>
+
+            <div class="rr-grid-2">
+                <div class="rr-field">
+                    <label for="target_role">Target role</label>
+                    <input id="target_role" type="text" name="target_role" placeholder="Backend Engineer">
+                </div>
+                <div class="rr-field">
+                    <label for="seniority">Seniority</label>
+                    <select id="seniority" name="seniority">
+                        <option value="">Select level</option>
+                        <option>Intern</option>
+                        <option>Entry-Level</option>
+                        <option>Mid-Level</option>
+                        <option>Senior</option>
+                        <option>Lead</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="rr-grid-2 rr-grid-compact">
+                <div class="rr-field">
+                    <label for="region">Region mode</label>
+                    <select id="region" name="region">
+                        <option value="US">US</option>
+                        <option value="India">India</option>
+                        <option value="EU">EU</option>
+                    </select>
+                </div>
+                <div class="rr-field rr-note-block">
+                    <p><strong>Tip:</strong> Add a full job description for the most accurate rewrite and keyword guidance.</p>
+                </div>
+            </div>
+
+            <div class="rr-field">
+                <label for="job_description">Job description (optional)</label>
+                <textarea
+                    id="job_description"
+                    name="job_description"
+                    rows="8"
+                    placeholder="Paste the full job description to improve alignment, benchmark quality, and keyword suggestions."
+                ></textarea>
+            </div>
+
+            <div class="rr-actions">
+                <button type="submit" class="rr-submit">Run Advanced Review</button>
+            </div>
+        </form>
+    </div>
+</section>
 {% endblock %}

@@ -1,28 +1,215 @@
 {% extends "layout.html" %}
-
 {% block content %}
-<div style="max-width: 800px; margin: 60px auto; padding: 0 20px;">
-    <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-        <div style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 40px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 2rem; font-weight: 800;">Resume Analysis Result</h1>
-            <p style="margin: 8px 0 0 0; opacity: 0.9;">AI-powered scoring and feedback</p>
+<section class="rd-page">
+    <div class="rd-container">
+        <header class="rd-header">
+            <div>
+                <p class="rd-eyebrow">Advanced Resume Review</p>
+                <h1>Candidate report</h1>
+                <p class="rd-meta">
+                    {% if analysis_inputs.target_role %}
+                    Role: <strong>{{ analysis_inputs.target_role }}</strong>
+                    {% else %}
+                    Role: <strong>Not specified</strong>
+                    {% endif %}
+                    <span>Region: <strong>{{ analysis_inputs.region or "US" }}</strong></span>
+                    <span>JD mode: <strong>{{ "On" if analysis_inputs.has_job_description else "Off" }}</strong></span>
+                </p>
+            </div>
+            <div class="rd-actions">
+                <a href="/resume" class="btn-secondary">New Review</a>
+                <a href="/interview" class="btn-primary">Mock Interview</a>
+            </div>
+        </header>
+
+        {% if report.error %}
+        <section class="rd-panel rd-error">
+            <h2>Analysis Error</h2>
+            <p>{{ report.error }}</p>
+        </section>
+        {% endif %}
+
+        {% set overall = report.scores.Overall or 0 %}
+        {% set ats = report.scores.ATS or 0 %}
+        {% set coverage = report.keyword_coverage or 0 %}
+
+        <section class="rd-score-grid">
+            <article class="rd-stat">
+                <p>Overall</p>
+                <h3>{{ overall }}/10</h3>
+                <span>{{ report.scores.Status or "Needs Review" }}</span>
+            </article>
+            <article class="rd-stat">
+                <p>ATS</p>
+                <h3>{{ ats }}/10</h3>
+                <span>Readability + structure</span>
+            </article>
+            <article class="rd-stat">
+                <p>Keyword Coverage</p>
+                <h3>{{ coverage }}%</h3>
+                <span>Role alignment</span>
+            </article>
+        </section>
+
+        {% if report.version_diff %}
+        <section class="rd-panel">
+            <h2>Version Delta</h2>
+            <div class="rd-delta-grid">
+                <div><p>Overall</p><strong>{{ "%+.1f"|format(report.version_diff.overall_delta) }}</strong></div>
+                <div><p>ATS</p><strong>{{ "%+.1f"|format(report.version_diff.ats_delta) }}</strong></div>
+                <div><p>Keyword Coverage</p><strong>{{ "%+.1f"|format(report.version_diff.keyword_coverage_delta) }}%</strong></div>
+            </div>
+        </section>
+        {% endif %}
+
+        <div class="rd-grid-2">
+            <section class="rd-panel">
+                <h2>Evidence-based findings</h2>
+                {% if report.evidence %}
+                    {% for item in report.evidence %}
+                    <article class="rd-item">
+                        <span class="rd-tag">{{ item.category or "General" }}</span>
+                        <p class="rd-quote">{{ item.snippet or "No snippet provided." }}</p>
+                        <p>{{ item.issue or "No issue details." }}</p>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="rd-empty">No evidence items available.</p>
+                {% endif %}
+            </section>
+
+            <section class="rd-panel">
+                <h2>Keyword gap priorities</h2>
+                {% if report.keyword_gaps %}
+                    {% for gap in report.keyword_gaps %}
+                    <article class="rd-gap">
+                        <div>
+                            <p class="rd-keyword">{{ gap.keyword or "Keyword" }}</p>
+                            <p class="rd-muted">{{ gap.reason or "No reason provided." }}</p>
+                        </div>
+                        <div class="rd-priority">
+                            <span>{{ gap.priority or "Useful" }}</span>
+                            <strong>+{{ gap.estimated_score_gain or 0 }}</strong>
+                        </div>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="rd-empty">No major keyword gaps detected.</p>
+                {% endif %}
+            </section>
         </div>
-        
-        <div style="padding: 40px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 40px;">
-                {% for k,v in report.items() %}
-                <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #f1f5f9;">
-                    <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">{{k}}</div>
-                    <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">{{v}}</div>
-                </div>
+
+        <div class="rd-grid-2">
+            <section class="rd-panel">
+                <h2>Rewrite mode</h2>
+                {% if report.targeted_rewrites %}
+                    {% for item in report.targeted_rewrites %}
+                    <article class="rd-item">
+                        <p><strong>Before</strong> {{ item.before }}</p>
+                        <p><strong>After</strong> {{ item.after }}</p>
+                        <p class="rd-muted">{{ item.why }}</p>
+                        {% if item.matched_keywords %}
+                        <p class="rd-hint">Matched: {{ item.matched_keywords|join(", ") }}</p>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="rd-empty">No rewrites generated.</p>
+                {% endif %}
+            </section>
+
+            <section class="rd-panel">
+                <h2>Quantification assistant</h2>
+                {% if report.quantification_suggestions %}
+                    {% for item in report.quantification_suggestions %}
+                    <article class="rd-item">
+                        <p><strong>Before</strong> {{ item.before }}</p>
+                        <p><strong>After</strong> {{ item.after }}</p>
+                        <p class="rd-hint">Metric idea: {{ item.metric_hint }}</p>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="rd-empty">No quantification suggestions available.</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="rd-grid-2">
+            <section class="rd-panel">
+                <h2>Recruiter simulation</h2>
+                <p><strong>First impression:</strong> {{ report.recruiter_simulation.first_impression or "N/A" }}</p>
+                <p><strong>Likely outcome:</strong> {{ report.recruiter_simulation.likely_outcome or "N/A" }}</p>
+                <p class="rd-subtitle">Strengths</p>
+                <ul>
+                    {% for s in report.recruiter_simulation.strengths or [] %}
+                    <li>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+                <p class="rd-subtitle">Risks</p>
+                <ul>
+                    {% for r in report.recruiter_simulation.risks or [] %}
+                    <li>{{ r }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="rd-panel">
+                <h2>Role benchmark</h2>
+                <p><strong>Cohort:</strong> {{ report.benchmarking.cohort or "N/A" }}</p>
+                <p><strong>Percentile:</strong> {{ report.benchmarking.percentile or 0 }}th</p>
+                <p class="rd-muted">{{ report.benchmarking.summary or "" }}</p>
+                <div class="rd-meter"><div style="width: {{ report.benchmarking.percentile or 0 }}%;"></div></div>
+            </section>
+        </div>
+
+        <div class="rd-grid-2">
+            <section class="rd-panel">
+                <h2>Interview handoff</h2>
+                {% if report.interview_questions %}
+                <ol>
+                    {% for q in report.interview_questions %}
+                    <li>{{ q }}</li>
+                    {% endfor %}
+                </ol>
+                <form action="/interview/from-resume" method="post">
+                    <input type="hidden" name="questions_json" value='{{ (report.interview_questions or [])|tojson }}'>
+                    <button type="submit" class="btn-primary rd-inline-button">Start interview with these questions</button>
+                </form>
+                {% else %}
+                <p class="rd-empty">No interview questions generated.</p>
+                {% endif %}
+            </section>
+
+            <section class="rd-panel">
+                <h2>Region advice</h2>
+                {% if report.region_advice %}
+                <ul>
+                    {% for item in report.region_advice %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="rd-empty">No region-specific guidance available.</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <section class="rd-panel">
+            <h2>Portfolio and proof links</h2>
+            {% if report.link_validation %}
+            <div class="rd-link-grid">
+                {% for item in report.link_validation %}
+                <article class="rd-link">
+                    <p class="rd-link-url">{{ item.url or "N/A" }}</p>
+                    <p class="rd-link-status">{{ item.status or "unknown" }}</p>
+                    <p class="rd-muted">{{ item.note or "" }}</p>
+                </article>
                 {% endfor %}
             </div>
-
-            <div style="border-top: 1px solid #f1f5f9; padding-top: 32px; text-align: center;">
-                <h3 style="margin-bottom: 24px;">Next Step: Practice what you've improved</h3>
-                <a href="/interview" class="btn-primary">Start Mock Interview →</a>
-            </div>
-        </div>
+            {% else %}
+            <p class="rd-empty">No links found in resume.</p>
+            {% endif %}
+        </section>
     </div>
-</div>
+</section>
 {% endblock %}

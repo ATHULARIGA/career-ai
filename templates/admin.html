@@ -1,35 +1,322 @@
 {% extends "layout.html" %}
 {% block content %}
-<div style="max-width: 1000px; margin: 60px auto; padding: 0 20px;">
-    <h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 32px;">Booking Dashboard</h1>
-    
-    <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+<section class="ad-page">
+  <div class="ad-container">
+    <header class="ad-header">
+      <div>
+        <p class="ad-eyebrow">Admin 2.0</p>
+        <h1>Operations command center</h1>
+        <p>Everything is grouped by workflow: overview, experiments, coding, safety, and bookings.</p>
+      </div>
+      <div class="ad-actions">
+        <a class="btn-secondary" href="/admin/export?format=json">Export JSON</a>
+        <a class="btn-secondary" href="/admin/export?format=csv">Export CSV</a>
+        <a class="btn-primary" href="/admin-logout">Logout</a>
+      </div>
+    </header>
+
+    <nav class="ad-nav">
+      <a href="#overview">Overview</a>
+      <a href="#experiments">Experiments</a>
+      <a href="#coding">Coding</a>
+      <a href="#safety">Safety</a>
+      <a href="#bookings">Bookings</a>
+    </nav>
+
+    <section class="ad-kpi-grid">
+      <article><p>Total bookings</p><h3>{{ admin.kpis.total_bookings }}</h3></article>
+      <article><p>Unique users</p><h3>{{ admin.kpis.unique_users }}</h3></article>
+      <article><p>Today bookings</p><h3>{{ admin.kpis.today_bookings }}</h3></article>
+      <article><p>Resume reviews</p><h3>{{ admin.kpis.resume_reviews }}</h3></article>
+      <article><p>Interview completions</p><h3>{{ admin.kpis.interview_completed }}</h3></article>
+      <article><p>Roadmaps generated</p><h3>{{ admin.kpis.roadmap_generated }}</h3></article>
+    </section>
+
+    <section id="overview" class="ad-section">
+      <div class="ad-section-head">
+        <h2>Overview</h2>
+        <p>Platform health and core business signals.</p>
+      </div>
+      <div class="ad-grid-3">
+        <section class="ad-panel">
+          <h2>AI quality monitor</h2>
+          <div class="ad-kv-row"><span>Success rate</span><strong>{{ admin.model_health.success_rate }}%</strong></div>
+          <div class="ad-kv-row"><span>Avg latency</span><strong>{{ admin.model_health.avg_latency_ms }} ms</strong></div>
+          <div class="ad-kv-row"><span>Fallback usage</span><strong>{{ admin.model_health.fallback_rate }}%</strong></div>
+          <div class="ad-mini-table">
+            <div class="ad-mini-head"><span>Feature</span><span>Model</span><span>Status</span><span>Latency</span></div>
+            {% for r in admin.model_health.recent[:8] %}
+            <div class="ad-mini-row">
+              <span>{{ r[0] }}</span>
+              <span>{{ r[1] }}</span>
+              <span>{{ "OK" if r[2] == 1 else "Fail" }}</span>
+              <span>{{ "%.0f"|format(r[3]) }} ms</span>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="ad-panel">
+          <h2>Conversion</h2>
+          <div class="ad-kv-row"><span>Resume Reviews</span><strong>{{ admin.conversion.resume_reviews }}</strong></div>
+          <div class="ad-kv-row"><span>Interview Started</span><strong>{{ admin.conversion.interview_started }}</strong></div>
+          <div class="ad-kv-row"><span>Interview Completed</span><strong>{{ admin.conversion.interview_completed }}</strong></div>
+          <div class="ad-kv-row"><span>Mentor Bookings</span><strong>{{ admin.conversion.mentor_bookings }}</strong></div>
+        </section>
+
+        <section class="ad-panel">
+          <h2>Cohorts + Mentor Ops</h2>
+          <div class="ad-list">
+            {% for c in admin.cohorts %}
+            <div class="ad-list-item"><strong>{{ c[0] or "unknown" }}</strong><em>{{ c[1] }} users</em></div>
+            {% endfor %}
+          </div>
+          <h3>Mentor operations</h3>
+          <div class="ad-kv-row"><span>Calendar load</span><strong>{{ admin.mentor_ops.calendar_load_pct.value }}%</strong></div>
+          <div class="ad-kv-row"><span>No-show rate</span><strong>{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong></div>
+          <div class="ad-kv-row"><span>Mentor quality</span><strong>{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong></div>
+          <div class="ad-kv-row"><span>Reschedule rate</span><strong>{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="experiments" class="ad-section">
+      <div class="ad-section-head">
+        <h2>Experiments</h2>
+        <p>Prompt and model controls.</p>
+      </div>
+      <div class="ad-grid-2">
+        <section class="ad-panel">
+          <h2>Prompt/model experiment panel</h2>
+          <form class="ad-form" method="post" action="/admin/experiments/save">
+            <input name="feature" placeholder="Feature (resume_review)" required>
+            <input name="prompt_version" placeholder="Prompt Version (v4)" required>
+            <input name="model_name" placeholder="Model (openai/gpt-4o-mini)" required>
+            <label class="ad-check"><input type="checkbox" name="enabled" checked> Enabled</label>
+            <button type="submit" class="btn-primary">Save Experiment</button>
+          </form>
+          <div class="ad-list">
+            {% for exp in admin.experiments %}
+            <div class="ad-list-item"><strong>{{ exp[0] }}</strong><span>{{ exp[1] }} · {{ exp[2] }}</span><em>{{ "Enabled" if exp[3] == 1 else "Disabled" }}</em></div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="coding" class="ad-section">
+      <div class="ad-section-head">
+        <h2>Coding Management</h2>
+        <p>Question bank and submission insights.</p>
+      </div>
+      <div class="ad-grid-2">
+        <section class="ad-panel">
+          <h2>Add Coding Practice Question</h2>
+          <form class="ad-form" method="post" action="/admin/coding-problem/add">
+            <input name="title" placeholder="Question title" required>
+            <select name="difficulty">
+              <option>Easy</option>
+              <option>Medium</option>
+              <option>Hard</option>
+            </select>
+            <input name="tags" placeholder="Tags (comma-separated)">
+            <textarea name="description" rows="4" placeholder="Problem description" required></textarea>
+            <textarea name="constraints" rows="3" placeholder="Constraints (one per line)"></textarea>
+            <textarea name="examples" rows="3" placeholder="Examples as: input|||output (one per line, use \n for line breaks)"></textarea>
+            <textarea name="sample_tests" rows="3" placeholder="Sample tests (required): input|||expected (one per line)" required></textarea>
+            <textarea name="hidden_tests" rows="3" placeholder="Hidden tests: input|||expected (one per line)"></textarea>
+            <textarea name="starter_py" rows="4" placeholder="Python starter code"></textarea>
+            <textarea name="starter_js" rows="4" placeholder="JavaScript starter code"></textarea>
+            <textarea name="starter_java" rows="4" placeholder="Java starter code"></textarea>
+            <textarea name="starter_cpp" rows="4" placeholder="C++ starter code"></textarea>
+            <button type="submit" class="btn-primary">Add Question</button>
+          </form>
+        </section>
+
+        <section class="ad-panel">
+          <h2>Coding Submission Stats</h2>
+          <div class="ad-kv-row"><span>Total submissions</span><strong>{{ coding_stats.total_submissions }}</strong></div>
+          <div class="ad-mini-table">
+            <div class="ad-mini-head"><span>Problem</span><span>Runs</span><span>Accepted</span><span>Avg Runtime</span></div>
+            {% for s in coding_stats.by_problem %}
+            <div class="ad-mini-row">
+              <span>{{ s.problem_id }}</span>
+              <span>{{ s.total_runs }}</span>
+              <span>{{ s.accept_rate }}%</span>
+              <span>{{ s.avg_runtime_ms }} ms</span>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      <section class="ad-panel">
+        <h2>Edit / Delete Coding Problems</h2>
+        <div class="ad-list">
+          {% for p in custom_problems %}
+          <div class="ad-list-item ad-list-item-stack">
+            <strong>{{ p.title }} ({{ p.id }})</strong>
+            <form class="ad-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
+              <input name="title" value="{{ p.title }}" required>
+              <select name="difficulty">
+                <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
+                <option value="Medium" {% if p.difficulty == "Medium" %}selected{% endif %}>Medium</option>
+                <option value="Hard" {% if p.difficulty == "Hard" %}selected{% endif %}>Hard</option>
+              </select>
+              <input name="tags" value="{{ p.tags|join(', ') }}" placeholder="Tags">
+              <textarea name="description" rows="3" required>{{ p.description }}</textarea>
+              <textarea name="constraints" rows="2">{{ p.constraints|join('\n') }}</textarea>
+              <textarea name="examples" rows="2">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+              <textarea name="sample_tests" rows="2" required>{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+              <textarea name="hidden_tests" rows="2">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+              <textarea name="starter_py" rows="3">{{ p.starter_codes.python }}</textarea>
+              <textarea name="starter_js" rows="3">{{ p.starter_codes.javascript }}</textarea>
+              <textarea name="starter_java" rows="3">{{ p.starter_codes.java }}</textarea>
+              <textarea name="starter_cpp" rows="3">{{ p.starter_codes.cpp }}</textarea>
+              <div class="ad-inline-actions">
+                <button type="submit" class="btn-secondary">Save Changes</button>
+                <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="btn-primary">Delete</button>
+              </div>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% if not custom_problems %}
+        <p class="cp-muted">No custom coding problems added yet.</p>
+        {% endif %}
+      </section>
+    </section>
+
+    <section id="safety" class="ad-section">
+      <div class="ad-section-head">
+        <h2>Safety + Feedback</h2>
+        <p>Triage user reports and moderation events.</p>
+      </div>
+      <div class="ad-grid-2">
+        <section class="ad-panel">
+          <h2>Feedback + flag queue</h2>
+          <form class="ad-form" method="post" action="/admin/feedback">
+            <input name="source" placeholder="Source (interview/resume/roadmap)" required>
+            <select name="severity">
+              <option>low</option>
+              <option>medium</option>
+              <option>high</option>
+              <option>critical</option>
+            </select>
+            <textarea name="message" rows="3" placeholder="Issue details" required></textarea>
+            <button type="submit" class="btn-primary">Add Queue Item</button>
+          </form>
+
+          <div class="ad-list">
+            {% for f in admin.feedback_queue %}
+            <div class="ad-list-item ad-list-item-stack">
+              <div>
+                <strong>#{{ f[0] }} · {{ f[2] }}</strong>
+                <p>{{ f[4] }}</p>
+              </div>
+              <form method="post" action="/admin/feedback/{{ f[0] }}/status" class="ad-inline-form">
+                <select name="status">
+                  <option value="open" {% if f[5] == "open" %}selected{% endif %}>open</option>
+                  <option value="in_progress" {% if f[5] == "in_progress" %}selected{% endif %}>in_progress</option>
+                  <option value="resolved" {% if f[5] == "resolved" %}selected{% endif %}>resolved</option>
+                </select>
+                <button type="submit" class="btn-secondary">Update</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="ad-panel">
+          <h2>Safety + moderation console</h2>
+          <form class="ad-form" method="post" action="/admin/safety/report">
+            <select name="level">
+              <option>low</option>
+              <option>medium</option>
+              <option>high</option>
+              <option>critical</option>
+            </select>
+            <input name="event_type" placeholder="Event type (prompt_abuse)" required>
+            <textarea name="payload" rows="3" placeholder="Payload / evidence"></textarea>
+            <button type="submit" class="btn-primary">Log Safety Event</button>
+          </form>
+
+          <div class="ad-list">
+            {% for s in admin.safety_events %}
+            <div class="ad-list-item ad-list-item-stack">
+              <strong>{{ s[2] }} · {{ s[3] }}</strong>
+              <p>{{ s[4] }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="bookings" class="ad-section">
+      <div class="ad-section-head">
+        <h2>Bookings</h2>
+        <p>User journey replay and mentor assignment operations.</p>
+      </div>
+      <section class="ad-panel">
+        <input type="text" id="searchInput" class="ad-search" placeholder="Search by name/email/topic" onkeyup="searchTable()">
+        <div class="ad-table-wrap">
+          <table id="bookingTable" class="ad-table">
             <thead>
-                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                    <th style="padding: 16px 24px; font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Name</th>
-                    <th style="padding: 16px 24px; font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Email</th>
-                    <th style="padding: 16px 24px; font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Topic</th>
-                    <th style="padding: 16px 24px; font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Date</th>
-                    <th style="padding: 16px 24px; font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Action</th>
-                </tr>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Topic</th>
+                <th>Date/Time</th>
+                <th>Journey</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody>
-                {% for d in data %}
-                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                    <td style="padding: 16px 24px; color: #1e293b; font-weight: 500;">{{ d[1] }}</td>
-                    <td style="padding: 16px 24px; color: #64748b;">{{ d[2] }}</td>
-                    <td style="padding: 16px 24px;">
-                        <span style="background: #eef2ff; color: #4f46e5; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">{{ d[3] }}</span>
-                    </td>
-                    <td style="padding: 16px 24px; color: #64748b;">{{ d[4] }}</td>
-                    <td style="padding: 16px 24px;">
-                        <a href="{{ d[5] }}" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: none; font-size: 0.875rem;">Join Meeting</a>
-                    </td>
-                </tr>
-                {% endfor %}
+              {% for d in data %}
+              <tr>
+                <td>{{ d[1] }}</td>
+                <td>{{ d[2] }}</td>
+                <td>{{ d[3] }}</td>
+                <td>{{ d[4] }}</td>
+                <td><span class="ad-pill">Resume -> Interview -> Booking</span></td>
+                <td>
+                  <a href="{{ d[5] }}" target="_blank">Join</a>
+                  <button onclick="copyLink('{{ d[5] }}')">Copy</button>
+                  <form method="post" action="/admin/booking/{{ d[0] }}/assign-mentor" class="ad-mentor-form">
+                    <input
+                      type="email"
+                      name="mentor_email"
+                      value="{{ d[9] if d|length > 9 and d[9] else '' }}"
+                      placeholder="mentor@email.com"
+                      class="ad-mentor-input"
+                      required
+                    >
+                    <button type="submit">Assign Mentor</button>
+                  </form>
+                  <a href="/admin-delete/{{ d[0] }}">Delete</a>
+                </td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
-    </div>
-</div>
+          </table>
+        </div>
+      </section>
+    </section>
+  </div>
+</section>
+
+<script>
+function searchTable() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const rows = document.querySelectorAll("#bookingTable tbody tr");
+  rows.forEach((row) => {
+    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+  });
+}
+
+function copyLink(link) {
+  navigator.clipboard.writeText(link);
+}
+</script>
 {% endblock %}

@@ -1,0 +1,215 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="cp-page">
+  <div class="cp-container">
+    <header class="cp-header">
+      <div>
+        <p class="cp-eyebrow">Coding Practice</p>
+        <h1>{{ problem.title }}</h1>
+        <p>{{ problem.description }}</p>
+        <div class="cp-hero-meta">
+          <span>{{ problem.difficulty }}</span>
+          {% if problem.acceptance_rate %}
+          <span>{{ "%.1f"|format(problem.acceptance_rate) }}% acceptance</span>
+          {% endif %}
+          <span>{{ language|upper }}</span>
+        </div>
+      </div>
+      <div class="cp-summary">
+        <span>Solved: <strong>{{ solved_count }}/{{ problems|length }}</strong></span>
+        <a class="btn-secondary" href="/coding/problems">Problem List</a>
+      </div>
+    </header>
+
+    <div class="cp-shell">
+      <aside class="cp-sidebar">
+        <div class="cp-panel">
+          <h2>Problems</h2>
+          <form method="get" action="/coding" class="cp-problem-select">
+            <select id="problem" name="problem" onchange="this.form.submit()">
+              {% for p in problems %}
+              <option value="{{ p.id }}" {% if p.id == selected_problem_id %}selected{% endif %}>
+                {{ p.title }} · {{ p.difficulty }}
+              </option>
+              {% endfor %}
+            </select>
+          </form>
+          <div class="cp-tags">
+            {% for t in problem.tags %}
+            <span>{{ t }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="cp-panel">
+          <h2>Testcases</h2>
+          <div class="cp-tab-buttons">
+            <button type="button" class="cp-tab-btn active" data-tab="sample-tab">Sample</button>
+            <button type="button" class="cp-tab-btn" data-tab="hidden-tab">Hidden</button>
+          </div>
+          <div id="sample-tab" class="cp-tab-panel active">
+            {% for t in problem.sample_tests %}
+            <article class="cp-sample-item">
+              <p><strong>Input</strong></p>
+              <pre>{{ t.input }}</pre>
+              <p><strong>Expected</strong></p>
+              <pre>{{ t.expected }}</pre>
+            </article>
+            {% endfor %}
+          </div>
+          <div id="hidden-tab" class="cp-tab-panel">
+            <p class="cp-muted">{{ problem.hidden_tests|length }} hidden testcases used during submit.</p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="cp-main">
+        <section class="cp-panel">
+          <h2>Editor</h2>
+          <form id="editorForm" method="post" action="/coding/run">
+            <input type="hidden" name="problem_id" value="{{ selected_problem_id }}">
+            <input type="hidden" name="code" id="codeField" value="{{ code|e }}">
+            <div class="cp-editor-toolbar">
+              <label for="language">Language</label>
+              <select id="language" name="language" class="cp-language-select">
+                <option value="python" {% if language == "python" %}selected{% endif %}>Python</option>
+                <option value="java" {% if language == "java" %}selected{% endif %}>Java</option>
+                <option value="cpp" {% if language == "cpp" %}selected{% endif %}>C++</option>
+                <option value="javascript" {% if language == "javascript" %}selected{% endif %}>JavaScript</option>
+              </select>
+              <button type="button" id="resetBtn" class="btn-secondary">Reset Code</button>
+              <span class="cp-shortcuts">Ctrl/Cmd+Enter: Run · Ctrl/Cmd+Shift+Enter: Submit</span>
+            </div>
+            <div id="editorCode" class="cp-ace"></div>
+            <label class="cp-inline-label" for="custom_input">Custom Input (Run only)</label>
+            <textarea id="custom_input" name="custom_input" rows="4" class="cp-custom-input" spellcheck="false">{{ last_custom_input }}</textarea>
+            <div class="cp-actions">
+              <button id="runBtn" type="button" class="btn-secondary">Run Code</button>
+              <button id="submitBtn" type="button" class="btn-primary">Submit Code</button>
+            </div>
+          </form>
+        </section>
+
+        {% if result %}
+        <section class="cp-panel">
+          <h2>Result</h2>
+          <div class="cp-result-meta">
+            <span>Status: <strong>{{ result.status }}</strong></span>
+            <span>Score: <strong>{{ result.passed }}/{{ result.total }}</strong></span>
+            <span>Runtime: <strong>{{ result.runtime_ms }} ms</strong></span>
+            <span>Language: <strong>{{ (result.language or language)|upper }}</strong></span>
+          </div>
+          <div class="cp-cases">
+            {% for c in result.cases %}
+            <article class="cp-case {% if c.passed %}ok{% else %}bad{% endif %}">
+              <p><strong>Case {{ c.index }}</strong> · {{ "Pass" if c.passed else "Fail" }}{% if c.hidden %} · Hidden{% endif %}</p>
+              <p><strong>Input:</strong></p>
+              <pre>{{ c.input }}</pre>
+              <p><strong>Expected:</strong></p>
+              <pre>{{ c.expected }}</pre>
+              <p><strong>Actual:</strong></p>
+              <pre>{{ c.actual }}</pre>
+            </article>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+      </main>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ext-language_tools.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("editorForm");
+  const codeField = document.getElementById("codeField");
+  const runBtn = document.getElementById("runBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const languageSelect = document.getElementById("language");
+  const starters = {{ problem.starter_codes|tojson }};
+  const problemSelect = document.getElementById("problem");
+
+  const editor = ace.edit("editorCode");
+  editor.setOptions({
+    enableBasicAutocompletion: true,
+    enableLiveAutocompletion: true,
+    enableSnippets: true,
+    fontSize: "13px",
+  });
+  editor.session.setUseWorker(false);
+
+  function aceMode(lang) {
+    if (lang === "python") return "ace/mode/python";
+    if (lang === "java") return "ace/mode/java";
+    if (lang === "cpp") return "ace/mode/c_cpp";
+    return "ace/mode/javascript";
+  }
+
+  function aceTheme() {
+    return document.documentElement.classList.contains("theme-dark") ? "ace/theme/one_dark" : "ace/theme/github";
+  }
+
+  function syncTheme() {
+    editor.setTheme(aceTheme());
+  }
+
+  function syncCodeFromEditor() {
+    codeField.value = editor.getValue();
+  }
+
+  function submitTo(action) {
+    syncCodeFromEditor();
+    form.action = action;
+    form.submit();
+  }
+
+  editor.setValue(codeField.value || "", -1);
+  editor.session.setMode(aceMode(languageSelect.value));
+  syncTheme();
+
+  languageSelect.addEventListener("change", function () {
+    syncCodeFromEditor();
+    const pid = problemSelect ? problemSelect.value : "{{ selected_problem_id }}";
+    window.location.href = "/coding?problem=" + encodeURIComponent(pid) + "&language=" + encodeURIComponent(languageSelect.value);
+  });
+
+  runBtn.addEventListener("click", function () { submitTo("/coding/run"); });
+  submitBtn.addEventListener("click", function () { submitTo("/coding/submit"); });
+
+  resetBtn.addEventListener("click", function () {
+    const lang = languageSelect.value;
+    editor.setValue(starters[lang] || "", -1);
+    syncCodeFromEditor();
+  });
+
+  editor.commands.addCommand({
+    name: "runCode",
+    bindKey: {win: "Ctrl-Enter", mac: "Command-Enter"},
+    exec: function() { submitTo("/coding/run"); }
+  });
+  editor.commands.addCommand({
+    name: "submitCode",
+    bindKey: {win: "Ctrl-Shift-Enter", mac: "Command-Shift-Enter"},
+    exec: function() { submitTo("/coding/submit"); }
+  });
+
+  document.querySelectorAll(".cp-tab-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const parent = btn.closest(".cp-panel");
+      const target = btn.dataset.tab;
+      parent.querySelectorAll(".cp-tab-btn").forEach((b) => b.classList.remove("active"));
+      parent.querySelectorAll(".cp-tab-panel").forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      parent.querySelector("#" + target).classList.add("active");
+    });
+  });
+
+  const observer = new MutationObserver(syncTheme);
+  observer.observe(document.documentElement, {attributes: true, attributeFilter: ["class"]});
+  window.addEventListener("resize", function () { editor.resize(); });
+});
+</script>
+{% endblock %}

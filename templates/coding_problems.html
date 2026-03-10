@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="cp-page">
+  <div class="cp-container">
+    <header class="cp-header">
+      <div>
+        <p class="cp-eyebrow">Coding Practice</p>
+        <h1>Problem List</h1>
+        <p>Search problems and filter by difficulty.</p>
+      </div>
+      <a class="btn-primary" href="/coding">Open Workspace</a>
+    </header>
+
+    <section class="cp-panel">
+      <form method="get" action="/coding/problems" class="cp-list-filters">
+        <input type="text" name="q" placeholder="Search problems or tags..." value="{{ query }}">
+        <select name="difficulty">
+          <option value="All" {% if difficulty == "All" %}selected{% endif %}>All</option>
+          <option value="Easy" {% if difficulty == "Easy" %}selected{% endif %}>Easy</option>
+          <option value="Medium" {% if difficulty == "Medium" %}selected{% endif %}>Medium</option>
+          <option value="Hard" {% if difficulty == "Hard" %}selected{% endif %}>Hard</option>
+        </select>
+        <button type="submit" class="btn-secondary">Apply</button>
+      </form>
+    </section>
+
+    <section class="cp-panel">
+      <div class="cp-list-head">
+        <p>{{ problems|length }} problems</p>
+      </div>
+      <div class="cp-problem-list">
+        {% for p in problems %}
+        <article class="cp-problem-row">
+          <div>
+            <h3>{{ p.title }}</h3>
+            <p>{{ p.description[:170] }}{% if p.description|length > 170 %}...{% endif %}</p>
+            <div class="cp-tags">
+              <span>{{ p.difficulty }}</span>
+              {% for t in p.tags %}
+              <span>{{ t }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          <a class="btn-primary" href="/coding?problem={{ p.id }}">Solve</a>
+        </article>
+        {% endfor %}
+      </div>
+      {% if not problems %}
+      <p class="cp-muted">No problems found for current filters.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

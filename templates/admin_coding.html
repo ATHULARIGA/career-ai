@@ -1,0 +1,85 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+<section class="ad-section">
+  <div class="ad-section-head">
+    <h2>Coding Management</h2>
+    <p>Question bank and submission insights.</p>
+  </div>
+  <div class="ad-grid-2">
+    <section class="ad-panel">
+      <h2>Add Coding Practice Question</h2>
+      <form class="ad-form" method="post" action="/admin/coding-problem/add">
+        <input name="title" placeholder="Question title" required>
+        <select name="difficulty">
+          <option>Easy</option>
+          <option>Medium</option>
+          <option>Hard</option>
+        </select>
+        <input name="tags" placeholder="Tags (comma-separated)">
+        <textarea name="description" rows="4" placeholder="Problem description" required></textarea>
+        <textarea name="constraints" rows="3" placeholder="Constraints (one per line)"></textarea>
+        <textarea name="examples" rows="3" placeholder="Examples as: input|||output (one per line, use \n for line breaks)"></textarea>
+        <textarea name="sample_tests" rows="3" placeholder="Sample tests (required): input|||expected (one per line)" required></textarea>
+        <textarea name="hidden_tests" rows="3" placeholder="Hidden tests: input|||expected (one per line)"></textarea>
+        <textarea name="starter_py" rows="4" placeholder="Python starter code"></textarea>
+        <textarea name="starter_js" rows="4" placeholder="JavaScript starter code"></textarea>
+        <textarea name="starter_java" rows="4" placeholder="Java starter code"></textarea>
+        <textarea name="starter_cpp" rows="4" placeholder="C++ starter code"></textarea>
+        <button type="submit" class="btn-primary">Add Question</button>
+      </form>
+    </section>
+
+    <section class="ad-panel">
+      <h2>Coding Submission Stats</h2>
+      <div class="ad-kv-row"><span>Total submissions</span><strong>{{ coding_stats.total_submissions }}</strong></div>
+      <div class="ad-mini-table">
+        <div class="ad-mini-head"><span>Problem</span><span>Runs</span><span>Accepted</span><span>Avg Runtime</span></div>
+        {% for s in coding_stats.by_problem %}
+        <div class="ad-mini-row">
+          <span>{{ s.problem_id }}</span>
+          <span>{{ s.total_runs }}</span>
+          <span>{{ s.accept_rate }}%</span>
+          <span>{{ s.avg_runtime_ms }} ms</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="ad-panel">
+    <h2>Edit / Delete Coding Problems</h2>
+    <div class="ad-list">
+      {% for p in custom_problems %}
+      <div class="ad-list-item ad-list-item-stack">
+        <strong>{{ p.title }} ({{ p.id }})</strong>
+        <form class="ad-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
+          <input name="title" value="{{ p.title }}" required>
+          <select name="difficulty">
+            <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
+            <option value="Medium" {% if p.difficulty == "Medium" %}selected{% endif %}>Medium</option>
+            <option value="Hard" {% if p.difficulty == "Hard" %}selected{% endif %}>Hard</option>
+          </select>
+          <input name="tags" value="{{ p.tags|join(', ') }}" placeholder="Tags">
+          <textarea name="description" rows="3" required>{{ p.description }}</textarea>
+          <textarea name="constraints" rows="2">{{ p.constraints|join('\n') }}</textarea>
+          <textarea name="examples" rows="2">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+          <textarea name="sample_tests" rows="2" required>{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+          <textarea name="hidden_tests" rows="2">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+          <textarea name="starter_py" rows="3">{{ p.starter_codes.python }}</textarea>
+          <textarea name="starter_js" rows="3">{{ p.starter_codes.javascript }}</textarea>
+          <textarea name="starter_java" rows="3">{{ p.starter_codes.java }}</textarea>
+          <textarea name="starter_cpp" rows="3">{{ p.starter_codes.cpp }}</textarea>
+          <div class="ad-inline-actions">
+            <button type="submit" class="btn-secondary">Save Changes</button>
+            <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="btn-primary">Delete</button>
+          </div>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% if not custom_problems %}
+    <p class="cp-muted">No custom coding problems added yet.</p>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

@@ -10,22 +10,32 @@
         <form action="/schedule" method="post" style="display: flex; flex-direction: column; gap: 20px;">
             <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Full Name</label>
-                <input name="name" placeholder="John Doe" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+                <input name="name" value="{{ prefill.name if prefill else '' }}" placeholder="John Doe" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
             </div>
             
             <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Email Address</label>
-                <input name="email" type="email" placeholder="john@example.com" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+                <input name="email" value="{{ prefill.email if prefill else '' }}" type="email" placeholder="john@example.com" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
             </div>
 
             <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Specialization</label>
                 <select name="topic" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 1rem;">
-                    <option>Python Developer</option>
-                    <option>Data Analyst (SQL)</option>
-                    <option>Frontend Engineer (React)</option>
-                    <option>Product Manager</option>
+                    <option {% if prefill and prefill.topic == "Python Developer" %}selected{% endif %}>Python Developer</option>
+                    <option {% if prefill and prefill.topic == "Data Analyst (SQL)" %}selected{% endif %}>Data Analyst (SQL)</option>
+                    <option {% if prefill and prefill.topic == "Frontend Engineer (React)" %}selected{% endif %}>Frontend Engineer (React)</option>
+                    <option {% if prefill and prefill.topic == "Product Manager" %}selected{% endif %}>Product Manager</option>
                 </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Target Outcome</label>
+                <input name="outcome" value="{{ prefill.outcome if prefill else '' }}" placeholder="Example: improve system design answers" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Context Notes (Optional)</label>
+                <textarea name="context_notes" rows="4" placeholder="Share your current challenge, interview stage, or portfolio context..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;"></textarea>
             </div>
 
             <div>
@@ -41,6 +51,20 @@
             <p style="margin: 0 0 12px 0; font-weight: 600; color: #4338ca;">Booking Confirmed!</p>
             <p style="margin: 0 0 16px 0; font-size: 0.875rem; color: #6366f1;">Your meeting link is ready:</p>
             <a href="{{link}}" target="_blank" style="display: inline-block; background: #4f46e5; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">Join Meeting</a>
+            {% if mentor_notified %}
+            <p style="margin: 12px 0 0 0; color: #334155; font-size: 0.9rem;">Mentor has been notified by email.</p>
+            {% else %}
+            <p style="margin: 12px 0 0 0; color: #334155; font-size: 0.9rem;">Assign mentor email for this meeting from Admin to send the brief.</p>
+            {% endif %}
+            {% if brief %}
+            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Auto-generated pre-session brief</p>
+                <pre style="white-space: pre-wrap; margin: 0; color: #334155; font-size: 0.85rem; font-family: inherit;">{{ brief }}</pre>
+            </div>
+            {% endif %}
+            {% if rebook_url %}
+            <a href="{{ rebook_url }}" style="display: inline-block; margin-top: 14px; background: #111827; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">Rebook same setup</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

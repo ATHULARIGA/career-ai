@@ -1,0 +1,68 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+<section class="ad-section">
+  <div class="ad-section-head">
+    <h2>Safety + Feedback</h2>
+    <p>Triage user reports and moderation events.</p>
+  </div>
+  <div class="ad-grid-2">
+    <section class="ad-panel">
+      <h2>Feedback + flag queue</h2>
+      <form class="ad-form" method="post" action="/admin/feedback">
+        <input name="source" placeholder="Source (interview/resume/roadmap)" required>
+        <select name="severity">
+          <option>low</option>
+          <option>medium</option>
+          <option>high</option>
+          <option>critical</option>
+        </select>
+        <textarea name="message" rows="3" placeholder="Issue details" required></textarea>
+        <button type="submit" class="btn-primary">Add Queue Item</button>
+      </form>
+
+      <div class="ad-list">
+        {% for f in admin.feedback_queue %}
+        <div class="ad-list-item ad-list-item-stack">
+          <div>
+            <strong>#{{ f[0] }} · {{ f[2] }}</strong>
+            <p>{{ f[4] }}</p>
+          </div>
+          <form method="post" action="/admin/feedback/{{ f[0] }}/status" class="ad-inline-form">
+            <select name="status">
+              <option value="open" {% if f[5] == "open" %}selected{% endif %}>open</option>
+              <option value="in_progress" {% if f[5] == "in_progress" %}selected{% endif %}>in_progress</option>
+              <option value="resolved" {% if f[5] == "resolved" %}selected{% endif %}>resolved</option>
+            </select>
+            <button type="submit" class="btn-secondary">Update</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="ad-panel">
+      <h2>Safety + moderation console</h2>
+      <form class="ad-form" method="post" action="/admin/safety/report">
+        <select name="level">
+          <option>low</option>
+          <option>medium</option>
+          <option>high</option>
+          <option>critical</option>
+        </select>
+        <input name="event_type" placeholder="Event type (prompt_abuse)" required>
+        <textarea name="payload" rows="3" placeholder="Payload / evidence"></textarea>
+        <button type="submit" class="btn-primary">Log Safety Event</button>
+      </form>
+
+      <div class="ad-list">
+        {% for s in admin.safety_events %}
+        <div class="ad-list-item ad-list-item-stack">
+          <strong>{{ s[2] }} · {{ s[3] }}</strong>
+          <p>{{ s[4] }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}

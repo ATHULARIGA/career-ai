@@ -2,8 +2,16 @@
 {% block content %}
 
 <div class="hero">
+    <div class="hero-orb orb-a"></div>
+    <div class="hero-orb orb-b"></div>
+    <div class="hero-orb orb-c"></div>
 
     <div class="badge">AI-Powered Career Prep</div>
+    {% if auth_notice %}
+    <div style="margin: 14px auto 0; max-width: 520px; background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 0.95rem;">
+        Please login or sign up to access that page.
+    </div>
+    {% endif %}
 
     <h1>
         Land your dream job <br>
@@ -20,8 +28,24 @@
         <a href="/interview" class="btn-secondary">View Demo</a>
     </div>
 
-    <div style="margin-top: 80px; position: relative; z-index: 1;">
-        <img src="/static/ai-analysis.png" alt="AI Analysis" style="max-width: 100%; height: auto; border-radius: 24px; box-shadow: 0 20px 50px rgba(79, 70, 229, 0.2);">
+    <div style="margin-top: 70px; position: relative; z-index: 1; max-width: 940px; margin-left: auto; margin-right: auto;">
+        <div style="background: linear-gradient(140deg, #ffffff 0%, #eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(79, 70, 229, 0.10); text-align: left;">
+            <p style="margin: 0 0 12px; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7280; font-family: 'IBM Plex Mono', monospace;">Live Career Snapshot</p>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
+                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Resume Health</p>
+                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">89%</strong>
+                </div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
+                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Interview Readiness</p>
+                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">74%</strong>
+                </div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
+                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Action Items</p>
+                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">6</strong>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- FLOATING RESUME SCORE -->
@@ -54,8 +78,25 @@
 
 </div>
 
+<div class="skill-ticker" aria-hidden="true">
+    <div class="skill-track">
+        <span>Resume Optimization</span>
+        <span>ATS Alignment</span>
+        <span>Mock Interviews</span>
+        <span>Career Roadmapping</span>
+        <span>Mentor Sessions</span>
+        <span>Portfolio Positioning</span>
+        <span>Salary Storytelling</span>
+        <span>Behavioral Prep</span>
+        <span>Resume Optimization</span>
+        <span>ATS Alignment</span>
+        <span>Mock Interviews</span>
+        <span>Career Roadmapping</span>
+    </div>
+</div>
+
 <!-- INTERACTIVE TOOLS SECTION -->
-<div style="padding: 100px 40px; background: white;">
+<div class="reveal-on-scroll" style="padding: 100px 40px; background: white;">
     <div style="text-align: center; max-width: 800px; margin: 0 auto 60px;">
         <div class="badge">Interactive Tools</div>
         <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-top: 16px;">Try a mini AI session</h2>
@@ -113,7 +154,7 @@
 </div>
 
 <!-- FEATURE CARDS -->
-<div class="features">
+<div class="features reveal-on-scroll">
     <div class="feature-card">
         <div class="feature-icon blue">📄</div>
         <h3>Resume Analysis</h3>
@@ -132,7 +173,7 @@
 </div>
 
 <!-- TESTIMONIALS -->
-<div class="testimonials">
+<div class="testimonials reveal-on-scroll">
     <div class="badge">Success Stories</div>
     <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin: 16px 0 48px;">Trusted by candidates at top companies</h2>
     <div class="testimonial-grid">
@@ -160,7 +201,7 @@
 </div>
 
 <!-- MARKET TRENDS WIDGET -->
-<div style="padding: 60px 40px; background: #0f172a; color: white;">
+<div class="reveal-on-scroll" style="padding: 60px 40px; background: #0f172a; color: white;">
     <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap;">
         <div>
             <h2 style="font-size: 2rem; font-weight: 800; margin: 0;">2026 Job Market Pulse</h2>
@@ -187,7 +228,7 @@
 </div>
 
 <!-- FAQ SECTION -->
-<div class="faq-section">
+<div class="faq-section reveal-on-scroll">
     <div class="badge">FAQ</div>
     <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin: 16px 0 48px; text-align: center;">Frequently Asked Questions</h2>
     
@@ -208,7 +249,7 @@
 </div>
 
 <!-- NEWSLETTER -->
-<div class="newsletter">
+<div class="newsletter reveal-on-scroll">
     <div class="badge">Newsletter</div>
     <h2>Get career tips in your inbox</h2>
     <p style="color: #64748b; margin-bottom: 24px;">Join 10,000+ job seekers receiving weekly AI-powered career advice.</p>
@@ -219,7 +260,7 @@
 </div>
 
 <!-- CTA SECTION -->
-<div class="cta-section">
+<div class="cta-section reveal-on-scroll">
     <h2>Ready to elevate your career?</h2>
     <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">Join thousands of job seekers using ResuMate to land their dream roles.</p>
     <div class="buttons">
@@ -236,5 +277,21 @@
     </div>
     <p style="color: #94a3b8; font-size: 0.875rem;">&copy; 2026 ResuMate AI. All rights reserved.</p>
 </footer>
+
+<script>
+(() => {
+  const items = document.querySelectorAll(".reveal-on-scroll");
+  if (!("IntersectionObserver" in window)) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  items.forEach((item) => observer.observe(item));
+})();
+</script>
 
 {% endblock %}

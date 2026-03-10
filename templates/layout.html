@@ -6,7 +6,7 @@
     <title>ResuMate | AI Career Coach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 
@@ -21,14 +21,58 @@
     <div class="nav-links">
         <a href="/resume">Resume Review</a>
         <a href="/interview">Mock Interview</a>
+        <a href="/coding/problems">Coding Practice</a>
         <a href="/career-map">Career Roadmap</a>
         <a href="/book-call">Mentorship</a>
-        <a href="/admin">Dashboard</a>
+        {% if request.session.get("admin") %}
+        <a href="/admin">Admin</a>
+        {% endif %}
+        {% if request.session.get("user_id") %}
+        <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
+        <a href="/logout">Logout</a>
+        {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup">Sign up</a>
+        {% endif %}
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+            Dark
+        </button>
     </div>
 </nav>
 
 {% block content %}
 {% endblock %}
 
+<script>
+(function() {
+  const root = document.documentElement;
+  const key = "resumate-theme";
+  const saved = localStorage.getItem(key);
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const initialTheme = saved || (prefersDark ? "dark" : "light");
+
+  function applyTheme(theme) {
+    if (theme === "dark") {
+      root.classList.add("theme-dark");
+    } else {
+      root.classList.remove("theme-dark");
+    }
+    const btn = document.getElementById("themeToggle");
+    if (btn) btn.textContent = theme === "dark" ? "Light" : "Dark";
+  }
+
+  applyTheme(initialTheme);
+
+  window.addEventListener("DOMContentLoaded", function() {
+    const btn = document.getElementById("themeToggle");
+    if (!btn) return;
+    btn.addEventListener("click", function() {
+      const next = root.classList.contains("theme-dark") ? "light" : "dark";
+      localStorage.setItem(key, next);
+      applyTheme(next);
+    });
+  });
+})();
+</script>
 </body>
 </html>

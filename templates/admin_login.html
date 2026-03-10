@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="al-page">
+  <div class="al-card">
+    <p class="al-eyebrow">Admin Access</p>
+    <h1>Sign in to command center</h1>
+    {% if error %}
+    <p class="al-error">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/admin-login" class="al-form">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="admin" required>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+      <button type="submit" class="btn-primary">Login</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

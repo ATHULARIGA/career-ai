@@ -1,33 +1,40 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<section class="career-section">
-    <div class="career-container">
-        <h1 class="career-title">AI Career Roadmap</h1>
-        <p class="career-subtitle">
-            Generate a structured learning roadmap tailored to your target role.
-        </p>
+<section class="cp-page career-page">
+    <div class="cp-container career-container">
+        <div class="career-top">
+            <header class="cp-header career-header">
+                <div>
+                    <p class="cp-eyebrow">Career Roadmap</p>
+                    <h1 class="career-title">AI Career Roadmap</h1>
+                    <p class="career-subtitle">Generate a structured learning roadmap tailored to your target role.</p>
+                </div>
+            </header>
 
-        <div class="career-input">
-            <input type="text" id="roleInput" placeholder="Enter Career Role (e.g. Data Scientist)">
-            <button id="generateBtn" onclick="generateMindmap()">Generate</button>
+            <section class="cp-panel career-toolbar">
+                <div class="career-input">
+                    <input type="text" id="roleInput" placeholder="Enter Career Role (e.g. Data Scientist)">
+                    <button id="generateBtn" onclick="generateMindmap()">Generate Roadmap</button>
+                </div>
+                <div id="mindmap-status"></div>
+            </section>
         </div>
 
-        <div id="mindmap-status"></div>
-        <div id="mindmap"></div>
+        <section class="cp-panel career-canvas">
+            <div id="mindmap"></div>
+        </section>
         
-        <!-- Skill Detail Panel -->
-        <div id="skill-panel" style="display:none; margin-top: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: left;">
-            <h3 id="panel-title" style="margin-top:0; color: #4f46e5;">Skill Details</h3>
-            <div id="panel-content" style="color: #475569; line-height: 1.6;">
+        <section id="skill-panel" class="cp-panel skill-panel" style="display:none;">
+            <h3 id="panel-title">Skill Details</h3>
+            <div id="panel-content">
                 Click a skill to see more information.
             </div>
-            <div id="panel-resources" style="margin-top: 15px;">
-                <h4 style="margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">Learning Resources</h4>
-                <ul id="resource-list" style="padding-left: 20px; margin: 0;">
-                </ul>
+            <div id="panel-resources">
+                <h4>Learning Resources</h4>
+                <ul id="resource-list"></ul>
             </div>
-        </div>
+        </section>
     </div>
 </section>
 
@@ -43,13 +50,15 @@ async function generateMindmap() {
     const role = roleInput.value.trim();
 
     if (!role) {
-        status.innerHTML = "Please enter a career role.";
+        status.className = "status-error";
+        status.textContent = "Please enter a career role.";
         return;
     }
 
     button.disabled = true;
     button.innerText = "Generating...";
-    status.innerHTML = "AI is building your roadmap...";
+    status.className = "status-loading";
+    status.textContent = "AI is building your roadmap...";
     document.getElementById("mindmap").innerHTML = "";
     document.getElementById("skill-panel").style.display = "none";
 
@@ -81,9 +90,11 @@ async function generateMindmap() {
         assignIds(data);
         
         renderGraph(data);
-        status.innerHTML = "Roadmap generated successfully.";
+        status.className = "status-success";
+        status.textContent = "Roadmap generated successfully.";
     } catch (error) {
-        status.innerHTML = "Something went wrong.";
+        status.className = "status-error";
+        status.textContent = "Something went wrong.";
         console.error(error);
     } finally {
         button.disabled = false;
@@ -92,6 +103,7 @@ async function generateMindmap() {
 }
 
 function renderGraph(data) {
+    const skillCache = {};
     document.getElementById("mindmap").innerHTML = "";
 
     const width = document.getElementById("mindmap").clientWidth || 800;
@@ -142,10 +154,30 @@ function renderGraph(data) {
         }))
         .force("charge", d3.forceManyBody().strength(-1000))
         .force("center", d3.forceCenter(width/2, height/2))
-        .force("collision", d3.forceCollide().radius(80));
+        .force("collision", d3.forceCollide().radius(80))
+        .force("boundary", forceBoundary());
 
     const linkGroup = g.append("g");
     const nodeGroup = g.append("g");
+    function forceBoundary(){
+
+        const padding = 40;
+
+        return function(){
+
+            nodes.forEach(node => {
+
+                if(node.x < padding) node.x = padding;
+                if(node.x > width - padding) node.x = width - padding;
+
+                if(node.y < padding) node.y = padding;
+                if(node.y > height - padding) node.y = height - padding;
+
+            });
+
+        }
+
+    }
 
     function update() {
         nodes = [];
@@ -159,11 +191,13 @@ function renderGraph(data) {
         link.exit().remove();
         
         const linkEnter = link.enter()
-            .append("line")
-            .attr("stroke", "#94a3b8")
-            .attr("stroke-width", 2)
-            .attr("stroke-opacity", 0.6);
+        .append("line")
+        .attr("stroke", "#e5e7eb")
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.6)
+        .style("transition","all 0.25s ease");
 
+        link.merge(linkEnter);
         // Update Nodes
         const node = nodeGroup.selectAll(".node")
             .data(nodes, d => d.id);
@@ -176,18 +210,56 @@ function renderGraph(data) {
             .on("click", (event, d) => {
                 if (event.defaultPrevented) return;
                 toggleNode(event, d);
-                showSkillInfo(d);
+
+                if(!d.children && !d._children){
+                    showSkillInfo(d)
+                }
             })
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended));
+        
 
         nodeEnter.append("circle")
             .attr("r", d => d.depth === 0 ? 35 : 18)
             .attr("stroke", "#fff")
             .attr("stroke-width", 2)
             .style("cursor", "pointer");
+        
+        nodeEnter.select("circle")
+        .on("mouseover", function(event,d){
+
+            linkGroup.selectAll("line")
+                .attr("stroke","#cbd5e1")
+
+            linkGroup.selectAll("line")
+                .filter(l => l.source.id === d.id || l.target.id === d.id)
+                .attr("stroke","#e5e7eb")
+                .attr("stroke-width",3)
+
+            d3.select(this)
+                .transition()
+                .duration(180)
+                .attr("r", d.depth === 0 ? 40 : 22)
+                .attr("stroke","#e5e7eb")
+                .attr("stroke-width",4)
+
+        })
+        .on("mouseout", function(event,d){
+
+            linkGroup.selectAll("line")
+                .attr("stroke","#ced4de")
+                .attr("stroke-width",2)
+
+            d3.select(this)
+                .transition()
+                .duration(180)
+                .attr("r", d.depth === 0 ? 35 : 18)
+                .attr("stroke","#fff")
+                .attr("stroke-width",2)
+
+        })
 
         nodeEnter.append("text")
             .attr("dy", d => d.depth === 0 ? 55 : 35)
@@ -199,7 +271,13 @@ function renderGraph(data) {
         const nodeCombined = nodeEnter.merge(node);
         
         nodeCombined.select("circle")
-            .attr("fill", d => d.depth === 0 ? "#4f46e5" : (d._children ? "#f59e0b" : "#6366f1"));
+        .attr("fill", d => {
+
+            if(d.depth === 0) return "#1f2937";   // root (dark but softer)
+            if(d._children) return "#6b7280";     // expandable nodes (medium grey)
+            return "#d1d5db";                     // leaf nodes (light grey)
+
+        })
 
         nodeCombined.select("text")
             .text(d => d.name)
@@ -215,7 +293,7 @@ function renderGraph(data) {
 
         simulation.nodes(nodes);
         simulation.force("link").links(links);
-        simulation.alpha(0.5).restart();
+        simulation.alpha(0.4).alphaDecay(0.02).restart();
     }
 
     simulation.on("tick", () => {
@@ -243,6 +321,7 @@ function renderGraph(data) {
     }
 
     async function showSkillInfo(d) {
+
         const panel = document.getElementById("skill-panel");
         const title = document.getElementById("panel-title");
         const content = document.getElementById("panel-content");
@@ -250,25 +329,49 @@ function renderGraph(data) {
 
         panel.style.display = "block";
         title.innerText = d.name;
-        content.innerText = "Loading details...";
         resList.innerHTML = "";
 
-        try {
-            const resp = await fetch("/skill-info", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `skill=${encodeURIComponent(d.name)}`
-            });
-            const info = await resp.json();
+        // 🚀 Use cached result if available
+        if(skillCache[d.name]){
+            const info = skillCache[d.name];
             content.innerText = info.description;
-            
+
             info.resources.forEach(res => {
                 const li = document.createElement("li");
-                li.innerHTML = `<a href="${res.url}" target="_blank" style="color: #4f46e5; text-decoration: none;">${res.label}</a>`;
+                li.innerHTML = `<a href="${res.url}" target="_blank" class="skill-link">${res.label}</a>`;
                 resList.appendChild(li);
             });
-        } catch (e) {
+
+            return;
+        }
+
+        content.innerText = "Loading details...";
+
+        try {
+
+            const resp = await fetch("/skill-info",{
+                method:"POST",
+                headers:{"Content-Type":"application/x-www-form-urlencoded"},
+                body:`skill=${encodeURIComponent(d.name)}`
+            });
+
+            const info = await resp.json();
+
+            // cache result
+            skillCache[d.name] = info;
+
+            content.innerText = info.description;
+
+            info.resources.forEach(res=>{
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="${res.url}" target="_blank" class="skill-link">${res.label}</a>`;
+                resList.appendChild(li);
+            });
+
+        } catch(e){
+
             content.innerText = "Failed to load skill details.";
+
         }
     }
 

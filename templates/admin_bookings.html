@@ -1,0 +1,67 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+<section class="ad-section">
+  <div class="ad-section-head">
+    <h2>Bookings</h2>
+    <p>User journey replay and mentor assignment operations.</p>
+  </div>
+  <section class="ad-panel">
+    <input type="text" id="searchInput" class="ad-search" placeholder="Search by name/email/topic" onkeyup="searchTable()">
+    <div class="ad-table-wrap">
+      <table id="bookingTable" class="ad-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Topic</th>
+            <th>Date/Time</th>
+            <th>Journey</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in data %}
+          <tr>
+            <td>{{ d[1] }}</td>
+            <td>{{ d[2] }}</td>
+            <td>{{ d[3] }}</td>
+            <td>{{ d[4] }}</td>
+            <td><span class="ad-pill">Resume -> Interview -> Booking</span></td>
+            <td>
+              <a href="{{ d[5] }}" target="_blank">Join</a>
+              <button onclick="copyLink('{{ d[5] }}')">Copy</button>
+              <form method="post" action="/admin/booking/{{ d[0] }}/assign-mentor" class="ad-mentor-form">
+                <input
+                  type="email"
+                  name="mentor_email"
+                  value="{{ d[9] if d|length > 9 and d[9] else '' }}"
+                  placeholder="mentor@email.com"
+                  class="ad-mentor-input"
+                  required
+                >
+                <button type="submit">Assign Mentor</button>
+              </form>
+              <a href="/admin-delete/{{ d[0] }}">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<script>
+function searchTable() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const rows = document.querySelectorAll("#bookingTable tbody tr");
+  rows.forEach((row) => {
+    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+  });
+}
+
+function copyLink(link) {
+  navigator.clipboard.writeText(link);
+}
+</script>
+{% endblock %}
