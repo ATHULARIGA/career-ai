@@ -2,23 +2,35 @@
 {% block content %}
 <section class="cp-page">
   <div class="cp-container">
-    <header class="cp-header">
-      <div>
+    <header class="cp-header cp-header-main">
+      <div class="cp-header-copy">
         <p class="cp-eyebrow">Coding Practice</p>
         <h1>Problem List</h1>
-        <p>Search problems and filter by difficulty.</p>
+        <p class="cp-header-description">Pick a problem, choose your language, and start solving with interview-style feedback.</p>
       </div>
       <a class="btn-primary" href="/coding">Open Workspace</a>
     </header>
 
-    <section class="cp-panel">
+    <section class="cp-panel cp-panel-compact">
+      <div class="cp-panel-head">
+        <h2>Find Problems Faster</h2>
+        {% if query or (difficulty and difficulty != "All") or company %}
+        <a class="cp-inline-link" href="/coding/problems">Clear filters</a>
+        {% endif %}
+      </div>
       <form method="get" action="/coding/problems" class="cp-list-filters">
-        <input type="text" name="q" placeholder="Search problems or tags..." value="{{ query }}">
-        <select name="difficulty">
+        <input type="text" name="q" placeholder="Search by title, description, or tags..." value="{{ query }}">
+        <select name="difficulty" aria-label="Filter by difficulty">
           <option value="All" {% if difficulty == "All" %}selected{% endif %}>All</option>
           <option value="Easy" {% if difficulty == "Easy" %}selected{% endif %}>Easy</option>
           <option value="Medium" {% if difficulty == "Medium" %}selected{% endif %}>Medium</option>
           <option value="Hard" {% if difficulty == "Hard" %}selected{% endif %}>Hard</option>
+        </select>
+        <select name="company" aria-label="Filter by question set">
+          <option value="" {% if not company %}selected{% endif %}>All Sets</option>
+          {% for cname, _ids in company_sets.items() %}
+          <option value="{{ cname }}" {% if company == cname %}selected{% endif %}>{{ cname }} Set</option>
+          {% endfor %}
         </select>
         <button type="submit" class="btn-secondary">Apply</button>
       </form>
@@ -26,22 +38,24 @@
 
     <section class="cp-panel">
       <div class="cp-list-head">
-        <p>{{ problems|length }} problems</p>
+        <p>{{ problems|length }} problem{{ "" if (problems|length) == 1 else "s" }}</p>
       </div>
       <div class="cp-problem-list">
         {% for p in problems %}
         <article class="cp-problem-row">
-          <div>
+          <div class="cp-problem-main">
             <h3>{{ p.title }}</h3>
             <p>{{ p.description[:170] }}{% if p.description|length > 170 %}...{% endif %}</p>
             <div class="cp-tags">
-              <span>{{ p.difficulty }}</span>
+              <span class="cp-chip cp-chip-difficulty cp-difficulty-{{ (p.difficulty or 'medium')|lower }}">{{ p.difficulty }}</span>
               {% for t in p.tags %}
-              <span>{{ t }}</span>
+              <span class="cp-chip">{{ t }}</span>
               {% endfor %}
             </div>
           </div>
-          <a class="btn-primary" href="/coding?problem={{ p.id }}">Solve</a>
+          <div class="cp-problem-actions">
+            <a class="btn-primary" href="/coding?problem={{ p.id }}">Solve</a>
+          </div>
         </article>
         {% endfor %}
       </div>

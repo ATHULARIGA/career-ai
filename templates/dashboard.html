@@ -18,9 +18,36 @@
             </div>
             <div class="rd-actions">
                 <a href="/resume" class="btn-secondary">New Review</a>
+                {% if (user_plan or "free") == "premium" %}
+                <a href="/resume/export?format=json" class="btn-secondary">Export JSON</a>
+                <a href="/resume/export?format=txt" class="btn-secondary">Export TXT</a>
+                {% else %}
+                <a href="/pricing?status=premium-required" class="btn-secondary">Export JSON (Premium)</a>
+                <a href="/pricing?status=premium-required" class="btn-secondary">Export TXT (Premium)</a>
+                {% endif %}
                 <a href="/interview" class="btn-primary">Mock Interview</a>
             </div>
         </header>
+
+        {% if progress %}
+        <section class="rd-panel" style="margin-bottom:14px;">
+            <h2>Progress Snapshot (Last 7 days)</h2>
+            <div class="rd-delta-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+                <div><p>Resume runs</p><strong>{{ progress.resume_runs_7d }}</strong></div>
+                <div><p>Resume avg</p><strong>{{ progress.resume_avg_7d }}/10</strong></div>
+                <div><p>Coding subs</p><strong>{{ progress.coding_submissions_7d }}</strong></div>
+                <div><p>Accept rate</p><strong>{{ progress.coding_accept_rate_7d }}%</strong></div>
+            </div>
+            <div style="margin-top:10px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:10px;padding:10px 12px;">
+                <p style="margin:0;color:#3730a3;font-size:0.85rem;">Next best action (10 min)</p>
+                <p style="margin:4px 0 0;font-weight:600;">{{ progress.next_action }}</p>
+                <p style="margin:6px 0 0;color:#475569;font-size:0.85rem;">
+                    Streak: <strong>{{ progress.current_streak_days }} day{{ '' if progress.current_streak_days == 1 else 's' }}</strong>
+                    · Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
+                </p>
+            </div>
+        </section>
+        {% endif %}
 
         {% if report.error %}
         <section class="rd-panel rd-error">
@@ -58,6 +85,21 @@
                 <div><p>Overall</p><strong>{{ "%+.1f"|format(report.version_diff.overall_delta) }}</strong></div>
                 <div><p>ATS</p><strong>{{ "%+.1f"|format(report.version_diff.ats_delta) }}</strong></div>
                 <div><p>Keyword Coverage</p><strong>{{ "%+.1f"|format(report.version_diff.keyword_coverage_delta) }}%</strong></div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if resume_versions %}
+        <section class="rd-panel">
+            <h2>Recent Resume Runs</h2>
+            <div class="rd-link-grid">
+                {% for v in resume_versions|reverse %}
+                <article class="rd-link">
+                    <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
+                    <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
+                    <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
+                </article>
+                {% endfor %}
             </div>
         </section>
         {% endif %}

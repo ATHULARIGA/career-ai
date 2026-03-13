@@ -5,6 +5,11 @@
     <h2>Coding Management</h2>
     <p>Question bank and submission insights.</p>
   </div>
+  {% if import_status %}
+  <p style="margin:0 0 12px;color:#065f46;background:#ecfdf5;border:1px solid #86efac;border-radius:10px;padding:8px 10px;">
+    Import result: {{ import_status }}
+  </p>
+  {% endif %}
   <div class="ad-grid-2">
     <section class="ad-panel">
       <h2>Add Coding Practice Question</h2>
@@ -43,6 +48,43 @@
         </div>
         {% endfor %}
       </div>
+      {% if coding_stats.by_language %}
+      <h3 style="margin-top:12px;">By Language</h3>
+      <div class="ad-mini-table">
+        <div class="ad-mini-head"><span>Language</span><span>Runs</span><span>Accept Rate</span><span></span></div>
+        {% for s in coding_stats.by_language %}
+        <div class="ad-mini-row">
+          <span>{{ s.language }}</span>
+          <span>{{ s.total_runs }}</span>
+          <span>{{ s.accept_rate }}%</span>
+          <span></span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if coding_stats.by_difficulty %}
+      <h3 style="margin-top:12px;">By Difficulty</h3>
+      <div class="ad-mini-table">
+        <div class="ad-mini-head"><span>Difficulty</span><span>Runs</span><span>Accept Rate</span><span></span></div>
+        {% for s in coding_stats.by_difficulty %}
+        <div class="ad-mini-row">
+          <span>{{ s.difficulty }}</span>
+          <span>{{ s.total_runs }}</span>
+          <span>{{ s.accept_rate }}%</span>
+          <span></span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <h3 style="margin-top:12px;">Bulk Operations</h3>
+      <div class="ad-inline-actions">
+        <a class="btn-secondary" href="/admin/coding/export?format=json">Export JSON</a>
+        <a class="btn-secondary" href="/admin/coding/export?format=csv">Export CSV</a>
+      </div>
+      <form class="ad-form" method="post" action="/admin/coding/import" enctype="multipart/form-data" style="margin-top:10px;">
+        <input type="file" name="file" accept=".json,application/json" required>
+        <button type="submit" class="btn-primary">Import JSON</button>
+      </form>
     </section>
   </div>
 
@@ -52,6 +94,12 @@
       {% for p in custom_problems %}
       <div class="ad-list-item ad-list-item-stack">
         <strong>{{ p.title }} ({{ p.id }})</strong>
+        {% if p.coverage %}
+        <p class="cp-muted">
+          Coverage score: {{ p.coverage.coverage_score }} · Sample: {{ p.coverage.sample_tests }} · Hidden: {{ p.coverage.hidden_tests }}
+          · Ready: {{ "Yes" if p.coverage.ready_to_publish else "No" }}
+        </p>
+        {% endif %}
         <form class="ad-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
           <input name="title" value="{{ p.title }}" required>
           <select name="difficulty">
@@ -79,6 +127,35 @@
     </div>
     {% if not custom_problems %}
     <p class="cp-muted">No custom coding problems added yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="ad-panel">
+    <h2>Similarity / Plagiarism Signals</h2>
+    <p class="cp-muted">Auto-detected near-identical submission fingerprints for manual review.</p>
+    {% if plagiarism_alerts %}
+    <div class="ad-mini-table">
+      <div class="ad-mini-head"><span>Problem</span><span>Hash</span><span>Rows</span><span>Users</span></div>
+      {% for a in plagiarism_alerts %}
+      <div class="ad-mini-row">
+        <span>{{ a.problem_id }}</span>
+        <span>{{ a.code_hash }}</span>
+        <span>{{ a.total_rows }}</span>
+        <span>{{ a.user_count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% for a in plagiarism_alerts[:6] %}
+    <div class="cp-case bad" style="margin-top:10px;">
+      <p><strong>{{ a.problem_id }}</strong> · fingerprint {{ a.code_hash }}</p>
+      {% for s in a.samples %}
+      <p class="cp-muted">{{ s.user_email }}</p>
+      <pre>{{ s.code_preview }}</pre>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="cp-muted">No suspicious duplicate fingerprints detected.</p>
     {% endif %}
   </section>
 </section>

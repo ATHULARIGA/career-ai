@@ -1,30 +1,50 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="cp-page">
+<section class="cp-page cp-ide-page">
   <div class="cp-container">
-    <header class="cp-header">
-      <div>
+    <header class="cp-header cp-header-main">
+      <div class="cp-header-copy">
         <p class="cp-eyebrow">Coding Practice</p>
         <h1>{{ problem.title }}</h1>
-        <p>{{ problem.description }}</p>
+        <p class="cp-header-description">{{ problem.description }}</p>
         <div class="cp-hero-meta">
-          <span>{{ problem.difficulty }}</span>
+          <span class="cp-chip cp-chip-difficulty cp-difficulty-{{ (problem.difficulty or 'medium')|lower }}">{{ problem.difficulty }}</span>
           {% if problem.acceptance_rate %}
-          <span>{{ "%.1f"|format(problem.acceptance_rate) }}% acceptance</span>
+          <span class="cp-chip">{{ "%.1f"|format(problem.acceptance_rate) }}% acceptance</span>
           {% endif %}
-          <span>{{ language|upper }}</span>
+          <span class="cp-chip">{{ language|upper }}</span>
+          <span class="cp-chip">{{ problem.tags|length }} topic{{ "" if (problem.tags|length) == 1 else "s" }}</span>
         </div>
       </div>
       <div class="cp-summary">
-        <span>Solved: <strong>{{ solved_count }}/{{ problems|length }}</strong></span>
+        <div class="cp-summary-kpis">
+          <span>Solved: <strong>{{ solved_count }}/{{ problems|length }}</strong></span>
+          <span>Streak: <strong>{{ daily_goal.streak_days if daily_goal else 0 }}d</strong></span>
+          <span>Accepted today: <strong>{{ daily_goal.accepted_today if daily_goal else 0 }}</strong></span>
+          <span>Accept rate: <strong>{{ user_submission_summary.accept_rate }}%</strong></span>
+        </div>
         <a class="btn-secondary" href="/coding/problems">Problem List</a>
       </div>
     </header>
 
-    <div class="cp-shell">
-      <aside class="cp-sidebar">
-        <div class="cp-panel">
-          <h2>Problems</h2>
+    <div class="cp-replit-shell">
+      <aside class="cp-explorer cp-panel">
+        <div class="cp-panel-head">
+          <h2>Explorer</h2>
+          <a href="/coding/problems" class="cp-inline-link">Browse</a>
+        </div>
+
+        <div class="cp-explorer-block">
+          <p class="cp-eyebrow">Workspace</p>
+          <ul class="cp-file-tree" id="fileTree">
+            <li class="active" data-file-kind="code"><button type="button"><span id="activeFileName">main.py</span></button></li>
+            <li data-file-kind="input"><button type="button">input.txt</button></li>
+            <li data-file-kind="notes"><button type="button">notes.md</button></li>
+          </ul>
+        </div>
+
+        <div class="cp-explorer-block">
+          <p class="cp-eyebrow">Problem</p>
           <form method="get" action="/coding" class="cp-problem-select">
             <select id="problem" name="problem" onchange="this.form.submit()">
               {% for p in problems %}
@@ -34,42 +54,41 @@
               {% endfor %}
             </select>
           </form>
+        </div>
+
+        <div class="cp-explorer-block">
+          <p class="cp-eyebrow">Tags</p>
           <div class="cp-tags">
             {% for t in problem.tags %}
-            <span>{{ t }}</span>
+            <span class="cp-chip">{{ t }}</span>
             {% endfor %}
           </div>
         </div>
 
-        <div class="cp-panel">
-          <h2>Testcases</h2>
-          <div class="cp-tab-buttons">
-            <button type="button" class="cp-tab-btn active" data-tab="sample-tab">Sample</button>
-            <button type="button" class="cp-tab-btn" data-tab="hidden-tab">Hidden</button>
-          </div>
-          <div id="sample-tab" class="cp-tab-panel active">
-            {% for t in problem.sample_tests %}
-            <article class="cp-sample-item">
-              <p><strong>Input</strong></p>
-              <pre>{{ t.input }}</pre>
-              <p><strong>Expected</strong></p>
-              <pre>{{ t.expected }}</pre>
-            </article>
-            {% endfor %}
-          </div>
-          <div id="hidden-tab" class="cp-tab-panel">
-            <p class="cp-muted">{{ problem.hidden_tests|length }} hidden testcases used during submit.</p>
+        <div class="cp-explorer-block">
+          <p class="cp-eyebrow">Session Stats</p>
+          <div class="cp-result-meta">
+            <span>Submissions: <strong>{{ user_submission_summary.total }}</strong></span>
+            <span>Accepted: <strong>{{ user_submission_summary.accepted }}</strong></span>
+            <span>Avg runtime: <strong>{{ user_submission_summary.avg_runtime_ms }} ms</strong></span>
           </div>
         </div>
       </aside>
 
-      <main class="cp-main">
-        <section class="cp-panel">
-          <h2>Editor</h2>
-          <form id="editorForm" method="post" action="/coding/run">
-            <input type="hidden" name="problem_id" value="{{ selected_problem_id }}">
-            <input type="hidden" name="code" id="codeField" value="{{ code|e }}">
-            <div class="cp-editor-toolbar">
+      <main class="cp-ide-stage">
+        <form id="editorForm" method="post" action="/coding/run" class="cp-ide-form">
+          <input type="hidden" name="problem_id" value="{{ selected_problem_id }}">
+          <input type="hidden" name="code" id="codeField" value="{{ code|e }}">
+          <input type="hidden" name="idem_key" id="idemKeyField" value="{{ submit_idem_key }}">
+          <input type="hidden" name="level" id="hintLevelField" value="{{ ((hint_result.level|int + 1) if hint_result else 1) }}">
+
+          {% if premium_notice %}
+          <p class="al-error cp-alert-inline">{{ premium_notice }} <a href="/pricing">Upgrade</a></p>
+          {% endif %}
+
+          <div class="cp-ide-toolbar">
+            <div class="cp-ide-toolbar-left">
+              <span class="cp-active-file-tab"><span class="cp-file-dot"></span><span id="activeFileTabName">main.py</span></span>
               <label for="language">Language</label>
               <select id="language" name="language" class="cp-language-select">
                 <option value="python" {% if language == "python" %}selected{% endif %}>Python</option>
@@ -77,45 +96,354 @@
                 <option value="cpp" {% if language == "cpp" %}selected{% endif %}>C++</option>
                 <option value="javascript" {% if language == "javascript" %}selected{% endif %}>JavaScript</option>
               </select>
-              <button type="button" id="resetBtn" class="btn-secondary">Reset Code</button>
-              <span class="cp-shortcuts">Ctrl/Cmd+Enter: Run · Ctrl/Cmd+Shift+Enter: Submit</span>
+              <label for="timed_mode">Timed mode</label>
+              <select id="timed_mode" name="timed_mode" class="cp-language-select">
+                <option value="" {% if not timed_mode %}selected{% endif %}>Off</option>
+                <option value="35" {% if timed_mode == "35" %}selected{% endif %}>35 min interview</option>
+                <option value="45" {% if timed_mode == "45" %}selected{% endif %}>45 min</option>
+              </select>
+              {% if timed_state.enabled %}
+              <span id="timedStatus" class="cp-badge-good">{{ "Expired" if timed_state.expired else "Live" }} · {{ timed_state.duration_min }}m</span>
+              <span id="timedCountdown" class="cp-muted-mono" data-remaining="{{ timed_state.remaining_sec }}">--:--</span>
+              {% endif %}
             </div>
-            <div id="editorCode" class="cp-ace"></div>
-            <label class="cp-inline-label" for="custom_input">Custom Input (Run only)</label>
-            <textarea id="custom_input" name="custom_input" rows="4" class="cp-custom-input" spellcheck="false">{{ last_custom_input }}</textarea>
-            <div class="cp-actions">
-              <button id="runBtn" type="button" class="btn-secondary">Run Code</button>
-              <button id="submitBtn" type="button" class="btn-primary">Submit Code</button>
+            <div class="cp-ide-toolbar-right">
+              {% if timed_state.enabled %}
+              <button type="submit" formaction="/coding/timed/reset" formmethod="post" class="btn-secondary">Reset Timed</button>
+              {% endif %}
+              <button type="button" id="resetBtn" class="btn-secondary">Reset</button>
+              <button id="runBtn" type="button" class="btn-secondary">Run</button>
+              <button id="hintBtn" type="button" class="btn-secondary" {% if timed_state.enabled and not timed_state.expired %}disabled title="Disabled in timed mode"{% endif %}>Hint</button>
+              <button id="interviewerBtn" type="button" class="btn-secondary">Interviewer</button>
+              <button id="submitBtn" type="button" class="btn-primary" {% if timed_state.enabled and timed_state.submitted %}disabled title="Already submitted in timed mode"{% endif %}>
+                Submit{% if timed_state.enabled and timed_state.submitted %} (Used){% endif %}
+              </button>
             </div>
-          </form>
-        </section>
+          </div>
 
-        {% if result %}
-        <section class="cp-panel">
-          <h2>Result</h2>
-          <div class="cp-result-meta">
-            <span>Status: <strong>{{ result.status }}</strong></span>
-            <span>Score: <strong>{{ result.passed }}/{{ result.total }}</strong></span>
-            <span>Runtime: <strong>{{ result.runtime_ms }} ms</strong></span>
-            <span>Language: <strong>{{ (result.language or language)|upper }}</strong></span>
+          <div class="cp-ide-columns">
+            <section class="cp-panel cp-problem-card cp-tab-scope">
+              <div class="cp-panel-head">
+                <h2>Problem</h2>
+                <p class="cp-panel-subtext">Understand before coding</p>
+              </div>
+              <p class="cp-problem-text">{{ problem.description }}</p>
+              <div class="cp-tab-buttons">
+                <button type="button" class="cp-tab-btn active" data-tab="sample-tab">Sample Tests</button>
+                <button type="button" class="cp-tab-btn" data-tab="hidden-tab">Hidden Tests</button>
+              </div>
+              <div id="sample-tab" class="cp-tab-panel active">
+                {% for t in problem.sample_tests %}
+                <article class="cp-sample-item">
+                  <p><strong>Input</strong></p>
+                  <pre>{{ t.input }}</pre>
+                  <p><strong>Expected</strong></p>
+                  <pre>{{ t.expected }}</pre>
+                </article>
+                {% endfor %}
+              </div>
+              <div id="hidden-tab" class="cp-tab-panel">
+                <p class="cp-muted">{{ problem.hidden_tests|length }} hidden testcases are used in Submit mode.</p>
+              </div>
+            </section>
+
+            <section class="cp-panel cp-editor-card">
+              <div id="editorCode" class="cp-ace"></div>
+            </section>
           </div>
-          <div class="cp-cases">
-            {% for c in result.cases %}
-            <article class="cp-case {% if c.passed %}ok{% else %}bad{% endif %}">
-              <p><strong>Case {{ c.index }}</strong> · {{ "Pass" if c.passed else "Fail" }}{% if c.hidden %} · Hidden{% endif %}</p>
-              <p><strong>Input:</strong></p>
-              <pre>{{ c.input }}</pre>
-              <p><strong>Expected:</strong></p>
-              <pre>{{ c.expected }}</pre>
-              <p><strong>Actual:</strong></p>
-              <pre>{{ c.actual }}</pre>
+
+          <div class="cp-ide-notes">
+            <div>
+              <label class="cp-inline-label" for="explanation">Approach Notes</label>
+              <textarea id="explanation" name="explanation" rows="4" class="cp-custom-input" spellcheck="false" placeholder="Explain decisions, tradeoffs, and complexity...">{{ explanation or "" }}</textarea>
+            </div>
+            <div>
+              <label class="cp-inline-label" for="custom_input">Custom Input (Run only)</label>
+              <textarea id="custom_input" name="custom_input" rows="4" class="cp-custom-input" spellcheck="false">{{ last_custom_input }}</textarea>
+            </div>
+          </div>
+
+          <p class="cp-shortcuts">Ctrl/Cmd+Enter: Run · Ctrl/Cmd+Shift+Enter: Submit</p>
+        </form>
+
+        <section class="cp-panel cp-console cp-tab-scope">
+          <div class="cp-panel-head">
+            <h2>Console</h2>
+            <p class="cp-panel-subtext">Execution and feedback</p>
+          </div>
+          <div class="cp-tab-buttons cp-output-tabs">
+            <button type="button" class="cp-tab-btn active" data-tab="output-result-tab">Run/Submit</button>
+            <button type="button" class="cp-tab-btn" data-tab="output-feedback-tab">Feedback</button>
+          </div>
+
+          <div id="output-result-tab" class="cp-tab-panel active">
+            {% if judge_job and (judge_job.status == "queued" or judge_job.status == "running") %}
+            <article class="cp-case cp-queue-panel" data-job-id="{{ judge_job.job_id }}" data-problem-id="{{ selected_problem_id }}" data-language="{{ language }}">
+              <p><strong>Judge Queue</strong></p>
+              <p class="cp-muted">Your submission is in queue. This page auto-refreshes when results are ready.</p>
+              <div class="cp-result-meta">
+                <span>Job: <strong>{{ judge_job.job_id }}</strong></span>
+                <span>Status: <strong id="jobStatusText">{{ judge_job.status }}</strong></span>
+              </div>
             </article>
-            {% endfor %}
+            {% endif %}
+
+            {% if hint_result %}
+            <article class="cp-case ok">
+              <p><strong>Hint Ladder · Level {{ hint_result.level }}</strong></p>
+              <p>{{ hint_result.hint }}</p>
+            </article>
+            {% endif %}
+
+            {% if result %}
+            <article class="cp-case {{ 'ok' if result.status == 'Accepted' else 'bad' }}">
+              <div class="cp-result-meta">
+                <span>Status: <strong>{{ result.status }}</strong></span>
+                <span>Score: <strong>{{ result.passed }}/{{ result.total }}</strong></span>
+                <span>Runtime: <strong>{{ result.runtime_ms }} ms</strong></span>
+                <span>Language: <strong>{{ (result.language or language)|upper }}</strong></span>
+                {% if result.failure_reason %}
+                <span>Failure reason: <strong>{{ result.failure_reason }}</strong></span>
+                {% endif %}
+              </div>
+              {% if result.complexity %}
+              <div class="cp-result-meta cp-result-meta-tight">
+                <span>Estimated Complexity: <strong>{{ result.complexity.estimated }}</strong></span>
+                <span>Expected: <strong>{{ result.complexity.expected }}</strong></span>
+                <span>Verdict: <strong>{{ result.complexity.verdict }}</strong></span>
+              </div>
+              {% endif %}
+            </article>
+
+            <div class="cp-cases cp-case-list">
+              {% for c in result.cases %}
+              <article class="cp-case {% if c.passed %}ok{% else %}bad{% endif %}">
+                <p><strong>Case {{ c.index }}</strong> · {{ "Pass" if c.passed else "Fail" }}{% if c.hidden %} · Hidden{% endif %}</p>
+                <p><strong>Input:</strong></p>
+                <pre>{{ c.input }}</pre>
+                <p><strong>Expected:</strong></p>
+                <pre>{{ c.expected }}</pre>
+                <p><strong>Actual:</strong></p>
+                <pre>{{ c.actual }}</pre>
+                {% if (c.diff_index is defined) and (c.diff_index is not none) and (c.diff_index >= 0) %}
+                <p class="cp-muted">First mismatch index: {{ c.diff_index }}</p>
+                {% endif %}
+              </article>
+              {% endfor %}
+            </div>
+
+            {% if result.failure_debug %}
+            <article class="cp-case bad cp-case-spaced">
+              <p><strong>Failure Debug View</strong> · Case {{ result.failure_debug.case_index }}</p>
+              <p class="cp-muted">Mismatch index: {{ result.failure_debug.mismatch_index }} · {{ result.failure_debug.hint }}</p>
+              <p><strong>Expected Context</strong></p>
+              <pre>{{ result.failure_debug.expected_ctx.snippet }}</pre>
+              <p><strong>Actual Context</strong></p>
+              <pre>{{ result.failure_debug.actual_ctx.snippet }}</pre>
+            </article>
+            {% endif %}
+            {% elif not hint_result and not (judge_job and (judge_job.status == "queued" or judge_job.status == "running")) %}
+            <p class="cp-muted">Run your code to see output here.</p>
+            {% endif %}
+          </div>
+
+          <div id="output-feedback-tab" class="cp-tab-panel">
+            {% if code_review %}
+            <article class="cp-case ok">
+              <p><strong>Premium Code Review</strong></p>
+              <p>{{ code_review.summary }}</p>
+              <ul>
+                {% for note in code_review.notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+              </ul>
+            </article>
+            {% endif %}
+
+            {% if editorial %}
+            <article class="cp-case ok">
+              <p><strong>Editorial Compare</strong></p>
+              <p>{{ editorial.approach }}</p>
+              <div class="cp-result-meta">
+                <span>Optimal: <strong>{{ editorial.optimal_complexity }}</strong></span>
+                <span>Your Estimate: <strong>{{ editorial.user_complexity }}</strong></span>
+              </div>
+              <p class="cp-muted">{{ editorial.comparison }}</p>
+              <p><strong>Pitfalls Checklist</strong></p>
+              <ul>
+                {% for p in editorial.pitfalls %}
+                <li>{{ p }}</li>
+                {% endfor %}
+              </ul>
+              <p><strong>Next Step</strong></p>
+              <p>{{ editorial.next_step }}</p>
+            </article>
+            {% endif %}
+
+            {% if followups %}
+            <article class="cp-case ok">
+              <p><strong>Mock Coding Interview Follow-ups</strong></p>
+              <ol>
+                {% for f in followups %}
+                <li>{{ f }}</li>
+                {% endfor %}
+              </ol>
+            </article>
+            {% endif %}
+
+            {% if not code_review and not editorial and not followups %}
+            <p class="cp-muted">Submit at least once to unlock detailed feedback.</p>
+            {% endif %}
           </div>
         </section>
-        {% endif %}
       </main>
     </div>
+
+    <details class="cp-advanced cp-panel-spaced">
+      <summary>
+        <span>Advanced Insights</span>
+        <span class="cp-advanced-hint">Progress, mastery, timeline, and contest</span>
+      </summary>
+      <div class="cp-advanced-body">
+        <section class="cp-panel cp-panel-compact">
+          <div class="cp-panel-head">
+            <h2>Progress Visibility</h2>
+            <p class="cp-panel-subtext">Your long-term trajectory at a glance.</p>
+          </div>
+          <div class="cp-result-meta">
+            <span>Interview Readiness: <strong>{{ readiness.score }} ({{ readiness.band }})</strong></span>
+            <span>Consistency: <strong>{{ readiness.consistency }}</strong></span>
+            <span>Speed Score: <strong>{{ readiness.speed_score }}</strong></span>
+          </div>
+          {% if weak_tags %}
+          <div class="cp-tags cp-tags-spaced">
+            {% for w in weak_tags %}
+            <span class="cp-chip">{{ w.tag }} · {{ w.accept_rate }}%</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if recommended_problem and recommended_problem.id %}
+          <p class="cp-note-line">
+            Recommended next: <a href="/coding?problem={{ recommended_problem.id }}">{{ recommended_problem.title }}</a>
+          </p>
+          {% endif %}
+          <div class="cp-grid-2 cp-plan-grid">
+            <article class="cp-case ok">
+              <p><strong>7-Day Plan</strong></p>
+              <ul>
+                {% for step in study_plan_7d %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ul>
+            </article>
+            <article class="cp-case ok">
+              <p><strong>30-Day Plan</strong></p>
+              <ul>
+                {% for step in study_plan_30d %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="cp-grid-2 cp-grid-rich">
+          <article class="cp-panel cp-panel-compact">
+            <h2>Personalized Practice Queue</h2>
+            {% if practice_queue %}
+            <div class="cp-problem-list">
+              {% for p in practice_queue %}
+              <article class="cp-case ok">
+                <p><strong>{{ p.title }}</strong> · {{ p.difficulty }}</p>
+                <p class="cp-muted">{{ p.reason }}</p>
+                <a href="/coding?problem={{ p.id }}" class="btn-secondary">Open</a>
+              </article>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="cp-muted">Solve a few problems to unlock personalized recommendations.</p>
+            {% endif %}
+          </article>
+
+          <article class="cp-panel cp-panel-compact">
+            <h2>Topic Mastery Tracker</h2>
+            {% if mastery %}
+            <div class="cp-mastery-list">
+              {% for m in mastery %}
+              <div class="cp-mastery-row">
+                <div>
+                  <strong>{{ m.tag }}</strong>
+                  <p class="cp-muted">Attempts {{ m.attempts }} · Accept {{ m.accept_rate }}%</p>
+                </div>
+                <div class="cp-mastery-pill {{ 'cp-badge-good' if m.level == 'Strong' else ('cp-badge-warn' if m.level == 'Developing' else 'cp-badge-muted') }}">
+                  {{ m.level }} · {{ m.mastery_score }}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="cp-muted">Mastery data will appear after your first few submissions.</p>
+            {% endif %}
+          </article>
+        </section>
+
+        <section class="cp-grid-2 cp-grid-rich">
+          <article class="cp-panel cp-panel-compact">
+            <h2>Attempt Timeline ({{ problem.title }})</h2>
+            {% if problem_timeline %}
+            <div class="cp-timeline">
+              {% for t in problem_timeline %}
+              <article class="cp-case {{ 'ok' if t.status == 'Accepted' else 'bad' }}">
+                <p><strong>{{ t.mode|upper }}</strong> · {{ t.status }} · {{ t.score }} · {{ t.runtime_ms }} ms</p>
+                <p class="cp-muted">Code: {{ t.code_size }} chars · Fingerprint {{ t.code_hash }}</p>
+                {% if t.failure_reason %}
+                <p class="cp-muted">Failure: {{ t.failure_reason }}</p>
+                {% endif %}
+                {% if t.explanation %}
+                <p class="cp-muted">Notes: {{ t.explanation }}</p>
+                {% endif %}
+                {% if t.code_preview %}
+                <pre>{{ t.code_preview }}</pre>
+                {% endif %}
+              </article>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="cp-muted">No attempt history for this problem yet.</p>
+            {% endif %}
+          </article>
+
+          <article class="cp-panel cp-panel-compact">
+            <h2>{{ contest_snapshot.contest.title if contest_snapshot and contest_snapshot.contest else "Weekly Contest" }}</h2>
+            {% if contest_snapshot and contest_snapshot.contest and contest_snapshot.contest.problems %}
+            <div class="cp-result-meta">
+              {% for p in contest_snapshot.contest.problems %}
+              <span><a href="/coding?problem={{ p.id }}">{{ p.title }}</a> · {{ p.difficulty }}</span>
+              {% endfor %}
+            </div>
+            {% if contest_snapshot.user_rank %}
+            <p class="cp-muted">Your rank: {{ contest_snapshot.user_rank }} · Percentile: {{ contest_snapshot.user_percentile }}%</p>
+            {% endif %}
+            {% if contest_snapshot.leaderboard %}
+            <div class="cp-mini-table">
+              <div class="cp-mini-row cp-mini-head"><span>Rank</span><span>User</span><span>Solved</span><span>Penalty</span></div>
+              {% for row in contest_snapshot.leaderboard %}
+              <div class="cp-mini-row">
+                <span>#{{ row.rank }}</span>
+                <span>{{ row.user_email }}</span>
+                <span>{{ row.solved }}</span>
+                <span>{{ row.penalty }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="cp-muted">Contest set will appear once enough problems are available.</p>
+            {% endif %}
+          </article>
+        </section>
+      </div>
+    </details>
   </div>
 </section>
 
@@ -126,11 +454,29 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("editorForm");
   const codeField = document.getElementById("codeField");
   const runBtn = document.getElementById("runBtn");
+  const hintBtn = document.getElementById("hintBtn");
+  const interviewerBtn = document.getElementById("interviewerBtn");
   const submitBtn = document.getElementById("submitBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const idemKeyField = document.getElementById("idemKeyField");
+  const actionButtons = [runBtn, hintBtn, interviewerBtn, submitBtn].filter(Boolean);
+  const actionLabels = {
+    "/coding/run": "Running...",
+    "/coding/hint": "Getting Hint...",
+    "/coding/interviewer": "Preparing Follow-ups...",
+    "/coding/submit": "Submitting..."
+  };
+  const timedLocked = {{ 'true' if (timed_state.enabled and timed_state.submitted) else 'false' }};
   const languageSelect = document.getElementById("language");
   const starters = {{ problem.starter_codes|tojson }};
   const problemSelect = document.getElementById("problem");
+  const countdownEl = document.getElementById("timedCountdown");
+  const timedStatusEl = document.getElementById("timedStatus");
+  const queuePanel = document.querySelector(".cp-queue-panel");
+  const activeFileName = document.getElementById("activeFileName");
+  const activeFileTabName = document.getElementById("activeFileTabName");
+  const customInputEl = document.getElementById("custom_input");
+  const explanationEl = document.getElementById("explanation");
 
   const editor = ace.edit("editorCode");
   editor.setOptions({
@@ -140,6 +486,19 @@ document.addEventListener("DOMContentLoaded", function () {
     fontSize: "13px",
   });
   editor.session.setUseWorker(false);
+
+  function sourceFileForLanguage(lang) {
+    if (lang === "python") return "main.py";
+    if (lang === "java") return "Main.java";
+    if (lang === "cpp") return "main.cpp";
+    return "main.js";
+  }
+
+  function syncFileNames() {
+    const name = sourceFileForLanguage(languageSelect.value);
+    if (activeFileName) activeFileName.textContent = name;
+    if (activeFileTabName) activeFileTabName.textContent = name;
+  }
 
   function aceMode(lang) {
     if (lang === "python") return "ace/mode/python";
@@ -160,24 +519,54 @@ document.addEventListener("DOMContentLoaded", function () {
     codeField.value = editor.getValue();
   }
 
-  function submitTo(action) {
+  function setBusyState(action, triggerButton) {
+    actionButtons.forEach((btn) => {
+      if (!btn) return;
+      if (!btn.dataset.originalText) {
+        btn.dataset.originalText = btn.textContent;
+      }
+      btn.disabled = true;
+    });
+    if (triggerButton) {
+      triggerButton.textContent = actionLabels[action] || "Working...";
+    }
+  }
+
+  function submitTo(action, triggerButton) {
     syncCodeFromEditor();
+    setBusyState(action, triggerButton);
     form.action = action;
+    if (idemKeyField && action === "/coding/submit") {
+      idemKeyField.value = "submit-" + Date.now() + "-" + Math.random().toString(16).slice(2, 10);
+    }
     form.submit();
   }
 
   editor.setValue(codeField.value || "", -1);
   editor.session.setMode(aceMode(languageSelect.value));
   syncTheme();
+  syncFileNames();
 
   languageSelect.addEventListener("change", function () {
     syncCodeFromEditor();
+    syncFileNames();
     const pid = problemSelect ? problemSelect.value : "{{ selected_problem_id }}";
     window.location.href = "/coding?problem=" + encodeURIComponent(pid) + "&language=" + encodeURIComponent(languageSelect.value);
   });
 
-  runBtn.addEventListener("click", function () { submitTo("/coding/run"); });
-  submitBtn.addEventListener("click", function () { submitTo("/coding/submit"); });
+  runBtn.addEventListener("click", function () { submitTo("/coding/run", runBtn); });
+  if (hintBtn) {
+    hintBtn.addEventListener("click", function () { submitTo("/coding/hint", hintBtn); });
+  }
+  if (interviewerBtn) {
+    interviewerBtn.addEventListener("click", function () { submitTo("/coding/interviewer", interviewerBtn); });
+  }
+  submitBtn.addEventListener("click", function () {
+    if (timedLocked) {
+      return;
+    }
+    submitTo("/coding/submit", submitBtn);
+  });
 
   resetBtn.addEventListener("click", function () {
     const lang = languageSelect.value;
@@ -188,24 +577,101 @@ document.addEventListener("DOMContentLoaded", function () {
   editor.commands.addCommand({
     name: "runCode",
     bindKey: {win: "Ctrl-Enter", mac: "Command-Enter"},
-    exec: function() { submitTo("/coding/run"); }
+    exec: function() { submitTo("/coding/run", runBtn); }
   });
   editor.commands.addCommand({
     name: "submitCode",
     bindKey: {win: "Ctrl-Shift-Enter", mac: "Command-Shift-Enter"},
-    exec: function() { submitTo("/coding/submit"); }
+    exec: function() {
+      if (timedLocked) {
+        return;
+      }
+      submitTo("/coding/submit", submitBtn);
+    }
   });
 
-  document.querySelectorAll(".cp-tab-btn").forEach((btn) => {
+  document.querySelectorAll(".cp-tab-btn[data-tab]").forEach((btn) => {
     btn.addEventListener("click", function () {
-      const parent = btn.closest(".cp-panel");
+      const scope = btn.closest(".cp-tab-scope");
       const target = btn.dataset.tab;
-      parent.querySelectorAll(".cp-tab-btn").forEach((b) => b.classList.remove("active"));
-      parent.querySelectorAll(".cp-tab-panel").forEach((p) => p.classList.remove("active"));
+      if (!scope || !target) return;
+      scope.querySelectorAll(".cp-tab-btn[data-tab]").forEach((b) => b.classList.remove("active"));
+      scope.querySelectorAll(".cp-tab-panel").forEach((p) => p.classList.remove("active"));
       btn.classList.add("active");
-      parent.querySelector("#" + target).classList.add("active");
+      const panel = scope.querySelector("#" + target);
+      if (panel) {
+        panel.classList.add("active");
+      }
     });
   });
+
+  document.querySelectorAll("#fileTree li button").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const item = btn.closest("li");
+      const kind = item ? item.dataset.fileKind : "";
+      document.querySelectorAll("#fileTree li").forEach((li) => li.classList.remove("active"));
+      if (item) item.classList.add("active");
+      if (kind === "input" && customInputEl) {
+        customInputEl.focus();
+      } else if (kind === "notes" && explanationEl) {
+        explanationEl.focus();
+      } else {
+        editor.focus();
+      }
+    });
+  });
+
+  function formatRemaining(sec) {
+    const s = Math.max(0, Number(sec || 0));
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return mm + ":" + ss;
+  }
+
+  if (countdownEl) {
+    let remaining = Number(countdownEl.dataset.remaining || 0);
+    countdownEl.textContent = formatRemaining(remaining);
+    const timer = setInterval(function () {
+      remaining -= 1;
+      countdownEl.textContent = formatRemaining(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer);
+        if (timedStatusEl) {
+          timedStatusEl.textContent = "Expired";
+        }
+      }
+    }, 1000);
+  }
+
+  if (queuePanel) {
+    const jobId = queuePanel.dataset.jobId;
+    const statusText = document.getElementById("jobStatusText");
+    const poll = function () {
+      fetch("/coding/judge-status/" + encodeURIComponent(jobId), {credentials: "same-origin"})
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data || !data.ok) {
+            return;
+          }
+          if (statusText) {
+            statusText.textContent = data.status;
+          }
+          if (data.status === "completed" && data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+          }
+          if (data.status === "failed") {
+            if (statusText) {
+              statusText.textContent = "failed";
+            }
+            return;
+          }
+          setTimeout(poll, 1600);
+        })
+        .catch(() => setTimeout(poll, 2400));
+    };
+    setTimeout(poll, 1000);
+  }
 
   const observer = new MutationObserver(syncTheme);
   observer.observe(document.documentElement, {attributes: true, attributeFilter: ["class"]});

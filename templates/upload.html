@@ -9,6 +9,17 @@
                 Review your resume against a specific role with evidence-backed scoring,
                 rewrite suggestions, keyword gap priorities, and recruiter-style feedback.
             </p>
+            {% if (user_plan or "free") != "premium" %}
+            <p class="rr-subtle" style="margin-top:8px;color:#64748b;">
+                Free plan: {{ (resume_quota.limit if resume_quota else 3) }} reviews/day.
+                Remaining today: <strong>{{ (resume_quota.remaining if resume_quota else 0) }}</strong>.
+                <a href="/pricing">Upgrade</a>
+            </p>
+            {% else %}
+            <p class="rr-subtle" style="margin-top:8px;color:#065f46;">
+                Premium active: unlimited resume reviews.
+            </p>
+            {% endif %}
             <div class="rr-chip-row">
                 <span class="rr-chip">ATS + recruiter lens</span>
                 <span class="rr-chip">Keyword priority engine</span>
@@ -16,7 +27,11 @@
             </div>
         </div>
 
-        <form action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
+        {% if quota_error %}
+        <p class="al-error" style="margin-bottom:10px;">{{ quota_error }} <a href="/pricing">Upgrade</a></p>
+        {% endif %}
+
+        <form id="resumeReviewForm" action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
             <div class="rr-field rr-file-field">
                 <label for="file">Resume PDF</label>
                 <input
@@ -32,7 +47,7 @@
             <div class="rr-grid-2">
                 <div class="rr-field">
                     <label for="target_role">Target role</label>
-                    <input id="target_role" type="text" name="target_role" placeholder="Backend Engineer">
+                    <input id="target_role" type="text" name="target_role" value="{{ (memory.target_role if memory else '') }}" placeholder="Backend Engineer">
                 </div>
                 <div class="rr-field">
                     <label for="seniority">Seniority</label>
@@ -77,4 +92,23 @@
         </form>
     </div>
 </section>
+
+<div id="globalLoader" class="app-loader" hidden>
+    <div class="app-loader-card">
+        <span class="app-loader-spinner" aria-hidden="true"></span>
+        <span class="app-loader-text">Generating resume review...</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    const form = document.getElementById("resumeReviewForm");
+    const loader = document.getElementById("globalLoader");
+    if (!form || !loader) return;
+
+    form.addEventListener("submit", function() {
+        loader.hidden = false;
+    });
+})();
+</script>
 {% endblock %}

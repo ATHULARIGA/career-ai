@@ -7,7 +7,11 @@
     </div>
 
     <div style="background: white; padding: 40px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+        {% if error %}
+        <p style="margin:0 0 14px;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;">{{ error }}</p>
+        {% endif %}
         <form action="/schedule" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+            <input type="text" name="website" autocomplete="off" tabindex="-1" style="display:none">
             <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Full Name</label>
                 <input name="name" value="{{ prefill.name if prefill else '' }}" placeholder="John Doe" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
@@ -60,6 +64,26 @@
             <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
                 <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Auto-generated pre-session brief</p>
                 <pre style="white-space: pre-wrap; margin: 0; color: #334155; font-size: 0.85rem; font-family: inherit;">{{ brief }}</pre>
+            </div>
+            {% endif %}
+            {% if checklist %}
+            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Pre-session checklist</p>
+                <ul style="margin: 0; padding-left: 18px; color: #334155;">
+                    {% for item in checklist %}
+                    <li style="margin: 4px 0;">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if action_plan %}
+            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Post-session action plan</p>
+                <ol style="margin: 0; padding-left: 18px; color: #334155;">
+                    {% for item in action_plan %}
+                    <li style="margin: 4px 0;">{{ item }}</li>
+                    {% endfor %}
+                </ol>
             </div>
             {% endif %}
             {% if rebook_url %}

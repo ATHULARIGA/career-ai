@@ -29,6 +29,10 @@
         {% endif %}
         {% if request.session.get("user_id") %}
         <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
+        {% if not request.session.get("admin") %}
+        <a href="/pricing">Pricing</a>
+        <a href="/account">Account</a>
+        {% endif %}
         <a href="/logout">Logout</a>
         {% else %}
         <a href="/login">Login</a>
@@ -42,6 +46,12 @@
 
 {% block content %}
 {% endblock %}
+
+<footer style="padding:18px 24px;border-top:1px solid #e2e8f0;color:#64748b;font-size:0.88rem;display:flex;justify-content:center;gap:18px;">
+  <a href="/privacy">Privacy</a>
+  <a href="/terms">Terms</a>
+  <a href="/healthz">Status</a>
+</footer>
 
 <script>
 (function() {

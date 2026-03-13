@@ -1,7 +1,7 @@
 import csv
 import io
 import json
-import sqlite3
+import db_backend as db
 import time
 from datetime import datetime
 from typing import Any, Dict, List
@@ -10,17 +10,38 @@ DB_PATH = "bookings.db"
 
 
 def _conn():
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+    return db.get_conn()
+
+
+def _repair_identity_sequence(conn, table: str) -> None:
+    if not db.is_postgres():
+        return
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT pg_get_serial_sequence(%s, 'id')
+        """,
+        (table,),
+    )
+    seq_row = cur.fetchone()
+    if not seq_row or not seq_row[0]:
+        return
+    seq_name = seq_row[0]
+    cur.execute(f'SELECT COALESCE(MAX(id), 0) + 1 FROM "{table}"')
+    next_id = int(cur.fetchone()[0])
+    cur.execute("SELECT setval(%s, %s, false)", (seq_name, next_id))
 
 
 def init_admin_tables() -> None:
     conn = _conn()
     cur = conn.cursor()
+    id_col = db.id_pk_col()
 
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS user_events(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             event_type TEXT,
             feature TEXT,
@@ -30,12 +51,15 @@ def init_admin_tables() -> None:
             role TEXT,
             metadata TEXT
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_user_events_user_ts ON user_events(user_id, ts)")
+    db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_user_events_type_ts ON user_events(event_type, ts)")
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS model_health(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             feature TEXT,
             model_name TEXT,
@@ -44,78 +68,84 @@ def init_admin_tables() -> None:
             fallback_used INTEGER,
             error_message TEXT
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS feedback_queue(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             source TEXT,
             severity TEXT,
             message TEXT,
             status TEXT
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS audit_logs(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             actor TEXT,
             action TEXT,
             details TEXT
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS experiments(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             feature TEXT UNIQUE,
             prompt_version TEXT,
             model_name TEXT,
             enabled INTEGER,
             updated_ts INTEGER
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS ab_tests(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             experiment_name TEXT UNIQUE,
             variant_a TEXT,
             variant_b TEXT,
             winner TEXT,
             updated_ts INTEGER
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS safety_events(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             level TEXT,
             event_type TEXT,
             payload TEXT
         )
-        """
+        """,
     )
-    cur.execute(
-        """
+    db.execute(
+        cur,
+        f"""
         CREATE TABLE IF NOT EXISTS mentor_ops(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_col},
             ts INTEGER,
             metric_name TEXT,
             metric_value REAL,
             note TEXT
         )
-        """
+        """,
     )
-    cur.execute(
+    db.execute(cur, 
         """
         CREATE TABLE IF NOT EXISTS admin_settings(
             key TEXT PRIMARY KEY,
@@ -124,6 +154,17 @@ def init_admin_tables() -> None:
         )
         """
     )
+    for t in (
+        "user_events",
+        "model_health",
+        "feedback_queue",
+        "audit_logs",
+        "experiments",
+        "ab_tests",
+        "safety_events",
+        "mentor_ops",
+    ):
+        _repair_identity_sequence(conn, t)
     conn.commit()
     conn.close()
 
@@ -142,25 +183,30 @@ def log_event(
     metadata: Dict[str, Any] = None,
 ) -> None:
     conn = _conn()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT INTO user_events(ts,event_type,feature,user_id,cohort,region,role,metadata)
-        VALUES (?,?,?,?,?,?,?,?)
-        """,
-        (
-            _now(),
-            event_type,
-            feature,
-            user_id,
-            cohort,
-            region,
-            role,
-            json.dumps(metadata or {}),
-        ),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        cur = conn.cursor()
+        db.execute(cur, 
+            """
+            INSERT INTO user_events(ts,event_type,feature,user_id,cohort,region,role,metadata)
+            VALUES (?,?,?,?,?,?,?,?)
+            """,
+            (
+                _now(),
+                event_type,
+                feature,
+                user_id,
+                cohort,
+                region,
+                role,
+                json.dumps(metadata or {}),
+            ),
+        )
+        conn.commit()
+    except Exception:
+        # Never fail user requests because analytics logging failed.
+        conn.rollback()
+    finally:
+        conn.close()
 
 
 def log_model_health(
@@ -173,7 +219,7 @@ def log_model_health(
 ) -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO model_health(ts,feature,model_name,success,latency_ms,fallback_used,error_message)
         VALUES (?,?,?,?,?,?,?)
@@ -195,7 +241,7 @@ def log_model_health(
 def add_feedback(source: str, severity: str, message: str, status: str = "open") -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO feedback_queue(ts,source,severity,message,status)
         VALUES (?,?,?,?,?)
@@ -209,7 +255,7 @@ def add_feedback(source: str, severity: str, message: str, status: str = "open")
 def update_feedback_status(feedback_id: int, status: str) -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute("UPDATE feedback_queue SET status=? WHERE id=?", (status, feedback_id))
+    db.execute(cur, "UPDATE feedback_queue SET status=? WHERE id=?", (status, feedback_id))
     conn.commit()
     conn.close()
 
@@ -217,7 +263,7 @@ def update_feedback_status(feedback_id: int, status: str) -> None:
 def log_audit(actor: str, action: str, details: str = "") -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO audit_logs(ts,actor,action,details)
         VALUES (?,?,?,?)
@@ -231,7 +277,7 @@ def log_audit(actor: str, action: str, details: str = "") -> None:
 def upsert_experiment(feature: str, prompt_version: str, model_name: str, enabled: bool) -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO experiments(feature,prompt_version,model_name,enabled,updated_ts)
         VALUES (?,?,?,?,?)
@@ -250,7 +296,7 @@ def upsert_experiment(feature: str, prompt_version: str, model_name: str, enable
 def upsert_ab_test(experiment_name: str, variant_a: str, variant_b: str, winner: str) -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO ab_tests(experiment_name,variant_a,variant_b,winner,updated_ts)
         VALUES (?,?,?,?,?)
@@ -269,7 +315,7 @@ def upsert_ab_test(experiment_name: str, variant_a: str, variant_b: str, winner:
 def add_safety_event(level: str, event_type: str, payload: str = "") -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO safety_events(ts,level,event_type,payload)
         VALUES (?,?,?,?)
@@ -283,7 +329,7 @@ def add_safety_event(level: str, event_type: str, payload: str = "") -> None:
 def log_mentor_metric(metric_name: str, metric_value: float, note: str = "") -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO mentor_ops(ts,metric_name,metric_value,note)
         VALUES (?,?,?,?)
@@ -297,7 +343,7 @@ def log_mentor_metric(metric_name: str, metric_value: float, note: str = "") -> 
 def _fetchall(query: str, params: tuple = ()) -> List[tuple]:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(query, params)
+    db.execute(cur, query, params)
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -424,7 +470,7 @@ def export_all_csv(bookings: List[tuple]) -> str:
 def set_setting(key: str, value: str) -> None:
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
+    db.execute(cur, 
         """
         INSERT INTO admin_settings(key,value,updated_ts)
         VALUES (?,?,?)

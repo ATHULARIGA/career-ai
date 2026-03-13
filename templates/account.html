@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="al-page">
+  <div class="al-card">
+    <p class="al-eyebrow">Account</p>
+    <h1>Account Settings</h1>
+    <p style="margin:6px 0 4px;color:#334155;font-size:0.95rem;">
+      Plan:
+      <strong style="text-transform:capitalize;">{{ user_plan or "free" }}</strong>
+    </p>
+    {% if (user_plan or "free") != "premium" %}
+    <p style="margin:0 0 14px;">
+      <a href="/pricing">Upgrade to Premium</a>
+    </p>
+    {% endif %}
+    <p style="margin:8px 0 16px;color:#6b7280;font-size:0.95rem;">
+      Signed in as <strong>{{ request.session.get("user_email", "Unknown") }}</strong>
+    </p>
+
+    {% if status == "memory-saved" %}
+    <p style="margin:0 0 12px;color:#065f46;background:#ecfdf5;border:1px solid #86efac;border-radius:10px;padding:8px 10px;">
+      Personal preferences updated.
+    </p>
+    {% endif %}
+
+    <div style="border:1px solid #dbe0ea;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+      <h3 style="margin:0 0 10px;font-size:1rem;">Personal Memory</h3>
+      <form action="/account/memory" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:0.9rem;">
+          Target role
+          <input name="target_role" type="text" value="{{ (memory.target_role if memory else '') }}" placeholder="Backend Engineer" style="border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:0.9rem;">
+          Target company
+          <input name="target_company" type="text" value="{{ (memory.target_company if memory else '') }}" placeholder="Vercel" style="border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:0.9rem;grid-column:1 / -1;">
+          Focus area
+          <input name="focus_area" type="text" value="{{ (memory.focus_area if memory else '') }}" placeholder="System Design, Python, Behavioral" style="border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;">
+        </label>
+        <div style="grid-column:1 / -1;">
+          <button type="submit" style="border:1px solid #111827;background:#111827;color:#fff;font-weight:600;border-radius:10px;padding:9px 12px;cursor:pointer;">
+            Save Memory
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div style="border:1px solid #dbe0ea;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+      <h3 style="margin:0 0 10px;font-size:1rem;">Progress Snapshot (Last 7 days)</h3>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px;">
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0;color:#64748b;font-size:0.85rem;">Resume runs</p>
+          <p style="margin:4px 0 0;font-size:1.2rem;font-weight:700;">{{ progress.resume_runs_7d if progress else 0 }}</p>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0;color:#64748b;font-size:0.85rem;">Resume avg score</p>
+          <p style="margin:4px 0 0;font-size:1.2rem;font-weight:700;">{{ progress.resume_avg_7d if progress else 0 }}/10</p>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0;color:#64748b;font-size:0.85rem;">Coding submissions</p>
+          <p style="margin:4px 0 0;font-size:1.2rem;font-weight:700;">{{ progress.coding_submissions_7d if progress else 0 }}</p>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0;color:#64748b;font-size:0.85rem;">Coding accept rate</p>
+          <p style="margin:4px 0 0;font-size:1.2rem;font-weight:700;">{{ progress.coding_accept_rate_7d if progress else 0 }}%</p>
+        </div>
+      </div>
+      <div style="border:1px solid #c7d2fe;background:#eef2ff;border-radius:10px;padding:10px 12px;">
+        <p style="margin:0;color:#3730a3;font-size:0.85rem;">Next best action (10 min)</p>
+        <p style="margin:4px 0 0;font-weight:600;">{{ progress.next_action if progress else "Run your first resume review (8 min)." }}</p>
+        <p style="margin:6px 0 0;color:#475569;font-size:0.85rem;">
+          Streak: <strong>{{ progress.current_streak_days if progress else 0 }} day{{ '' if (progress and progress.current_streak_days == 1) else 's' }}</strong>
+          · Active days (7d): <strong>{{ progress.active_days_7d if progress else 0 }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <div style="border:1px solid #fecaca;background:#fff1f2;border-radius:12px;padding:14px 16px;">
+      <h3 style="margin:0 0 8px;color:#991b1b;font-size:1rem;">Danger Zone</h3>
+      <p style="margin:0 0 12px;color:#7f1d1d;font-size:0.9rem;">
+        Deleting your account permanently removes your profile and saved data.
+      </p>
+      <form action="/account/delete" method="post" onsubmit="return confirm('Delete your account and data? This cannot be undone.');">
+        <button type="submit" style="border:1px solid #ef4444;background:#dc2626;color:#fff;font-weight:600;border-radius:10px;padding:9px 12px;cursor:pointer;">
+          Delete Account
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

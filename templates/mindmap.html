@@ -13,8 +13,14 @@
             </header>
 
             <section class="cp-panel career-toolbar">
+                {% if (user_plan or "free") != "premium" %}
+                <p class="cp-muted" style="margin:0 0 10px;">
+                    Free plan: 1 roadmap/day. Detailed skill insights are Premium.
+                    <a href="/pricing">Upgrade</a>
+                </p>
+                {% endif %}
                 <div class="career-input">
-                    <input type="text" id="roleInput" placeholder="Enter Career Role (e.g. Data Scientist)">
+                    <input type="text" id="roleInput" value="{{ (memory.target_role if memory else '') }}" placeholder="Enter Career Role (e.g. Data Scientist)">
                     <button id="generateBtn" onclick="generateMindmap()">Generate Roadmap</button>
                 </div>
                 <div id="mindmap-status"></div>
@@ -38,9 +44,29 @@
     </div>
 </section>
 
+<div id="globalLoader" class="app-loader" hidden>
+    <div class="app-loader-card">
+        <span class="app-loader-spinner" aria-hidden="true"></span>
+        <span id="globalLoaderText" class="app-loader-text">Generating career roadmap...</span>
+    </div>
+</div>
+
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
+
+function showGlobalLoader(message) {
+    const loader = document.getElementById("globalLoader");
+    const loaderText = document.getElementById("globalLoaderText");
+    if (!loader) return;
+    if (loaderText && message) loaderText.textContent = message;
+    loader.hidden = false;
+}
+
+function hideGlobalLoader() {
+    const loader = document.getElementById("globalLoader");
+    if (loader) loader.hidden = true;
+}
 
 async function generateMindmap() {
     const roleInput = document.getElementById("roleInput");
@@ -59,6 +85,7 @@ async function generateMindmap() {
     button.innerText = "Generating...";
     status.className = "status-loading";
     status.textContent = "AI is building your roadmap...";
+    showGlobalLoader("Generating career roadmap...");
     document.getElementById("mindmap").innerHTML = "";
     document.getElementById("skill-panel").style.display = "none";
 
@@ -71,9 +98,10 @@ async function generateMindmap() {
             body: formData
         });
 
-        if (!response.ok) throw new Error("Server error");
-
         const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data && data.error ? data.error : "Server error");
+        }
         
         // Ensure every node has a unique ID to prevent D3 object reference issues
         let idCounter = 0;
@@ -94,11 +122,13 @@ async function generateMindmap() {
         status.textContent = "Roadmap generated successfully.";
     } catch (error) {
         status.className = "status-error";
-        status.textContent = "Something went wrong.";
+        const msg = (error && error.message) ? error.message : "Something went wrong.";
+        status.innerHTML = msg + ' <a href="/pricing">Upgrade</a>';
         console.error(error);
     } finally {
         button.disabled = false;
         button.innerText = "Generate";
+        hideGlobalLoader();
     }
 }
 

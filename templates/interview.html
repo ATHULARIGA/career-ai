@@ -13,26 +13,35 @@
 
         <section class="mi-panel">
             <h2>Session Setup</h2>
-            <form action="/generate" method="post" class="mi-form-grid">
+            {% if (user_plan or "free") != "premium" %}
+            <p class="mi-muted" style="margin-bottom:10px;">
+                Free plan: up to 3 rounds. Red-Team mode is Premium.
+                <a href="/pricing">Upgrade</a>
+            </p>
+            {% endif %}
+            {% if premium_notice %}
+            <p class="al-error" style="margin-bottom:10px;">{{ premium_notice }}</p>
+            {% endif %}
+            <form id="interviewSetupForm" action="/generate" method="post" class="mi-form-grid">
                 <div class="mi-field">
                     <label for="topic">Topic</label>
                     <select id="topic" name="topic">
-                        <option>Python</option>
-                        <option>SQL</option>
-                        <option>React</option>
-                        <option>System Design</option>
-                        <option>Behavioral</option>
+                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else 'Python')) == "Python" %}selected{% endif %}>Python</option>
+                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "SQL" %}selected{% endif %}>SQL</option>
+                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "React" %}selected{% endif %}>React</option>
+                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "System Design" %}selected{% endif %}>System Design</option>
+                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "Behavioral" %}selected{% endif %}>Behavioral</option>
                     </select>
                 </div>
 
                 <div class="mi-field">
                     <label for="role">Target role</label>
-                    <input id="role" name="role" type="text" placeholder="Backend Engineer">
+                    <input id="role" name="role" type="text" value="{{ (config.role if config else '') or (default_setup.role if default_setup else '') }}" placeholder="Backend Engineer">
                 </div>
 
                 <div class="mi-field">
                     <label for="company">Company style</label>
-                    <input id="company" name="company" type="text" placeholder="Vercel / Stripe / FAANG">
+                    <input id="company" name="company" type="text" value="{{ (config.company if config else '') or (default_setup.company if default_setup else '') }}" placeholder="Vercel / Stripe / FAANG">
                 </div>
 
                 <div class="mi-field">
@@ -57,15 +66,17 @@
                 <div class="mi-field">
                     <label for="max_rounds">Rounds</label>
                     <select id="max_rounds" name="max_rounds">
-                        <option value="3">3</option>
-                        <option value="5" selected>5</option>
+                        <option value="3" {% if (user_plan or "free") != "premium" %}selected{% endif %}>3</option>
+                        <option value="5" {% if (user_plan or "free") == "premium" %}selected{% endif %}>5{% if (user_plan or "free") != "premium" %} (Premium){% endif %}</option>
+                        {% if (user_plan or "free") == "premium" %}
                         <option value="7">7</option>
                         <option value="8">8</option>
+                        {% endif %}
                     </select>
                 </div>
 
                 <label class="mi-check">
-                    <input type="checkbox" name="red_team" value="true">
+                    <input type="checkbox" name="red_team" value="true" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>
                     <span>Enable Red-Team mode (pressure + contradiction checks)</span>
                 </label>
 
@@ -158,6 +169,11 @@
         {% if timeline %}
         <section class="mi-panel">
             <h2>Session Replay Timeline</h2>
+            <div class="mi-score-grid" style="margin-bottom:14px;">
+                <article><p>Avg Score</p><h3>{{ "%.1f"|format(session_metrics.avg_score) }}</h3></article>
+                <article><p>Avg WPM</p><h3>{{ session_metrics.avg_wpm }}</h3></article>
+                <article><p>Avg Filler %</p><h3>{{ "%.1f"|format(session_metrics.avg_filler_pct) }}</h3></article>
+            </div>
             <div class="mi-timeline">
                 {% for item in timeline %}
                 <article class="mi-time-item">
@@ -189,8 +205,25 @@
     </div>
 </section>
 
+<div id="globalLoader" class="app-loader" hidden>
+    <div class="app-loader-card">
+        <span class="app-loader-spinner" aria-hidden="true"></span>
+        <span id="globalLoaderText" class="app-loader-text">Generating interview questions...</span>
+    </div>
+</div>
+
 <script>
 (function() {
+    const loader = document.getElementById("globalLoader");
+    const loaderText = document.getElementById("globalLoaderText");
+    const setupForm = document.getElementById("interviewSetupForm");
+    if (setupForm && loader && loaderText) {
+        setupForm.addEventListener("submit", function() {
+            loaderText.textContent = "Generating interview questions...";
+            loader.hidden = false;
+        });
+    }
+
     const form = document.getElementById("answerForm");
     if (!form) return;
     const startedAt = Date.now();
@@ -198,6 +231,10 @@
         const sec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
         const target = document.getElementById("answer_time_sec");
         if (target) target.value = sec;
+        if (loader && loaderText) {
+            loaderText.textContent = "Evaluating your answer...";
+            loader.hidden = false;
+        }
     });
 })();
 </script>

@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="al-page">
+  <div class="al-card" style="max-width:760px;">
+    <p class="al-eyebrow">Premium</p>
+    <h1>Upgrade (Manual UPI)</h1>
+    <p style="margin:8px 0 14px;color:#64748b;">
+      Temporary flow: pay via UPI and submit payment details. Admin will manually verify and activate Premium.
+    </p>
+
+    {% if status == "submitted" %}
+    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 10px;">Request submitted. We will review it soon.</p>
+    {% elif status == "already-pending" %}
+    <p class="al-error">A pending request already exists for your account.</p>
+    {% elif status == "already-premium" %}
+    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 10px;">Your account is already on Premium.</p>
+    {% elif status == "premium-required" %}
+    <p class="al-error">This feature requires Premium.</p>
+    {% elif status == "invalid-ref" %}
+    <p class="al-error">Please enter a valid UPI transaction reference.</p>
+    {% elif status == "invalid-link" %}
+    <p class="al-error">Screenshot link must start with http:// or https://</p>
+    {% endif %}
+
+    <div style="padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin:10px 0 14px;">
+      <p style="margin:0 0 6px;"><strong>Premium includes:</strong></p>
+      <ul style="margin:0;padding-left:18px;color:#334155;">
+        <li>Unlimited resume reviews (free plan capped per day)</li>
+        <li>Resume report export (JSON/TXT)</li>
+        <li>Mock Interview advanced mode (5-8 rounds + Red-Team mode)</li>
+        <li>Coding Practice code submit + full judged results</li>
+        <li>Career Roadmap unlimited generation + detailed skill insights</li>
+      </ul>
+    </div>
+
+    {% if (user_plan or "free") == "premium" %}
+    <p style="margin:10px 0 0;color:#065f46;">Current plan: <strong>Premium</strong></p>
+    {% else %}
+    <form class="al-form" method="post" action="/premium/request">
+      <label for="upi_txn_ref">UPI transaction reference</label>
+      <input id="upi_txn_ref" name="upi_txn_ref" type="text" placeholder="Example: 423456789012" required>
+
+      <label for="amount">Amount paid (optional)</label>
+      <input id="amount" name="amount" type="text" placeholder="e.g. 499">
+
+      <label for="screenshot_url">Payment screenshot URL (optional)</label>
+      <input id="screenshot_url" name="screenshot_url" type="url" placeholder="https://...">
+
+      <label for="notes">Notes (optional)</label>
+      <textarea id="notes" name="notes" rows="3" placeholder="Any details for admin verification"></textarea>
+
+      <button class="btn-primary" type="submit">Submit Premium Request</button>
+    </form>
+    {% endif %}
+
+    {% if latest_request %}
+    <div style="margin-top:14px;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">
+      <p style="margin:0 0 8px;"><strong>Latest request</strong></p>
+      <p style="margin:0;color:#475569;">Status: <strong style="text-transform:capitalize;">{{ latest_request[5] }}</strong></p>
+      <p style="margin:0;color:#475569;">UPI Ref: {{ latest_request[1] }}</p>
+      {% if latest_request[6] %}
+      <p style="margin:0;color:#b91c1c;">Reason: {{ latest_request[6] }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

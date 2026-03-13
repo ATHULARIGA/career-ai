@@ -5,6 +5,19 @@
     <h2>Bookings</h2>
     <p>User journey replay and mentor assignment operations.</p>
   </div>
+  {% set mail_state = request.query_params.get("mail") %}
+  {% if mail_state == "sent" %}
+  <p class="ad-flash ad-flash-success">Mentor email sent successfully.</p>
+  {% elif mail_state == "failed" %}
+  <p class="ad-flash ad-flash-error">
+    Mentor email could not be sent.
+    {% if request.query_params.get("reason") == "invalid_email" %}
+    Enter a valid mentor email address.
+    {% else %}
+    Check SMTP credentials and server settings.
+    {% endif %}
+  </p>
+  {% endif %}
   <section class="ad-panel">
     <input type="text" id="searchInput" class="ad-search" placeholder="Search by name/email/topic" onkeyup="searchTable()">
     <div class="ad-table-wrap">

@@ -8,6 +8,7 @@
     <p class="al-error">{{ error }}</p>
     {% endif %}
     <form class="al-form" method="post" action="/signup">
+      <input type="text" name="website" autocomplete="off" tabindex="-1" style="display:none">
       <label for="full_name">Full name</label>
       <input id="full_name" name="full_name" type="text" placeholder="Your name" required>
 
