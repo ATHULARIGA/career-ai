@@ -3559,3 +3559,11 @@ def admin_logout(request: Request):
     request.session.pop("user_plan", None)
     log_audit("admin", "admin_logout", "Session closed")
     return RedirectResponse("/admin-login", status_code=303)
+
+
+import os
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

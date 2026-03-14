@@ -13,3 +13,4 @@ itsdangerous
 starlette
 sentry-sdk
 psycopg[binary]
+python-dotenv
