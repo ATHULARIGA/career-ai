@@ -31,7 +31,15 @@ def signup(
     conn = db.get_conn()
     cur = conn.cursor()
     try:
-        db.execute(cur, 
+        # Check if email already exists first – gives a clear, user-friendly error
+        db.execute(cur, "SELECT id FROM users WHERE email=?", (email,))
+        if cur.fetchone():
+            conn.close()
+            return templates.TemplateResponse(
+                "signup.html",
+                {"request": request, "error": "An account with this email already exists. Try logging in or use a different email."},
+            )
+        db.execute(cur,
             "INSERT INTO users(full_name,email,password_hash,role,password_updated_ts,created_ts) VALUES(?,?,?,?,?,?)",
             (full_name, email, hash_password(password), "user", int(time.time()), int(time.time())),
         )
@@ -39,9 +47,9 @@ def signup(
         db.execute(cur, "SELECT id FROM users WHERE email=?", (email,))
         row = cur.fetchone()
         user_id = int((row or [0])[0] or 0)
-    except Exception:
+    except Exception as e:
         conn.close()
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Email already registered."})
+        return templates.TemplateResponse("signup.html", {"request": request, "error": "Signup failed due to a server error. Please try again."})
     conn.close()
 
     request.session["user_id"] = int(user_id)
