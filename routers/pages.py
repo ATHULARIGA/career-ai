@@ -32,7 +32,7 @@ def terms(request: Request):
     return templates.TemplateResponse("terms.html", {"request": request})
 
 
-@router.exception_handler(Exception)
+@app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     req_id = getattr(request.state, "request_id", "n/a")
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
