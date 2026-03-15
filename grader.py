@@ -1,15 +1,8 @@
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-model = None
-
-
 def get_model():
-    global model
-    if model is None:
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-    return model
-
+    return TfidfVectorizer(stop_words="english", max_features=1000)
 
 def token_overlap_score(a: str, b: str) -> float:
     tokens_a = set(a.lower().split())
@@ -18,17 +11,14 @@ def token_overlap_score(a: str, b: str) -> float:
         return 0.0
     return len(tokens_a & tokens_b) / len(tokens_a | tokens_b)
 
-
 def grade_answer(user_answer, ideal_answer):
-
     print("IDEAL IN GRADER:", ideal_answer)
     print("USER IN GRADER:", user_answer)
 
     try:
-        emb_model = get_model()
-        emb1 = emb_model.encode([ideal_answer], normalize_embeddings=True)
-        emb2 = emb_model.encode([user_answer], normalize_embeddings=True)
-        similarity = cosine_similarity(emb1, emb2)[0][0]
+        vectorizer = get_model()
+        tfidf_matrix = vectorizer.fit_transform([ideal_answer, user_answer])
+        similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
     except Exception as e:
         print("EMBEDDING MODEL ERROR:", e)
         similarity = token_overlap_score(user_answer, ideal_answer)
