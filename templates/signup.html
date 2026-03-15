@@ -1,29 +1,424 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="al-page">
-  <div class="al-card">
-    <p class="al-eyebrow">Get Started</p>
-    <h1>Create account</h1>
-    {% if error %}
-    <p class="al-error">{{ error }}</p>
-    {% endif %}
-    <form class="al-form" method="post" action="/signup">
-      <input type="text" name="website" autocomplete="off" tabindex="-1" style="display:none">
-      <label for="full_name">Full name</label>
-      <input id="full_name" name="full_name" type="text" placeholder="Your name" required>
+<style>
+  /* Reuse shared auth CSS – defined in login.html – but scoped here too for standalone use */
+  html, body { overflow-x: hidden; }
 
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" placeholder="you@example.com" required>
+  .auth-root {
+    position: relative;
+    min-height: calc(100vh - 70px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+  }
 
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" placeholder="At least 6 characters" required>
+  #auth-canvas {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
 
-      <label for="confirm_password">Confirm password</label>
-      <input id="confirm_password" name="confirm_password" type="password" placeholder="Re-enter password" required>
+  /* ━━ LEFT brand panel ━━ */
+  .auth-brand {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 56px;
+    background: linear-gradient(145deg, rgba(15,23,42,0.97) 0%, rgba(30,41,59,0.96) 100%);
+    backdrop-filter: blur(16px);
+    border-right: 1px solid rgba(16,185,129,0.18);
+    overflow: hidden;
+  }
 
-      <button class="btn-primary" type="submit">Create account</button>
-    </form>
-    <p style="margin:12px 0 0;color:#6b7280;font-size:0.9rem;">Already have an account? <a href="/login">Login</a></p>
+  .auth-brand .orb {
+    position: absolute; border-radius: 50%;
+    pointer-events: none; filter: blur(60px); opacity: 0.45;
+    animation: orb-float 8s ease-in-out infinite;
+  }
+  .orb-1 { width: 340px; height: 340px; background: radial-gradient(circle, #10b981, transparent); top: -100px; right: -80px; animation-delay:0s; }
+  .orb-2 { width: 260px; height: 260px; background: radial-gradient(circle, #6366f1, transparent); bottom: -60px; left: -60px; animation-delay:-4s; }
+  .orb-3 { width: 180px; height: 180px; background: radial-gradient(circle, #f59e0b, transparent); top: 55%; left: 25%; opacity: 0.2; animation-delay:-2s; }
+
+  @keyframes orb-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    33%       { transform: translateY(-24px) scale(1.05); }
+    66%       { transform: translateY(16px) scale(0.97); }
+  }
+
+  .ab-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 44px; animation: slide-in-up 0.7s ease both; }
+  .ab-logo-mark {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 0 24px rgba(16,185,129,0.55);
+    animation: pulse-shadow-green 3s ease-in-out infinite;
+  }
+  @keyframes pulse-shadow-green {
+    0%, 100% { box-shadow: 0 0 24px rgba(16,185,129,0.55); }
+    50%       { box-shadow: 0 0 44px rgba(16,185,129,0.9), 0 0 60px rgba(16,185,129,0.3); }
+  }
+  .ab-logo-name { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+
+  .ab-headline {
+    font-size: 2.3rem; font-weight: 900; color: #fff;
+    letter-spacing: -0.04em; line-height: 1.15; margin: 0 0 18px;
+    animation: slide-in-up 0.8s 0.1s ease both;
+  }
+  .ab-headline .grad-text {
+    background: linear-gradient(90deg, #34d399, #a5b4fc, #fcd34d);
+    background-size: 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+
+  .ab-subtext { color: #94a3b8; font-size: 0.95rem; line-height: 1.7; margin: 0 0 36px; max-width: 360px; animation: slide-in-up 0.8s 0.2s ease both; }
+
+  /* Steps list for signup panel */
+  .ab-steps { display: flex; flex-direction: column; gap: 18px; animation: slide-in-up 0.8s 0.3s both; }
+  .ab-step {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+  .ab-step:hover { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.28); transform: translateX(4px); }
+  .ab-step-num {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800; color: #fff;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.4);
+  }
+  .ab-step-text { color: #e2e8f0; font-size: 0.87rem; line-height: 1.5; }
+  .ab-step-text strong { color: #fff; font-weight: 700; display: block; margin-bottom: 2px; }
+
+  .floating-tags { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .ftag {
+    position: absolute; padding: 5px 12px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.35);
+    font-size: 0.72rem; font-family: "IBM Plex Mono", monospace;
+    white-space: nowrap; animation: float-tag linear infinite;
+  }
+  @keyframes float-tag {
+    0%   { transform: translateY(100vh) rotate(-5deg); opacity: 0; }
+    5%   { opacity: 1; } 90% { opacity: 1; }
+    100% { transform: translateY(-120px) rotate(5deg); opacity: 0; }
+  }
+
+  /* ━━ RIGHT form panel ━━ */
+  .auth-form-panel {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 48px 56px;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(20px);
+  }
+  .theme-dark .auth-form-panel { background: rgba(17,24,39,0.97); }
+
+  .auth-form-inner { animation: slide-in-right 0.6s ease both; max-width: 380px; width: 100%; }
+
+  @keyframes slide-in-up   { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slide-in-right{ from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+  .af-eyebrow { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #10b981; margin: 0 0 8px; font-family: "IBM Plex Mono", monospace; }
+  .af-title { font-size: 2rem; font-weight: 900; letter-spacing: -0.04em; color: #0f172a; margin: 0 0 6px; line-height: 1.2; }
+  .theme-dark .af-title { color: #f1f5f9; }
+  .af-subtitle { font-size: 0.88rem; color: #6b7280; margin: 0 0 26px; }
+  .af-subtitle a { color: #10b981; font-weight: 600; text-decoration: none; }
+  .af-subtitle a:hover { text-decoration: underline; }
+
+  /* Password strength bar */
+  .pw-strength-wrap { margin-top: 6px; }
+  .pw-strength-bar { height: 4px; border-radius: 4px; background: #e5e7eb; overflow: hidden; }
+  .pw-strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; border-radius: 4px; }
+  .pw-strength-label { font-size: 0.73rem; color: #9ca3af; margin-top: 3px; }
+
+  /* Form groups */
+  .af-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .af-group label { font-size: 0.8rem; font-weight: 600; color: #374151; letter-spacing: 0.01em; }
+  .theme-dark .af-group label { color: #9ca3af; }
+
+  .af-input-wrap { position: relative; }
+  .af-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 0.95rem; pointer-events: none; z-index: 1; transition: transform 0.2s; }
+  .af-group input { width: 100%; padding: 11px 14px 11px 40px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 0.94rem; color: #0f172a; background: #f9fafb; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+  .theme-dark .af-group input { background: #1e293b; border-color: #374151; color: #f1f5f9; }
+  .af-group input::placeholder { color: #c4c9d4; }
+  .af-group input:focus { outline: none; border-color: #10b981; background: #fff; box-shadow: 0 0 0 3.5px rgba(16,185,129,0.13); }
+  .theme-dark .af-group input:focus { background: #1e293b; }
+
+  /* Submit */
+  .af-submit-btn {
+    width: 100%; padding: 13px; border-radius: 11px; border: none;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff; font-size: 1rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.01em;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px rgba(16,185,129,0.4);
+    position: relative; overflow: hidden; margin-top: 6px;
+  }
+  .af-submit-btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%); transform: translateX(-100%); transition: transform 0.5s; }
+  .af-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(16,185,129,0.5); }
+  .af-submit-btn:hover::after { transform: translateX(100%); }
+  .af-submit-btn:active { transform: translateY(0); }
+
+  /* Alerts */
+  .af-alert { display: flex; align-items: flex-start; gap: 10px; font-size: 0.86rem; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; animation: slide-in-up 0.4s ease; }
+  .af-alert-error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+
+  /* Terms */
+  .af-terms { font-size: 0.76rem; color: #9ca3af; text-align: center; margin-top: 14px; line-height: 1.5; }
+  .af-terms a { color: #10b981; text-decoration: none; }
+  .af-terms a:hover { text-decoration: underline; }
+  .af-foot { text-align: center; font-size: 0.82rem; color: #9ca3af; margin-top: 10px; }
+  .af-foot a { color: #10b981; font-weight: 600; text-decoration: none; }
+  .af-foot a:hover { text-decoration: underline; }
+
+  @media (max-width: 768px) {
+    .auth-root { grid-template-columns: 1fr; }
+    .auth-brand { display: none; }
+    .auth-form-panel { padding: 40px 24px; }
+  }
+</style>
+
+<canvas id="auth-canvas"></canvas>
+
+<div class="auth-root">
+
+  <!-- LEFT: Brand / Steps Panel -->
+  <div class="auth-brand">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="floating-tags" id="floating-tags"></div>
+
+    <div class="ab-logo">
+      <div class="ab-logo-mark">🚀</div>
+      <span class="ab-logo-name">CareerAI</span>
+    </div>
+
+    <h2 class="ab-headline">
+      Your journey to<br>
+      <span class="grad-text">greatness</span><br>
+      starts here.
+    </h2>
+
+    <p class="ab-subtext">Join thousands of engineers who prepared smarter and landed roles at top companies.</p>
+
+    <div class="ab-steps">
+      <div class="ab-step">
+        <div class="ab-step-num">1</div>
+        <div class="ab-step-text">
+          <strong>Create your free account</strong>
+          Takes less than 30 seconds — no credit card needed.
+        </div>
+      </div>
+      <div class="ab-step">
+        <div class="ab-step-num">2</div>
+        <div class="ab-step-text">
+          <strong>Upload your resume</strong>
+          Get an instant AI-powered ATS score and job-match analysis.
+        </div>
+      </div>
+      <div class="ab-step">
+        <div class="ab-step-num">3</div>
+        <div class="ab-step-text">
+          <strong>Start mock interviews</strong>
+          Practice under pressure with our AI interviewer and get scored instantly.
+        </div>
+      </div>
+      <div class="ab-step">
+        <div class="ab-step-num">4</div>
+        <div class="ab-step-text">
+          <strong>Land the offer</strong>
+          Track your progress, fix weak spots, and walk into interviews ready.
+        </div>
+      </div>
+    </div>
   </div>
-</section>
+
+  <!-- RIGHT: Signup Form -->
+  <div class="auth-form-panel">
+    <div class="auth-form-inner">
+      <p class="af-eyebrow">Get Started — Free</p>
+      <h1 class="af-title">Create your account</h1>
+      <p class="af-subtitle">
+        Already have one? <a href="/login">Sign in →</a>
+      </p>
+
+      {% if error %}
+      <div class="af-alert af-alert-error">⚠ {{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/signup" autocomplete="on" id="signup-form">
+        <input type="text" name="website" autocomplete="off" tabindex="-1" style="display:none">
+
+        <div class="af-group">
+          <label for="full_name">Full Name</label>
+          <div class="af-input-wrap">
+            <input id="full_name" name="full_name" type="text" placeholder="Alex Johnson" autocomplete="name" required>
+            <span class="af-icon">👤</span>
+          </div>
+        </div>
+
+        <div class="af-group">
+          <label for="email">Email Address</label>
+          <div class="af-input-wrap">
+            <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+            <span class="af-icon">✉️</span>
+          </div>
+        </div>
+
+        <div class="af-group">
+          <label for="password">Password</label>
+          <div class="af-input-wrap">
+            <input id="password" name="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" required minlength="6">
+            <span class="af-icon">🔒</span>
+          </div>
+          <div class="pw-strength-wrap">
+            <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill"></div></div>
+            <div class="pw-strength-label" id="pw-label">Enter a password</div>
+          </div>
+        </div>
+
+        <div class="af-group">
+          <label for="confirm_password">Confirm Password</label>
+          <div class="af-input-wrap">
+            <input id="confirm_password" name="confirm_password" type="password" placeholder="Re-enter password" autocomplete="new-password" required>
+            <span class="af-icon">✅</span>
+          </div>
+        </div>
+
+        <button class="af-submit-btn" type="submit">Create Free Account →</button>
+      </form>
+
+      <p class="af-terms">
+        By creating an account you agree to our
+        <a href="/terms">Terms of Service</a> &amp; <a href="/privacy">Privacy Policy</a>.
+      </p>
+      <p class="af-foot">
+        Already have an account? <a href="/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Password Strength Indicator ── */
+(function() {
+  const pw = document.getElementById("password");
+  const fill = document.getElementById("pw-fill");
+  const label = document.getElementById("pw-label");
+  if (!pw) return;
+
+  const levels = [
+    { score: 0,  pct:  0,  color: "#e5e7eb", text: "Enter a password" },
+    { score: 1,  pct: 25,  color: "#ef4444", text: "Weak" },
+    { score: 2,  pct: 50,  color: "#f59e0b", text: "Fair" },
+    { score: 3,  pct: 75,  color: "#3b82f6", text: "Good" },
+    { score: 4,  pct: 100, color: "#10b981", text: "Strong 💪" },
+  ];
+
+  function score(v) {
+    let s = 0;
+    if (v.length >= 6) s++;
+    if (v.length >= 10) s++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+    if (/[^A-Za-z0-9]/.test(v) || /\d/.test(v)) s++;
+    return Math.min(s, 4);
+  }
+
+  pw.addEventListener("input", () => {
+    const s = score(pw.value);
+    const lv = levels[s];
+    fill.style.width = lv.pct + "%";
+    fill.style.background = lv.color;
+    label.textContent = lv.text;
+    label.style.color = lv.color === "#e5e7eb" ? "#9ca3af" : lv.color;
+  });
+})();
+
+/* ── Confirm password live check ── */
+(function() {
+  const pw = document.getElementById("password");
+  const cpw = document.getElementById("confirm_password");
+  if (!pw || !cpw) return;
+  cpw.addEventListener("input", () => {
+    cpw.setCustomValidity(cpw.value !== pw.value ? "Passwords do not match" : "");
+  });
+})();
+
+/* ── Particle Canvas (green theme) ── */
+(function() {
+  const canvas = document.getElementById("auth-canvas");
+  const ctx = canvas.getContext("2d");
+  const COLOR_R = 16, COLOR_G = 185, COLOR_B = 129;
+
+  let W, H, particles = [], mouse = { x: -999, y: -999 };
+  const N = 75;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+  function rnd(a, b) { return Math.random() * (b - a) + a; }
+
+  function mkp() {
+    return { x: rnd(0, W), y: rnd(0, H), vx: rnd(-0.3, 0.3), vy: rnd(-0.4, -0.1), r: rnd(1.5, 3.5), alpha: rnd(0.1, 0.4), life: 1, decay: rnd(0.001, 0.003) };
+  }
+
+  function init() { particles = Array.from({ length: N }, mkp); }
+
+  function rgba(a) { return `rgba(${COLOR_R},${COLOR_G},${COLOR_B},${a})`; }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = rgba(0.1 * (1 - dist / 120));
+          ctx.lineWidth = 0.7; ctx.stroke();
+        }
+      }
+    }
+
+    particles.forEach((p, idx) => {
+      const mdx = p.x - mouse.x, mdy = p.y - mouse.y, md = Math.hypot(mdx, mdy);
+      if (md < 90) { p.vx += (mdx / md) * 0.07; p.vy += (mdy / md) * 0.07; }
+      p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+      if (p.life <= 0 || p.y < -20) { particles[idx] = { ...mkp(), x: rnd(0, W), y: H + 10 }; return; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(p.alpha * p.life);
+      ctx.fill();
+    });
+
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", () => { resize(); init(); });
+  window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  resize(); init(); frame();
+})();
+
+/* ── Floating Tags ── */
+(function() {
+  const tags = ["Python", "React", "SQL", "Algorithms", "FAANG", "Resume", "DSA", "Behavioral", "System Design", "TypeScript", "Interview Prep", "Node.js", "AWS", "Career", "Full Stack", "Backend"];
+  const container = document.getElementById("floating-tags");
+  tags.forEach(tag => {
+    const el = document.createElement("div");
+    el.className = "ftag";
+    el.textContent = tag;
+    const dur = 14 + Math.random() * 12;
+    el.style.cssText = `left:${5 + Math.random() * 80}%;animation-duration:${dur}s;animation-delay:${-(Math.random() * dur)}s;`;
+    container.appendChild(el);
+  });
+})();
+</script>
 {% endblock %}
