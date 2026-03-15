@@ -1132,6 +1132,9 @@ def init_user_tables() -> None:
     conn.close()
 
 
+init_user_tables()
+
+
 def is_admin_session(request: Request) -> bool:
     return request.session.get("admin") is True
 
