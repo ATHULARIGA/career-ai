@@ -54,8 +54,11 @@ def signup(
     except Exception as e:
         err_detail = traceback.format_exc()
         _log.error("Signup error: %s", err_detail)
-        conn.close()
-        return templates.TemplateResponse("signup.html", {"request": request, "error": f"Signup error: {e}"})
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return templates.TemplateResponse("signup.html", {"request": request, "error": "Signup failed. Please try again or contact support."})
     conn.close()
 
     request.session["user_id"] = int(user_id)
