@@ -8,6 +8,7 @@ python-dotenv
 scikit-learn
 numpy
 itsdangerous
+gunicorn
 starlette
 sentry-sdk
 psycopg[binary]
