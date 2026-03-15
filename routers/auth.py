@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from core import *
+import logging
+import traceback
+
+_log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -48,8 +52,10 @@ def signup(
         row = cur.fetchone()
         user_id = int((row or [0])[0] or 0)
     except Exception as e:
+        err_detail = traceback.format_exc()
+        _log.error("Signup error: %s", err_detail)
         conn.close()
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Signup failed due to a server error. Please try again."})
+        return templates.TemplateResponse("signup.html", {"request": request, "error": f"Signup error: {e}"})
     conn.close()
 
     request.session["user_id"] = int(user_id)
