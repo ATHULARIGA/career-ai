@@ -32,15 +32,6 @@ def terms(request: Request):
     return templates.TemplateResponse("terms.html", {"request": request})
 
 
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-    req_id = getattr(request.state, "request_id", "n/a")
-    logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
-    return templates.TemplateResponse(
-        "error.html",
-        {"request": request, "request_id": req_id},
-        status_code=500,
-    )
 
 
 # LANDING PAGE
