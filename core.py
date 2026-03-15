@@ -104,7 +104,7 @@ CODING_MAX_CODE_CHARS = max(2000, int(os.getenv("CODING_MAX_CODE_CHARS") or 4000
 CODING_MAX_CUSTOM_INPUT_CHARS = max(100, int(os.getenv("CODING_MAX_CUSTOM_INPUT_CHARS") or 10000))
 CODING_ASYNC_JUDGE = (os.getenv("CODING_ASYNC_JUDGE") or "true").strip().lower() in ("1", "true", "yes", "on")
 CODING_DEEP_INSIGHTS = (os.getenv("CODING_DEEP_INSIGHTS") or "false").strip().lower() in ("1", "true", "yes", "on")
-TRUSTED_HOSTS = [h.strip() for h in (os.getenv("TRUSTED_HOSTS") or "localhost,127.0.0.1,testserver").split(",") if h.strip()]
+TRUSTED_HOSTS = [h.strip() for h in (os.getenv("TRUSTED_HOSTS") or "localhost,127.0.0.1,testserver").split(",") if h.strip()] + [".onrender.com"]
 ENABLE_HTTPS_REDIRECT = (os.getenv("ENABLE_HTTPS_REDIRECT") or "false").strip().lower() in ("1", "true", "yes", "on")
 
 SENTRY_DSN = (os.getenv("SENTRY_DSN") or "").strip()
