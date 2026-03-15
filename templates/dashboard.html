@@ -29,26 +29,6 @@
             </div>
         </header>
 
-        {% if progress %}
-        <section class="rd-panel" style="margin-bottom:14px;">
-            <h2>Progress Snapshot (Last 7 days)</h2>
-            <div class="rd-delta-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-                <div><p>Resume runs</p><strong>{{ progress.resume_runs_7d }}</strong></div>
-                <div><p>Resume avg</p><strong>{{ progress.resume_avg_7d }}/10</strong></div>
-                <div><p>Coding subs</p><strong>{{ progress.coding_submissions_7d }}</strong></div>
-                <div><p>Accept rate</p><strong>{{ progress.coding_accept_rate_7d }}%</strong></div>
-            </div>
-            <div style="margin-top:10px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:10px;padding:10px 12px;">
-                <p style="margin:0;color:#3730a3;font-size:0.85rem;">Next best action (10 min)</p>
-                <p style="margin:4px 0 0;font-weight:600;">{{ progress.next_action }}</p>
-                <p style="margin:6px 0 0;color:#475569;font-size:0.85rem;">
-                    Streak: <strong>{{ progress.current_streak_days }} day{{ '' if progress.current_streak_days == 1 else 's' }}</strong>
-                    · Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
-                </p>
-            </div>
-        </section>
-        {% endif %}
-
         {% if report.error %}
         <section class="rd-panel rd-error">
             <h2>Analysis Error</h2>
@@ -59,87 +39,120 @@
         {% set overall = report.scores.Overall or 0 %}
         {% set ats = report.scores.ATS or 0 %}
         {% set coverage = report.keyword_coverage or 0 %}
+        {% set match_percent = report.job_match_percent or 0 %}
 
-        <section class="rd-score-grid">
-            <article class="rd-stat">
-                <p>Overall</p>
-                <h3>{{ overall }}/10</h3>
-                <span>{{ report.scores.Status or "Needs Review" }}</span>
-            </article>
-            <article class="rd-stat">
-                <p>ATS</p>
-                <h3>{{ ats }}/10</h3>
-                <span>Readability + structure</span>
-            </article>
-            <article class="rd-stat">
-                <p>Keyword Coverage</p>
-                <h3>{{ coverage }}%</h3>
-                <span>Role alignment</span>
-            </article>
-        </section>
+        <nav class="rd-tabs" id="dashboardTabs">
+            <button class="rd-tab-btn rd-tab-active" data-target="tab-overview">Overview</button>
+            <button class="rd-tab-btn" data-target="tab-deepdive">Deep Dive</button>
+            <button class="rd-tab-btn" data-target="tab-nextsteps">Next Steps</button>
+            <button class="rd-tab-btn" data-target="tab-history">History</button>
+        </nav>
 
-        {% if report.version_diff %}
-        <section class="rd-panel">
-            <h2>Version Delta</h2>
-            <div class="rd-delta-grid">
-                <div><p>Overall</p><strong>{{ "%+.1f"|format(report.version_diff.overall_delta) }}</strong></div>
-                <div><p>ATS</p><strong>{{ "%+.1f"|format(report.version_diff.ats_delta) }}</strong></div>
-                <div><p>Keyword Coverage</p><strong>{{ "%+.1f"|format(report.version_diff.keyword_coverage_delta) }}%</strong></div>
-            </div>
-        </section>
-        {% endif %}
-
-        {% if resume_versions %}
-        <section class="rd-panel">
-            <h2>Recent Resume Runs</h2>
-            <div class="rd-link-grid">
-                {% for v in resume_versions|reverse %}
-                <article class="rd-link">
-                    <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
-                    <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
-                    <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
+        <div id="tab-overview" class="rd-tab-content rd-active-section">
+            <section class="rd-score-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+                <article class="rd-stat">
+                    <p>Overall Score</p>
+                    <h3>{{ overall }}/10</h3>
+                    <span>{{ report.scores.Status or "Needs Review" }}</span>
                 </article>
-                {% endfor %}
+                <article class="rd-stat">
+                    <p>ATS Readable</p>
+                    <h3>{{ ats }}/10</h3>
+                    <span>Structure & Parsing</span>
+                </article>
+                <article class="rd-stat">
+                    <p>Keyword Coverage</p>
+                    <h3>{{ coverage }}%</h3>
+                    <span>Lexical Alignment</span>
+                </article>
+                <article class="rd-stat" style="border-left: 2px solid #e0e7ff; background: #fafbfe;">
+                    <p style="color:#4f46e5;font-weight:600;">Job Match</p>
+                    <h3 style="color:#4338ca;">{{ match_percent }}%</h3>
+                    <span>Requirements Met</span>
+                </article>
+            </section>
+
+            {% if report.critical_changes_required %}
+            <section class="rd-panel" style="border: 2px solid #fee2e2; background: #fef2f2; margin-top:24px;">
+                <h2 style="color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Critical Changes Required
+                </h2>
+                <p style="margin-bottom:12px; color:#7f1d1d;">Address these items immediately to improve your {{ report.job_match_percent }}% job match.</p>
+                <ul style="margin:0; padding-left:18px; color:#7f1d1d;">
+                    {% for change in report.critical_changes_required %}
+                    <li style="margin-bottom:6px;"><strong>{{ change }}</strong></li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            <div class="rd-grid-2" style="margin-top:24px;">
+                <section class="rd-panel">
+                    <h2>Recruiter simulation</h2>
+                    <p><strong>First impression:</strong> {{ report.recruiter_simulation.first_impression or "N/A" }}</p>
+                    <p><strong>Likely outcome:</strong> {{ report.recruiter_simulation.likely_outcome or "N/A" }}</p>
+                    <p class="rd-subtitle">Strengths</p>
+                    <ul>
+                        {% for s in report.recruiter_simulation.strengths or [] %}
+                        <li>{{ s }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="rd-subtitle">Risks</p>
+                    <ul>
+                        {% for r in report.recruiter_simulation.risks or [] %}
+                        <li>{{ r }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section class="rd-panel">
+                    <h2>Role benchmark</h2>
+                    <p><strong>Cohort:</strong> {{ report.benchmarking.cohort or "N/A" }}</p>
+                    <p><strong>Percentile:</strong> {{ report.benchmarking.percentile or 0 }}th</p>
+                    <p class="rd-muted">{{ report.benchmarking.summary or "" }}</p>
+                    <div class="rd-meter"><div style="width: {{ report.benchmarking.percentile or 0 }}%;"></div></div>
+                </section>
             </div>
-        </section>
-        {% endif %}
-
-        <div class="rd-grid-2">
-            <section class="rd-panel">
-                <h2>Evidence-based findings</h2>
-                {% if report.evidence %}
-                    {% for item in report.evidence %}
-                    <article class="rd-item">
-                        <span class="rd-tag">{{ item.category or "General" }}</span>
-                        <p class="rd-quote">{{ item.snippet or "No snippet provided." }}</p>
-                        <p>{{ item.issue or "No issue details." }}</p>
-                    </article>
-                    {% endfor %}
-                {% else %}
-                    <p class="rd-empty">No evidence items available.</p>
-                {% endif %}
-            </section>
-
-            <section class="rd-panel">
-                <h2>Keyword gap priorities</h2>
-                {% if report.keyword_gaps %}
-                    {% for gap in report.keyword_gaps %}
-                    <article class="rd-gap">
-                        <div>
-                            <p class="rd-keyword">{{ gap.keyword or "Keyword" }}</p>
-                            <p class="rd-muted">{{ gap.reason or "No reason provided." }}</p>
-                        </div>
-                        <div class="rd-priority">
-                            <span>{{ gap.priority or "Useful" }}</span>
-                            <strong>+{{ gap.estimated_score_gain or 0 }}</strong>
-                        </div>
-                    </article>
-                    {% endfor %}
-                {% else %}
-                    <p class="rd-empty">No major keyword gaps detected.</p>
-                {% endif %}
-            </section>
         </div>
+
+        <div id="tab-deepdive" class="rd-tab-content">
+            <div class="rd-grid-2">
+                <section class="rd-panel">
+                    <h2>Evidence-based findings</h2>
+                    {% if report.evidence %}
+                        {% for item in report.evidence %}
+                        <article class="rd-item">
+                            <span class="rd-tag">{{ item.category or "General" }}</span>
+                            <p class="rd-quote">{{ item.snippet or "No snippet provided." }}</p>
+                            <p>{{ item.issue or "No issue details." }}</p>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rd-empty">No evidence items available.</p>
+                    {% endif %}
+                </section>
+
+                <section class="rd-panel">
+                    <h2>Keyword gap priorities</h2>
+                    {% if report.keyword_gaps %}
+                        {% for gap in report.keyword_gaps %}
+                        <article class="rd-gap">
+                            <div>
+                                <p class="rd-keyword">{{ gap.keyword or "Keyword" }}</p>
+                                <p class="rd-muted">{{ gap.reason or "No reason provided." }}</p>
+                            </div>
+                            <div class="rd-priority">
+                                <span>{{ gap.priority or "Useful" }}</span>
+                                <strong>+{{ gap.estimated_score_gain or 0 }}</strong>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rd-empty">No major keyword gaps detected.</p>
+                    {% endif %}
+                </section>
+            </div>
 
         <div class="rd-grid-2">
             <section class="rd-panel">
@@ -176,33 +189,9 @@
             </section>
         </div>
 
-        <div class="rd-grid-2">
-            <section class="rd-panel">
-                <h2>Recruiter simulation</h2>
-                <p><strong>First impression:</strong> {{ report.recruiter_simulation.first_impression or "N/A" }}</p>
-                <p><strong>Likely outcome:</strong> {{ report.recruiter_simulation.likely_outcome or "N/A" }}</p>
-                <p class="rd-subtitle">Strengths</p>
-                <ul>
-                    {% for s in report.recruiter_simulation.strengths or [] %}
-                    <li>{{ s }}</li>
-                    {% endfor %}
-                </ul>
-                <p class="rd-subtitle">Risks</p>
-                <ul>
-                    {% for r in report.recruiter_simulation.risks or [] %}
-                    <li>{{ r }}</li>
-                    {% endfor %}
-                </ul>
-            </section>
-
-            <section class="rd-panel">
-                <h2>Role benchmark</h2>
-                <p><strong>Cohort:</strong> {{ report.benchmarking.cohort or "N/A" }}</p>
-                <p><strong>Percentile:</strong> {{ report.benchmarking.percentile or 0 }}th</p>
-                <p class="rd-muted">{{ report.benchmarking.summary or "" }}</p>
-                <div class="rd-meter"><div style="width: {{ report.benchmarking.percentile or 0 }}%;"></div></div>
-            </section>
         </div>
+
+        <div id="tab-nextsteps" class="rd-tab-content">
 
         <div class="rd-grid-2">
             <section class="rd-panel">
@@ -235,23 +224,91 @@
                 {% endif %}
             </section>
         </div>
+        </div>
 
-        <section class="rd-panel">
-            <h2>Portfolio and proof links</h2>
-            {% if report.link_validation %}
-            <div class="rd-link-grid">
-                {% for item in report.link_validation %}
-                <article class="rd-link">
-                    <p class="rd-link-url">{{ item.url or "N/A" }}</p>
-                    <p class="rd-link-status">{{ item.status or "unknown" }}</p>
-                    <p class="rd-muted">{{ item.note or "" }}</p>
-                </article>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="rd-empty">No links found in resume.</p>
+        <div id="tab-history" class="rd-tab-content">
+            {% if progress %}
+            <section class="rd-panel" style="margin-bottom:14px;">
+                <h2>Progress Snapshot (Last 7 days)</h2>
+                <div class="rd-delta-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+                    <div><p>Resume runs</p><strong>{{ progress.resume_runs_7d }}</strong></div>
+                    <div><p>Resume avg</p><strong>{{ progress.resume_avg_7d }}/10</strong></div>
+                    <div><p>Coding subs</p><strong>{{ progress.coding_submissions_7d }}</strong></div>
+                    <div><p>Accept rate</p><strong>{{ progress.coding_accept_rate_7d }}%</strong></div>
+                </div>
+                <div style="margin-top:10px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:10px;padding:10px 12px;">
+                    <p style="margin:0;color:#3730a3;font-size:0.85rem;">Next best action (10 min)</p>
+                    <p style="margin:4px 0 0;font-weight:600;">{{ progress.next_action }}</p>
+                    <p style="margin:6px 0 0;color:#475569;font-size:0.85rem;">
+                        Streak: <strong>{{ progress.current_streak_days }} day{{ '' if progress.current_streak_days == 1 else 's' }}</strong>
+                        · Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
+                    </p>
+                </div>
+            </section>
             {% endif %}
-        </section>
+
+            {% if report.version_diff %}
+            <section class="rd-panel">
+                <h2>Version Delta</h2>
+                <div class="rd-delta-grid">
+                    <div><p>Overall</p><strong>{{ "%+.1f"|format(report.version_diff.overall_delta) }}</strong></div>
+                    <div><p>ATS</p><strong>{{ "%+.1f"|format(report.version_diff.ats_delta) }}</strong></div>
+                    <div><p>Keyword Coverage</p><strong>{{ "%+.1f"|format(report.version_diff.keyword_coverage_delta) }}%</strong></div>
+                </div>
+            </section>
+            {% endif %}
+
+            {% if resume_versions %}
+            <section class="rd-panel">
+                <h2>Recent Resume Runs</h2>
+                <div class="rd-link-grid">
+                    {% for v in resume_versions|reverse %}
+                    <article class="rd-link">
+                        <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
+                        <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
+                        <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+            <section class="rd-panel">
+                <h2>Portfolio and proof links</h2>
+                {% if report.link_validation %}
+                <div class="rd-link-grid">
+                    {% for item in report.link_validation %}
+                    <article class="rd-link">
+                        <p class="rd-link-url">{{ item.url or "N/A" }}</p>
+                        <p class="rd-link-status">{{ item.status or "unknown" }}</p>
+                        <p class="rd-muted">{{ item.note or "" }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="rd-empty">No links found in resume.</p>
+                {% endif %}
+            </section>
+        </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".rd-tab-btn");
+        const contents = document.querySelectorAll(".rd-tab-content");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                // Remove active styling from all tabs
+                tabs.forEach(t => t.classList.remove("rd-tab-active"));
+                contents.forEach(c => c.classList.remove("rd-active-section"));
+
+                // Add active styling back to the clicked target
+                tab.classList.add("rd-tab-active");
+                const targetId = tab.getAttribute("data-target");
+                document.getElementById(targetId).classList.add("rd-active-section");
+            });
+        });
+    });
+</script>
 {% endblock %}

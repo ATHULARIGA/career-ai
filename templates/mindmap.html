@@ -13,12 +13,7 @@
             </header>
 
             <section class="cp-panel career-toolbar">
-                {% if (user_plan or "free") != "premium" %}
-                <p class="cp-muted" style="margin:0 0 10px;">
-                    Free plan: 1 roadmap/day. Detailed skill insights are Premium.
-                    <a href="/pricing">Upgrade</a>
-                </p>
-                {% endif %}
+
                 <div class="career-input">
                     <input type="text" id="roleInput" value="{{ (memory.target_role if memory else '') }}" placeholder="Enter Career Role (e.g. Data Scientist)">
                     <button id="generateBtn" onclick="generateMindmap()">Generate Roadmap</button>
@@ -136,7 +131,8 @@ function renderGraph(data) {
     const skillCache = {};
     document.getElementById("mindmap").innerHTML = "";
 
-    const width = document.getElementById("mindmap").clientWidth || 800;
+    const actualWidth = document.getElementById("mindmap").clientWidth;
+    const width = (actualWidth > 200) ? actualWidth : 1000;
     const height = 800;
 
     const svg = d3.select("#mindmap")
@@ -222,9 +218,7 @@ function renderGraph(data) {
         
         const linkEnter = link.enter()
         .append("line")
-        .attr("stroke", "#e5e7eb")
-        .attr("stroke-width", 2)
-        .attr("stroke-opacity", 0.6)
+        .attr("class", "obs-link")
         .style("transition","all 0.25s ease");
 
         link.merge(linkEnter);
@@ -250,69 +244,43 @@ function renderGraph(data) {
                 .on("drag", dragged)
                 .on("end", dragended));
         
+        // Compute rough width based on text length
+        const charWidth = 7;
+        const paddingH = 20;
 
-        nodeEnter.append("circle")
-            .attr("r", d => d.depth === 0 ? 35 : 18)
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 2)
+        nodeEnter.append("rect")
+            .attr("height", d => d.depth === 0 ? 36 : 28)
+            .attr("rx", 6) // Obsidian/Notion slightly rounded corners
+            .attr("ry", 6)
+            .attr("x", d => {
+                const w = Math.max(80, d.name.length * charWidth + paddingH*2);
+                d._w = w;
+                return -w/2;
+            })
+            .attr("y", d => d.depth === 0 ? -18 : -14)
+            .attr("width", d => d._w)
+            .attr("stroke", "currentColor")
+            .attr("stroke-width", 1)
             .style("cursor", "pointer");
-        
-        nodeEnter.select("circle")
-        .on("mouseover", function(event,d){
-
-            linkGroup.selectAll("line")
-                .attr("stroke","#cbd5e1")
-
-            linkGroup.selectAll("line")
-                .filter(l => l.source.id === d.id || l.target.id === d.id)
-                .attr("stroke","#e5e7eb")
-                .attr("stroke-width",3)
-
-            d3.select(this)
-                .transition()
-                .duration(180)
-                .attr("r", d.depth === 0 ? 40 : 22)
-                .attr("stroke","#e5e7eb")
-                .attr("stroke-width",4)
-
-        })
-        .on("mouseout", function(event,d){
-
-            linkGroup.selectAll("line")
-                .attr("stroke","#ced4de")
-                .attr("stroke-width",2)
-
-            d3.select(this)
-                .transition()
-                .duration(180)
-                .attr("r", d.depth === 0 ? 35 : 18)
-                .attr("stroke","#fff")
-                .attr("stroke-width",2)
-
-        })
 
         nodeEnter.append("text")
-            .attr("dy", d => d.depth === 0 ? 55 : 35)
+            .attr("dy", 4) // vertical center alignment roughly
             .attr("text-anchor", "middle")
-            .style("fill", "#1e293b")
             .style("pointer-events", "none");
 
         // Merge enter and update
         const nodeCombined = nodeEnter.merge(node);
         
-        nodeCombined.select("circle")
-        .attr("fill", d => {
-
-            if(d.depth === 0) return "#1f2937";   // root (dark but softer)
-            if(d._children) return "#6b7280";     // expandable nodes (medium grey)
-            return "#d1d5db";                     // leaf nodes (light grey)
-
-        })
+        nodeCombined.select("rect")
+            .attr("class", d => {
+                if (d.depth === 0) return "obs-node-root";
+                if (d._children) return "obs-node-expandable";
+                return "obs-node-leaf";
+            });
 
         nodeCombined.select("text")
             .text(d => d.name)
-            .style("font-size", d => d.depth === 0 ? "18px" : "13px")
-            .style("font-weight", d => d.depth === 0 ? "800" : "600");
+            .attr("class", d => d.depth === 0 ? "obs-text-root" : "obs-text-node");
 
         // Fix root node
         const root = nodes.find(d => d.depth === 0);

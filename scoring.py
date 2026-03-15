@@ -163,6 +163,10 @@ Context:
 
 Return this schema exactly:
 {{
+  "job_match_percent": 0,
+  "critical_changes_required": [
+    "..."
+  ],
   "score": {{
     "Impact": 0,
     "Skills": 0,
@@ -206,6 +210,8 @@ Return this schema exactly:
 }}
 
 Rules:
+- Calculate `job_match_percent` as a strict integer 0-100 indicating direct matching with the provided job description (if none provided, base it on the target role).
+- Base `critical_changes_required` on the largest skill or alignment gaps missing from the expected job. Provide exactly 3 to 5 critical changes as direct actionable steps.
 - Use 0-10 scoring scale with one decimal precision.
 - Provide 4-8 evidence items, each referencing realistic resume excerpts.
 - Provide up to 7 keyword gaps sorted by impact.
@@ -267,9 +273,22 @@ Resume:
             percentile = 0
         percentile = max(1, min(99, percentile)) if percentile else 0
 
+        job_match_percent = parsed.get("job_match_percent", 0)
+        try:
+            job_match_percent = int(job_match_percent)
+            job_match_percent = max(0, min(100, job_match_percent))
+        except Exception:
+            job_match_percent = 0
+            
+        critical_changes_required = parsed.get("critical_changes_required", [])
+        if not isinstance(critical_changes_required, list):
+            critical_changes_required = []
+
         return {
             "error": "",
             "scores": scores,
+            "job_match_percent": job_match_percent,
+            "critical_changes_required": critical_changes_required[:5],
             "evidence": parsed.get("evidence", [])[:8] if isinstance(parsed.get("evidence", []), list) else [],
             "keyword_gaps": keyword_gaps[:7],
             "targeted_rewrites": parsed.get("targeted_rewrites", [])[:6] if isinstance(parsed.get("targeted_rewrites", []), list) else [],
@@ -289,4 +308,6 @@ Resume:
     except Exception as e:
         report = default_report(str(e))
         report["link_validation"] = local_link_checks
+        report["job_match_percent"] = 0
+        report["critical_changes_required"] = []
         return report

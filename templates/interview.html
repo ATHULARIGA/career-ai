@@ -75,10 +75,14 @@
                     </select>
                 </div>
 
-                <label class="mi-check">
-                    <input type="checkbox" name="red_team" value="true" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>
-                    <span>Enable Red-Team mode (pressure + contradiction checks)</span>
-                </label>
+                <div class="mi-field">
+                    <label for="persona">Interviewer Persona</label>
+                    <select id="persona" name="persona">
+                        <option value="Friendly">Friendly</option>
+                        <option value="Neutral" selected>Neutral</option>
+                        <option value="Pressure Test" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>Pressure Test (Premium)</option>
+                    </select>
+                </div>
 
                 <div class="mi-actions">
                     <button type="submit" class="btn-primary mi-button">Start Interview</button>
@@ -106,10 +110,53 @@
             {% if not finished %}
             <form action="/evaluate" method="post" id="answerForm" class="mi-answer-form">
                 <input type="hidden" name="question" value="{{ questions[current] }}">
-                <input type="hidden" name="answer_time_sec" id="answer_time_sec" value="0">
-                <textarea name="answer" placeholder="Type your answer with concrete decisions, tradeoffs, and measurable impact..." required></textarea>
-                <div class="mi-actions">
-                    <button type="submit" class="btn-primary mi-button">Submit Answer</button>
+                <input type="hidden" id="answer_time_sec" name="answer_time_sec" value="0">
+                <input type="hidden" id="is_recorded" name="is_recorded" value="false">
+                
+                <div class="mi-recording-area" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <p style="margin:0; font-weight:600; font-size:0.95rem; color:#1e293b;">Live Presence Analytics</p>
+                            <p style="margin:2px 0 0; font-size:0.85rem; color:#64748b; max-width:400px;">Record your answer via webcam & microphone for pacing and expression analysis.</p>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" id="start-recording" class="btn-secondary" style="display:flex; align-items:center; gap:6px;">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"></circle></svg>
+                                Start Recording
+                            </button>
+                            <button type="button" id="stop-recording" class="btn-secondary" style="display:none; align-items:center; gap:6px; color:#ef4444; border-color:#ef4444;">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="10" height="10"></rect></svg>
+                                Stop Recording
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="video-container" style="display:none; justify-content:center; background:#0f172a; border-radius:8px; overflow:hidden; margin-bottom:16px;">
+                        <video id="webcam-video" autoplay muted playsinline style="max-height: 240px; transform: scaleX(-1);"></video>
+                    </div>
+
+                    <div style="display:flex; gap:12px; font-size:0.85rem; color:#64748b; margin-bottom:8px;">
+                        <div id="recording-indicator" style="display:none; align-items:center; gap:6px; color:#ef4444; font-weight:600;">
+                            <span style="display:inline-block; width:8px; height:8px; background:#ef4444; border-radius:50%; box-shadow:0 0 8px #ef4444;"></span>
+                            Recording live...
+                        </div>
+                    </div>
+
+                    <textarea id="answer-textarea" name="answer" placeholder="Speak to automatically transcribe your answer, or type it manually..." required style="width:100%; min-height:140px; border:1px solid #cbd5e1; border-radius:8px; padding:12px; font-family:inherit; resize:vertical;"></textarea>
+                </div>
+
+                <div class="mi-actions" style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:16px;">
+                    <div id="lifeline-wrapper" style="flex:1; max-width:65%;">
+                        <button type="button" id="btn-lifeline" class="btn-secondary" style="display:flex; align-items:center; gap:6px;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                            Use Interview Lifeline
+                        </button>
+                        <div id="lifeline-hints" style="display:none; margin-top:12px; padding:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:0.9rem; color:#166534;">
+                            <strong style="display:block; margin-bottom:8px;">Suggested Resume Hints:</strong>
+                            <ul id="lifeline-list" style="margin:0; padding-left:20px; line-height:1.5;"></ul>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary mi-button" id="submit-answer-btn">Submit Answer</button>
                 </div>
             </form>
             {% endif %}
@@ -226,8 +273,130 @@
 
     const form = document.getElementById("answerForm");
     if (!form) return;
-    const startedAt = Date.now();
+    
+    let startedAt = Date.now();
+    let stream = null;
+    let recognition = null;
+    let finalTranscript = '';
+
+    const startBtn = document.getElementById("start-recording");
+    const stopBtn = document.getElementById("stop-recording");
+    const video = document.getElementById("webcam-video");
+    const videoContainer = document.getElementById("video-container");
+    const textarea = document.getElementById("answer-textarea");
+    const indicator = document.getElementById("recording-indicator");
+    const isRecordedInput = document.getElementById("is_recorded");
+
+    if (startBtn && stopBtn) {
+        startBtn.addEventListener("click", async () => {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Your browser does not support media devices. Make sure you are using HTTPS or localhost.");
+                }
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                video.srcObject = stream;
+                videoContainer.style.display = "flex";
+                startBtn.style.display = "none";
+                stopBtn.style.display = "flex";
+                indicator.style.display = "flex";
+                isRecordedInput.value = "true";
+
+                // Reset timer once speaking starts
+                startedAt = Date.now();
+                finalTranscript = textarea.value ? textarea.value + " " : "";
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+
+                    recognition.onresult = (event) => {
+                        let interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const chunk = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += chunk + ' ';
+                            } else {
+                                interimTranscript += chunk;
+                            }
+                        }
+                        textarea.value = finalTranscript + interimTranscript;
+                    };
+
+                    // Handle edge cases where recognition silently crashes
+                    recognition.onend = () => {
+                        if (stream && stream.active) recognition.start();
+                    };
+
+                    recognition.start();
+                } else {
+                    textarea.placeholder = "Speech recognition is not supported in your browser (try Chrome/Edge). Video is recording, but please type your answer manually...";
+                }
+
+            } catch (err) {
+                console.error("Recording error:", err);
+                alert(`Recording failed: ${err.message || err.name}\n\nPlease ensure you are accessing the site via localhost or HTTPS, and have granted camera and microphone permissions.`);
+            }
+        });
+
+        stopBtn.addEventListener("click", () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            if (recognition) {
+                recognition.onend = null; // Prevent auto-restart
+                recognition.stop();
+            }
+            videoContainer.style.display = "none";
+            startBtn.style.display = "flex";
+            stopBtn.style.display = "none";
+            indicator.style.display = "none";
+        });
+    }
+
+    const btnLifeline = document.getElementById("btn-lifeline");
+    const lifelineHints = document.getElementById("lifeline-hints");
+    const lifelineList = document.getElementById("lifeline-list");
+
+    if (btnLifeline) {
+        btnLifeline.addEventListener("click", async () => {
+            btnLifeline.disabled = true;
+            btnLifeline.innerHTML = "Loading hints...";
+            try {
+                const formData = new FormData();
+                formData.append("question", document.querySelector("input[name='question']").value);
+                const res = await fetch("/interview/lifeline", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.hints && data.hints.length) {
+                    lifelineList.innerHTML = "";
+                    data.hints.forEach(hint => {
+                        const li = document.createElement("li");
+                        li.textContent = hint;
+                        li.style.marginBottom = "6px";
+                        lifelineList.appendChild(li);
+                    });
+                    lifelineHints.style.display = "block";
+                    btnLifeline.style.display = "none";
+                } else {
+                    btnLifeline.innerHTML = "Lifeline (Unavailable)";
+                }
+            } catch (err) {
+                console.error(err);
+                btnLifeline.innerHTML = "Lifeline (Error)";
+            }
+        });
+    }
+
     form.addEventListener("submit", function() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
         const sec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
         const target = document.getElementById("answer_time_sec");
         if (target) target.value = sec;

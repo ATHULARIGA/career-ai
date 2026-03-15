@@ -77,7 +77,13 @@
             </div>
 
             <div class="rr-field">
-                <label for="job_description">Job description (optional)</label>
+                <label for="job_link">Job link (optional)</label>
+                <input type="url" id="job_link" name="job_link" placeholder="https://linkedin.com/jobs/view/12345" style="width:100%; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                <p style="font-size: 0.8rem; color:#64748b; margin-top:4px;">We'll scrape this URL automatically.</p>
+            </div>
+
+            <div class="rr-field" style="margin-top:14px;">
+                <label for="job_description">Or paste Job description</label>
                 <textarea
                     id="job_description"
                     name="job_description"
