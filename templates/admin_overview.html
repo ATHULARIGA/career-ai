@@ -20,6 +20,8 @@
           <span>{{ "OK" if r[2] == 1 else "Fail" }}</span>
           <span>{{ "%.0f"|format(r[3]) }} ms</span>
         </div>
+        {% else %}
+        <p class="cp-muted" style="padding:12px 0;font-size:0.82rem;">No AI calls logged yet. Data will appear as users interact with the platform.</p>
         {% endfor %}
       </div>
     </section>
@@ -30,6 +32,9 @@
       <div class="ad-kv-row"><span>Interview Started</span><strong>{{ admin.conversion.interview_started }}</strong></div>
       <div class="ad-kv-row"><span>Interview Completed</span><strong>{{ admin.conversion.interview_completed }}</strong></div>
       <div class="ad-kv-row"><span>Mentor Bookings</span><strong>{{ admin.conversion.mentor_bookings }}</strong></div>
+      {% if admin.conversion.resume_reviews == 0 and admin.conversion.interview_started == 0 %}
+      <p class="cp-muted" style="padding:12px 0 0;font-size:0.82rem;">No conversions recorded yet. Data populates as users complete actions.</p>
+      {% endif %}
     </section>
 
     <section class="ad-panel">
@@ -37,6 +42,8 @@
       <div class="ad-list">
         {% for c in admin.cohorts %}
         <div class="ad-list-item"><strong>{{ c[0] or "unknown" }}</strong><em>{{ c[1] }} users</em></div>
+        {% else %}
+        <p class="cp-muted" style="font-size:0.82rem;">No cohort data yet.</p>
         {% endfor %}
       </div>
       <h3>Mentor operations</h3>
@@ -48,3 +55,4 @@
   </div>
 </section>
 {% endblock %}
+
