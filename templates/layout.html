@@ -1,88 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResuMate | AI Career Coach</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/styles.css?v=2">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResuMate | AI Career Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
 
-<nav class="navbar">
+  <nav class="navbar">
     <div class="logo" onclick="location.href='/'">
-        <div class="logo-box">R</div>
-        <span>ResuMate</span>
+      <div class="logo-box">R</div>
+      <span>ResuMate</span>
     </div>
 
     <div class="nav-links">
-        <a href="/resume">Resume Review</a>
-        <a href="/interview">Mock Interview</a>
-        <a href="/coding/problems">Coding Practice</a>
-        <a href="/career-map">Career Roadmap</a>
-        <a href="/book-call">Mentorship</a>
-        {% if request.session.get("admin") or request.session.get("user_role") == "admin" %}
-        <a href="/admin">Admin</a>
-        {% endif %}
-        {% if request.session.get("user_id") %}
-        <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
-        {% if not request.session.get("admin") and request.session.get("user_role") != "admin" %}
-        <a href="/pricing">Pricing</a>
-        <a href="/account">Account</a>
-        {% endif %}
-        <a href="/logout">Logout</a>
-        {% else %}
-        <a href="/login">Login</a>
-        <a href="/signup">Sign up</a>
-        {% endif %}
-        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
-            Dark
-        </button>
+      <a href="/resume">Resume Review</a>
+      <a href="/interview">Mock Interview</a>
+      <a href="/coding/problems">Coding Practice</a>
+      <a href="/career-map">Career Roadmap</a>
+      <a href="/book-call">Mentorship</a>
+      {% if request.session.get("admin") or request.session.get("user_role") == "admin" %}
+      <a href="/admin">Admin</a>
+      {% endif %}
+      {% if request.session.get("user_id") %}
+      <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
+      {% if not request.session.get("admin") and request.session.get("user_role") != "admin" %}
+      <a href="/pricing">Pricing</a>
+      <a href="/account">Account</a>
+      {% endif %}
+      <a href="/logout">Logout</a>
+      {% else %}
+      <a href="/login">Login</a>
+      <a href="/signup">Sign up</a>
+      {% endif %}
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+        Dark
+      </button>
     </div>
-</nav>
+  </nav>
 
-{% block content %}
-{% endblock %}
+  {% block content %}
+  {% endblock %}
 
-<footer style="padding:18px 24px;border-top:1px solid #e2e8f0;color:#64748b;font-size:0.88rem;display:flex;justify-content:center;gap:18px;">
-  <a href="/privacy">Privacy</a>
-  <a href="/terms">Terms</a>
-  <a href="/healthz">Status</a>
-</footer>
+  <footer
+    style="padding:18px 24px;border-top:1px solid #e2e8f0;color:#64748b;font-size:0.88rem;display:flex;justify-content:center;gap:18px;">
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+    <a href="/healthz">Status</a>
+  </footer>
 
-<script>
-(function() {
-  const root = document.documentElement;
-  const key = "resumate-theme";
-  const saved = localStorage.getItem(key);
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const initialTheme = saved || (prefersDark ? "dark" : "light");
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const key = "resumate-theme";
+      const saved = localStorage.getItem(key);
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initialTheme = saved || (prefersDark ? "dark" : "light");
 
-  function applyTheme(theme) {
-    if (theme === "dark") {
-      root.classList.add("theme-dark");
-    } else {
-      root.classList.remove("theme-dark");
-    }
-    const btn = document.getElementById("themeToggle");
-    if (btn) btn.textContent = theme === "dark" ? "Light" : "Dark";
-  }
+      function applyTheme(theme) {
+        if (theme === "dark") {
+          root.classList.add("theme-dark");
+        } else {
+          root.classList.remove("theme-dark");
+        }
+        const btn = document.getElementById("themeToggle");
+        if (btn) btn.textContent = theme === "dark" ? "Light" : "Dark";
+      }
 
-  applyTheme(initialTheme);
+      applyTheme(initialTheme);
 
-  window.addEventListener("DOMContentLoaded", function() {
-    const btn = document.getElementById("themeToggle");
-    if (!btn) return;
-    btn.addEventListener("click", function() {
-      const next = root.classList.contains("theme-dark") ? "light" : "dark";
-      localStorage.setItem(key, next);
-      applyTheme(next);
-    });
-  });
-})();
-</script>
+      window.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById("themeToggle");
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+          const next = root.classList.contains("theme-dark") ? "light" : "dark";
+          localStorage.setItem(key, next);
+          applyTheme(next);
+        });
+      });
+    })();
+  </script>
 </body>
+
 </html>
