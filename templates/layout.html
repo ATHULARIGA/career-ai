@@ -24,12 +24,12 @@
         <a href="/coding/problems">Coding Practice</a>
         <a href="/career-map">Career Roadmap</a>
         <a href="/book-call">Mentorship</a>
-        {% if request.session.get("admin") %}
+        {% if request.session.get("admin") or request.session.get("user_role") == "admin" %}
         <a href="/admin">Admin</a>
         {% endif %}
         {% if request.session.get("user_id") %}
         <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
-        {% if not request.session.get("admin") %}
+        {% if not request.session.get("admin") and request.session.get("user_role") != "admin" %}
         <a href="/pricing">Pricing</a>
         <a href="/account">Account</a>
         {% endif %}
