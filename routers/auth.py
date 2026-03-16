@@ -86,7 +86,26 @@ def login(
     if blocked:
         return templates.TemplateResponse("login.html", {"request": request, "error": f"Too many attempts. Try again in {retry}s."})
 
-    # NOTE: Admin access is only through /admin-login, not the regular login page.
+    # Admin credentials check: logs in to regular site only (NOT admin panel).
+    # Admin panel access exclusively requires /admin-login.
+    admin_username, admin_password, admin_email = get_admin_settings()
+    is_admin_identity = (
+        (admin_username and identity.lower() == admin_username.lower())
+        or (admin_email and email == admin_email.lower())
+    )
+    if admin_password and is_admin_identity and password == admin_password:
+        # Log admin in as a regular session for site access.
+        # admin=True is NOT set here — go to /admin-login for admin panel.
+        request.session.pop("admin", None)
+        request.session.pop("admin_user", None)
+        request.session["user_id"] = -1
+        request.session["user_name"] = "Admin"
+        request.session["user_email"] = admin_email or admin_username
+        request.session["user_role"] = "admin"
+        request.session["user_plan"] = "premium"
+        record_auth_success(request, "login", identity=email)
+        log_audit("admin", "admin_site_login", "Admin logged into site via /login")
+        return RedirectResponse("/", status_code=303)
 
     conn = db.get_conn()
     cur = conn.cursor()
