@@ -1,7 +1,7 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="ad-section">
-  <div class="ad-section-head">
+<section class="adm-section">
+  <div class="adm-section-head">
     <h2>Coding Management</h2>
     <p>Question bank and submission insights.</p>
   </div>
@@ -10,10 +10,10 @@
     Import result: {{ import_status }}
   </p>
   {% endif %}
-  <div class="ad-grid-2">
-    <section class="ad-panel">
+  <div class="adm-grid-2">
+    <section class="adm-panel">
       <h2>Add Coding Practice Question</h2>
-      <form class="ad-form" method="post" action="/admin/coding-problem/add">
+      <form class="adm-form" method="post" action="/admin/coding-problem/add">
         <input name="title" placeholder="Question title" required>
         <select name="difficulty">
           <option>Easy</option>
@@ -34,13 +34,13 @@
       </form>
     </section>
 
-    <section class="ad-panel">
+    <section class="adm-panel">
       <h2>Coding Submission Stats</h2>
-      <div class="ad-kv-row"><span>Total submissions</span><strong>{{ coding_stats.total_submissions }}</strong></div>
-      <div class="ad-mini-table">
-        <div class="ad-mini-head"><span>Problem</span><span>Runs</span><span>Accepted</span><span>Avg Runtime</span></div>
+      <div class="adm-kv-row"><span>Total submissions</span><strong>{{ coding_stats.total_submissions }}</strong></div>
+      <div class="adm-mini-table">
+        <div class="adm-mini-head"><span>Problem</span><span>Runs</span><span>Accepted</span><span>Avg Runtime</span></div>
         {% for s in coding_stats.by_problem %}
-        <div class="ad-mini-row">
+        <div class="adm-mini-row">
           <span>{{ s.problem_id }}</span>
           <span>{{ s.total_runs }}</span>
           <span>{{ s.accept_rate }}%</span>
@@ -50,10 +50,10 @@
       </div>
       {% if coding_stats.by_language %}
       <h3 style="margin-top:12px;">By Language</h3>
-      <div class="ad-mini-table">
-        <div class="ad-mini-head"><span>Language</span><span>Runs</span><span>Accept Rate</span><span></span></div>
+      <div class="adm-mini-table">
+        <div class="adm-mini-head"><span>Language</span><span>Runs</span><span>Accept Rate</span><span></span></div>
         {% for s in coding_stats.by_language %}
-        <div class="ad-mini-row">
+        <div class="adm-mini-row">
           <span>{{ s.language }}</span>
           <span>{{ s.total_runs }}</span>
           <span>{{ s.accept_rate }}%</span>
@@ -64,10 +64,10 @@
       {% endif %}
       {% if coding_stats.by_difficulty %}
       <h3 style="margin-top:12px;">By Difficulty</h3>
-      <div class="ad-mini-table">
-        <div class="ad-mini-head"><span>Difficulty</span><span>Runs</span><span>Accept Rate</span><span></span></div>
+      <div class="adm-mini-table">
+        <div class="adm-mini-head"><span>Difficulty</span><span>Runs</span><span>Accept Rate</span><span></span></div>
         {% for s in coding_stats.by_difficulty %}
-        <div class="ad-mini-row">
+        <div class="adm-mini-row">
           <span>{{ s.difficulty }}</span>
           <span>{{ s.total_runs }}</span>
           <span>{{ s.accept_rate }}%</span>
@@ -77,22 +77,22 @@
       </div>
       {% endif %}
       <h3 style="margin-top:12px;">Bulk Operations</h3>
-      <div class="ad-inline-actions">
+      <div class="adm-inline-actions">
         <a class="btn-secondary" href="/admin/coding/export?format=json">Export JSON</a>
         <a class="btn-secondary" href="/admin/coding/export?format=csv">Export CSV</a>
       </div>
-      <form class="ad-form" method="post" action="/admin/coding/import" enctype="multipart/form-data" style="margin-top:10px;">
+      <form class="adm-form" method="post" action="/admin/coding/import" enctype="multipart/form-data" style="margin-top:10px;">
         <input type="file" name="file" accept=".json,application/json" required>
         <button type="submit" class="btn-primary">Import JSON</button>
       </form>
     </section>
   </div>
 
-  <section class="ad-panel">
+  <section class="adm-panel">
     <h2>Edit / Delete Coding Problems</h2>
-    <div class="ad-list">
+    <div class="adm-list">
       {% for p in custom_problems %}
-      <div class="ad-list-item ad-list-item-stack">
+      <div class="adm-list-item adm-list-item-stack">
         <strong>{{ p.title }} ({{ p.id }})</strong>
         {% if p.coverage %}
         <p class="cp-muted">
@@ -100,7 +100,7 @@
           · Ready: {{ "Yes" if p.coverage.ready_to_publish else "No" }}
         </p>
         {% endif %}
-        <form class="ad-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
+        <form class="adm-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
           <input name="title" value="{{ p.title }}" required>
           <select name="difficulty">
             <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
@@ -117,7 +117,7 @@
           <textarea name="starter_js" rows="3">{{ p.starter_codes.javascript }}</textarea>
           <textarea name="starter_java" rows="3">{{ p.starter_codes.java }}</textarea>
           <textarea name="starter_cpp" rows="3">{{ p.starter_codes.cpp }}</textarea>
-          <div class="ad-inline-actions">
+          <div class="adm-inline-actions">
             <button type="submit" class="btn-secondary">Save Changes</button>
             <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="btn-primary">Delete</button>
           </div>
@@ -130,14 +130,14 @@
     {% endif %}
   </section>
 
-  <section class="ad-panel">
+  <section class="adm-panel">
     <h2>Similarity / Plagiarism Signals</h2>
     <p class="cp-muted">Auto-detected near-identical submission fingerprints for manual review.</p>
     {% if plagiarism_alerts %}
-    <div class="ad-mini-table">
-      <div class="ad-mini-head"><span>Problem</span><span>Hash</span><span>Rows</span><span>Users</span></div>
+    <div class="adm-mini-table">
+      <div class="adm-mini-head"><span>Problem</span><span>Hash</span><span>Rows</span><span>Users</span></div>
       {% for a in plagiarism_alerts %}
-      <div class="ad-mini-row">
+      <div class="adm-mini-row">
         <span>{{ a.problem_id }}</span>
         <span>{{ a.code_hash }}</span>
         <span>{{ a.total_rows }}</span>

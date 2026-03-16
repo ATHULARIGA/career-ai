@@ -1,6 +1,6 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="ad-section">
+<section class="adm-section">
   <h2>Premium Requests</h2>
   <p style="margin:0 0 12px;color:#64748b;">Manual UPI verification queue.</p>
 
@@ -9,11 +9,11 @@
   {% elif status == "rejected" %}
   <p style="color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 10px;">Premium request rejected.</p>
   {% elif status == "not-found" %}
-  <p class="ad-empty">Premium request not found.</p>
+  <p class="adm-empty">Premium request not found.</p>
   {% endif %}
 
-  <div class="ad-table-wrap">
-    <table class="ad-table">
+  <div class="adm-table-wrap">
+    <table class="adm-table">
       <thead>
         <tr>
           <th>Email</th>
@@ -48,13 +48,13 @@
               <button type="submit" class="btn-secondary">Reject</button>
             </form>
             {% else %}
-            <span class="ad-muted">Reviewed</span>
+            <span class="adm-muted">Reviewed</span>
             {% endif %}
           </td>
         </tr>
         {% endfor %}
         {% if not premium_requests %}
-        <tr><td colspan="6" class="ad-empty">No premium requests yet.</td></tr>
+        <tr><td colspan="6" class="adm-empty">No premium requests yet.</td></tr>
         {% endif %}
       </tbody>
     </table>

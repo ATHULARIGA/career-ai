@@ -1,23 +1,23 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="ad-section">
-  <div class="ad-section-head">
+<section class="adm-section">
+  <div class="adm-section-head">
     <h2>Experiments</h2>
     <p>Prompt and model controls.</p>
   </div>
-  <div class="ad-grid-2">
-    <section class="ad-panel">
+  <div class="adm-grid-2">
+    <section class="adm-panel">
       <h2>Prompt/model experiment panel</h2>
-      <form class="ad-form" method="post" action="/admin/experiments/save">
+      <form class="adm-form" method="post" action="/admin/experiments/save">
         <input name="feature" placeholder="Feature (resume_review)" required>
         <input name="prompt_version" placeholder="Prompt Version (v4)" required>
         <input name="model_name" placeholder="Model (openai/gpt-4o-mini)" required>
-        <label class="ad-check"><input type="checkbox" name="enabled" checked> Enabled</label>
+        <label class="adm-check"><input type="checkbox" name="enabled" checked> Enabled</label>
         <button type="submit" class="btn-primary">Save Experiment</button>
       </form>
-      <div class="ad-list">
+      <div class="adm-list">
         {% for exp in admin.experiments %}
-        <div class="ad-list-item"><strong>{{ exp[0] }}</strong><span>{{ exp[1] }} · {{ exp[2] }}</span><em>{{ "Enabled" if exp[3] == 1 else "Disabled" }}</em></div>
+        <div class="adm-list-item"><strong>{{ exp[0] }}</strong><span>{{ exp[1] }} · {{ exp[2] }}</span><em>{{ "Enabled" if exp[3] == 1 else "Disabled" }}</em></div>
         {% endfor %}
       </div>
     </section>

@@ -1,14 +1,14 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="ad-section">
-  <div class="ad-section-head">
+<section class="adm-section">
+  <div class="adm-section-head">
     <h2>Safety + Feedback</h2>
     <p>Triage user reports and moderation events.</p>
   </div>
-  <div class="ad-grid-2">
-    <section class="ad-panel">
+  <div class="adm-grid-2">
+    <section class="adm-panel">
       <h2>Feedback + flag queue</h2>
-      <form class="ad-form" method="post" action="/admin/feedback">
+      <form class="adm-form" method="post" action="/admin/feedback">
         <input name="source" placeholder="Source (interview/resume/roadmap)" required>
         <select name="severity">
           <option>low</option>
@@ -20,14 +20,14 @@
         <button type="submit" class="btn-primary">Add Queue Item</button>
       </form>
 
-      <div class="ad-list">
+      <div class="adm-list">
         {% for f in admin.feedback_queue %}
-        <div class="ad-list-item ad-list-item-stack">
+        <div class="adm-list-item adm-list-item-stack">
           <div>
             <strong>#{{ f[0] }} · {{ f[2] }}</strong>
             <p>{{ f[4] }}</p>
           </div>
-          <form method="post" action="/admin/feedback/{{ f[0] }}/status" class="ad-inline-form">
+          <form method="post" action="/admin/feedback/{{ f[0] }}/status" class="adm-inline-form">
             <select name="status">
               <option value="open" {% if f[5] == "open" %}selected{% endif %}>open</option>
               <option value="in_progress" {% if f[5] == "in_progress" %}selected{% endif %}>in_progress</option>
@@ -40,9 +40,9 @@
       </div>
     </section>
 
-    <section class="ad-panel">
+    <section class="adm-panel">
       <h2>Safety + moderation console</h2>
-      <form class="ad-form" method="post" action="/admin/safety/report">
+      <form class="adm-form" method="post" action="/admin/safety/report">
         <select name="level">
           <option>low</option>
           <option>medium</option>
@@ -54,9 +54,9 @@
         <button type="submit" class="btn-primary">Log Safety Event</button>
       </form>
 
-      <div class="ad-list">
+      <div class="adm-list">
         {% for s in admin.safety_events %}
-        <div class="ad-list-item ad-list-item-stack">
+        <div class="adm-list-item adm-list-item-stack">
           <strong>{{ s[2] }} · {{ s[3] }}</strong>
           <p>{{ s[4] }}</p>
         </div>

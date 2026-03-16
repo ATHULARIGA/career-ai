@@ -1,21 +1,21 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="ad-page">
-  <div class="ad-container">
-    <header class="ad-header">
+<section class="adm-page">
+  <div class="adm-container">
+    <header class="adm-header">
       <div>
-        <p class="ad-eyebrow">Admin 2.0</p>
+        <p class="adm-eyebrow">Admin 2.0</p>
         <h1>Operations command center</h1>
         <p>Use section pages for focused workflows.</p>
       </div>
-      <div class="ad-actions">
+      <div class="adm-actions">
         <a class="btn-secondary" href="/admin/export?format=json">Export JSON</a>
         <a class="btn-secondary" href="/admin/export?format=csv">Export CSV</a>
         <a class="btn-primary" href="/admin-logout">Logout</a>
       </div>
     </header>
 
-    <nav class="ad-nav">
+    <nav class="adm-nav">
       <a href="/admin" class="{% if active_admin_page == 'overview' %}active{% endif %}">Overview</a>
       <a href="/admin/experiments" class="{% if active_admin_page == 'experiments' %}active{% endif %}">Experiments</a>
       <a href="/admin/coding" class="{% if active_admin_page == 'coding' %}active{% endif %}">Coding</a>
@@ -24,7 +24,7 @@
       <a href="/admin/premium" class="{% if active_admin_page == 'premium' %}active{% endif %}">Premium</a>
     </nav>
 
-    <section class="ad-kpi-grid">
+    <section class="adm-kpi-grid">
       <article><p>Total bookings</p><h3>{{ admin.kpis.total_bookings }}</h3></article>
       <article><p>Unique users</p><h3>{{ admin.kpis.unique_users }}</h3></article>
       <article><p>Today bookings</p><h3>{{ admin.kpis.today_bookings }}</h3></article>
