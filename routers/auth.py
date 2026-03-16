@@ -80,28 +80,13 @@ def login(
 ):
     if (website or "").strip():
         return templates.TemplateResponse("login.html", {"request": request, "error": "Request blocked."})
-    admin_username, admin_password, admin_email = get_admin_settings()
     identity = email.strip()
     email = identity.lower()
     blocked, retry = is_rate_limited(request, "login", identity=email)
     if blocked:
         return templates.TemplateResponse("login.html", {"request": request, "error": f"Too many attempts. Try again in {retry}s."})
 
-    is_admin_identity = (
-        (admin_username and identity.lower() == admin_username.lower())
-        or (admin_email and email == admin_email)
-    )
-    if admin_password and is_admin_identity and password == admin_password:
-        request.session["admin"] = True
-        request.session["admin_user"] = admin_username or admin_email
-        request.session["user_id"] = -1
-        request.session["user_name"] = "Admin"
-        request.session["user_email"] = admin_email or admin_username
-        request.session["user_role"] = "admin"
-        request.session["user_plan"] = "premium"
-        record_auth_success(request, "login", identity=email)
-        log_audit("admin", "admin_login_success", "Admin authenticated via /login")
-        return RedirectResponse("/admin", status_code=303)
+    # NOTE: Admin access is only through /admin-login, not the regular login page.
 
     conn = db.get_conn()
     cur = conn.cursor()
