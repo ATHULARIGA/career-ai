@@ -212,6 +212,10 @@ Return exactly this JSON structure:
 - DO NOT invent skills or experience not present in the resume
 - DO NOT give inflated scores — hiring bars are high
 - benchmarking.percentile: penalize 10+ points if Quantification < 6.0
+- region_advice: 3–5 items specific to THIS resume's gaps in the given region.
+  India: focus on FAANG-style quantification gaps, remote-work signals, and GitHub activity.
+  US: focus on visa status clarity, location flexibility, and LinkedIn completeness.
+  Do NOT give generic formatting advice here — that belongs in critical_changes_required.
 </constraints>
 
 <job_description>
@@ -223,7 +227,7 @@ Return exactly this JSON structure:
 </resume>"""
 
 
-def call_ai_with_fallback(system: str, user: str) -> Any:
+def call_ai_with_fallback(system: str, user: str) -> dict[str, Any]:
     models = [
         "openai/gpt-4o-mini",
         "meta-llama/llama-3.1-8b-instruct",
@@ -241,8 +245,10 @@ def call_ai_with_fallback(system: str, user: str) -> Any:
                     {"role": "user", "content": user},
                 ],
             )
+            parsed = parse_json_object(response.choices[0].message.content)
+            validate_parsed(parsed)
             print(f"AI SUCCESS using {model}")
-            return response
+            return parsed
         except Exception as e:
             print(f"AI FAILED using {model}: {e}")
             last_error = e
@@ -259,7 +265,7 @@ def parse_json_object(raw: str) -> dict[str, Any]:
 
 REQUIRED_KEYS = {"score", "evidence", "keyword_gaps", "targeted_rewrites", "recruiter_simulation", "benchmarking", "interview_questions"}
 
-def validate_parsed(parsed: dict) -> list[str]:
+def validate_parsed(parsed: dict) -> None:
     missing = [k for k in REQUIRED_KEYS if k not in parsed]
     if missing:
         raise ValueError(f"AI response missing keys: {missing}")
@@ -369,10 +375,7 @@ def score_resume(
     user_prompt = build_evaluation_prompt(text, job_description, target_role, seniority, region)
 
     try:
-        response = call_ai_with_fallback(SYSTEM_PROMPT, user_prompt)
-        print("MODEL USED:", response.model)
-        parsed = parse_json_object(response.choices[0].message.content)
-        validate_parsed(parsed)
+        parsed = call_ai_with_fallback(SYSTEM_PROMPT, user_prompt)
 
         scores = normalize_scores(parsed.get("score", {}))
 
@@ -402,7 +405,8 @@ def score_resume(
         merged_links = (ai_links[:3] + local_link_checks) if isinstance(ai_links, list) and ai_links else local_link_checks
 
         benchmark = parsed.get("benchmarking", {}) or {}
-        percentile = max(1, min(99, int(benchmark.get("percentile", 0) or 0))) or 0
+        raw_percentile = int(benchmark.get("percentile", 0) or 0)
+        percentile = max(1, min(99, raw_percentile)) if raw_percentile > 0 else 0
 
         job_match_percent = max(0, min(100, int(parsed.get("job_match_percent", 0) or 0)))
 
