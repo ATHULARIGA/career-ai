@@ -49,9 +49,12 @@ async def upload(
         if job_link.strip():
             # 1. Rate Limit Guard
             scrape_res = {}
-            if is_rate_limited(request, "scrape_job_link", max_attempts=10, window_sec=3600):
+            is_blocked, wait_sec = is_rate_limited(request, "scrape_job_link", max_attempts=10, window_sec=3600)
+            
+            if is_blocked:
                 if not final_jd.strip():
-                    raise ValueError("Rate limit exceeded for URL scraping. Please paste the JD text directly.")
+                    wait_str = f"{wait_sec // 60}m {wait_sec % 60}s" if wait_sec > 60 else f"{wait_sec}s"
+                    raise ValueError(f"Rate limit exceeded for URL scraping. Please wait {wait_str}, or paste the JD text directly.")
             else:
                 scrape_res = scrape_job_link(job_link.strip())
                 if isinstance(scrape_res, dict) and scrape_res.get("error"):
@@ -149,21 +152,9 @@ async def upload(
             fallback_used=True,
             error_message=str(e),
         )
-        report = {
-            "error": str(e),
-            "scores": {"Overall": 0, "ATS": 0, "Status": "Needs Review"},
-            "evidence": [],
-            "keyword_gaps": [],
-            "targeted_rewrites": [],
-            "quantification_suggestions": [],
-            "recruiter_simulation": {},
-            "benchmarking": {"cohort": "N/A", "percentile": 0, "summary": ""},
-            "interview_questions": [],
-            "region_advice": [],
-            "keyword_coverage": 0,
-            "link_validation": [],
-            "version_diff": None,
-        }
+        import urllib.parse
+        error_msg = urllib.parse.quote(str(e))
+        return RedirectResponse(f"/resume?error={error_msg}", status_code=303)
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,

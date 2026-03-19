@@ -157,6 +157,7 @@ def resume(request: Request):
             "user_plan": current_user_plan(request),
             "resume_quota": resume_quota_state(request),
             "quota_error": (request.query_params.get("quota_error") or "").strip(),
+            "general_error": (request.query_params.get("error") or "").strip(),
             "memory": memory,
         },
     )

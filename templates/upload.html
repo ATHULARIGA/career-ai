@@ -31,6 +31,12 @@
         <p class="al-error" style="margin-bottom:10px;">{{ quota_error }} <a href="/pricing">Upgrade</a></p>
         {% endif %}
 
+        {% if general_error %}
+        <p class="al-error" style="margin-bottom:10px; background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 10px 12px; border-radius: 8px; font-weight: 500;">
+            ⚠️ {{ general_error }}
+        </p>
+        {% endif %}
+
         <form id="resumeReviewForm" action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
             <div class="rr-field rr-file-field">
                 <label for="file">Resume PDF</label>
