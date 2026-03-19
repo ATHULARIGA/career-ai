@@ -9,6 +9,12 @@ def healthz():
     return {"status": "ok", "ts": int(time.time())}
 
 
+@router.get("/robots.txt", response_class=PlainTextResponse)
+def robots_txt():
+    content = "User-agent: *\nAllow: /\nDisallow: /admin\n"
+    return content
+
+
 @router.get("/readyz")
 def readyz():
     try:
