@@ -1,118 +1,91 @@
-# 🚀 ResuMate | AI-Powered Career Platform
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" />
+</p>
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
-[![Jinja2](https://img.shields.io/badge/Jinja2-B41712?style=for-the-badge&logo=jinja&logoColor=white)](https://jinja.palletsprojects.com/)
+<h1 align="center">🎯 ResuMate</h1>
+<p align="center"><b>AI-Powered Career Prep & Mock Interview Platform</b></p>
 
-An **AI-powered career development platform** designed to help users land their dream job with precision. Includes automated resume parsing, interactive mock interviews, and role-based skill roadmaps.
+<p align="center">
+  <a href="https://career-ai-foom.onrender.com/upload">
+    <img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-Try%20it%20on%20Render-brightgreen?style=for-the-badge" alt="Live Demo" />
+  </a>
+</p>
 
 ---
 
-## 🌟 Main Features
+### 💡 Overview
+An **AI-powered platform** built to help candidates practice mock interviews and audit resumes for optimal target matching. 
 
-### 📄 AI Resume Analyzer
-*   **PDF Upload Support**: Automatically extracts text structure from standard CV formats.
-*   **AI Scoring**: Reviews keyword matches, layout weight, and provides structural scores out of 10.
-*   **Keyword Gap Analysis**: Highlights missing phrases optimized for ATS (Applicant Tracking Systems).
+I built this to run fast, local evaluation metrics before hitting LLMs, leveraging rule-based feedback pipelines so users can practice safely.
 
-### 🎤 AI Interview Simulator
-*   **Dynamic Questions**: Generates contextual behavior & technical questions tailored to role benchmarks.
-*   **Answer Evaluation**: Grades user inputs in real-time, providing immediate improvement tips.
-*   **Hiring Decision Simulation**: Weighs final responses mapped to standard interview scorecards.
+---
 
-### 🗺️ Career Roadmap Generator
-*   **Interactive Skill Mindmap**: Renders nodes dynamically mapping prerequisite hierarchies using **D3.js**.
-*   **Role-Based Tracks**: Visualizes pathways for Frontend, Backend, Data, or DevOps mastery tiers.
+## 🌟 Core Modules
 
-### 📅 Booking & Support
-*   **Schedule Sessions**: Simple modular booking form with email triggers support.
-*   **Automated Email meeting Links**: Smooth dispatch using **Brevo SMTP** relay bindings.
+| Module | Purpose | Under The Hood |
+| :--- | :--- | :--- |
+| **📄 Resume Auditor** | Upload PDF resumes to fetch keyword-gap analysis vs job descriptions. | `GPT-4o`, `pypdf` |
+| **🎤 Interview Coach** | Async simulator tracking speech pacing (WPM), filler frequency, and **STAR method** compliance. | `FastAPI`, Token count heuristics |
+| **🗺️ Roadmap** | Interactive node graphs mapping prerequisite learning tiers. | `D3.js` |
+| **📅 Dispatcher** | Triggers automated schedules with basic email trackers. | `Brevo SMTP` |
 
 ---
 
 ## 🛠️ Tech Stack
 
-*   **Backend**: `FastAPI` (Python)
-*   **Frontend templating**: `Jinja2`, `HTML5/CSS3/JS` (Minimalist Notion Style)
-*   **AI & NLP Inference**: `OpenAI API`, `Scikit-learn`, `Numpy`
+*   **Backend**: `FastAPI` (Python 3.11+)
+*   **NLP Evaluation**: `Scikit-learn` (TF-IDF, Cosine Similarity), `OpenAI API`
 *   **Visualizations**: `D3.js`
-*   **Database ORM**: `SQLite` (Default setup), supporting `PostgreSQL` hooks.
-*   **Credentials dispatch**: `ItsDangerous`, `Starslette` Session handlers.
+*   **Structure**: `Jinja2` Templates, Minimalist CSS layouts
 
 ---
 
-## ⚙️ Quick Start Installation
+<details>
+<summary><b>⚙️ Local Installation & Secrets Setup</b></summary>
 
-Follow these steps to spin up the service locally:
-
-### 1. Clone the Repository
+### 1. Configure Workspace
 ```bash
+# Clone and enter
 git clone <repository_url>
 cd career-ai
-```
 
-### 2. Configure Virtual Environment
-```bash
+# Virtual Env
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-```
-
-### 3. Install Dependencies
-```bash
+source venv/bin/activate 
 pip install -r requirements.txt
 ```
 
-### 4. Setup Secrets (`.env`)
-Create a `.env` file in the root directory and populate your API credentials:
-
+### 2. Secrets Handling (`.env`)
+Populate your API credentials looking similar to:
 ```bash
-# Core AI Credits
 OPENAI_API_KEY=your_openai_api_key
-
-# Database Setup (Optional - defaults to bookings.db SQLite)
-# DATABASE_URL=postgresql://user:pass@host:port/dbname
-
-# SMTP Support (Brevo / SendGrid example)
-SENDER_EMAIL=your_verified_sender@email.com
-BREVO_API_KEY=your_brevo_api_key
-SMTP_HOST=smtp-relay.brevo.com
-SMTP_PORT=587
-
-# Admin Dashboard Defaults
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin_secure_password
-ADMIN_EMAIL=admin@platform.com
+# SENDER_EMAIL=your_email_settings
+# BREVO_API_KEY=api_setting
 ```
 
----
-
-## 🖥️ Running the Application
-
-To start the local Uvicorn development server:
-
+### 3. Run Dev Mode
+To run locally:
 ```bash
 uvicorn main:app --reload
 ```
-
-The app will become available at: **[`http://localhost:8000`](http://localhost:8000)**
-
-*(Optional)* Access the Admin View area:
-*   Route: `/admin`
-*   Credentials preset inside your `.env` variables setup.
+Access at: `http://localhost:8000`
+</details>
 
 ---
 
-## 📁 Project Directory Structure
+<details>
+<summary><b>📁 Project Directory Tree</b></summary>
 
 ```text
 career-ai/
-├── templates/         # Jinja2 Layout HTML Templates
-├── static/            # Styles (CSS), Layout assets (JS, Images)
-├── routers/           # FastAPI Endpoints (Auth, Resume, Admin, Pages)
-├── core.py            # Global Configs, Loggers Init
-├── email_sender.py     # SMTP Dispatch wrappers
-├── db_backend.py      # ORM / DB Engine hooks
-├── call_booking.py    # Appointment triggers
-└── main.py            # Main Router Setup
+├── templates/         # HTML Templates list
+├── static/            # Static weights (CSS/JS)
+├── routers/           # FastAPI Endpoints (Auth, Scorer)
+├── core.py            # Loggers configs
+├── email_sender.py     # Dispatch hook
+├── db_backend.py      # ORM / DB Engine
+└── main.py            # Main Router setup
 ```
+</details>
