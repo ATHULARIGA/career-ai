@@ -138,6 +138,20 @@ Keywords:
   0-2  = Almost no keyword overlap
 </scoring_rubrics>
 
+<scoring_example>
+Resume snippet: "Worked on improving API performance."
+Correct scoring:
+  Impact: 2.0 — no outcome stated, no metric, passive ownership
+  Quantification: 1.0 — zero numbers
+  ActionVerbs: 3.0 — "Worked on" is weak
+
+Resume snippet: "Reduced P99 API latency from 840ms to 120ms by migrating synchronous DB calls to async batch queries, serving 2M RPD."
+Correct scoring:
+  Impact: 9.5 — org-level outcome, specific metric, scale stated
+  Quantification: 9.0 — before/after numbers + scale
+  ActionVerbs: 9.0 — "Reduced" + specific action
+</scoring_example>
+
 <output_schema>
 Return exactly this JSON structure:
 {{
@@ -197,6 +211,7 @@ Return exactly this JSON structure:
 - recruiter_simulation.likely_outcome: pick exactly one of the three options listed
 - DO NOT invent skills or experience not present in the resume
 - DO NOT give inflated scores — hiring bars are high
+- benchmarking.percentile: penalize 10+ points if Quantification < 6.0
 </constraints>
 
 <job_description>
@@ -240,6 +255,19 @@ def parse_json_object(raw: str) -> dict[str, Any]:
     if "{" in cleaned and "}" in cleaned:
         cleaned = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
     return json.loads(cleaned)
+
+
+REQUIRED_KEYS = {"score", "evidence", "keyword_gaps", "targeted_rewrites", "recruiter_simulation", "benchmarking", "interview_questions"}
+
+def validate_parsed(parsed: dict) -> list[str]:
+    missing = [k for k in REQUIRED_KEYS if k not in parsed]
+    if missing:
+        raise ValueError(f"AI response missing keys: {missing}")
+    if not isinstance(parsed.get("evidence"), list) or len(parsed["evidence"]) < 2:
+        raise ValueError("Evidence too sparse — likely model degradation")
+    scores = parsed.get("score", {})
+    if all(v == scores.get("Impact") for v in scores.values()) and scores:
+        raise ValueError("All scores identical — model failed to differentiate")
 
 
 def clamp_score(value: Any) -> float:
@@ -344,6 +372,7 @@ def score_resume(
         response = call_ai_with_fallback(SYSTEM_PROMPT, user_prompt)
         print("MODEL USED:", response.model)
         parsed = parse_json_object(response.choices[0].message.content)
+        validate_parsed(parsed)
 
         scores = normalize_scores(parsed.get("score", {}))
 
