@@ -48,12 +48,14 @@ async def upload(
         final_jd = job_description
         if job_link.strip():
             # 1. Rate Limit Guard
+            scrape_res = {}
             if is_rate_limited(request, "scrape_job_link", max_attempts=10, window_sec=3600):
-                raise ValueError("Rate limit exceeded for URL scraping. Please paste the JD text directly.")
-                
-            scrape_res = scrape_job_link(job_link.strip())
-            if isinstance(scrape_res, dict) and scrape_res.get("error"):
-                raise ValueError(scrape_res.get("error"))
+                if not final_jd.strip():
+                    raise ValueError("Rate limit exceeded for URL scraping. Please paste the JD text directly.")
+            else:
+                scrape_res = scrape_job_link(job_link.strip())
+                if isinstance(scrape_res, dict) and scrape_res.get("error"):
+                    raise ValueError(scrape_res.get("error"))
                 
             scraped_text = scrape_res.get("text", "") if isinstance(scrape_res, dict) else ""
             if not scraped_text.strip():
