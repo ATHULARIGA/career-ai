@@ -80,12 +80,14 @@ Access at: `http://localhost:8000`
 
 ```text
 career-ai/
-├── templates/         # HTML Templates list
-├── static/            # Static weights (CSS/JS)
-├── routers/           # FastAPI Endpoints (Auth, Scorer)
-├── core.py            # Loggers configs
-├── email_sender.py     # Dispatch hook
-├── db_backend.py      # ORM / DB Engine
-└── main.py            # Main Router setup
+├── routers/           # FastAPI Endpoints
+├── static/            # Stylesheets & assets
+├── templates/         # Jinja2 HTML Layouts
+├── tests/             # PyTest test cases
+├── coding_platform.py # Code Sandbox logic
+├── scoring.py         # AI grading & weights
+├── resume_parser.py   # PDF text extractor
+├── core.py            # Logger & Globals setup
+└── main.py            # App entry point
 ```
 </details>
