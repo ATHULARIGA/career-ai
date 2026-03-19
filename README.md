@@ -15,30 +15,31 @@
 
 ---
 
-### 💡 Overview
-An **AI-powered platform** built to help candidates practice mock interviews and audit resumes for optimal target matching. 
+### 💡 Why I built this
+I needed a way to practice mock interviews that felt accurate without solely relying on generic prompts. 
 
-I built this to run fast, local evaluation metrics before hitting LLMs, leveraging rule-based feedback pipelines so users can practice safely.
+To make it faster and cheaper than hitting an LLM repeatedly, I built a local text grader in Python using **Scikit-Learn (TF-IDF)** before passing metrics over to GPT. It grades your accuracy and maps speech pacing in real-time.
 
 ---
 
 ## 🌟 Core Modules
 
-| Module | Purpose | Under The Hood |
+| Module | What it solves | Under The Hood |
 | :--- | :--- | :--- |
-| **📄 Resume Auditor** | Upload PDF resumes to fetch keyword-gap analysis vs job descriptions. | `GPT-4o`, `pypdf` |
-| **🎤 Interview Coach** | Async simulator tracking speech pacing (WPM), filler frequency, and **STAR method** compliance. | `FastAPI`, Token count heuristics |
+| **📄 Resume Auditor** | Upload PDF resumes to fetch keyword-gap analysis vs job descriptions for ATS tuning. | `GPT-4o`, `pypdf` |
+| **🎤 Interview Coach** | Async simulator tracking speech pacing (WPM), filler frequency, and **STAR method** compliance. | `FastAPI`, `Token heuristics` |
 | **🗺️ Roadmap** | Interactive node graphs mapping prerequisite learning tiers. | `D3.js` |
-| **📅 Dispatcher** | Triggers automated schedules with basic email trackers. | `Brevo SMTP` |
 
 ---
 
 ## 🛠️ Tech Stack
 
-*   **Backend**: `FastAPI` (Python 3.11+)
-*   **NLP Evaluation**: `Scikit-learn` (TF-IDF, Cosine Similarity), `OpenAI API`
-*   **Visualizations**: `D3.js`
-*   **Structure**: `Jinja2` Templates, Minimalist CSS layouts
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | `FastAPI` (Python 3.11+), `Uvicorn` |
+| **NLP & AI** | `Scikit-learn` (TF-IDF, Cosine Similarity), `OpenAI API` |
+| **Visualizations** | `D3.js` |
+| **Structure** | `Jinja2` Templates, Minimalist CSS layouts |
 
 ---
 
@@ -80,14 +81,22 @@ Access at: `http://localhost:8000`
 
 ```text
 career-ai/
-├── routers/           # FastAPI Endpoints
-├── static/            # Stylesheets & assets
-├── templates/         # Jinja2 HTML Layouts
-├── tests/             # PyTest test cases
-├── coding_platform.py # Code Sandbox logic
-├── scoring.py         # AI grading & weights
-├── resume_parser.py   # PDF text extractor
-├── core.py            # Logger & Globals setup
-└── main.py            # App entry point
+├── routers/              # FastAPI endpoint endpoints
+├── static/               # Stylesheets & Assets 
+├── templates/            # Jinja2 HTML Layouts
+├── tests/                # Pytest suit test cases
+├── admin_analytics.py    # Admin Dashboard reporting engine
+├── booking_db.py         # Schedule caching & triggers
+├── coding_platform.py    # Code Sandbox / job judges
+├── core.py               # Logger & app globals init
+├── email_sender.py        # Brevo SMTP wrappers
+├── grader.py             # TF-IDF Cosine Similarity system
+├── interview_engine.py   # Question contexts loops
+├── interview_feedback.py  # STAR & WPM analyzer
+├── mindmap_generator.py   # D3.js mindset node maps
+├── resume_parser.py      # PDF text extractor
+├── scoring.py            # AI scoring & weights
+├── skill_extractor.py    # Keywords gap analyzer
+└── main.py               # Main App router setup
 ```
 </details>
