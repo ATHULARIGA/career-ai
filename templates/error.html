@@ -6,6 +6,9 @@
     <h1>Something went wrong</h1>
     <p>Please try again. If this keeps happening, contact support with request id:</p>
     <p style="font-family:'IBM Plex Mono', monospace; background:#f3f4f6; border-radius:8px; padding:8px 10px;">{{ request_id }}</p>
+    {% if message %}
+    <p style="color: #ef4444; font-weight: 500; margin-top: 10px;">Error detail: {{ message }}</p>
+    {% endif %}
     <p><a href="/">Return to home</a></p>
   </div>
 </section>

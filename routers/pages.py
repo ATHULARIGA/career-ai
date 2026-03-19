@@ -162,6 +162,62 @@ def resume(request: Request):
     )
 
 
+@router.get("/resume/compare", response_class=HTMLResponse)
+def compare_resumes(request: Request, current_id: int = None, previous_id: int = None):
+    log_event("page_view", "resume_compare", metadata={"current": current_id, "previous": previous_id})
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse(url="/login")
+
+    if not current_id or not previous_id:
+        return templates.TemplateResponse("error.html", {"request": request, "message": "Missing comparison IDs."}, status_code=400)
+
+    try:
+        if int(current_id) == int(previous_id):
+            return templates.TemplateResponse("error.html", {"request": request, "message": "Cannot compare a report with itself."}, status_code=400)
+    except ValueError:
+        return templates.TemplateResponse("error.html", {"request": request, "message": "Invalid IDs provided."}, status_code=400)
+
+    current_report = get_resume_report_by_id_for_user(current_id, user_email)
+    previous_report = get_resume_report_by_id_for_user(previous_id, user_email)
+
+    if not current_report or not previous_report:
+        return templates.TemplateResponse("error.html", {"request": request, "message": "One or both reports not found or access denied."}, status_code=404)
+
+    # Read scores gracefully
+    curr_scores = current_report.get("scores", {}) or current_report.get("score", {})
+    prev_scores = previous_report.get("scores", {}) or previous_report.get("score", {})
+
+    deltas = {}
+    for k in curr_scores.keys():
+        if k in prev_scores:
+            try:
+                deltas[k] = round(float(curr_scores[k] or 0) - float(prev_scores[k] or 0), 1)
+            except Exception:
+                deltas[k] = 0.0
+
+    warning = ""
+    if current_report.get("target_role") != previous_report.get("target_role"):
+        warning = "Roles differ ({} vs {}). Evaluation weights might not be comparable.".format(
+            current_report.get("target_role") or "Generic", previous_report.get("target_role") or "Generic"
+        )
+
+    return templates.TemplateResponse(
+        "resume_compare.html",
+        {
+            "request": request,
+            "current": current_report,
+            "previous": previous_report,
+            "curr_scores": curr_scores,
+            "prev_scores": prev_scores,
+            "deltas": deltas,
+            "warning": warning,
+            "all_zero": all(d == 0.0 for d in deltas.values()) if deltas else False,
+            "user_plan": current_user_plan(request),
+        }
+    )
+
+
 # UPLOAD ROUTE
 @router.get("/interview", response_class=HTMLResponse)
 def interview(request: Request):

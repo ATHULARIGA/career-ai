@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .comp-container { margin-top: 30px; }
+    .comp-banner { background: #fffbeb; border: 1px solid #f59e0b; color: #b45309; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .comp-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; }
+    .comp-card:hover { transform: translateY(-2px); }
+    .comp-title { font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .comp-val-row { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+    .comp-current { font-size: 2rem; font-weight: 700; color: #1e293b; }
+    .comp-prev { font-size: 1rem; color: #94a3b8; text-decoration: line-through; }
+    .comp-delta { font-size: 0.9rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+    .delta-pos { background: #dcfce7; color: #166534; }
+    .delta-neg { background: #fee2e2; color: #991b1b; }
+    .delta-zero { background: #f1f5f9; color: #475569; }
+    
+    .comp-views { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .view-pane { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
+    .view-pane h3 { font-size: 1.1rem; color: #1e293b; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+    .pane-list { list-style: none; padding: 0; }
+    .pane-list li { padding: 8px 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px; font-size: 0.9rem; color: #334155; }
+    .pane-list li::before { content: "•"; color: #3b82f6; font-weight: bold; display: inline-block; width: 1em; }
+</style>
+
+<section class="rr-page">
+    <div class="rr-container comp-container">
+        <div class="rr-header">
+            <p class="rr-eyebrow">Versioning dashboard</p>
+            <h1>Score Delta Breakdown</h1>
+            <p>Visualize how your recent resume iterations affected dimensional weight scores.</p>
+        </div>
+
+        {% if warning %}
+        <div class="comp-banner">
+            <span>⚠️</span> {{ warning }}
+        </div>
+        {% endif %}
+
+        {% if all_zero %}
+        <div class="comp-banner" style="background:#f1f5f9; border-color:#e2e8f0; color:#475569;">
+            <span>ℹ️</span> No changes detected between these two resume versions.
+        </div>
+        {% endif %}
+
+        <!-- DELTAS GRID -->
+        <h2 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 16px;">Dimension Comparisons</h2>
+        <div class="comp-grid">
+            {% for key, delta in deltas.items() %}
+            <div class="comp-card">
+                <div class="comp-title">{{ key }}</div>
+                <div class="comp-val-row">
+                    <span class="comp-current">
+                        {{ "%.1f"|format(curr_scores.get(key, 0.0)) }}
+                    </span>
+                    <span class="comp-prev">
+                        {{ "%.1f"|format(prev_scores.get(key, 0.0)) }}
+                    </span>
+                    
+                    {% if delta > 0 %}
+                        <span class="comp-delta delta-pos">↑ +{{ "%.1f"|format(delta) }}</span>
+                    {% elif delta < 0 %}
+                        <span class="comp-delta delta-neg">↓ {{ "%.1f"|format(delta) }}</span>
+                    {% else %}
+                        <span class="comp-delta delta-zero">0.0</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- SIDE BY SIDE PANES -->
+        <h2 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 16px;">Fix Resolutions</h2>
+        <div class="comp-views">
+            <div class="view-pane">
+                <h3>V1 Critical Gaps (Previous)</h3>
+                <ul class="pane-list">
+                    {% if previous.get("critical_changes_required") %}
+                        {% for item in previous.get("critical_changes_required", []) %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li style="color:#64748b; background:transparent;">No critical changes listed in previous version.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="view-pane">
+                <h3>V2 Critical Gaps (Current)</h3>
+                <ul class="pane-list">
+                    {% if current.get("critical_changes_required") %}
+                        {% for item in current.get("critical_changes_required", []) %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li style="color:#64748b; background:transparent;">No remaining critical items listed! Great job.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="/resume" class="rr-submit" style="display:inline-block; text-decoration:none;">Run Another Review</a>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

@@ -443,3 +443,67 @@ def score_resume(
         report = default_report(str(e))
         report["link_validation"] = local_link_checks
         return report
+
+def clean_scraped_jd(scraped_text: str) -> str:
+    """Uses lightweight AI to distill full innerText into pure requirements without forcing JSON parse bounds."""
+    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    system = "You are an expert HR assistant. Extract ONLY the Job Title, Core Responsibilities, and Mandatory Skills/Requirements from the following text. Do not include navigation links, footer noise, or generic company boilerplate. Keep it concise."
+    user = f"Scraped Text:\n\n{scraped_text[:6000]}"
+    
+    for model in models:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
+            content = response.choices[0].message.content
+            if content and len(content.strip()) > 50:
+                 return content.strip()
+        except Exception as e:
+            print(f"JD Clean FAILED using {model}: {e}")
+            
+    return scraped_text # Fallback to original text if AI fails
+
+def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
+    """Writes a tailored cover letter using EXACTLY the skills and facts in the candidate's Resume."""
+    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    system = """You are a professional hiring manager. Write a tailored, 3-4 paragraph cover letter utilizing EXACTLY the skills and facts in the candidate's Resume. 
+    Do not invent non-sourced facts, companies, or dates not listed. 
+    Explicitly incorporate keywords bridging the specified Keyword Gaps to fit responsibilities. 
+    Structure with [Your Name] placeholders. Keep it concise (under 400 words)."""
+    
+    verified_skills = list(report.get("scores", {}).keys())
+    keyword_gaps = report.get("keyword_gaps", [])
+    
+    user_prompt = f"""
+    Write a cover letter based on the following:
+    
+    Candidate's Verified Skills: {verified_skills}
+    Keyword Gaps to address: {keyword_gaps}
+    
+    Resume Context:
+    {resume_text[:4000]}
+    
+    Job Description Context:
+    {jd_text[:2000]}
+    """
+    
+    for model in models:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0.2, # slight variation for fluidity
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
+                max_tokens=610
+            )
+            content = response.choices[0].message.content
+            if content and len(content.strip()) > 300:
+                return content.strip()
+        except Exception as e:
+            print(f"Cover Letter FAILED using {model}: {e}")
+            
+    return "Error generating cover letter. Layout limits exceeded."

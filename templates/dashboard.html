@@ -261,12 +261,27 @@
             {% if resume_versions %}
             <section class="rd-panel">
                 <h2>Recent Resume Runs</h2>
+                {% if resume_versions|length == 1 %}
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Upload a second version to enable Side-by-Side comparison deltas.
+                </p>
+                {% endif %}
                 <div class="rd-link-grid">
                     {% for v in resume_versions|reverse %}
+                    {% set prev_v = (resume_versions|reverse)[loop.index] if loop.index < (resume_versions|length) else None %}
                     <article class="rd-link">
-                        <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                            <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
+                            {% if prev_v %}
+                            <a href="/resume/compare?current_id={{ v.id }}&previous_id={{ prev_v.id }}" style="font-size:0.75rem; color:#4f46e5; text-decoration:none; font-weight:600; background:#eef2ff; padding:2px 6px; border-radius:4px;">Compare delta</a>
+                            {% endif %}
+                        </div>
                         <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
                         <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <a href="/resume/{{ v.id }}/cover_letter" style="font-size:0.75rem; color:#16a34a; text-decoration:none; font-weight:600; background:#f0fdf4; padding:2px 6px; border-radius:4px;">Generate Cover Letter</a>
+                        </div>
                     </article>
                     {% endfor %}
                 </div>

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from core import *
+from scoring import clean_scraped_jd
 
 router = APIRouter()
 
@@ -46,12 +47,23 @@ async def upload(
         # Determine job description: Scrape link if provided, otherwise fallback to manual entry
         final_jd = job_description
         if job_link.strip():
-            scraped_text = scrape_job_link(job_link.strip())
-            if scraped_text.strip():
+            # 1. Rate Limit Guard
+            if is_rate_limited(request, "scrape_job_link", max_attempts=10, window_sec=3600):
+                raise ValueError("Rate limit exceeded for URL scraping. Please paste the JD text directly.")
+                
+            scrape_res = scrape_job_link(job_link.strip())
+            if isinstance(scrape_res, dict) and scrape_res.get("error"):
+                raise ValueError(scrape_res.get("error"))
+                
+            scraped_text = scrape_res.get("text", "") if isinstance(scrape_res, dict) else ""
+            if not scraped_text.strip():
+                if not final_jd.strip():
+                    raise ValueError("Could not extract a readable job description from the provided URL. Please try pasting the text manually instead.")
+            else:
+                # 2. AI Cleanup for large text
+                if len(scraped_text) > 3000:
+                    scraped_text = clean_scraped_jd(scraped_text)
                 final_jd = f"Scraped from {job_link}:\n\n{scraped_text}"
-            elif not final_jd.strip():
-                # Provided link but failed to scrape and no backup text
-                raise ValueError("Could not extract a readable job description from the provided URL. Please try pasting the text manually instead.")
 
         consume_resume_quota(request)
         report = score_resume(
@@ -61,6 +73,8 @@ async def upload(
             seniority=seniority,
             region=region,
         )
+        report["resume_text"] = text
+        report["jd_text"] = final_jd
 
         user_email = (request.session.get("user_email") or "").strip().lower()
         if user_email and (target_role or "").strip():
@@ -201,5 +215,55 @@ def export_resume_report(request: Request, format: str = "json"):
         headers={"Content-Disposition": "attachment; filename=resume_report.json"},
     )
 
+
+@router.post("/resume/{report_id}/cover_letter", response_class=RedirectResponse)
+async def generate_cover_letter_endpoint(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+        
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        raise ValueError("Report not found or access denied.")
+        
+    resume_text = report.get("resume_text", "")
+    jd_text = report.get("jd_text", "")
+    
+    from scoring import generate_cover_letter
+    cover_letter = generate_cover_letter(resume_text, jd_text, report)
+    
+    report["cover_letter_text"] = cover_letter
+    update_resume_report_json(report_id, user_email, report)
+    
+    return RedirectResponse(f"/resume/{report_id}/cover_letter", status_code=303)
+
+@router.get("/resume/{report_id}/cover_letter", response_class=HTMLResponse)
+async def view_cover_letter_endpoint(request: Request, report_id: int):
+    from starlette.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="templates")
+    
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+         return RedirectResponse("/?auth=required")
+         
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         
+    cover_letter = report.get("cover_letter_text", "")
+    warning = ""
+    # Explicit JD fallback alerts
+    if not cover_letter:
+        warning = "Cover letter not generated yet. Click generate below to create one."
+    elif not report.get("jd_text") or len(report.get("jd_text", "").strip()) < 100:
+        warning = "Empty or generic Job Description provided. This cover letter is generalized."
+         
+    return templates.TemplateResponse("cover_letter.html", {
+         "request": request,
+         "cover_letter": cover_letter,
+         "report_id": report_id,
+         "warning": warning,
+         "user_plan": current_user_plan(request)
+    })
 
 # INTERVIEW PAGE

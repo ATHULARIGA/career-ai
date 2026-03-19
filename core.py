@@ -128,27 +128,56 @@ def get_admin_settings() -> tuple[str, str, str]:
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_job_link(url: str) -> str:
+def scrape_job_link(url: str) -> dict:
     if not url:
-        return ""
+        return {"text": "", "error": "No URL provided."}
+    
+    # 1. Block List for Unsupported Login-Wall domains
+    UNSUPPORTED_DOMAINS = ["linkedin.com", "indeed.com", "glassdoor.com"]
+    if any(d in url.lower() for d in UNSUPPORTED_DOMAINS):
+        return {"text": "", "error": "LinkedIn/Indeed/Glassdoor require login — please paste the JD text directly."}
+        
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        }
+        # 2. Hard timeout ceiling (8s)
+        response = requests.get(url, headers=headers, timeout=8)
+        
+        if response.status_code >= 400:
+            return {"text": "", "error": f"Could not access URL (Status {response.status_code})."}
+            
         soup = BeautifulSoup(response.text, "html.parser")
         
-        for script_or_style in soup(["script", "style", "noscript", "header", "footer", "nav"]):
+        # 3. Specialized Selectors
+        content_node = None
+        if "greenhouse.io" in url.lower():
+            content_node = soup.select_one(".job-body, #content, #main")
+        elif "lever.co" in url.lower():
+            content_node = soup.select_one(".section-wrapper, .content, .job-info")
+            
+        if content_node:
+            soup = content_node # Use specialized node instead of entire document
+            
+        for script_or_style in soup(["script", "style", "noscript", "header", "footer", "nav", "iframe"]):
             script_or_style.decompose()
-
+            
         text = soup.get_text(separator="\n")
         lines = (line.strip() for line in text.splitlines())
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         text = "\n".join(chunk for chunk in chunks if chunk)
         
-        return text[:15000] # Limit scraped context to 15k chars to prevent prompt blowouts
+        # 4. Length Thresholds Checks
+        if len(text.strip()) < 120:
+            return {"text": "", "error": "Could not extract a readable description — try pasting the text manually instead."}
+            
+        # Limit scraped context to 15k chars to prevent prompt blowouts
+        return {"text": text[:15000], "error": None}
+    except requests.Timeout:
+        return {"text": "", "error": "Request timed out (8s limit). Page took too long to load."}
     except Exception as e:
         logger.warning("Scraping failed for %s: %s", url, e)
-        return ""
+        return {"text": "", "error": f"Scraping failed: {str(e)}"}
 def normalize_question(q):
 
     if isinstance(q, dict):
@@ -369,7 +398,7 @@ def get_recent_resume_runs_for_user(user_email: str, limit: int = 10):
     cur = conn.cursor()
     db.execute(cur, 
         """
-        SELECT created_ts, overall, ats, keyword_coverage, status, target_role
+        SELECT id, created_ts, overall, ats, keyword_coverage, status, target_role
         FROM resume_reports
         WHERE user_email=?
         ORDER BY created_ts ASC, id ASC
@@ -381,15 +410,58 @@ def get_recent_resume_runs_for_user(user_email: str, limit: int = 10):
     conn.close()
     return [
         {
-            "timestamp": int(r[0] or 0),
-            "overall": float(r[1] or 0),
-            "ats": float(r[2] or 0),
-            "keyword_coverage": float(r[3] or 0),
-            "status": str(r[4] or ""),
-            "target_role": str(r[5] or ""),
+            "id": int(r[0] or 0),
+            "timestamp": int(r[1] or 0),
+            "overall": float(r[2] or 0),
+            "ats": float(r[3] or 0),
+            "keyword_coverage": float(r[4] or 0),
+            "status": str(r[5] or ""),
+            "target_role": str(r[6] or ""),
         }
         for r in rows
     ]
+
+
+def get_resume_report_by_id_for_user(report_id: int, user_email: str):
+    email = (user_email or "").strip().lower()
+    if not email:
+        return None
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(cur, 
+        "SELECT report_json, target_role FROM resume_reports WHERE id=? AND user_email=?",
+        (int(report_id), email),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        report = json.loads(row[0] or "{}")
+        if isinstance(report, dict):
+            report["target_role"] = str(row[1] or "")
+        return report
+    except Exception:
+        return None
+
+def update_resume_report_json(report_id: int, user_email: str, updated_json: dict) -> bool:
+    email = (user_email or "").strip().lower()
+    if not email:
+        return False
+    conn = db.get_conn()
+    cur = conn.cursor()
+    try:
+        db.execute(cur, 
+            "UPDATE resume_reports SET report_json=? WHERE id=? AND user_email=?",
+            (json.dumps(updated_json), int(report_id), email)
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception as e:
+        logger.error(f"Failed to update report_json for {report_id}: {e}")
+        return False
+    finally:
+        conn.close()
 
 
 def _auth_key(request: Request, action: str, identity: str = "") -> str:
