@@ -19,8 +19,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     traceback.print_exc()
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
     return templates.TemplateResponse(
-        "error.html",
-        {"request": request, "request_id": req_id},
+        request=request,
+        name="error.html",
+        context={"request": request, "request_id": req_id},
         status_code=500,
     )
 

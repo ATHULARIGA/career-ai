@@ -18,19 +18,19 @@ def signup(
     website: str = Form(""),
 ):
     if (website or "").strip():
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Request blocked."})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": "Request blocked."})
     full_name = full_name.strip()
     email = email.strip().lower()
 
     if len(full_name) < 2:
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Enter a valid name."})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": "Enter a valid name."})
     if "@" not in email or "." not in email:
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Enter a valid email."})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": "Enter a valid email."})
     pw_error = validate_password_strength(password)
     if pw_error:
-        return templates.TemplateResponse("signup.html", {"request": request, "error": pw_error})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": pw_error})
     if password != confirm_password:
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Passwords do not match."})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": "Passwords do not match."})
 
     conn = db.get_conn()
     cur = conn.cursor()
@@ -40,8 +40,9 @@ def signup(
         if cur.fetchone():
             conn.close()
             return templates.TemplateResponse(
-                "signup.html",
-                {"request": request, "error": "An account with this email already exists. Try logging in or use a different email."},
+                request=request,
+                name="signup.html",
+                context={"request": request, "error": "An account with this email already exists. Try logging in or use a different email."},
             )
         db.execute(cur,
             "INSERT INTO users(full_name,email,password_hash,role,password_updated_ts,created_ts) VALUES(?,?,?,?,?,?)",
@@ -58,7 +59,7 @@ def signup(
             conn.close()
         except Exception:
             pass
-        return templates.TemplateResponse("signup.html", {"request": request, "error": "Signup failed. Please try again or contact support."})
+        return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": "Signup failed. Please try again or contact support."})
     conn.close()
 
     request.session["user_id"] = int(user_id)
@@ -79,12 +80,12 @@ def login(
     website: str = Form(""),
 ):
     if (website or "").strip():
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Request blocked."})
+        return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": "Request blocked."})
     identity = email.strip()
     email = identity.lower()
     blocked, retry = is_rate_limited(request, "login", identity=email)
     if blocked:
-        return templates.TemplateResponse("login.html", {"request": request, "error": f"Too many attempts. Try again in {retry}s."})
+        return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": f"Too many attempts. Try again in {retry}s."})
 
     # Admin credentials check: logs in to regular site only (NOT admin panel).
     # Admin panel access exclusively requires /admin-login.
@@ -114,7 +115,7 @@ def login(
     if not row or not verify_password(row[3], password):
         conn.close()
         record_auth_failure(request, "login", identity=email)
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid email or password."})
+        return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": "Invalid email or password."})
     if not str(row[3]).startswith("pbkdf2_sha256$"):
         db.execute(cur, 
             "UPDATE users SET password_hash=?, password_updated_ts=? WHERE id=?",
@@ -237,13 +238,14 @@ def delete_account(request: Request):
 @router.post("/forgot-password", response_class=HTMLResponse)
 def forgot_password(request: Request, email: str = Form(...), website: str = Form("")):
     if (website or "").strip():
-        return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Request blocked."})
+        return templates.TemplateResponse(request=request, name="forgot_password.html", context={"request": request, "error": "Request blocked."})
     email = (email or "").strip().lower()
     blocked, retry = is_rate_limited(request, "forgot_password", identity=email, max_attempts=4, window_sec=300, block_sec=900)
     if blocked:
         return templates.TemplateResponse(
-            "forgot_password.html",
-            {"request": request, "error": f"Too many requests. Try again in {retry}s."},
+            request=request,
+            name="forgot_password.html",
+            context={"request": request, "error": f"Too many requests. Try again in {retry}s."},
         )
     conn = db.get_conn()
     cur = conn.cursor()
@@ -264,8 +266,9 @@ def forgot_password(request: Request, email: str = Form(...), website: str = For
     conn.close()
     record_auth_success(request, "forgot_password", identity=email)
     return templates.TemplateResponse(
-        "forgot_password.html",
-        {"request": request, "message": "If this email exists, a reset link has been sent."},
+        request=request,
+        name="forgot_password.html",
+        context={"request": request, "message": "If this email exists, a reset link has been sent."},
     )
 
 
@@ -278,15 +281,15 @@ def reset_password(
     website: str = Form(""),
 ):
     if (website or "").strip():
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": "Request blocked.", "token": token})
+        return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "error": "Request blocked.", "token": token})
     token = (token or "").strip()
     if not token:
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": "Reset token is required.", "token": token})
+        return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "error": "Reset token is required.", "token": token})
     pw_error = validate_password_strength(password)
     if pw_error:
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": pw_error, "token": token})
+        return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "error": pw_error, "token": token})
     if password != confirm_password:
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": "Passwords do not match.", "token": token})
+        return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "error": "Passwords do not match.", "token": token})
 
     now = int(time.time())
     conn = db.get_conn()
@@ -298,14 +301,14 @@ def reset_password(
     row = cur.fetchone()
     if not row or int(row[2] or 0) < now:
         conn.close()
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": "Token is invalid or expired.", "token": token})
+        return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "error": "Token is invalid or expired.", "token": token})
     db.execute(cur, 
         "UPDATE users SET password_hash=?, password_updated_ts=?, reset_token=NULL, reset_token_expiry=0 WHERE id=?",
         (hash_password(password), now, int(row[0])),
     )
     conn.commit()
     conn.close()
-    return templates.TemplateResponse("login.html", {"request": request, "message": "Password reset successful. Please login."})
+    return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "message": "Password reset successful. Please login."})
 
 
 # RESUME UPLOAD PAGE

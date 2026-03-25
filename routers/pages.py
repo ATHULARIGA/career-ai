@@ -241,7 +241,7 @@ def interview(request: Request, db_conn = Depends(db.get_conn)):
                 payload["qa_history"] = json.loads(row[0])
             except Exception:
                 payload["qa_history"] = []
-    return templates.TemplateResponse("interview.html", payload)
+    return templates.TemplateResponse(request=request, name="interview.html", context=payload)
 
 
 @router.get("/api/interview-progress", response_class=JSONResponse)

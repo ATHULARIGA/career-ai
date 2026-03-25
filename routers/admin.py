@@ -160,32 +160,48 @@ def admin_login(request: Request,
                 password: str = Form(...),
                 website: str = Form("")):
     if (website or "").strip():
-        return templates.TemplateResponse("admin_login.html", {
-            "request": request,
-            "error": "Request blocked."
-        })
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={
+                "request": request,
+                "error": "Request blocked."
+            }
+        )
     blocked, retry = is_rate_limited(request, "admin_login", identity=username, max_attempts=5, window_sec=300, block_sec=900)
     if blocked:
-        return templates.TemplateResponse("admin_login.html", {
-            "request": request,
-            "error": f"Too many attempts. Try again in {retry}s."
-        })
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={
+                "request": request,
+                "error": f"Too many attempts. Try again in {retry}s."
+            }
+        )
     admin_username, admin_password, admin_email = get_admin_settings()
     if not admin_username or not admin_password or not admin_email:
         log_audit("admin", "admin_login_blocked", "admin_env_not_configured")
-        return templates.TemplateResponse("admin_login.html", {
-            "request": request,
-            "error": "Admin access is not configured. Set ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_EMAIL."
-        })
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={
+                "request": request,
+                "error": "Admin access is not configured. Set ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_EMAIL."
+            }
+        )
 
     user_email = (request.session.get("user_email") or "").strip().lower()
     if user_email != admin_email:
         record_auth_failure(request, "admin_login", identity=username)
         log_audit("admin", "admin_login_denied", f"user_email={user_email}")
-        return templates.TemplateResponse("admin_login.html", {
-            "request": request,
-            "error": "This account is not allowed for admin access."
-        })
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={
+                "request": request,
+                "error": "This account is not allowed for admin access."
+            }
+        )
 
     if username == admin_username and password == admin_password:
         request.session["admin"] = True
@@ -198,9 +214,13 @@ def admin_login(request: Request,
 
     record_auth_failure(request, "admin_login", identity=username)
     log_audit("admin", "admin_login_failed", f"username={username}")
-    return templates.TemplateResponse("admin_login.html", {
-        "request": request,
-        "error": "Invalid credentials"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_login.html",
+        context={
+            "request": request,
+            "error": "Invalid credentials"
+        }
+    )
 
 # ADMIN

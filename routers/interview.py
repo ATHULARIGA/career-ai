@@ -24,7 +24,7 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
 
     questions = [normalize_question(q) for q in parsed if str(q).strip()]
     if not questions:
-        return templates.TemplateResponse("interview.html", interview_context_payload(request))
+        return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(request))
 
     request.session["questions"] = questions
     request.session["ideal"] = []
@@ -51,7 +51,7 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
         "fixed_questions": True,
     }
 
-    return templates.TemplateResponse("interview.html", interview_context_payload(request))
+    return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(request))
 
 @router.get("/interview/new")
 def new_interview(request: Request):
@@ -386,13 +386,15 @@ def generate(
     max_rounds = max(3, min(8, int(max_rounds)))
     if persona == "Pressure Test" and not is_premium:
         return templates.TemplateResponse(
-            "interview.html",
-            interview_context_payload(request, premium_notice="Pressure Test mode is Premium only."),
+            request=request,
+            name="interview.html",
+            context=interview_context_payload(request, premium_notice="Pressure Test mode is Premium only."),
         )
     if max_rounds > 3 and not is_premium:
         return templates.TemplateResponse(
-            "interview.html",
-            interview_context_payload(request, premium_notice="More than 3 rounds requires Premium."),
+            request=request,
+            name="interview.html",
+            context=interview_context_payload(request, premium_notice="More than 3 rounds requires Premium."),
         )
     user_email = (request.session.get("user_email") or "").strip().lower()
     if user_email and (role.strip() or company.strip() or topic.strip()):
@@ -485,7 +487,7 @@ def generate(
         latency_ms=(time.time() - start) * 1000.0,
     )
 
-    return templates.TemplateResponse("interview.html", interview_context_payload(request))
+    return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(request))
 
 @router.post("/evaluate", response_class=HTMLResponse)
 def evaluate(request: Request,
@@ -507,7 +509,7 @@ def evaluate(request: Request,
     max_rounds = int(config.get("max_rounds", max(len(questions), 5)))
 
     if not questions:
-        return templates.TemplateResponse("interview.html", interview_context_payload(request))
+        return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(request))
 
     import concurrent.futures
 
@@ -706,7 +708,7 @@ def evaluate(request: Request,
             f.write(f"SESSION DUMP ERR: {e}\n")
         f.write(f"----------------------\n")
 
-    return templates.TemplateResponse("interview.html", interview_context_payload(
+    return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(
         request,
         questions=questions,
         current=current,
@@ -730,7 +732,7 @@ def schedule(request: Request,
              website: str = Form("")):
     if (website or "").strip():
         log_event("honeypot_triggered", "mentorship", metadata={"ip": getattr(request.client, "host", "unknown")})
-        return templates.TemplateResponse("book_call.html", {"request": request, "error": "Request blocked.", "prefill": {}})
+        return templates.TemplateResponse(request=request, name="book_call.html", context={"request": request, "error": "Request blocked.", "prefill": {}})
     start = time.time()
 
     room = f"mock-{topic}-{int(time.time())}"
@@ -781,21 +783,17 @@ Prep Checklist:
     )
     log_model_health("mentorship_booking", "app_internal", success=True, latency_ms=(time.time() - start) * 1000.0)
 
-    return templates.TemplateResponse("book_call.html", {
-        "request": request,
-        "link": link,
-        "brief": brief,
-        "mentor_notified": mentor_notified,
-        "checklist": checklist,
-        "action_plan": action_plan,
-        "rebook_url": "/book-call?" + urlencode({
-            "name": name,
-            "email": email,
-            "topic": topic,
-            "outcome": outcome,
-        }),
-        "prefill": {"name": name, "email": email, "topic": topic, "outcome": outcome},
-    })
+    prefill = {"name": name, "email": email, "topic": topic, "outcome": outcome}
+    return templates.TemplateResponse(
+        request=request,
+        name="book_call.html",
+        context={
+            "request": request,
+            "prefill": prefill,
+            "user_plan": current_user_plan(request),
+            "user_role": request.session.get("user_role") or "user"
+        }
+    )
 
 
 @router.post("/mindmap")

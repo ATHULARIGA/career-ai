@@ -23,8 +23,9 @@ async def upload(
     if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
         user_email = (request.session.get("user_email") or "").strip().lower()
         return templates.TemplateResponse(
-            "upload.html",
-            {
+            request=request,
+            name="upload.html",
+            context={
                 "request": request,
                 "user_plan": quota.get("plan", "free"),
                 "resume_quota": quota,
@@ -166,7 +167,7 @@ async def upload(
         error_msg = urllib.parse.quote(str(e))
         return RedirectResponse(f"/resume?error={error_msg}", status_code=303)
 
-    return templates.TemplateResponse("dashboard.html", {
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={
         "request": request,
         "report": report,
         "resume_versions": version_history if 'version_history' in locals() else request.session.get("resume_versions", []),
@@ -242,16 +243,13 @@ async def generate_cover_letter_endpoint(request: Request, report_id: int):
 
 @router.get("/resume/{report_id}/cover_letter", response_class=HTMLResponse)
 async def view_cover_letter_endpoint(request: Request, report_id: int):
-    from starlette.templating import Jinja2Templates
-    templates = Jinja2Templates(directory="templates")
-    
     user_email = (request.session.get("user_email") or "").strip().lower()
     if not user_email:
          return RedirectResponse("/?auth=required")
          
     report = get_resume_report_by_id_for_user(report_id, user_email)
     if not report:
-         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
     cover_letter = report.get("cover_letter_text", "")
     warning = ""
@@ -261,7 +259,7 @@ async def view_cover_letter_endpoint(request: Request, report_id: int):
     elif not report.get("jd_text") or len(report.get("jd_text", "").strip()) < 100:
         warning = "Empty or generic Job Description provided. This cover letter is generalized."
          
-    return templates.TemplateResponse("cover_letter.html", {
+    return templates.TemplateResponse(request=request, name="cover_letter.html", context={
          "request": request,
          "cover_letter": cover_letter,
          "report_id": report_id,
@@ -297,16 +295,8 @@ async def fix_resume_endpoint(request: Request, report_id: int):
 
 @router.get("/resume/{report_id}/fix", response_class=HTMLResponse)
 async def view_fixed_resume_endpoint(request: Request, report_id: int):
-    from starlette.templating import Jinja2Templates
-    templates = Jinja2Templates(directory="templates")
-    
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    if not user_email:
-         return RedirectResponse("/?auth=required")
-         
-    report = get_resume_report_by_id_for_user(report_id, user_email)
     if not report:
-         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
     fixed_md = report.get("fixed_resume_md", "")
     error = report.get("fixed_resume_error", "")
@@ -314,7 +304,7 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
     if not fixed_md and not error:
         warning = "Resume optimization not generated yet. Click Fix My Resume from the dashboard to create one."
          
-    return templates.TemplateResponse("resume_fix.html", {
+    return templates.TemplateResponse(request=request, name="resume_fix.html", context={
          "request": request,
          "fixed_md": fixed_md,
          "report_id": report_id,
@@ -325,16 +315,8 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
 
 @router.get("/resume/{report_id}", response_class=HTMLResponse)
 async def view_dashboard_by_id(request: Request, report_id: int):
-    from starlette.templating import Jinja2Templates
-    templates = Jinja2Templates(directory="templates")
-    
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    if not user_email:
-         return RedirectResponse("/?auth=required")
-         
-    report = get_resume_report_by_id_for_user(report_id, user_email)
     if not report:
-         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
     report["id"] = report_id
          
@@ -345,7 +327,7 @@ async def view_dashboard_by_id(request: Request, report_id: int):
     except Exception:
         version_history = request.session.get("resume_versions", [])
 
-    return templates.TemplateResponse("dashboard.html", {
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={
         "request": request,
         "report": report,
         "resume_versions": version_history,

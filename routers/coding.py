@@ -21,8 +21,9 @@ def coding_run(
     custom_input = custom_input or ""
     if len(code) > CODING_MAX_CODE_CHARS:
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -83,8 +84,9 @@ def coding_run(
         metadata={"status": result["status"], "score": f"{result['passed']}/{result['total']}", "language": language},
     )
     return templates.TemplateResponse(
-        "coding.html",
-        coding_context_payload(
+        request=request,
+        name="coding.html",
+        context=coding_context_payload(
             request,
             selected["id"],
             language=language,
@@ -117,8 +119,9 @@ def coding_submit(
     code = code or ""
     if len(code) > CODING_MAX_CODE_CHARS:
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -129,8 +132,9 @@ def coding_submit(
     timed_state = _apply_timed_mode_selection(request, selected["id"], timed_mode)
     if timed_state.get("enabled") and timed_state.get("expired"):
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -143,8 +147,9 @@ def coding_submit(
         )
     if timed_state.get("enabled") and timed_state.get("submitted"):
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -158,8 +163,9 @@ def coding_submit(
     cached = fetch_idempotent_response(idem_key)
     if cached:
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -198,8 +204,9 @@ def coding_submit(
             metadata={"job_id": job_id, "language": language},
         )
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -270,8 +277,9 @@ def coding_submit(
         metadata={"status": result["status"], "score": f"{result['passed']}/{result['total']}", "language": language},
     )
     return templates.TemplateResponse(
-        "coding.html",
-        coding_context_payload(
+        request=request,
+        name="coding.html",
+        context=coding_context_payload(
             request,
             selected["id"],
             language=language,
@@ -322,8 +330,9 @@ def coding_hint(
     timed_state = _timed_mode_state(request, selected["id"])
     if timed_state.get("enabled") and not timed_state.get("expired"):
         return templates.TemplateResponse(
-            "coding.html",
-            coding_context_payload(
+            request=request,
+            name="coding.html",
+            context=coding_context_payload(
                 request,
                 selected["id"],
                 language=language,
@@ -348,8 +357,9 @@ def coding_hint(
         result=previous,
     )
     return templates.TemplateResponse(
-        "coding.html",
-        coding_context_payload(
+        request=request,
+        name="coding.html",
+        context=coding_context_payload(
             request,
             selected["id"],
             language=language,
@@ -387,8 +397,9 @@ def coding_interviewer(
         result={},
     )
     return templates.TemplateResponse(
-        "coding.html",
-        coding_context_payload(
+        request=request,
+        name="coding.html",
+        context=coding_context_payload(
             request,
             selected["id"],
             language=language,
