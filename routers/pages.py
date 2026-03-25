@@ -30,12 +30,12 @@ def readyz():
 
 @router.get("/privacy", response_class=HTMLResponse)
 def privacy(request: Request):
-    return templates.TemplateResponse("privacy.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="privacy.html", context={"request": request})
 
 
 @router.get("/terms", response_class=HTMLResponse)
 def terms(request: Request):
-    return templates.TemplateResponse("terms.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="terms.html", context={"request": request})
 
 
 
@@ -45,14 +45,14 @@ def terms(request: Request):
 def home(request: Request):
     log_event("page_view", "landing", metadata={"path": "/"})
     auth_notice = request.query_params.get("auth") == "required"
-    return templates.TemplateResponse("index.html", {"request": request, "auth_notice": auth_notice})
+    return templates.TemplateResponse(request=request, name="index.html", context={"request": request, "auth_notice": auth_notice})
 
 
 @router.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
     if request.session.get("user_id"):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse("signup.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="signup.html", context={"request": request})
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -61,7 +61,7 @@ def login_page(request: Request):
         return RedirectResponse("/admin", status_code=303)
     if request.session.get("user_id"):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="login.html", context={"request": request})
 
 
 @router.get("/account", response_class=HTMLResponse)
@@ -91,8 +91,9 @@ def account_page(request: Request):
     finally:
         conn.close()
     return templates.TemplateResponse(
-        "account.html",
-        {
+        request=request,
+        name="account.html",
+        context={
             "request": request,
             "user_plan": plan,
             "memory": memory,
@@ -125,8 +126,9 @@ def pricing_page(request: Request):
     latest_request = cur.fetchone()
     conn.close()
     return templates.TemplateResponse(
-        "pricing.html",
-        {
+        request=request,
+        name="pricing.html",
+        context={
             "request": request,
             "user_plan": current_user_plan(request),
             "latest_request": latest_request,
@@ -137,12 +139,12 @@ def pricing_page(request: Request):
 
 @router.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="forgot_password.html", context={"request": request})
 
 
 @router.get("/reset-password", response_class=HTMLResponse)
 def reset_password_page(request: Request, token: str = ""):
-    return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
+    return templates.TemplateResponse(request=request, name="reset_password.html", context={"request": request, "token": token})
 
 
 @router.get("/resume", response_class=HTMLResponse)
@@ -151,8 +153,9 @@ def resume(request: Request):
     user_email = (request.session.get("user_email") or "").strip().lower()
     memory = get_user_memory(user_email)
     return templates.TemplateResponse(
-        "upload.html",
-        {
+        request=request,
+        name="upload.html",
+        context={
             "request": request,
             "user_plan": current_user_plan(request),
             "resume_quota": resume_quota_state(request),
@@ -171,19 +174,19 @@ def compare_resumes(request: Request, current_id: int = None, previous_id: int =
         return RedirectResponse(url="/login")
 
     if not current_id or not previous_id:
-        return templates.TemplateResponse("error.html", {"request": request, "message": "Missing comparison IDs."}, status_code=400)
+        return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Missing comparison IDs."}, status_code=400)
 
     try:
         if int(current_id) == int(previous_id):
-            return templates.TemplateResponse("error.html", {"request": request, "message": "Cannot compare a report with itself."}, status_code=400)
+            return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Cannot compare a report with itself."}, status_code=400)
     except ValueError:
-        return templates.TemplateResponse("error.html", {"request": request, "message": "Invalid IDs provided."}, status_code=400)
+        return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Invalid IDs provided."}, status_code=400)
 
     current_report = get_resume_report_by_id_for_user(current_id, user_email)
     previous_report = get_resume_report_by_id_for_user(previous_id, user_email)
 
     if not current_report or not previous_report:
-        return templates.TemplateResponse("error.html", {"request": request, "message": "One or both reports not found or access denied."}, status_code=404)
+        return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "One or both reports not found or access denied."}, status_code=404)
 
     # Read scores gracefully
     curr_scores = current_report.get("scores", {}) or current_report.get("score", {})
@@ -210,8 +213,9 @@ def compare_resumes(request: Request, current_id: int = None, previous_id: int =
         warning = (warning + " " + tier_warning) if warning else tier_warning
 
     return templates.TemplateResponse(
-        "resume_compare.html",
-        {
+        request=request,
+        name="resume_compare.html",
+        context={
             "request": request,
             "current": current_report,
             "previous": previous_report,
@@ -313,7 +317,7 @@ def coding_page(request: Request, problem: str = "", language: str = "", job_id:
             else:
                 extra["judge_job"] = job
 
-    return templates.TemplateResponse("coding.html", coding_context_payload(request, selected_id, **extra))
+    return templates.TemplateResponse(request=request, name="coding.html", context=coding_context_payload(request, selected_id, **extra))
 
 
 @router.get("/coding/problems", response_class=HTMLResponse)
@@ -337,8 +341,9 @@ def coding_problem_list(request: Request, q: str = "", difficulty: str = "All", 
     else:
         filtered = get_all_problems(query=q, difficulty=difficulty)
     return templates.TemplateResponse(
-        "coding_problems.html",
-        {
+        request=request,
+        name="coding_problems.html",
+        context={
             "request": request,
             "problems": filtered,
             "query": q,
@@ -358,7 +363,7 @@ def book(request: Request):
         "topic": request.query_params.get("topic", ""),
         "outcome": request.query_params.get("outcome", ""),
     }
-    return templates.TemplateResponse("book_call.html", {"request": request, "prefill": prefill})
+    return templates.TemplateResponse(request=request, name="book_call.html", context={"request": request, "prefill": prefill})
 
 
 @router.get("/career-map", response_class=HTMLResponse)
@@ -366,8 +371,9 @@ def career_map_page(request: Request):
     log_event("page_view", "career_map_page", metadata={"path": "/career-map"})
     user_email = (request.session.get("user_email") or "").strip().lower()
     return templates.TemplateResponse(
-        "mindmap.html",
-        {
+        request=request,
+        name="mindmap.html",
+        context={
             "request": request,
             "user_plan": current_user_plan(request),
             "memory": get_user_memory(user_email),
@@ -378,7 +384,7 @@ def career_map_page(request: Request):
 @router.get("/admin-login", response_class=HTMLResponse)
 def admin_login_page(request: Request):
     log_event("admin_login_page_view", "admin")
-    return templates.TemplateResponse("admin_login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="admin_login.html", context={"request": request})
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin(request: Request):
@@ -388,8 +394,9 @@ def admin(request: Request):
 
     log_audit("admin", "admin_dashboard_view", "Viewed Admin 2.0 dashboard")
     return templates.TemplateResponse(
-        "admin_overview.html",
-        {
+        request=request,
+        name="admin_overview.html",
+        context={
             **admin_context_payload(request),
             "active_admin_page": "overview",
         },
@@ -402,8 +409,9 @@ def admin_experiments_page(request: Request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_experiments_view", "Viewed experiments page")
     return templates.TemplateResponse(
-        "admin_experiments.html",
-        {
+        request=request,
+        name="admin_experiments.html",
+        context={
             **admin_context_payload(request),
             "active_admin_page": "experiments",
         },
@@ -416,8 +424,9 @@ def admin_coding_page(request: Request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_coding_view", "Viewed coding page")
     return templates.TemplateResponse(
-        "admin_coding.html",
-        {
+        request=request,
+        name="admin_coding.html",
+        context={
             **admin_context_payload(request),
             "active_admin_page": "coding",
             "import_status": (request.query_params.get("import") or "").strip(),
@@ -432,8 +441,9 @@ def admin_safety_page(request: Request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_safety_view", "Viewed safety page")
     return templates.TemplateResponse(
-        "admin_safety.html",
-        {
+        request=request,
+        name="admin_safety.html",
+        context={
             **admin_context_payload(request),
             "active_admin_page": "safety",
         },
@@ -446,8 +456,9 @@ def admin_bookings_page(request: Request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_bookings_view", "Viewed bookings page")
     return templates.TemplateResponse(
-        "admin_bookings.html",
-        {
+        request=request,
+        name="admin_bookings.html",
+        context={
             **admin_context_payload(request),
             "active_admin_page": "bookings",
         },
@@ -475,8 +486,9 @@ def admin_premium_page(request: Request):
     conn.close()
     log_audit("admin", "admin_premium_view", "Viewed premium approvals page")
     return templates.TemplateResponse(
-        "admin_premium.html",
-        {
+        request=request,
+        name="admin_premium.html",
+        context={
             **admin_context_payload(request),
             "request": request,
             "premium_requests": premium_requests,

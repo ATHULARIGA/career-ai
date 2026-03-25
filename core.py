@@ -1102,7 +1102,7 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(self), camera=()"
         if request.url.scheme == "https" or APP_ENV == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         logger.info("request_id=%s method=%s path=%s status=%s latency_ms=%s", req_id, request.method, path, response.status_code, latency_ms)
