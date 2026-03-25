@@ -88,9 +88,10 @@ def generate_mindmap(role):
     """
 
     response = client.chat.completions.create(
-            model="openai/gpt-4o-mini",
+        model="openai/gpt-4o-mini",
         temperature=0,
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role":"user","content":prompt}],
+        max_tokens=8000
     )
 
     raw = response.choices[0].message.content

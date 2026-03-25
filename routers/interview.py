@@ -850,7 +850,7 @@ async def skill_info(request: Request, skill: str = Form(...)):
         response = client.chat.completions.create(
             model="openai/gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
+            max_tokens=800
         )
         parsed = parse_json_object(response.choices[0].message.content)
         description = str(parsed.get("description", "No description available.")).strip()

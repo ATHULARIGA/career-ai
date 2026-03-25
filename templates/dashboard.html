@@ -25,9 +25,13 @@
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export JSON (Premium)</a>
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export TXT (Premium)</a>
                 {% endif %}
-                <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;">
-                    <button type="submit" class="btn-primary">✨ Fix My Resume</button>
-                </form>
+                {% if report.resume_text %}
+                    <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;" id="autoFixForm">
+                        <button type="submit" class="btn-primary" onclick="this.innerHTML='⏳ Generating...'; this.disabled=true; document.getElementById('autoFixForm').submit();">✨ Fix My Resume</button>
+                    </form>
+                {% else %}
+                    <button type="button" class="btn-primary" onclick="openFixModal()">✨ Fix My Resume</button>
+                {% endif %}
                 <a href="/interview/new" class="btn-primary">Mock Interview</a>
             </div>
         </header>
@@ -69,9 +73,9 @@
                     <h3>{{ coverage }}%</h3>
                     <span>Lexical Alignment</span>
                 </article>
-                <article class="rd-stat" style="border-left: 2px solid #e0e7ff; background: #fafbfe;">
-                    <p style="color:#4f46e5;font-weight:600;">Job Match</p>
-                    <h3 style="color:#4338ca;">{{ match_percent }}%</h3>
+                <article class="rd-stat rd-score-card">
+                    <p class="rd-score-card-title">Job Match</p>
+                    <h3 class="rd-score-card-value">{{ match_percent }}%</h3>
                     <span>Requirements Met</span>
                 </article>
             </section>
@@ -83,13 +87,13 @@
                 </div>
             </section>
             {% if report.critical_changes_required %}
-            <section class="rd-panel" style="border: 2px solid #fee2e2; background: #fef2f2; margin-top:24px;">
-                <h2 style="color: #991b1b; display: flex; align-items: center; gap: 8px;">
+            <section class="rd-panel-critical">
+                <h2 class="rd-critical-title">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     Critical Changes Required
                 </h2>
-                <p style="margin-bottom:12px; color:#7f1d1d;">Address these items immediately to improve your {{ report.job_match_percent }}% job match.</p>
-                <ul style="margin:0; padding-left:18px; color:#7f1d1d;">
+                <p class="rd-critical-text" style="margin-bottom:12px;">Address these items immediately to improve your {{ report.job_match_percent }}% job match.</p>
+                <ul class="rd-critical-text" style="margin:0; padding-left:18px;">
                     {% for change in report.critical_changes_required %}
                     <li style="margin-bottom:6px;"><strong>{{ change }}</strong></li>
                     {% endfor %}
@@ -127,8 +131,8 @@
                     <p class="rd-muted" style="margin-top: 4px;">{{ report.benchmarking.summary or "" }}</p>
                     
                     {% if report.benchmarking.missing_critical %}
-                    <p class="rd-subtitle" style="margin-top:12px; margin-bottom:6px; color: #b91c1c;">Missing Critical Gaps</p>
-                    <ul style="padding-left: 18px; color: #b91c1c;">
+                    <p class="rd-subtitle" style="margin-top:12px; margin-bottom:6px; color: #ef4444;">Missing Critical Gaps</p>
+                    <ul style="padding-left: 18px; color: #ef4444;">
                         {% for item in report.benchmarking.missing_critical %}
                         <li>{{ item }}</li>
                         {% endfor %}
@@ -141,8 +145,8 @@
                 {% if report.link_validation %}
                 <div class="rd-link-grid">
                     {% for item in report.link_validation %}
-                    <article class="rd-link">
-                        <p class="rd-link-url">{{ item.url or "N/A" }}</p>
+                    <article class="rd-link link-card">
+                        <p class="rd-link-url" style="word-break: break-all;">{{ item.url or "N/A" }}</p>
                         <p class="rd-link-status">{{ item.status or "unknown" }}</p>
                         <p class="rd-muted">{{ item.note or "" }}</p>
                     </article>
@@ -462,4 +466,62 @@
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Fix My Resume Modal -->
+<div id="fixResumeModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:16px; padding:36px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.2); position:relative;">
+    <button onclick="closeFixModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;font-size:1.4rem;color:#94a3b8;">×</button>
+    <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin:0 0 8px;">AI Resume Optimizer</p>
+    <h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;">Fix My Resume</h2>
+    <p style="color:#64748b;font-size:0.92rem;margin:0 0 24px;line-height:1.6;">Upload your PDF resume and we'll apply action-verb rewrites, quantification suggestions, and keyword anchors from your report.</p>
+    <form id="fixResumeForm" action="/resume/{{ report.id or 0 }}/fix-upload" method="POST" enctype="multipart/form-data">
+      <label id="fixDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:32px 20px;cursor:pointer;transition:all 0.2s;" ondragover="event.preventDefault();this.style.borderColor='#4f46e5'" ondragleave="this.style.borderColor='#cbd5e1'" ondrop="handleDrop(event)">
+        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#94a3b8;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <span id="fixFileLabel" style="font-weight:600;color:#475569;font-size:0.92rem;">Drop your PDF here or click to browse</span>
+        <span style="font-size:0.78rem;color:#94a3b8;">PDF only · Max 10MB</span>
+        <input type="file" name="file" id="fixFileInput" accept=".pdf" required style="display:none;" onchange="onFileSelected(this)">
+      </label>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit" id="fixSubmitBtn" class="btn-primary" style="flex:1;padding:13px;font-size:1rem;border-radius:10px;">✨ Generate Fix</button>
+        <button type="button" onclick="closeFixModal()" class="btn-secondary" style="padding:13px 20px;border-radius:10px;">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openFixModal() {
+  const m = document.getElementById('fixResumeModal');
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeFixModal() {
+  const m = document.getElementById('fixResumeModal');
+  m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function onFileSelected(input) {
+  const label = document.getElementById('fixFileLabel');
+  label.textContent = input.files[0] ? input.files[0].name : 'Drop your PDF here or click to browse';
+  document.getElementById('fixDropZone').style.borderColor = '#4f46e5';
+}
+function handleDrop(e) {
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  if (dt.files.length) {
+    const input = document.getElementById('fixFileInput');
+    input.files = dt.files;
+    onFileSelected(input);
+  }
+  e.currentTarget.style.borderColor = '#4f46e5';
+}
+document.getElementById('fixResumeForm').addEventListener('submit', function() {
+  const btn = document.getElementById('fixSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+});
+document.getElementById('fixResumeModal').addEventListener('click', function(e) {
+  if (e.target === this) closeFixModal();
+});
+</script>
 {% endblock %}

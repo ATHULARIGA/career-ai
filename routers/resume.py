@@ -279,7 +279,7 @@ async def fix_resume_endpoint(request: Request, report_id: int):
         
     resume_text = report.get("resume_text", "")
     if not resume_text.strip():
-        report["fixed_resume_error"] = "Resume text unavailable for this historical report. Please run a new review to use this feature."
+        report["fixed_resume_error"] = "Resume text unavailable for this historical report (pre-update). Please run a 'New Review' to use this feature."
         update_resume_report_json(report_id, user_email, report)
         return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
         
@@ -291,6 +291,51 @@ async def fix_resume_endpoint(request: Request, report_id: int):
     report.pop("fixed_resume_error", None)
     update_resume_report_json(report_id, user_email, report)
     
+    return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+@router.post("/resume/{report_id}/fix-upload", response_class=RedirectResponse)
+async def fix_resume_with_upload(request: Request, report_id: int, file: UploadFile = File(...)):
+    """Allow users with legacy reports (missing resume_text) to re-supply their PDF and get a fix."""
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login", status_code=303)
+
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        return RedirectResponse("/resume", status_code=303)
+
+    try:
+        filename = (file.filename or "").lower()
+        if not filename.endswith(".pdf"):
+            report["fixed_resume_error"] = "Only PDF files are supported. Please re-upload your resume as a PDF."
+            update_resume_report_json(report_id, user_email, report)
+            return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+        content = await file.read()
+        if not content:
+            report["fixed_resume_error"] = "The uploaded file was empty. Please try again."
+            update_resume_report_json(report_id, user_email, report)
+            return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+        text = extract_text(file.filename, content)
+        if not text.strip():
+            report["fixed_resume_error"] = "Could not extract text from the uploaded PDF. Make sure it's not a scanned image."
+            update_resume_report_json(report_id, user_email, report)
+            return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+        # Save the extracted text so future calls work without re-uploading
+        report["resume_text"] = text
+        report.pop("fixed_resume_error", None)
+
+        from scoring import generate_resume_rewrite
+        fixed_md = generate_resume_rewrite(text, report)
+        report["fixed_resume_md"] = fixed_md
+        update_resume_report_json(report_id, user_email, report)
+
+    except Exception as e:
+        report["fixed_resume_error"] = f"Failed to process upload: {str(e)}"
+        update_resume_report_json(report_id, user_email, report)
+
     return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
 
 @router.get("/resume/{report_id}/fix", response_class=HTMLResponse)

@@ -215,7 +215,7 @@ html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white butt
 
 .iv-send-btn {
   width: 44px; height: 44px; border-radius: 8px; border: none;
-  background: linear-gradient(135deg, #4f46e5, #6366f1); color: var(--iv-surface); 
+  background: #111827; color: var(--iv-surface); 
   cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
@@ -648,7 +648,7 @@ function showVerdict(data) {
     'Strong Hire': '#16a34a', 'Lean Hire': '#2563eb',
     'Borderline': '#d97706', 'No Hire': '#dc2626'
   };
-  const color = decisionColors[decision] || '#6366f1';
+  const color = decisionColors[decision] || '#111827';
 
   // Gap 5: show partial result notice if scoring was cut short
   const partialNotice = data.partial

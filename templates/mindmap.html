@@ -1,400 +1,395 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<section class="cp-page career-page">
-    <div class="cp-container career-container">
-        <div class="career-top">
-            <header class="cp-header career-header">
-                <div>
-                    <p class="cp-eyebrow">Career Roadmap</p>
-                    <h1 class="career-title">AI Career Roadmap</h1>
-                    <p class="career-subtitle">Generate a structured learning roadmap tailored to your target role.</p>
-                </div>
-            </header>
+<style>
+/* ── Ultimate Obsidian/Notion Roadmap UI 3.0 ─────────────────── */
+:root {
+  --rm-bg: #f8f8f4;
+  --rm-canvas-bg: #ffffff;
+  --rm-dot-color: #e5e5e0;
+  --rm-text-primary: #1a1a1b;
+  --rm-text-secondary: #64748b;
+  --rm-border: #e2e8f0;
+  --rm-accent: #111827;
+  --rm-glass: rgba(255, 255, 255, 0.9);
+  --rm-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
 
-            <section class="cp-panel career-toolbar">
+.theme-dark {
+  --rm-bg: #0d0d0f;
+  --rm-canvas-bg: #141416;
+  --rm-dot-color: #242426;
+  --rm-text-primary: #ededed;
+  --rm-text-secondary: #888;
+  --rm-border: #2a2a2c;
+  --rm-glass: rgba(20, 20, 22, 0.9);
+  --rm-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
 
-                <div class="career-input">
-                    <input type="text" id="roleInput" value="{{ (memory.target_role if memory else '') }}" placeholder="Enter Career Role (e.g. Data Scientist)">
-                    <button id="generateBtn" onclick="generateMindmap()">Generate Roadmap</button>
-                </div>
-                <div id="mindmap-status"></div>
-            </section>
-        </div>
+.rm-page {
+  min-height: 100vh;
+  background: var(--rm-bg);
+  padding: 40px 24px 80px;
+  color: var(--rm-text-primary);
+  font-family: 'Inter', -apple-system, sans-serif;
+}
 
-        <section class="cp-panel career-canvas">
-            <div id="mindmap"></div>
-        </section>
-        
-        <section id="skill-panel" class="cp-panel skill-panel" style="display:none;">
-            <h3 id="panel-title">Skill Details</h3>
-            <div id="panel-content">
-                Click a skill to see more information.
-            </div>
-            <div id="panel-resources">
-                <h4>Learning Resources</h4>
-                <ul id="resource-list"></ul>
-            </div>
-        </section>
+.rm-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.rm-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.rm-eyebrow {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--rm-text-secondary);
+  margin-bottom: 8px;
+}
+.rm-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+.rm-subtitle {
+  color: var(--rm-text-secondary);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* Actions */
+.rm-actions { display: flex; gap: 8px; }
+.rm-action-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--rm-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--rm-text-primary);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rm-action-btn:hover { 
+  border-color: var(--rm-text-primary); 
+  background: rgba(0,0,0,0.04); 
+  transform: translateY(-1px);
+}
+.theme-dark .rm-action-btn:hover { 
+  background: rgba(255,255,255,0.08); 
+}
+
+/* Unified Toolbar/Search */
+.rm-toolbar {
+  margin-bottom: 16px;
+}
+.rm-search-wrap {
+  background: var(--rm-canvas-bg);
+  border: 1px solid var(--rm-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px 6px 16px;
+  box-shadow: var(--rm-shadow);
+  max-width: 600px;
+  margin: 0 auto;
+  transition: border-color 0.2s;
+}
+.rm-search-wrap:focus-within { border-color: var(--rm-accent); }
+.rm-search-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--rm-text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 8px 0;
+}
+.rm-search-wrap input::placeholder { color: #555; }
+
+.rm-gen-btn {
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.rm-gen-btn:hover { 
+  background: #000000;
+  transform: translateY(-1px);
+}
+.theme-dark .rm-gen-btn { 
+  background: #ffffff !important; 
+  color: #000000 !important; 
+}
+.theme-dark .rm-gen-btn:hover {
+  background: #f3f4f6 !important;
+}
+
+/* Status */
+.rm-status {
+  text-align: center; 
+  font-size: 0.7rem; 
+  font-weight: 700; 
+  text-transform: uppercase;
+  letter-spacing: 0.1em; 
+  height: 20px; 
+  margin-bottom: 12px;
+  color: var(--rm-text-secondary);
+}
+
+/* Canvas Area */
+.rm-viewport {
+  position: relative;
+  background-color: var(--rm-canvas-bg);
+  background-image: radial-gradient(var(--rm-dot-color) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  border: 1px solid var(--rm-border);
+  border-radius: 14px;
+  height: 680px;
+  overflow: hidden;
+  box-shadow: var(--rm-shadow);
+}
+#rm-svg { width: 100%; height: 100%; display: block; }
+
+/* D3 Elements */
+.node rect { stroke-width: 1.5px; rx: 10; ry: 10; cursor: pointer; }
+.node text { font-family: inherit; pointer-events: none; user-select: none; }
+
+.node-root rect { fill: var(--rm-text-primary); stroke: none; }
+.node-root text { fill: var(--rm-canvas-bg); font-weight: 900; font-size: 14px; letter-spacing: -0.02em; }
+
+.node-cat rect { fill: var(--rm-canvas-bg); stroke: var(--rm-border); }
+.node-cat text { fill: var(--rm-text-primary); font-weight: 700; font-size: 11.5px; }
+
+.node-leaf rect { fill: var(--rm-bg); stroke: var(--rm-border); }
+.node-leaf text { fill: var(--rm-text-secondary); font-weight: 600; font-size: 10.5px; }
+
+.link { stroke: var(--rm-border); stroke-width: 1.5px; fill: none; opacity: 0.4; }
+
+/* Skill Panel (Floating Glass Card) */
+.skill-panel {
+  position: absolute; top: 20px; right: 20px; width: 300px;
+  background: var(--rm-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--rm-border);
+  border-radius: 12px; padding: 20px;
+  box-shadow: var(--rm-shadow);
+  display: none; z-index: 100;
+  animation: panelIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes panelIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+.skill-panel-label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rm-text-secondary); margin-bottom: 6px; }
+.skill-title { margin: 0 0 10px; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
+.skill-desc { font-size: 0.88rem; color: var(--rm-text-secondary); line-height: 1.6; margin-bottom: 20px; }
+.resource-link { display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(0,0,0,0.025); border: 1px solid var(--rm-border); border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; color: var(--rm-text-primary); margin-bottom: 8px; }
+.theme-dark .resource-link { background: rgba(255,255,255,0.03); }
+.resource-link:hover { border-color: var(--rm-text-primary); background: rgba(0,0,0,0.05); }
+
+/* Hints */
+.rm-hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 800; color: #999; letter-spacing: 0.05em; text-transform: uppercase; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; }
+
+/* Welcome msg */
+.welcome-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; opacity: 0.4; }
+.welcome-msg svg { margin-bottom: 12px; }
+.welcome-msg p { font-size: 0.9rem; font-weight: 600; color: #94a3b8; }
+</style>
+
+<div class="rm-page">
+  <div class="rm-container">
+    
+    <header class="rm-header">
+      <div>
+        <p class="rm-eyebrow">Smart Career Mapping</p>
+        <h1 class="rm-title">Career Roadmap</h1>
+        <p class="rm-subtitle">Visualization of skills and path to mastery</p>
+      </div>
+      <div class="rm-actions">
+        <a href="/resume" class="rm-action-btn">Analyze Resume</a>
+        <a href="/dashboard" class="rm-action-btn">Back home</a>
+      </div>
+    </header>
+
+    <div class="rm-toolbar">
+      <div class="rm-search-wrap">
+        <input type="text" id="role-query" 
+               placeholder="e.g. Senior Backend Developer, UX Designer..."
+               onkeydown="if(event.key==='Enter') startGeneration()">
+        <button class="rm-gen-btn" id="gen-trigger" onclick="startGeneration()">Generate Map</button>
+      </div>
     </div>
-</section>
 
-<div id="globalLoader" class="app-loader" hidden>
-    <div class="app-loader-card">
-        <span class="app-loader-spinner" aria-hidden="true"></span>
-        <span id="globalLoaderText" class="app-loader-text">Generating career roadmap...</span>
+    <div class="rm-status" id="gen-status"></div>
+
+    <div class="rm-viewport" id="viewport">
+      <div class="welcome-msg" id="welcome">
+        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <p>Enter a role to visualize your path.</p>
+      </div>
+      
+      <svg id="rm-svg"></svg>
+
+      <div class="skill-panel" id="skill-panel">
+        <button onclick="document.getElementById('skill-panel').style.display='none'" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:#999;font-size:1rem;">✕</button>
+        <div class="skill-panel-label">Learning Track</div>
+        <h2 class="skill-title" id="panel-title">Skill Title</h2>
+        <p class="skill-desc" id="panel-desc">Curating resources...</p>
+        <div class="skill-panel-label">Top Resources</div>
+        <div id="panel-resources"></div>
+      </div>
+
+      <div class="rm-hint">Scroll to zoom · Drag to pan · Click to expand</div>
     </div>
+
+  </div>
+</div>
+
+<div id="loader" class="app-loader" hidden>
+  <div class="app-loader-card">
+    <span class="app-loader-spinner"></span>
+    <span class="app-loader-text">AI is mapping your path...</span>
+  </div>
 </div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
-
 <script>
+(function() {
+  let sim, svg, g, zoom, rootData;
+  const viewport = document.getElementById('viewport');
+  const width = viewport.clientWidth;
+  const height = 680;
 
-function showGlobalLoader(message) {
-    const loader = document.getElementById("globalLoader");
-    const loaderText = document.getElementById("globalLoaderText");
-    if (!loader) return;
-    if (loaderText && message) loaderText.textContent = message;
-    loader.hidden = false;
-}
+  function init() {
+    svg = d3.select("#rm-svg");
+    g = svg.append("g");
+    zoom = d3.zoom().scaleExtent([0.1, 4]).on("zoom", (e) => g.attr("transform", e.transform));
+    svg.call(zoom);
+  }
 
-function hideGlobalLoader() {
-    const loader = document.getElementById("globalLoader");
-    if (loader) loader.hidden = true;
-}
+  window.startGeneration = async function() {
+    const input = document.getElementById('role-query');
+    const query = input.value.trim();
+    if (!query) return;
 
-async function generateMindmap() {
-    const roleInput = document.getElementById("roleInput");
-    const button = document.getElementById("generateBtn");
-    const status = document.getElementById("mindmap-status");
-
-    const role = roleInput.value.trim();
-
-    if (!role) {
-        status.className = "status-error";
-        status.textContent = "Please enter a career role.";
-        return;
-    }
-
-    button.disabled = true;
-    button.innerText = "Generating...";
-    status.className = "status-loading";
-    status.textContent = "AI is building your roadmap...";
-    showGlobalLoader("Generating career roadmap...");
-    document.getElementById("mindmap").innerHTML = "";
-    document.getElementById("skill-panel").style.display = "none";
+    document.getElementById('loader').hidden = false;
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('skill-panel').style.display = 'none';
+    g.selectAll("*").remove();
 
     try {
-        const formData = new FormData();
-        formData.append("role", role);
+      const fd = new FormData();
+      fd.append('role', query);
+      const res = await fetch('/mindmap', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
 
-        const response = await fetch("/mindmap", {
-            method: "POST",
-            body: formData
-        });
+      rootData = data;
+      let id = 0;
+      function tag(n, d) {
+        n.id = id++; n.depth = d;
+        if (n.children) n.children.forEach(c => tag(c, d + 1));
+      }
+      tag(rootData, 0);
 
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data && data.error ? data.error : "Server error");
-        }
-        
-        // Ensure every node has a unique ID to prevent D3 object reference issues
-        let idCounter = 0;
-        function assignIds(node, depth = 0) {
-            node.id = "node-" + (idCounter++);
-            node.depth = depth;
-            if (node.children) {
-                node.children.forEach(c => assignIds(c, depth + 1));
-            }
-            if (node._children) {
-                node._children.forEach(c => assignIds(c, depth + 1));
-            }
-        }
-        assignIds(data);
-        
-        renderGraph(data);
-        status.className = "status-success";
-        status.textContent = "Roadmap generated successfully.";
-    } catch (error) {
-        status.className = "status-error";
-        const msg = (error && error.message) ? error.message : "Something went wrong.";
-        status.innerHTML = msg + ' <a href="/pricing">Upgrade</a>';
-        console.error(error);
+      const collapse = (n) => { if (n.depth >= 1 && n.children) { n._children = n.children; n.children = null; } };
+      rootData.children.forEach(collapse);
+
+      render();
+      document.getElementById('gen-status').textContent = `✓ Roadmap ready for ${query}`;
+    } catch (e) {
+      document.getElementById('gen-status').textContent = "Error: " + e.message;
     } finally {
-        button.disabled = false;
-        button.innerText = "Generate";
-        hideGlobalLoader();
+      document.getElementById('loader').hidden = true;
     }
-}
+  };
 
-function renderGraph(data) {
-    const skillCache = {};
-    document.getElementById("mindmap").innerHTML = "";
-
-    const actualWidth = document.getElementById("mindmap").clientWidth;
-    const width = (actualWidth > 200) ? actualWidth : 1000;
-    const height = 800;
-
-    const svg = d3.select("#mindmap")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    const g = svg.append("g");
-
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 4])
-        .on("zoom", (event) => {
-            g.attr("transform", event.transform);
-        });
-
-    svg.call(zoom);
-
-    // Initial collapse: hide everything deeper than categories
-    function collapse(node) {
-        if (node.depth === 1 && node.children) {
-            node._children = node.children;
-            node.children = null;
-        } else if (node.children) {
-            node.children.forEach(collapse);
-        }
+  function render() {
+    g.selectAll("*").remove();
+    let nodes = [], links = [];
+    function flatten(n, p) {
+      nodes.push(n);
+      if (p) links.push({ source: p, target: n });
+      if (n.children) n.children.forEach(c => flatten(c, n));
     }
-    collapse(data);
+    flatten(rootData, null);
 
-    let nodes = [];
-    let links = [];
+    sim = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.source.depth === 0 ? 180 : 120))
+      .force("charge", d3.forceManyBody().strength(-1200))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(70));
 
-    function buildGraph(node, parent = null) {
-        nodes.push(node);
-        if (parent) {
-            links.push({ source: parent, target: node });
-        }
-        if (node.children) {
-            node.children.forEach(child => buildGraph(child, node));
-        }
-    }
+    // Curved links
+    const link = g.append("g").selectAll("path").data(links).enter().append("path")
+      .attr("class", "link")
+      .attr("stroke-dasharray", d => d.target.children || d.target._children ? "0" : "4,2");
 
-    const simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(d => d.id).distance(d => {
-            return d.source.depth === 0 ? 200 : 120;
-        }))
-        .force("charge", d3.forceManyBody().strength(-1000))
-        .force("center", d3.forceCenter(width/2, height/2))
-        .force("collision", d3.forceCollide().radius(80))
-        .force("boundary", forceBoundary());
+    const node = g.append("g").selectAll(".node").data(nodes).enter().append("g")
+      .attr("class", d => "node " + (d.depth === 0 ? "node-root" : (d.children || d._children ? "node-cat" : "node-leaf")))
+      .on("click", (evt, d) => {
+        if (d.children || d._children) {
+          if (d.children) { d._children = d.children; d.children = null; }
+          else { d.children = d._children; d._children = null; }
+          render();
+        } else { openPanel(d); }
+      })
+      .call(d3.drag()
+        .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); if (d.depth !== 0) { d.fx = null; d.fy = null; } }));
 
-    const linkGroup = g.append("g");
-    const nodeGroup = g.append("g");
-    function forceBoundary(){
+    node.append("rect").attr("height", d => d.depth === 0 ? 40 : 32).attr("y", d => d.depth === 0 ? -20 : -16);
+    node.append("text").attr("text-anchor", "middle").attr("dy", 5).text(d => d.name);
+    node.selectAll("rect").attr("width", function(d) { 
+      const tw = this.parentNode.querySelector("text").getBBox().width;
+      d.w = Math.max(90, tw + 36); 
+      return d.w; 
+    }).attr("x", d => -d.w / 2);
 
-        const padding = 40;
-
-        return function(){
-
-            nodes.forEach(node => {
-
-                if(node.x < padding) node.x = padding;
-                if(node.x > width - padding) node.x = width - padding;
-
-                if(node.y < padding) node.y = padding;
-                if(node.y > height - padding) node.y = height - padding;
-
-            });
-
-        }
-
-    }
-
-    function update() {
-        nodes = [];
-        links = [];
-        buildGraph(data);
-
-        // Update Links
-        const link = linkGroup.selectAll("line")
-            .data(links, d => d.target.id);
-        
-        link.exit().remove();
-        
-        const linkEnter = link.enter()
-        .append("line")
-        .attr("class", "obs-link")
-        .style("transition","all 0.25s ease");
-
-        link.merge(linkEnter);
-        // Update Nodes
-        const node = nodeGroup.selectAll(".node")
-            .data(nodes, d => d.id);
-
-        node.exit().remove();
-
-        const nodeEnter = node.enter()
-            .append("g")
-            .attr("class", "node")
-            .on("click", (event, d) => {
-                if (event.defaultPrevented) return;
-                toggleNode(event, d);
-
-                if(!d.children && !d._children){
-                    showSkillInfo(d)
-                }
-            })
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-        
-        // Compute rough width based on text length
-        const charWidth = 7;
-        const paddingH = 20;
-
-        nodeEnter.append("rect")
-            .attr("height", d => d.depth === 0 ? 36 : 28)
-            .attr("rx", 6) // Obsidian/Notion slightly rounded corners
-            .attr("ry", 6)
-            .attr("x", d => {
-                const w = Math.max(80, d.name.length * charWidth + paddingH*2);
-                d._w = w;
-                return -w/2;
-            })
-            .attr("y", d => d.depth === 0 ? -18 : -14)
-            .attr("width", d => d._w)
-            .attr("stroke", "currentColor")
-            .attr("stroke-width", 1)
-            .style("cursor", "pointer");
-
-        nodeEnter.append("text")
-            .attr("dy", 4) // vertical center alignment roughly
-            .attr("text-anchor", "middle")
-            .style("pointer-events", "none");
-
-        // Merge enter and update
-        const nodeCombined = nodeEnter.merge(node);
-        
-        nodeCombined.select("rect")
-            .attr("class", d => {
-                if (d.depth === 0) return "obs-node-root";
-                if (d._children) return "obs-node-expandable";
-                return "obs-node-leaf";
-            });
-
-        nodeCombined.select("text")
-            .text(d => d.name)
-            .attr("class", d => d.depth === 0 ? "obs-text-root" : "obs-text-node");
-
-        // Fix root node
-        const root = nodes.find(d => d.depth === 0);
-        if (root) {
-            root.fx = width / 2;
-            root.fy = height / 2;
-        }
-
-        simulation.nodes(nodes);
-        simulation.force("link").links(links);
-        simulation.alpha(0.4).alphaDecay(0.02).restart();
-    }
-
-    simulation.on("tick", () => {
-        linkGroup.selectAll("line")
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        nodeGroup.selectAll(".node")
-            .attr("transform", d => `translate(${d.x},${d.y})`);
+    sim.on("tick", () => {
+      link.attr("d", d => {
+        const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y, dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+        return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+      });
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
     });
+  }
 
-    function toggleNode(event, d) {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else if (d._children) {
-            d.children = d._children;
-            d._children = null;
-        } else {
-            return; // Leaf node
-        }
-        update();
-    }
+  async function openPanel(node) {
+    const p = document.getElementById('skill-panel');
+    p.style.display = 'block';
+    document.getElementById('panel-title').textContent = node.name;
+    document.getElementById('panel-desc').textContent = "Consulting AI for learning path...";
+    document.getElementById('panel-resources').innerHTML = "";
+    try {
+      const res = await fetch('/skill-info', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'skill=' + encodeURIComponent(node.name) });
+      const data = await res.json();
+      document.getElementById('panel-desc').textContent = data.description || "Core foundational skill area.";
+      (data.resources || []).forEach(r => {
+        const a = document.createElement('a'); a.href = r.url; a.target = "_blank"; a.className = "resource-link"; a.innerHTML = `<span>→</span> ${r.label}`;
+        document.getElementById('panel-resources').appendChild(a);
+      });
+    } catch { document.getElementById('panel-desc').textContent = "Resource data temporarily limited."; }
+  }
 
-    async function showSkillInfo(d) {
-
-        const panel = document.getElementById("skill-panel");
-        const title = document.getElementById("panel-title");
-        const content = document.getElementById("panel-content");
-        const resList = document.getElementById("resource-list");
-
-        panel.style.display = "block";
-        title.innerText = d.name;
-        resList.innerHTML = "";
-
-        // 🚀 Use cached result if available
-        if(skillCache[d.name]){
-            const info = skillCache[d.name];
-            content.innerText = info.description;
-
-            info.resources.forEach(res => {
-                const li = document.createElement("li");
-                li.innerHTML = `<a href="${res.url}" target="_blank" class="skill-link">${res.label}</a>`;
-                resList.appendChild(li);
-            });
-
-            return;
-        }
-
-        content.innerText = "Loading details...";
-
-        try {
-
-            const resp = await fetch("/skill-info",{
-                method:"POST",
-                headers:{"Content-Type":"application/x-www-form-urlencoded"},
-                body:`skill=${encodeURIComponent(d.name)}`
-            });
-
-            const info = await resp.json();
-
-            // cache result
-            skillCache[d.name] = info;
-
-            content.innerText = info.description;
-
-            info.resources.forEach(res=>{
-                const li = document.createElement("li");
-                li.innerHTML = `<a href="${res.url}" target="_blank" class="skill-link">${res.label}</a>`;
-                resList.appendChild(li);
-            });
-
-        } catch(e){
-
-            content.innerText = "Failed to load skill details.";
-
-        }
-    }
-
-    function dragstarted(event, d) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-        d.fx = event.x;
-        d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-        if (!event.active) simulation.alphaTarget(0);
-        if (d.depth !== 0) {
-            d.fx = null;
-            d.fy = null;
-        }
-    }
-
-    update();
-}
-
+  init();
+})();
 </script>
 
 {% endblock %}

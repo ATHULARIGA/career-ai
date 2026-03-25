@@ -343,7 +343,7 @@ body {
   font-size: 0.9375rem;
 }
 
-.blue { background:#e0e7ff; color: #4338ca; }
+.blue { background:#e0e7ff; color: #000000; }
 .green { background:#dcfce7; color: #166534; }
 .purple { background:#f3f4f6; color: #111827; }
 
@@ -636,7 +636,7 @@ html.theme-dark .stat-item h3 {
 
 .theme-dark .float-card {
   background: rgba(17, 24, 39, 0.75) !important;
-  border-color: rgba(75, 85, 99, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
   box-shadow: 0 12px 24px rgba(0,0,0,0.4) !important;
 }
 
@@ -1679,169 +1679,232 @@ body {
   margin-bottom: 12px;
 }
 
+/* ── Notion/Obsidian Dashboard System ───────────────────── */
 .rd-stat,
 .rd-panel {
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-border);
-  border-radius: 14px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+  background: #ffffff;
+  border: 1px solid #e8e8e4;
+  border-radius: 10px;
+  box-shadow: none;
+  transition: border-color 0.15s;
+}
+.theme-dark .rd-stat,
+.theme-dark .rd-panel {
+  background: #1c1c1c;
+  border-color: #2e2e2e;
 }
 
 .rd-stat {
-  padding: 14px;
+  padding: 18px;
 }
 
 .rd-stat p {
   margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.84rem;
+  color: #888;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
+.theme-dark .rd-stat p { color: #666; }
 
 .rd-stat h3 {
-  margin: 4px 0;
-  font-size: 1.7rem;
-  letter-spacing: -0.03em;
+  margin: 6px 0 2px;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #191919;
 }
+.theme-dark .rd-stat h3 { color: #ebebeb; }
 
 .rd-stat span {
-  color: #4b5563;
-  font-size: 0.88rem;
+  color: #999;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
+.theme-dark .rd-stat span { color: #666; }
 
 .rd-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .rd-panel {
-  padding: 14px;
+  padding: 20px;
 }
 
 .rd-panel h2 {
-  margin: 0 0 10px;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #999;
 }
+.theme-dark .rd-panel h2 { color: #555; }
 
 .rd-item,
 .rd-gap,
 .rd-link {
-  border: 1px solid var(--ui-border);
-  border-radius: 10px;
-  padding: 10px;
-  background: #fff;
+  border: 1px solid #f0f0ec;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafaf8;
   margin-bottom: 8px;
+  transition: border-color 0.15s;
 }
+.rd-item:hover, .rd-gap:hover { border-color: #d0d0cc; }
+.theme-dark .rd-item,
+.theme-dark .rd-gap,
+.theme-dark .rd-link {
+  background: #252525;
+  border-color: #303030;
+}
+.theme-dark .rd-item:hover, .theme-dark .rd-gap:hover { border-color: #444; }
 
 .rd-tag {
   display: inline-block;
-  border: 1px solid var(--ui-border);
-  background: #f8fafc;
+  background: #f0f0ed;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
-  padding: 2px 6px;
-  border-radius: 999px;
-  color: #4b5563;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
+.theme-dark .rd-tag { background: #333; color: #888; }
 
 .rd-quote {
   font-weight: 600;
+  font-size: 0.95rem;
   margin: 8px 0 6px;
+  color: #191919;
+  line-height: 1.5;
 }
+.theme-dark .rd-quote { color: #ebebeb; }
 
 .rd-muted {
   margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.9rem;
+  color: #888;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
+.theme-dark .rd-muted { color: #666; }
 
 .rd-hint {
   margin: 8px 0 0;
-  color: #374151;
-  font-size: 0.84rem;
+  color: #aaa;
+  font-size: 0.82rem;
   font-family: "IBM Plex Mono", monospace;
 }
+.theme-dark .rd-hint { color: #555; }
 
 .rd-gap {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-start;
 }
 
 .rd-keyword {
   margin: 0 0 4px;
   font-weight: 700;
+  font-size: 0.95rem;
+  color: #191919;
 }
+.theme-dark .rd-keyword { color: #dadada; }
 
 .rd-priority {
   text-align: right;
+  flex-shrink: 0;
 }
 
 .rd-priority span {
   display: inline-block;
-  border: 1px solid var(--ui-border);
-  border-radius: 999px;
-  padding: 2px 7px;
-  font-size: 0.78rem;
-  color: #374151;
+  background: #f5f5f2;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
+.theme-dark .rd-priority span { background: #2a2a2a; color: #666; }
 
 .rd-priority strong {
   display: block;
   margin-top: 6px;
   font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  color: #4ade80;
 }
-
 .rd-subtitle {
+  font-size: 0.72rem;
   font-weight: 700;
-  margin: 12px 0 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin: 16px 0 8px;
 }
+.theme-dark .rd-subtitle { color: #555; }
 
 .rd-meter {
-  height: 8px;
-  background: #f3f4f6;
+  height: 5px;
+  background: #f0f0ed;
   border-radius: 999px;
   overflow: hidden;
 }
+.theme-dark .rd-meter { background: #2a2a2a; }
 
 .rd-meter div {
   height: 100%;
-  background: #111;
+  background: #191919;
+  border-radius: 999px;
 }
+.theme-dark .rd-meter div { background: #ebebeb; }
 
 .rd-inline-button {
-  margin-top: 8px;
-  border-radius: 10px;
-  padding: 10px 13px;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 10px 16px;
   font-size: 0.88rem;
 }
 
 .rd-link-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .rd-link-url {
   margin: 0 0 4px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   word-break: break-all;
+  color: #666;
+  font-family: "IBM Plex Mono", monospace;
 }
+.theme-dark .rd-link-url { color: #555; }
 
 .rd-link-status {
   margin: 0 0 4px;
   font-family: "IBM Plex Mono", monospace;
-  color: #111;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #191919;
 }
+.theme-dark .rd-link-status { color: #ebebeb; }
 
 .rd-empty {
-  color: var(--ui-text-muted);
+  color: #ccc;
+  font-size: 0.9rem;
+  padding: 20px 0;
 }
+.theme-dark .rd-empty { color: #444; }
 
 .rd-error {
   border-color: #ef4444;
@@ -1854,22 +1917,29 @@ body {
 }
 
 .rd-delta-grid div {
-  border: 1px solid var(--ui-border);
-  border-radius: 10px;
-  padding: 10px;
+  border: 1px solid #f0f0ec;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fafaf8;
 }
+.theme-dark .rd-delta-grid div { border-color: #2e2e2e; background: #1c1c1c; }
 
 .rd-delta-grid p {
   margin: 0 0 4px;
-  color: var(--ui-text-muted);
-  font-size: 0.82rem;
+  color: #aaa;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
 }
+.theme-dark .rd-delta-grid p { color: #555; }
 
 .rd-delta-grid strong {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-family: "IBM Plex Mono", monospace;
+  color: #191919;
 }
-
+.theme-dark .rd-delta-grid strong { color: #ebebeb; }
 @media (max-width: 920px) {
   .rr-grid-2,
   .rr-grid-compact,
@@ -2288,7 +2358,7 @@ body {
 
 .adm-nav a.active {
   background: #111111;
-  border-color: #4338ca;
+  border-color: #000000;
   color: #ffffff;
 }
 
@@ -4217,4 +4287,41 @@ canvas {
     font-size: 18pt !important;
     margin-bottom: 8px !important;
   }
+}
+
+/* ── Dashboard & Resume Tool Refinements ────────────────────── */
+.rd-score-card { 
+    border-left: 2px solid #e0e7ff; background: #fafbfe; transition: all 0.2s;
+}
+.theme-dark .rd-score-card { 
+    border-left-color: #111827; background: #1e293b; 
+}
+.rd-score-card-title { color: #111827; font-weight: 600; }
+.rd-score-card-value { color: #000000; }
+.theme-dark .rd-score-card-title { color: #818cf8; }
+.theme-dark .rd-score-card-value { color: #a5b4fc; }
+
+.rd-panel-critical { border: 2px solid #fee2e2; background: #fef2f2; margin-top:24px; padding: 20px; border-radius: 12px; }
+.theme-dark .rd-panel-critical { border-color: #991b1b; background: rgba(153, 27, 27, 0.15); }
+.rd-critical-title { color: #991b1b; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.rd-critical-text { color: #7f1d1d; }
+.theme-dark .rd-critical-title { color: #f87171; }
+.theme-dark .rd-critical-text { color: #fecaca; }
+
+.link-card { 
+    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; 
+}
+.theme-dark .link-card { 
+    background: #1e293b; border-color: #334155; 
+}
+
+/* Resume Fix & Cover Letter */
+.tool-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+.theme-dark .tool-card { background: #1e293b; border-color: #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.tool-text-area { 
+    background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
+    font-family: 'IBM Plex Mono', monospace; padding: 20px; border-radius: 8px;
+}
+.theme-dark .tool-text-area { 
+    background: #0f172a; border-color: #334155; color: #f8fafc; 
 }
