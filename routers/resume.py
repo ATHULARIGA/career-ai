@@ -295,6 +295,8 @@ async def fix_resume_endpoint(request: Request, report_id: int):
 
 @router.get("/resume/{report_id}/fix", response_class=HTMLResponse)
 async def view_fixed_resume_endpoint(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    report = get_resume_report_by_id_for_user(report_id, user_email)
     if not report:
          return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
@@ -315,6 +317,8 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
 
 @router.get("/resume/{report_id}", response_class=HTMLResponse)
 async def view_dashboard_by_id(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    report = get_resume_report_by_id_for_user(report_id, user_email)
     if not report:
          return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          

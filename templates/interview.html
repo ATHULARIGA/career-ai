@@ -119,9 +119,10 @@ html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white butt
 .iv-chat-wrap { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .iv-status-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 14px; background: var(--iv-bg-subtle);
-  border: 1px solid var(--iv-border); border-radius: 8px;
-  margin: 16px 0 8px; font-size: 0.82rem; color: #6b7280;
+  padding: 10px 16px; background: var(--iv-bg-subtle);
+  border: 1px solid var(--iv-border); border-radius: 10px;
+  margin: 16px 0 12px; font-size: 0.85rem; color: #6b7280;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 .iv-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 7px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
@@ -135,7 +136,7 @@ html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white butt
 .iv-messages::-webkit-scrollbar-thumb { background: var(--iv-border-strong); border-radius: 4px; }
 
 /* ── Chat Bubbles ───────────────────────────────────────── */
-.iv-bubble { display: flex; gap: 10px; max-width: 85%; }
+.iv-bubble { display: flex; gap: 12px; max-width: 80%; margin-bottom: 4px; }
 .iv-bubble.interviewer { align-self: flex-start; }
 .iv-bubble.candidate { align-self: flex-end; flex-direction: row-reverse; }
 
@@ -152,16 +153,26 @@ html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white butt
   white-space: pre-wrap; word-break: break-word; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .interviewer .iv-msg {
-  background: rgba(255, 255, 255, 0.72); 
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: var(--text, #111827); 
-  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.2);
+  background: var(--iv-surface);
+  border: 1px solid var(--iv-border);
+  color: var(--iv-accent);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.theme-dark .interviewer .iv-msg {
+  background: #2a2b2e;
+  border-color: #3e3f42;
+  color: #f9fafb;
 }
 .candidate .iv-msg {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed); 
-  color: white; border: none;
-  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.25);
+  background: #111827;
+  color: white;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.2);
+}
+.theme-dark .candidate .iv-msg {
+  background: #f9fafb;
+  color: #111827;
+  border: none;
 }
 
 .iv-typing { padding: 12px 16px; border: 1px solid var(--iv-border); border-radius: 8px; background: var(--iv-surface); }
@@ -218,8 +229,8 @@ html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white butt
   border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600;
   cursor: pointer; transition: background 0.1s;
 }
-.iv-end-btn:hover { background: #fee2e2; }
-.iv-silence { font-size: 0.78rem; color: #9ca3af; text-align: center; padding: 2px 0; display: none; }
+.iv-end-btn:hover { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
+.iv-silence { font-size: 0.78rem; color: #94a3b8; text-align: center; padding: 6px 0; display: none; font-weight: 500; }
 
 /* ── Verdict Screen ────────────────────────────────────── */
 .iv-verdict { display: none; padding: 20px 0; animation: fadeIn 0.3s ease; }
