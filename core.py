@@ -1241,6 +1241,24 @@ def is_premium_user(request: Request) -> bool:
     return current_user_plan(request) == "premium"
 
 
+def get_user_weaknesses(user_email: str) -> list[str]:
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE user_email=?", (user_email,))
+    rows = cur.fetchall()
+    weaknesses = set()
+    for row in rows:
+        try:
+            hist = json.loads(row[0])
+            for item in hist:
+                if item.get("score", 10) < 6.0:
+                    fb = item.get("feedback")
+                    if fb:
+                        weaknesses.add(fb[:100] + "...")
+        except Exception:
+            pass
+    return list(weaknesses)[:3]
+
 def get_user_memory(user_email: str, conn=None) -> dict:
     email = (user_email or "").strip().lower()
     if not email:
@@ -1462,10 +1480,35 @@ def consume_resume_quota(request: Request) -> None:
     request.session["resume_count"] = int(state.get("used", 0)) + 1
 
 
+def _ensure_interview_tables():
+    conn = db.get_conn()
+    cur = conn.cursor()
+    id_col = db.id_pk_col()
+    db.execute(cur, f"""
+        CREATE TABLE IF NOT EXISTS interview_sessions(
+            id {id_col},
+            session_id TEXT UNIQUE NOT NULL,
+            user_email TEXT NOT NULL,
+            topic TEXT,
+            difficulty TEXT,
+            overall_score REAL,
+            qa_history_json TEXT,
+            chat_history_json TEXT,
+            created_at INTEGER
+        )
+    """)
+    # Migrate: add chat_history_json column if it doesn't exist yet
+    try:
+        db.execute(cur, "ALTER TABLE interview_sessions ADD COLUMN chat_history_json TEXT")
+    except Exception:
+        pass  # Column already exists
+    conn.commit()
+
+
 init_user_tables()
 _ensure_auth_tables()
 init_resume_tables()
-
+_ensure_interview_tables()
 PUBLIC_PATHS = {
     "/",
     "/login",

@@ -8,6 +8,9 @@ from openai import OpenAI
 
 load_dotenv()
 
+if not os.getenv("OPENAI_API_KEY"):
+    raise RuntimeError("OPENAI_API_KEY is missing from environment. Please populate it in `.env` and restart.")
+
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENAI_API_KEY"),
@@ -65,23 +68,47 @@ def build_evaluation_prompt(
     target_role: str,
     seniority: str,
     region: str,
+    company_tier: str = "General",
 ) -> str:
-    # ── EXPLICIT SCORING RUBRICS ───────────────────────────────────────────
+    # Dynamic rubric anchors for Impact based on company_tier
+    impact_rubric = """Impact (business/technical outcomes):
+  9-10 = Quantified org-level outcomes (revenue, latency, user scale, cost savings)
+  6-8  = Team/project-level impact with some numbers
+  3-5  = Vague ownership ("worked on", "helped with")
+  0-2  = No demonstrable impact"""
+
+    tier_clean = (company_tier or "General").lower()
+    if tier_clean == "faang":
+        impact_rubric = """Impact (business/technical outcomes):
+  9-10 = Org-level outcomes at 10M+ user scale, extreme scale metric improvements (latency in ms, cost in $M)
+  6-8  = Team-level outcomes with concrete numbers and specific system scale stated
+  3-5  = Vague ownership or missing scale anchors
+  0-2  = No demonstrable scale or impact metrics"""
+    elif tier_clean == "startup":
+        impact_rubric = """Impact (business/technical outcomes):
+  9-10 = Shipped features used by real users, measurable retention/revenue delta, high feature velocity
+  6-8  = End-to-end ownership with some outcome/metric stated
+  3-5  = Rigidly narrow duties, slow product impact signals
+  0-2  = No demonstrable product ownership"""
+    elif tier_clean == "enterprise":
+        impact_rubric = """Impact (business/technical outcomes):
+  9-10 = Cross-team process improvement, compliance/security delivered, risk reduced
+  6-8  = Project delivered on time with stakeholder sign-off
+  3-5  = Simple maintenance without optimization or process ownership
+  0-2  = No demonstrable system responsibility"""
+
     return f"""<evaluation_context>
 Target role: {target_role or "Not specified"}
 Seniority level: {seniority or "Not specified"}
 Region: {region or "India"}
+Target company tier: {company_tier or "General"}
 Job description provided: {"Yes — match strictly against it" if job_description.strip() else "No — infer from target role"}
 </evaluation_context>
 
 <scoring_rubrics>
 Score each dimension 0–10 using these anchors (no rounding to whole numbers):
 
-Impact (business/technical outcomes):
-  9-10 = Quantified org-level outcomes (revenue, latency, user scale, cost savings)
-  6-8  = Team/project-level impact with some numbers
-  3-5  = Vague ownership ("worked on", "helped with")
-  0-2  = No demonstrable impact
+{impact_rubric}
 
 Alignment (role/JD fit):
   9-10 = Every major JD requirement addressed with evidence
@@ -190,8 +217,9 @@ Return exactly this JSON structure:
     "likely_outcome": "Advance to phone screen|Reject|Hold for later review"
   }},
   "benchmarking": {{
-    "cohort": "{target_role or 'General candidate pool'}",
-    "percentile": 0,
+    "matched_requirements": 0,
+    "total_requirements": 0,
+    "missing_critical": ["item 1", "item 2"],
     "summary": "..."
   }},
   "interview_questions": ["..."],
@@ -211,8 +239,10 @@ Return exactly this JSON structure:
 - recruiter_simulation.likely_outcome: pick exactly one of the three options listed
 - DO NOT invent skills or experience not present in the resume
 - DO NOT give inflated scores — hiring bars are high
-- benchmarking.percentile: penalize 10+ points if Quantification < 6.0
-- region_advice: 3–5 items specific to THIS resume's gaps in the given region.
+
+- region_advice: 3–5 items specific to THIS resume's gaps in the given region. 
+  - IF the resume has no region-specific gaps, return an empty array [] for region_advice.
+  - DO NOT pad with generic advice to fill space.
   India: focus on FAANG-style quantification gaps, remote-work signals, and GitHub activity.
   US: focus on visa status clarity, location flexibility, and LinkedIn completeness.
   Do NOT give generic formatting advice here — that belongs in critical_changes_required.
@@ -352,7 +382,7 @@ def default_report(error: str = "") -> dict[str, Any]:
             "risks": [],
             "likely_outcome": "Insufficient data",
         },
-        "benchmarking": {"cohort": "N/A", "percentile": 0, "summary": "Benchmark unavailable."},
+        "benchmarking": {"matched_requirements": 0, "total_requirements": 0, "missing_critical": [], "summary": "Benchmark unavailable."},
         "interview_questions": [],
         "region_advice": [],
         "keyword_coverage": 0,
@@ -368,11 +398,12 @@ def score_resume(
     target_role: str = "",
     seniority: str = "",
     region: str = "US",
+    company_tier: str = "General",
 ) -> dict[str, Any]:
     links = extract_links_from_text(text)
     local_link_checks = validate_links(links)
 
-    user_prompt = build_evaluation_prompt(text, job_description, target_role, seniority, region)
+    user_prompt = build_evaluation_prompt(text, job_description, target_role, seniority, region, company_tier)
 
     try:
         parsed = call_ai_with_fallback(SYSTEM_PROMPT, user_prompt)
@@ -405,8 +436,6 @@ def score_resume(
         merged_links = (ai_links[:3] + local_link_checks) if isinstance(ai_links, list) and ai_links else local_link_checks
 
         benchmark = parsed.get("benchmarking", {}) or {}
-        raw_percentile = int(benchmark.get("percentile", 0) or 0)
-        percentile = max(1, min(99, raw_percentile)) if raw_percentile > 0 else 0
 
         job_match_percent = max(0, min(100, int(parsed.get("job_match_percent", 0) or 0)))
 
@@ -429,8 +458,9 @@ def score_resume(
             "quantification_suggestions": safe_list("quantification_suggestions", 6),
             "recruiter_simulation": parsed.get("recruiter_simulation", {}),
             "benchmarking": {
-                "cohort": benchmark.get("cohort", target_role or "General candidate pool"),
-                "percentile": percentile,
+                "matched_requirements": int(benchmark.get("matched_requirements", 0) or 0),
+                "total_requirements": int(benchmark.get("total_requirements", 0) or 0),
+                "missing_critical": benchmark.get("missing_critical", [])[:5] if isinstance(benchmark.get("missing_critical"), list) else [],
                 "summary": benchmark.get("summary", ""),
             },
             "interview_questions": safe_list("interview_questions", 7),
@@ -507,3 +537,89 @@ def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
             print(f"Cover Letter FAILED using {model}: {e}")
             
     return "Error generating cover letter. Layout limits exceeded."
+
+def generate_resume_rewrite(resume_text: str, report: dict) -> str:
+    """Rewrites the entire resume into clean Markdown applying ALL suggestions while strictly preventing hallucinations."""
+    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    system = """You are an Elite Resume Writer. Rewrite the provided resume into clean, structured Markdown format.
+Apply ALL of our suggestions (incorporate numbers, improve action verbs, structure clearly).
+Headings to include: Summary/Profile, Experience, Education, Skills.
+
+ANTI-HALLUCINATION GROUNDING:
+- Use ONLY names, dates, companies, and metrics present in the original resume.
+- Do NOT invent new achievements, titles, or technologies.
+- Use placeholders like "[X%]" or "[Metric]" ONLY where numbers are suggested for improvement but missing in original text.
+"""
+
+    verified_skills = list(report.get("scores", {}).keys())
+    suggested_rewrites = report.get("targeted_rewrites", [])
+    
+    user_prompt = f"""
+    Rewrite this resume document incorporating guidance and skills below:
+    
+    Target Skills and Gaps: {verified_skills}
+    Suggested Improvements to use as reference: {suggested_rewrites}
+    
+    Original Resume Text:
+    {resume_text[:4500]}
+    """
+    
+    # Iterate models with ceiling
+    for model in models:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0.2,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
+                max_tokens=1800
+            )
+            content = response.choices[0].message.content
+            if content and len(content.strip()) > 400:
+                return content.strip()
+        except Exception as e:
+            print(f"Resume Rewrite FAILED using {model}: {e}")
+            
+    return "Error generating fixed resume. Capacity limits exceeded."
+
+def score_resume_lightweight(text: str, jd_text: str, target_role: str, company_tier: str = "General") -> dict:
+    """Lightweight 2-metric prompt intended for comparison grids and alternate fits."""
+    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    system = """You are an Elite Recruiter. Evaluate the Resume against the Job Target.
+Return JSON ONLY with EXACTLY this structure:
+{
+  "score": float, // 0-10 overall alignment fit
+  "match_percent": int, // 0-100 requirements match percentage
+  "summary": "1 sentence verdict focusing on core alignment"
+}
+"""
+    user_prompt = f"""
+    Target Role: {target_role or "Not specified"}
+    Company Tier: {company_tier or "General"}
+    
+    Job Description context:
+    {jd_text[:2000] if jd_text.strip() else "Match against average role expectations."}
+    
+    Resume Text:
+    {text[:3500]}
+    """
+
+    for model in models:
+        try:
+            import json, re
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0.1, # strict analysis
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
+                max_tokens=250
+            )
+            content = response.choices[0].message.content
+            # JSON extraction
+            match = re.search(r'\{.*\}', content, re.DOTALL)
+            if match:
+                 parsed = json.loads(match.group(0))
+                 if "score" in parsed and "match_percent" in parsed:
+                      return parsed
+        except Exception as e:
+            print(f"Lightweight score FAILED using {model}: {e}")
+            
+    return {"score": 0.0, "match_percent": 0, "summary": "Evaluation timeout/failure."}

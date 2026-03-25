@@ -8,13 +8,16 @@ router = APIRouter()
 @router.post("/upload", response_class=HTMLResponse)
 async def upload(
     request: Request,
-    file: UploadFile = File(...),
     job_description: str = Form(""),
     job_link: str = Form(""),
     target_role: str = Form(""),
     seniority: str = Form(""),
     region: str = Form("US"),
+    company_tier: str = Form("General"),
+    file: UploadFile = File(...),
 ):
+    with open("/tmp/upload_debug.txt", "w") as f:
+        f.write(f"company_tier: {company_tier}\n")
     start = time.time()
     quota = resume_quota_state(request)
     if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
@@ -58,7 +61,8 @@ async def upload(
             else:
                 scrape_res = scrape_job_link(job_link.strip())
                 if isinstance(scrape_res, dict) and scrape_res.get("error"):
-                    raise ValueError(scrape_res.get("error"))
+                    if not final_jd.strip():
+                        raise ValueError(scrape_res.get("error"))
                 
             scraped_text = scrape_res.get("text", "") if isinstance(scrape_res, dict) else ""
             if not scraped_text.strip():
@@ -77,9 +81,11 @@ async def upload(
             target_role=target_role,
             seniority=seniority,
             region=region,
+            company_tier=company_tier,
         )
         report["resume_text"] = text
         report["jd_text"] = final_jd
+        report["company_tier"] = company_tier
 
         user_email = (request.session.get("user_email") or "").strip().lower()
         if user_email and (target_role or "").strip():
@@ -118,6 +124,10 @@ async def upload(
             try:
                 save_resume_report_for_user(user_email, report, target_role=target_role or "")
                 version_history = get_recent_resume_runs_for_user(user_email, limit=10)
+                if version_history:
+                    report["id"] = max(v["id"] for v in version_history)
+                    with open("/tmp/id_debug.txt", "w") as f:
+                        f.write(f"Assigned ID: {report['id']}\nVersion History: {[v['id'] for v in version_history]}\n")
             except Exception as persist_error:
                 logger.warning("resume_report_persist_failed user=%s err=%s", user_email, str(persist_error))
                 version_history.append(run_entry)
@@ -258,5 +268,167 @@ async def view_cover_letter_endpoint(request: Request, report_id: int):
          "warning": warning,
          "user_plan": current_user_plan(request)
     })
+
+@router.post("/resume/{report_id}/fix", response_class=RedirectResponse)
+async def fix_resume_endpoint(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+        
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        raise ValueError("Report not found or access denied.")
+        
+    resume_text = report.get("resume_text", "")
+    if not resume_text.strip():
+        report["fixed_resume_error"] = "Resume text unavailable for this historical report. Please run a new review to use this feature."
+        update_resume_report_json(report_id, user_email, report)
+        return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+        
+    from scoring import generate_resume_rewrite
+    fixed_md = generate_resume_rewrite(resume_text, report)
+    
+    report["fixed_resume_md"] = fixed_md
+    # Clear any old error
+    report.pop("fixed_resume_error", None)
+    update_resume_report_json(report_id, user_email, report)
+    
+    return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+@router.get("/resume/{report_id}/fix", response_class=HTMLResponse)
+async def view_fixed_resume_endpoint(request: Request, report_id: int):
+    from starlette.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="templates")
+    
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+         return RedirectResponse("/?auth=required")
+         
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         
+    fixed_md = report.get("fixed_resume_md", "")
+    error = report.get("fixed_resume_error", "")
+    warning = ""
+    if not fixed_md and not error:
+        warning = "Resume optimization not generated yet. Click Fix My Resume from the dashboard to create one."
+         
+    return templates.TemplateResponse("resume_fix.html", {
+         "request": request,
+         "fixed_md": fixed_md,
+         "report_id": report_id,
+         "warning": warning,
+         "error": error,
+         "user_plan": current_user_plan(request)
+    })
+
+@router.get("/resume/{report_id}", response_class=HTMLResponse)
+async def view_dashboard_by_id(request: Request, report_id: int):
+    from starlette.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="templates")
+    
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+         return RedirectResponse("/?auth=required")
+         
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+         return templates.TemplateResponse("error.html", {"request": request, "message": "Report not found or access denied."}, status_code=404)
+         
+    report["id"] = report_id
+         
+    # Mimic dashboard variables setup from /upload
+    version_history = []
+    try:
+        version_history = get_recent_resume_runs_for_user(user_email, limit=10)
+    except Exception:
+        version_history = request.session.get("resume_versions", [])
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "report": report,
+        "resume_versions": version_history,
+        "user_plan": current_user_plan(request),
+        "progress": safe_user_progress_summary(user_email),
+        "analysis_inputs": {
+            "target_role": report.get("target_role"),
+            "seniority": report.get("seniority", ""),
+            "region": report.get("region", "US"),
+            "has_job_description": bool(report.get("jd_text", "").strip()),
+        },
+    })
+
+@router.post("/resume/{report_id}/test_fit", response_class=RedirectResponse)
+async def test_fit_endpoint(
+    request: Request, 
+    report_id: int, 
+    target_role: str = Form(...), 
+    company_tier: str = Form("General"), 
+    jd_text: str = Form("")
+):
+    from fastapi import HTTPException
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+        
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found or access denied.")
+        
+    fits = report.get("alternative_fits", [])
+    if len(fits) >= 5:
+        report["multi_fit_error"] = "Maximum 5 role comparisons per report. Remove one to add another."
+        update_resume_report_json(report_id, user_email, report)
+        return RedirectResponse(f"/resume/{report_id}#tab-multirole", status_code=303)
+        
+    existing = [f.get("role", "").lower() for f in fits]
+    if target_role.lower() in existing:
+        report["multi_fit_error"] = "This role is already in your comparison list."
+        update_resume_report_json(report_id, user_email, report)
+        return RedirectResponse(f"/resume/{report_id}#tab-multirole", status_code=303)
+
+    resume_text = report.get("resume_text", "")
+    if not resume_text:
+        report["multi_fit_error"] = "Resume text unavailable. Re-upload required."
+        update_resume_report_json(report_id, user_email, report)
+        return RedirectResponse(f"/resume/{report_id}#tab-multirole", status_code=303)
+
+    from scoring import score_resume_lightweight
+    result = score_resume_lightweight(resume_text, jd_text, target_role, company_tier)
+    
+    fit_entry = {
+        "role": target_role,
+        "tier": company_tier,
+        "score": result.get("score", 0.0),
+        "match": result.get("match_percent", 0),
+        "summary": result.get("summary", ""),
+        "timestamp": int(time.time())
+    }
+    fits.append(fit_entry)
+    report["alternative_fits"] = fits
+    report.pop("multi_fit_error", None)
+    update_resume_report_json(report_id, user_email, report)
+    
+    return RedirectResponse(f"/resume/{report_id}", status_code=303)
+
+@router.get("/resume/{report_id}/test_fit/remove/{index}", response_class=RedirectResponse)
+async def remove_fit_endpoint(request: Request, report_id: int, index: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+        
+    from fastapi import HTTPException
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found or access denied.")
+        
+    fits = report.get("alternative_fits", [])
+    if 0 <= index < len(fits):
+        fits.pop(index)
+        report["alternative_fits"] = fits
+        update_resume_report_json(report_id, user_email, report)
+        
+    return RedirectResponse(f"/resume/{report_id}", status_code=303)
 
 # INTERVIEW PAGE

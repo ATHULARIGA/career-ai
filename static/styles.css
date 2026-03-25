@@ -81,7 +81,7 @@ body {
 }
 
 .nav-links a:hover {
-  color: #4f46e5;
+  color: #111111;
 }
 
 .nav-user {
@@ -99,8 +99,8 @@ body {
   position:relative;
   max-width: 1200px;
   margin: 0 auto;
-  background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent),
-                    radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.05), transparent);
+  background-image: radial-gradient(circle at top right, rgba(55, 65, 81, 0.05), transparent),
+                    radial-gradient(circle at bottom left, rgba(75, 85, 99, 0.05), transparent);
   overflow: hidden;
 }
 
@@ -173,7 +173,7 @@ body {
 .orb-c {
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle at 30% 30%, #6366f1, #14b8a6);
+  background: radial-gradient(circle at 30% 30%, #374151, #14b8a6);
   right: 28%;
   bottom: 18%;
   animation-delay: 4s;
@@ -345,7 +345,7 @@ body {
 
 .blue { background:#e0e7ff; color: #4338ca; }
 .green { background:#dcfce7; color: #166534; }
-.purple { background:#f3e8ff; color: #6b21a8; }
+.purple { background:#f3f4f6; color: #111827; }
 
 /* FLOATING CARDS */
 
@@ -968,7 +968,7 @@ html.theme-dark .stats-bar {
 
 .skill-panel h3 {
     margin: 0 0 8px;
-    color: #4f46e5;
+    color: #111111;
     letter-spacing: -0.02em;
 }
 
@@ -2287,7 +2287,7 @@ body {
 }
 
 .adm-nav a.active {
-  background: #4f46e5;
+  background: #111111;
   border-color: #4338ca;
   color: #ffffff;
 }
@@ -3786,7 +3786,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #4f46e5;
+  background: #111111;
 }
 
 .cp-ide-columns {
@@ -4128,7 +4128,7 @@ canvas {
   height: 20px;
   border-radius: 999px;
   border: 2px solid #cbd5e1;
-  border-top-color: #4f46e5;
+  border-top-color: #111111;
   animation: appSpin 0.8s linear infinite;
 }
 
@@ -4154,4 +4154,67 @@ canvas {
 .theme-dark .app-loader-spinner {
   border-color: #334155;
   border-top-color: #a5b4fc;
+}
+
+/* =========================================
+   PRINT STYLESHEET (Dashboard Expansion)
+   ========================================= */
+@media print {
+  /* Hide interactive/navigation elements */
+  .navbar, 
+  .rd-tabs, 
+  .rd-actions, 
+  .theme-toggle, 
+  form, 
+  button, 
+  .btn-primary, 
+  .btn-secondary {
+    display: none !important;
+  }
+
+  /* Force background colors to show if needed, but white is usually best */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Expand all Tab Contents sequentially */
+  .rd-tab-content {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    page-break-after: always;
+    margin-bottom: 40px;
+  }
+
+  /* Force single column for grids to prevent clipping on A4 paper */
+  .rd-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .rd-score-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Ensure Panel headers and sections fit page nicely */
+  .rd-panel {
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    page-break-inside: avoid; /* Don't break cards mid-item */
+    margin-top: 20px !important;
+  }
+
+  h1 {
+    font-size: 24pt !important;
+    margin-bottom: 10px !important;
+  }
+
+  h2 {
+    font-size: 18pt !important;
+    margin-bottom: 8px !important;
+  }
 }

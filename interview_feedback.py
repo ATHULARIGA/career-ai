@@ -66,25 +66,34 @@ def analyze_answer(
     if answer_time_sec and answer_time_sec > 0:
         wpm = (word_count / answer_time_sec) * 60.0
 
-    structure_score = _clamp((word_count / 45) * 10)
+    if 60 <= word_count <= 150:
+        structure_score = _clamp(10.0)
+    elif word_count < 60:
+        structure_score = _clamp((word_count / 60) * 10)
+    else:
+        structure_score = _clamp(10 - ((word_count - 150) / 30))
+
     clarity_score = _clamp(10 - max(0, abs(18 - avg_sentence_len) * 0.4))
     depth_score = _clamp((correctness * 0.65) + min(3.0, word_count / 35))
     impact_score = _clamp(min(10, 4 + numeric_hits * 2))
     confidence_score = _clamp(10 - filler_density * 1.8)
     communication_score = _clamp((clarity_score * 0.6) + (confidence_score * 0.4))
 
-    star = _star_coach(answer)
-    if round_type != "behavioral":
-        star["tip"] = "Use structure: concise context, technical approach, tradeoffs, measurable result."
+    if round_type == "behavioral":
+        star = _star_coach(answer)
+    else:
+        star = {"present": {}, "missing": [], "tip": "Use structure: concise context, technical approach, tradeoffs, measurable result."}
 
     pacing_band = "Unknown"
     if wpm > 0:
-        if wpm < 90:
+        if wpm < 30:
             pacing_band = "Too slow"
-        elif wpm <= 165:
-            pacing_band = "Balanced"
+        elif wpm <= 80:
+            pacing_band = "Good pace"
+        elif wpm <= 120:
+            pacing_band = "Fast typer"
         else:
-            pacing_band = "Too fast"
+            pacing_band = "Suspiciously fast (pasted?)"
 
     rubric = {
         "correctness": _clamp(correctness),
@@ -99,10 +108,19 @@ def analyze_answer(
     strengths = []
     if rubric["correctness"] >= 7:
         strengths.append("Answer was semantically aligned with expected content.")
+    if rubric.get("structure", 0) >= 7:
+        strengths.append("Clear, well-structured formatting.")
+    if rubric.get("clarity", 0) >= 7:
+        strengths.append("Response was easy to follow.")
+    if rubric.get("technical_depth", 0) >= 7:
+        strengths.append("Demonstrated solid technical depth.")
+    if rubric.get("impact", 0) >= 7:
+        strengths.append("Effectively highlighted measurable impact.")
     if numeric_hits > 0:
         strengths.append("Included measurable evidence.")
-    if rubric["clarity"] >= 7:
-        strengths.append("Response was easy to follow.")
+
+    if not strengths:
+        strengths = ["No standout strengths identified — focus on the improvements."]
 
     improvements = []
     if rubric["correctness"] < 6:
@@ -114,6 +132,9 @@ def analyze_answer(
     if word_count < 35:
         improvements.append("Provide a deeper answer with approach and tradeoffs.")
 
+    if not improvements:
+        improvements = ["Strong answer — focus on maintaining this consistency."]
+
     return {
         "rubric": rubric,
         "overall": overall,
@@ -124,6 +145,7 @@ def analyze_answer(
             "word_count": word_count,
             "wpm": round(wpm, 1),
             "pace_band": pacing_band,
+            "timing_available": answer_time_sec > 0,
             "filler_hits": filler_hits,
             "filler_density_pct": round(filler_density, 2),
         },
@@ -158,13 +180,16 @@ def hiring_decision(session_history: list[dict[str, Any]]) -> dict[str, Any]:
         confidence = "High"
 
     panel_notes = []
-    last = session_history[-1]
-    strengths = last.get("strengths", [])
-    improvements = last.get("improvements", [])
+    best = max(session_history, key=lambda x: float(x.get("overall", 0)))
+    worst = min(session_history, key=lambda x: float(x.get("overall", 0)))
+    
+    strengths = best.get("strengths", [])
+    improvements = worst.get("improvements", [])
+    
     if strengths:
-        panel_notes.append(f"Recent strength: {strengths[0]}")
+        panel_notes.append(f"Best answer strength: {strengths[0]}")
     if improvements:
-        panel_notes.append(f"Main concern: {improvements[0]}")
+        panel_notes.append(f"Key improvement area: {improvements[0]}")
     panel_notes.append(f"Average rubric score across session: {round(avg, 1)}/10.")
 
     return {

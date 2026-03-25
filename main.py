@@ -15,6 +15,8 @@ from core import templates, logger
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     req_id = getattr(request.state, "request_id", "n/a")
+    import traceback
+    traceback.print_exc()
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
     return templates.TemplateResponse(
         "error.html",

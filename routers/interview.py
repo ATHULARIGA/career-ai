@@ -1,6 +1,15 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+import uuid
+import json
 from core import *
+from ideal_generator import generate_ideal_answer
+from interview_engine import (
+    generate_interviewer_response,
+    generate_opener,
+    score_candidate_questions,
+)
+from interview_feedback import analyze_answer, hiring_decision
 
 router = APIRouter()
 
@@ -26,6 +35,10 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
     request.session["hiring_result"] = None
     request.session["last_feedback"] = None
     request.session["next_followup"] = None
+    
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    resume_report = get_latest_resume_report_for_user(user_email) or request.session.get("last_resume_report", {})
+    request.session["resume_context"] = (resume_report.get("fixed_resume_md", "") or resume_report.get("resume_text", ""))[:2000]
     request.session["interview_config"] = {
         "topic": "Resume Focus",
         "role": "Role-based",
@@ -40,6 +53,321 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
 
     return templates.TemplateResponse("interview.html", interview_context_payload(request))
 
+@router.get("/interview/new")
+def new_interview(request: Request):
+    keys_to_clear = [
+        "questions", "ideal", "current", "answers", "scores", 
+        "timeline", "finished", "final_score", "hiring_result", 
+        "last_feedback", "next_followup", "interview_config"
+    ]
+    for key in keys_to_clear:
+        request.session.pop(key, None)
+    return RedirectResponse(url="/interview", status_code=303)
+
+import db_backend as db
+
+
+@router.post("/interview/start", response_class=JSONResponse)
+def interview_start(request: Request):
+    """Called by the frontend on page load to get the opener message."""
+    # Gap 1: auth check — user must own this session
+    session_email = (request.session.get("user_email") or "").strip().lower()
+    if not session_email:
+        return JSONResponse({"error": "not authenticated"}, status_code=403)
+
+    config = request.session.get("interview_config", {})
+    persona = str(config.get("persona", "Neutral"))
+    opener = generate_opener(config, persona)
+
+    session_id_val = request.session.get("interview_id")
+    if session_id_val:
+        import time
+        for attempt in range(3):
+            try:
+                db_conn = db.get_conn()
+                cur = db_conn.cursor()
+                history = [{"speaker": "interviewer", "text": opener}]
+                db.execute(cur, "UPDATE interview_sessions SET chat_history_json=? WHERE session_id=? AND user_email=?",
+                           (json.dumps(history), session_id_val, session_email))
+                db_conn.commit()
+                break # Success
+            except Exception as e:
+                print(f"INTERVIEW START DB ERR (attempt {attempt+1}): {e}")
+                if attempt == 2: pass # last try. don't block start but log error
+                time.sleep(0.1)
+
+    request.session["chat_phase"] = "warmup"
+    request.session["chat_topics_covered"] = 0
+    return JSONResponse({"reply": opener, "phase": "warmup"})
+
+
+# ---------------------------------------------------------------------------
+# Gap 2: helper — truncate history to opener + last N turns
+# ---------------------------------------------------------------------------
+def _trim_history(history: list, keep_recent: int = 9) -> list:
+    """Always keep the opener (turn 0) + the most recent keep_recent turns."""
+    if len(history) <= keep_recent + 1:
+        return history
+    opener = history[:1]
+    recent = history[-(keep_recent):]
+    return opener + recent
+
+
+# ---------------------------------------------------------------------------
+# Gap 3: explicit phase transition logic
+# ---------------------------------------------------------------------------
+def _next_phase(current_phase: str, topics_covered: int, max_rounds: int) -> str:
+    """
+    Phase machine:
+      warmup            → interview  (after candidate's first response)
+      interview         → closing    (after max_rounds topics covered)
+      closing           → questions_for_me (after candidate submits their questions)
+      questions_for_me  → done
+      done              → done (terminal; reject further messages on the caller side)
+    Edge: any other value maps to interview (graceful fallback)
+    """
+    if current_phase == "warmup":
+        return "interview"
+    if current_phase == "interview":
+        if topics_covered >= max_rounds:
+            return "closing"
+        return "interview"
+    if current_phase == "closing":
+        return "questions_for_me"
+    if current_phase == "questions_for_me":
+        return "done"
+    # Graceful fallback: e.g. "End Interview" clicked during warmup
+    if current_phase in ("done",):
+        return "done"
+    return "interview"
+
+
+@router.post("/interview/chat-json", response_class=JSONResponse)
+async def interview_chat_json(request: Request):
+    """Process one candidate turn and return next interviewer message."""
+    # Gap 1: auth check
+    session_email = (request.session.get("user_email") or "").strip().lower()
+    if not session_email:
+        return JSONResponse({"error": "not authenticated"}, status_code=403)
+
+    # Gap 6: reject messages after session is over
+    current_phase = request.session.get("chat_phase", "warmup")
+    if current_phase == "done":
+        return JSONResponse({"error": "session already completed", "phase": "done"}, status_code=400)
+
+    config = request.session.get("interview_config", {})
+    persona = str(config.get("persona", "Neutral"))
+    max_rounds = int(config.get("max_rounds", 5))
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON body"}, status_code=400)
+
+    candidate_message = str(body.get("message", "")).strip()
+    # Gap 6: empty message → 400
+    if not candidate_message:
+        return JSONResponse({"error": "empty message"}, status_code=400)
+
+    conversation_history = body.get("conversation_history", [])
+    # Validate types to prevent injection of bad history shapes
+    if not isinstance(conversation_history, list):
+        conversation_history = []
+
+    # Append candidate message to full history
+    conversation_history.append({"speaker": "candidate", "text": candidate_message})
+
+    # Count interviewer turns to determine topics covered
+    # Opener = 1st interviewer turn; each subsequent interviewer turn = 1 topic question
+    interviewer_turns = [t for t in conversation_history if t.get("speaker") == "interviewer"]
+    topics_covered = max(0, len(interviewer_turns) - 1)
+
+    # Gap 3: use explicit phase machine
+    next_phase = _next_phase(current_phase, topics_covered, max_rounds)
+
+    # Gap 2: truncate history before sending to AI (keep opener + last 9)
+    trimmed = _trim_history(conversation_history, keep_recent=9)
+
+    # Generate reply
+    if next_phase == "done":
+        reply = ("Great \u2014 thanks so much for your time today. "
+                 "You\u2019ll hear back from us within a few days. Have a good rest of your day.")
+    else:
+        reply = generate_interviewer_response(
+            conversation_history=trimmed,
+            config=config,
+            persona=persona,
+            phase=next_phase,
+        )
+
+    conversation_history.append({"speaker": "interviewer", "text": reply})
+    request.session["chat_phase"] = next_phase
+    request.session["chat_topics_covered"] = topics_covered
+
+    # Persist full (un-trimmed) conversation to DB, keyed by session + email (Gap 1)
+    session_id_val = request.session.get("interview_id")
+    if session_id_val:
+        import time
+        for attempt in range(3):
+            try:
+                db_conn = db.get_conn()
+                cur = db_conn.cursor()
+                db.execute(cur,
+                           "UPDATE interview_sessions SET chat_history_json=? WHERE session_id=? AND user_email=?",
+                           (json.dumps(conversation_history), session_id_val, session_email))
+                db_conn.commit()
+                break # Success
+            except Exception as e:
+                print(f"CHAT DB SAVE ERR (attempt {attempt+1}): {e}")
+                if attempt == 2: pass # last try; don't return 500 but log error
+                time.sleep(0.1)
+
+    return JSONResponse({"reply": reply, "phase": next_phase, "topics_covered": topics_covered})
+
+
+@router.post("/interview/finish", response_class=JSONResponse)
+async def interview_finish(request: Request, db_conn=Depends(db.get_conn)):
+    """Score the full conversation and return verdict + breakdown."""
+    import asyncio
+
+    # Gap 1: auth check
+    session_email = (request.session.get("user_email") or "").strip().lower()
+    if not session_email:
+        return JSONResponse({"error": "not authenticated"}, status_code=403)
+
+    config = request.session.get("interview_config", {})
+    role = str(config.get("role", "Engineer"))
+    company = str(config.get("company", "the company"))
+    session_id_val = request.session.get("interview_id")
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    conversation_history = body.get("conversation_history", [])
+    if not isinstance(conversation_history, list):
+        conversation_history = []
+
+    candidate_questions_text = str(body.get("candidate_questions", "")).strip()
+
+    # Gap 6: graceful error on empty conversation
+    if not conversation_history:
+        return JSONResponse({
+            "error": "no conversation to score",
+            "final_score": 0.0,
+            "hiring_result": {"decision": "No Hire", "confidence": "Low", "summary": "No interview data.", "panel_notes": []},
+            "qa_history": [],
+            "questions_score": {"score": 0, "notes": "No conversation provided."},
+        }, status_code=200)
+
+    # Gap 1: verify ownership against DB
+    if session_id_val:
+        try:
+            cur = db_conn.cursor()
+            db.execute(cur, "SELECT user_email FROM interview_sessions WHERE session_id=?", (session_id_val,))
+            row = cur.fetchone()
+            if row and row[0] and row[0].strip().lower() != session_email:
+                return JSONResponse({"error": "forbidden"}, status_code=403)
+        except Exception:
+            pass  # Proceed if DB check fails (new sessions)
+
+    # Extract candidate turns (skip warmup opener)
+    candidate_turns = [t for t in conversation_history if t.get("speaker") == "candidate"]
+
+    # Gap 5: wrap scoring in a timeout — if it exceeds 45s return partial results
+    qa_history = []
+    scored_timeline = []
+    partial = False
+
+    async def score_all():
+        nonlocal partial
+        deadline = asyncio.get_event_loop().time() + 45.0
+        
+        last_interviewer_q = f"Tell me about your approach to {config.get('topic', 'General')}."
+        candidate_count = 0
+        
+        for turn in conversation_history:
+            if asyncio.get_event_loop().time() > deadline:
+                partial = True
+                break
+                
+            speaker = turn.get("speaker")
+            if speaker == "interviewer":
+                last_interviewer_q = turn.get("text", "")
+            elif speaker == "candidate":
+                answer = turn.get("text", "")
+                try:
+                    ideal = await asyncio.to_thread(generate_ideal_answer, last_interviewer_q) if last_interviewer_q else "N/A"
+                except Exception:
+                    ideal = "N/A"
+                try:
+                    result = await asyncio.to_thread(
+                        analyze_answer,
+                        question=last_interviewer_q,
+                        answer=answer,
+                        ideal_answer=ideal,
+                        round_type=str(config.get("round_type", "technical")),
+                        answer_time_sec=0,
+                    )
+                except Exception:
+                    result = {"overall": 5.0, "rubric": {}, "strengths": [], "improvements": []}
+
+                candidate_count += 1
+                qa_history.append({
+                    "round": candidate_count,
+                    "question": last_interviewer_q,
+                    "user_answer": answer,
+                    "ideal_answer": ideal,
+                    "score": result.get("overall", 0),
+                    "rubric": result.get("rubric", {}),
+                    "strengths": result.get("strengths", []),
+                    "improvements": result.get("improvements", []),
+                })
+                scored_timeline.append({"overall": result.get("overall", 0), "score": result.get("overall", 0)})
+
+    await score_all()
+
+    # Score questions-for-me
+    q_score = {"score": 5, "notes": ""}
+    if candidate_questions_text:
+        try:
+            q_score = await asyncio.to_thread(score_candidate_questions, candidate_questions_text, role, company)
+        except Exception:
+            pass
+
+    # Final verdict
+    total = sum(float(s.get("overall", s.get("score", 0))) for s in scored_timeline)
+    count = max(1, len(scored_timeline))
+    final_score = round(total / count, 1)
+    hiring_result = hiring_decision(scored_timeline)
+    hiring_result["curiosity_score"] = q_score
+
+    # Save to DB
+    if session_id_val:
+        try:
+            cur = db_conn.cursor()
+            db.execute(cur,
+                       "UPDATE interview_sessions SET qa_history_json=?, overall_score=? WHERE session_id=? AND user_email=?",
+                       (json.dumps(qa_history), final_score, session_id_val, session_email))
+            db_conn.commit()
+        except Exception as e:
+            print(f"FINISH DB ERR: {e}")
+
+    request.session["finished"] = True
+    request.session["final_score"] = final_score
+    request.session["hiring_result"] = hiring_result
+
+    return JSONResponse({
+        "final_score": final_score,
+        "hiring_result": hiring_result,
+        "qa_history": qa_history,
+        "questions_score": q_score,
+        "partial": partial,  # Gap 5: flag to frontend if scoring was cut short
+    })
+
+
+
 
 @router.post("/generate", response_class=HTMLResponse)
 def generate(
@@ -51,6 +379,7 @@ def generate(
     difficulty: str = Form("intermediate"),
     persona: str = Form("Neutral"),
     max_rounds: int = Form(5),
+    db_conn = Depends(db.get_conn),
 ):
     start = time.time()
     is_premium = is_premium_user(request)
@@ -77,7 +406,10 @@ def generate(
     resume_report = get_latest_resume_report_for_user(user_email) or request.session.get("last_resume_report", {})
     gaps = resume_report.get("keyword_gaps", []) if isinstance(resume_report, dict) else []
     skill_gaps = [str(g.get("keyword", "")).strip() for g in gaps if isinstance(g, dict) and g.get("keyword")]
-    skill_gaps = skill_gaps[:4]
+    past_weaknesses = get_user_weaknesses(user_email) if user_email else []
+    skill_gaps = list(set(skill_gaps + past_weaknesses))[:5]
+
+    resume_context = resume_report.get("fixed_resume_md", "") or resume_report.get("resume_text", "")
 
     seeded = bank_questions(topic=topic, role=role, round_type=round_type, limit=2)
     questions = generate_questions(
@@ -89,6 +421,7 @@ def generate(
         persona=persona,
         skill_gaps=skill_gaps,
         num_questions=1,
+        resume_context=resume_context[:2000],
     )
     questions = [normalize_question(q) for q in questions if str(q).strip()]
     questions = seeded + questions
@@ -104,8 +437,15 @@ def generate(
     if not questions:
         questions = [f"Tell me about your approach to {topic}."]
 
+    session_id_val = str(uuid.uuid4())
+    request.session["interview_id"] = session_id_val
+    if user_email:
+        cur = db_conn.cursor()
+        now = int(time.time())
+        db.execute(cur, "INSERT INTO interview_sessions (session_id, user_email, topic, difficulty, overall_score, qa_history_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)", (session_id_val, user_email, topic, difficulty, 0.0, "[]", now))
+        db_conn.commit()
+
     request.session["questions"] = questions
-    request.session["ideal"] = []
     request.session["current"] = 0
     request.session["timeline"] = []
     request.session["finished"] = False
@@ -151,9 +491,14 @@ def generate(
 def evaluate(request: Request,
              question: str = Form(...),
              answer: str = Form(...),
-             answer_time_sec: float = Form(0.0)):
+             answer_time_sec: float = Form(0.0),
+             db_conn = Depends(db.get_conn)):
     start = time.time()
 
+    # Prune session to avoid Cookes size limits (>4KB base64 overhead)
+    request.session.pop("resume_versions", None)
+    request.session.pop("audit_logs", None)
+    
     questions = request.session.get("questions", [])
     ideal = request.session.get("ideal", [])
     current = request.session.get("current", 0)
@@ -164,58 +509,52 @@ def evaluate(request: Request,
     if not questions:
         return templates.TemplateResponse("interview.html", interview_context_payload(request))
 
-    question = normalize_question(question)
+    import concurrent.futures
 
-    from ideal_generator import generate_ideal_answer
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        future_ideal = executor.submit(generate_ideal_answer, question)
+        future_followup = executor.submit(
+            generate_follow_up,
+            question=question,
+            answer=answer,
+            topic=str(config.get("topic", "General")),
+            role=str(config.get("role", "")),
+            round_type=str(config.get("round_type", "technical")),
+            persona=str(config.get("persona", "Neutral")),
+        )
 
-    if current >= len(ideal):
         try:
-            new_ideal = generate_ideal_answer(question)
+            ideal_answer = future_ideal.result(timeout=10)
         except Exception as e:
             print(f"IDEAL GENERATION ERROR: {e}")
-            new_ideal = "Ideal answer unavailable. Explain your approach clearly with tradeoffs and impact."
-        new_ideal = normalize_question(new_ideal)
+            ideal_answer = "Ideal answer unavailable. Explain your approach clearly with tradeoffs and impact."
+        ideal_answer = normalize_question(ideal_answer)
 
-        ideal = ideal + [new_ideal]   # 🚨 IMPORTANT
-        request.session["ideal"] = ideal
+        result = analyze_answer(
+            question=question,
+            answer=answer,
+            ideal_answer=ideal_answer,
+            round_type=str(config.get("round_type", "technical")),
+            answer_time_sec=float(answer_time_sec or 0),
+        )
 
-    ideal_answers = request.session.get("ideal", [])
-    if current < len(ideal_answers):
-        ideal_answer = ideal_answers[current]
-    else:
-        ideal_answer = "Ideal answer unavailable. Explain your approach clearly with tradeoffs and impact."
-
-    print("\n======================")
-    print("QUESTION:", question)
-    print("IDEAL ANSWER:", ideal_answer)
-    print("USER ANSWER:", answer)
-
-    if ideal_answer is None:
-        print("🚨 IDEAL IS NONE")
-
-    if ideal_answer == "Ideal answer failed":
-        print("🚨 IDEAL GENERATION FAILED")
-
-    if answer.strip() == "":
-        print("🚨 USER ANSWER EMPTY")
-
-    result = analyze_answer(
-        question=question,
-        answer=answer,
-        ideal_answer=ideal_answer,
-        round_type=str(config.get("round_type", "technical")),
-        answer_time_sec=float(answer_time_sec or 0),
-    )
+        try:
+            next_followup = future_followup.result(timeout=10)
+        except Exception:
+            next_followup = None
 
     print("SCORE:", result.get("overall"))
     print("======================\n")
 
-    timeline = timeline + [result]
+    min_result = {
+        "overall": result.get("overall", 0),
+        "voice_pace": result.get("voice_pace", {})
+    }
+    timeline = timeline + [min_result]
     current += 1
 
     request.session["current"] = current
     request.session["timeline"] = timeline
-    request.session["last_feedback"] = result
 
     # Adaptive interviewer: difficulty shifts with current performance.
     adaptive_difficulty = str(config.get("difficulty", "intermediate"))
@@ -228,55 +567,108 @@ def evaluate(request: Request,
         adaptive_difficulty = "intermediate"
     config["adaptive_difficulty"] = adaptive_difficulty
     request.session["interview_config"] = config
-
-    # Follow-up engine and next question generation.
-    next_followup = generate_follow_up(
-        question=question,
-        answer=answer,
-        topic=str(config.get("topic", "General")),
-        role=str(config.get("role", "")),
-        round_type=str(config.get("round_type", "technical")),
-        persona=str(config.get("persona", "Neutral")),
-    )
     request.session["next_followup"] = next_followup
 
     finished = current >= max_rounds
     final_score = float(request.session.get("final_score", 0) or 0)
     hiring_result = request.session.get("hiring_result")
 
-    if not finished and not bool(config.get("fixed_questions", False)):
-        # Skill-gap driven + role/company mode + adaptive difficulty in one prompt.
-        next_q = generate_questions(
-            topic=str(config.get("topic", "General")),
-            role=str(config.get("role", "")),
-            company=str(config.get("company", "")),
-            round_type=str(config.get("round_type", "technical")),
-            difficulty=adaptive_difficulty,
-            persona=str(config.get("persona", "Neutral")),
-            skill_gaps=list(config.get("skill_gaps", [])),
-            num_questions=1,
-        )
-        next_q = [normalize_question(q) for q in next_q if str(q).strip()]
-        if not next_q:
-            next_q = bank_questions(
+    if not finished:
+        if not bool(config.get("fixed_questions", False)):
+            user_email = (request.session.get("user_email") or "").strip().lower()
+            resume_report = get_latest_resume_report_for_user(user_email) if user_email else {}
+            resume_context = (resume_report.get("fixed_resume_md", "") or resume_report.get("resume_text", ""))[:2000] if resume_report else ""
+            # Skill-gap driven + role/company mode + adaptive difficulty in one prompt.
+            next_q = generate_questions(
                 topic=str(config.get("topic", "General")),
                 role=str(config.get("role", "")),
-                round_type=str(config.get("round_type", "")),
-                limit=1,
+                company=str(config.get("company", "")),
+                round_type=str(config.get("round_type", "technical")),
+                difficulty=adaptive_difficulty,
+                persona=str(config.get("persona", "Neutral")),
+                skill_gaps=list(config.get("skill_gaps", [])),
+                num_questions=1,
+                resume_context=resume_context,
             )
-        if next_q:
-            questions = questions + [next_q[0]]
+            next_q = [normalize_question(q) for q in next_q if str(q).strip()]
+            if not next_q:
+                next_q = bank_questions(
+                    topic=str(config.get("topic", "General")),
+                    role=str(config.get("role", "")),
+                    round_type=str(config.get("round_type", "")),
+                    limit=1,
+                )
+            if next_q:
+                questions = questions + [next_q[0]]
+                
+            # Truncate past question contents in session buffer to shrink cookie size securely
+            questions = list(questions)
+            for idx in range(min(current, len(questions))):
+                if isinstance(questions[idx], str) and len(questions[idx]) > 35:
+                     questions[idx] = questions[idx][:32] + "..."
+                     
             request.session["questions"] = questions
     else:
-        total = sum([float(s.get("overall", 0)) for s in timeline])
-        final_score = round(total / max(1, len(timeline)), 1)
-        hiring_result = hiring_decision(timeline)
+        full_timeline = []
+        session_id_val = request.session.get("interview_id")
+        if session_id_val:
+            cur = db_conn.cursor()
+            db.execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE session_id=?", (session_id_val,))
+            row = cur.fetchone()
+            if row:
+                try:
+                    full_timeline = json.loads(row[0])
+                except Exception:
+                    full_timeline = []
+            
+            # Append current round to complete timeline detail before operations
+            full_timeline.append({
+                "round": len(timeline),
+                "question": question,
+                "user_answer": answer,
+                "ideal_answer": ideal_answer,
+                "score": result.get("overall", 0),
+                "feedback": result.get("improvements", ["Solid performance"])[0] if result.get("improvements") else "Solid performance"
+            })
+        # Fallback to existing session timeline if DB load fails
+        eval_timeline = full_timeline if full_timeline else timeline
+        total = sum([float(s.get("overall", s.get("score", 0))) for s in eval_timeline])
+        final_score = round(total / max(1, len(eval_timeline)), 1)
+        hiring_result = hiring_decision(eval_timeline)
         request.session["final_score"] = final_score
         request.session["hiring_result"] = hiring_result
         request.session["finished"] = True
         current = max(0, min(current - 1, len(questions) - 1))
+        request.session["current"] = current
+        
+    session_id_val = request.session.get("interview_id")
+    if session_id_val:
+        cur = db_conn.cursor()
+        db.execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE session_id=?", (session_id_val,))
+        row = cur.fetchone()
+        if row:
+            try:
+                hist = json.loads(row[0])
+            except Exception:
+                hist = []
+            hist.append({
+                "round": len(timeline),
+                "question": question,
+                "user_answer": answer,
+                "ideal_answer": ideal_answer,
+                "score": result.get("overall", 0),
+                "feedback": result.get("improvements", ["Solid performance"])[0] if result.get("improvements") else "Solid performance"
+            })
+            if final_score is not None:
+                cur = db_conn.cursor()
+                db.execute(cur, "UPDATE interview_sessions SET qa_history_json=?, overall_score=? WHERE session_id=?", (json.dumps(hist), final_score, session_id_val))
+            else:
+                cur = db_conn.cursor()
+                db.execute(cur, "UPDATE interview_sessions SET qa_history_json=? WHERE session_id=?", (json.dumps(hist), session_id_val))
+            db_conn.commit()
+
         log_event(
-            "interview_completed",
+            "interview_completed" if finished else "interview_progress",
             "mock_interview",
             role=str(config.get("role", "")),
             metadata={
@@ -286,9 +678,6 @@ def evaluate(request: Request,
             },
         )
 
-    print("QUESTION:", question)
-    print("IDEAL:", ideal_answer)
-    print("ANSWER:", answer)
     log_event(
         "interview_round_scored",
         "mock_interview",
@@ -301,6 +690,21 @@ def evaluate(request: Request,
         success=True,
         latency_ms=(time.time() - start) * 1000.0,
     )
+
+    with open("/tmp/evaluate_debug.log", "a") as f:
+        f.write(f"--- DEBUG EVALUATE ---\n")
+        f.write(f"current: {current}\n")
+        f.write(f"max_rounds: {max_rounds}\n")
+        f.write(f"questions_len: {len(questions)}\n")
+        f.write(f"finished: {finished}\n")
+        f.write(f"questions: {questions}\n")
+        try:
+            payload_ser = json.dumps(dict(request.session))
+            f.write(f"SESSION SIZE: {len(payload_ser)} bytes\n")
+            f.write(f"SESSION: {payload_ser}\n")
+        except Exception as e:
+            f.write(f"SESSION DUMP ERR: {e}\n")
+        f.write(f"----------------------\n")
 
     return templates.TemplateResponse("interview.html", interview_context_payload(
         request,
@@ -325,6 +729,7 @@ def schedule(request: Request,
              context_notes: str = Form(""),
              website: str = Form("")):
     if (website or "").strip():
+        log_event("honeypot_triggered", "mentorship", metadata={"ip": getattr(request.client, "host", "unknown")})
         return templates.TemplateResponse("book_call.html", {"request": request, "error": "Request blocked.", "prefill": {}})
     start = time.time()
 
@@ -374,10 +779,6 @@ Prep Checklist:
         role=topic,
         metadata={"name": name, "datetime": datetime, "outcome": outcome},
     )
-    log_mentor_metric("calendar_load_pct", 68, "Auto-estimated from bookings volume.")
-    log_mentor_metric("no_show_rate_pct", 12, "Estimated trend.")
-    log_mentor_metric("mentor_quality_score", 8.4, "Post-session feedback aggregate.")
-    log_mentor_metric("reschedule_rate_pct", 9, "Estimated trend.")
     log_model_health("mentorship_booking", "app_internal", success=True, latency_ms=(time.time() - start) * 1000.0)
 
     return templates.TemplateResponse("book_call.html", {

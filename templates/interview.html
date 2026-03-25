@@ -1,410 +1,954 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="mi-page">
-    <div class="mi-container">
-        <header class="mi-header">
-            <p class="mi-eyebrow">Mock Interview 2.0</p>
-            <h1>Adaptive interview simulator</h1>
-            <p>
-                Company-style rounds with dynamic follow-ups, live rubric scoring, STAR coaching,
-                pace analysis, red-team pressure mode, and hiring decision simulation.
-            </p>
-        </header>
 
-        <section class="mi-panel">
-            <h2>Session Setup</h2>
-            {% if (user_plan or "free") != "premium" %}
-            <p class="mi-muted" style="margin-bottom:10px;">
-                Free plan: up to 3 rounds. Red-Team mode is Premium.
-                <a href="/pricing">Upgrade</a>
-            </p>
-            {% endif %}
-            {% if premium_notice %}
-            <p class="al-error" style="margin-bottom:10px;">{{ premium_notice }}</p>
-            {% endif %}
-            <form id="interviewSetupForm" action="/generate" method="post" class="mi-form-grid">
-                <div class="mi-field">
-                    <label for="topic">Topic</label>
-                    <select id="topic" name="topic">
-                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else 'Python')) == "Python" %}selected{% endif %}>Python</option>
-                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "SQL" %}selected{% endif %}>SQL</option>
-                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "React" %}selected{% endif %}>React</option>
-                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "System Design" %}selected{% endif %}>System Design</option>
-                        <option {% if ((config.topic if config else '') or (default_setup.topic if default_setup else '')) == "Behavioral" %}selected{% endif %}>Behavioral</option>
-                    </select>
-                </div>
+<style>
+/* ── Theme Variables & Wrapper ────────────────────────── */
+.iv-wrap {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 16px;
+  gap: 0;
+  
+  /* Redesign colors (Notion/Obsidian style) */
+  --iv-accent: #111827;
+  --iv-accent-hover: #1f2937;
+  --iv-border: #e5e7eb;
+  --iv-border-strong: #d1d5db;
+  --iv-surface: #ffffff;
+  --iv-bg-subtle: #f9fafb;
+}
 
-                <div class="mi-field">
-                    <label for="role">Target role</label>
-                    <input id="role" name="role" type="text" value="{{ (config.role if config else '') or (default_setup.role if default_setup else '') }}" placeholder="Backend Engineer">
-                </div>
+/* Dark Mode Override Support */
+.theme-dark .iv-wrap {
+  --iv-accent: #f9fafb;
+  --iv-accent-hover: #ffffff;
+  --iv-border: #2a2b2e;
+  --iv-border-strong: #3e3f42;
+  --iv-surface: #1e1f23; /* Clearly lifted card background from body */
+  --iv-bg-subtle: #111214;
+}
+.theme-dark .iv-setup {
+  background: #0f172a !important; /* Slate Blue to match Resume Review EXACTLY */
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+.theme-dark .iv-field label { 
+  color: #94a3b8 !important; /* Slate gray label */
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+}
+.theme-dark .iv-start-btn { 
+  background: #ffffff !important; 
+  color: #0f172a !important; 
+  font-weight: 700 !important;
+  border: none !important;
+}
+.theme-dark .iv-field select, 
+.theme-dark .iv-field input {
+  background: #0b1120 !important; /* Deeper slate well */
+  color: #f8fafc !important;
+  border: 1px solid #1e293b !important;
+}
+.theme-dark .iv-field select:focus, 
+.theme-dark .iv-field input:focus {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #ffffff !important;
+}
+/* ── Layout Pivot for Chat Session ────────────────────── */
+.rr-page.chat-session-active {
+  padding: 0 !important;
+  height: calc(100vh - 80px) !important;
+  overflow: hidden !important;
+}
+.rr-page.chat-session-active .rr-container {
+  height: 100% !important;
+  max-width: 820px !important; /* Framing for chat bubbles */
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 10px !important;
+}
+.rr-page.chat-session-active .rr-header {
+  display: none !important;
+}
+.rr-page.chat-session-active .iv-chat-wrap {
+  margin-top: 2px !important;
+  height: 100% !important;
+}
 
-                <div class="mi-field">
-                    <label for="company">Company style</label>
-                    <input id="company" name="company" type="text" value="{{ (config.company if config else '') or (default_setup.company if default_setup else '') }}" placeholder="Vercel / Stripe / FAANG">
-                </div>
+/* ── Setup Form ────────────────────────────────────────── */
+.iv-setup {
+  background: var(--iv-surface);
+  border: 1px solid var(--iv-border);
+  border-radius: 12px;
+  padding: 30px 40px;
+  margin: 10px 0 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* slight shadow for light mode raise */
+}
+.iv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.iv-field { display: flex; flex-direction: column; gap: 6px; }
+.iv-field label { font-size: 0.75rem; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; }
+.iv-field select, .iv-field input {
+  padding: 10px 12px; 
+  border: 1px solid #d1d5db !important; /* crisper border for light mode */
+  border-radius: 8px;
+  font-size: 0.95rem; font-family: inherit; background: #ffffff; color: #111827;
+  transition: border-color 0.15s;
+}
+.iv-field select:focus, .iv-field input:focus { 
+  outline: none !important; 
+  border-color: #111827 !important; 
+  box-shadow: 0 0 0 1px #111827 !important; 
+}
 
-                <div class="mi-field">
-                    <label for="round_type">Round type</label>
-                    <select id="round_type" name="round_type">
-                        <option value="technical">Technical</option>
-                        <option value="behavioral">Behavioral</option>
-                        <option value="system_design">System Design</option>
-                        <option value="mixed">Mixed</option>
-                    </select>
-                </div>
+.iv-start-btn {
+  grid-column: span 2; margin-top: 12px;
+  background: #111827 !important; /* solid black button */
+  color: #ffffff !important; /* white text */
+  border: none; border-radius: 8px;
+  padding: 12px 0; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.iv-start-btn:hover { background: #1f2937 !important; }
 
-                <div class="mi-field">
-                    <label for="difficulty">Starting difficulty</label>
-                    <select id="difficulty" name="difficulty">
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate" selected>Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                    </select>
-                </div>
+html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white button */
 
-                <div class="mi-field">
-                    <label for="max_rounds">Rounds</label>
-                    <select id="max_rounds" name="max_rounds">
-                        <option value="3" {% if (user_plan or "free") != "premium" %}selected{% endif %}>3</option>
-                        <option value="5" {% if (user_plan or "free") == "premium" %}selected{% endif %}>5{% if (user_plan or "free") != "premium" %} (Premium){% endif %}</option>
-                        {% if (user_plan or "free") == "premium" %}
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        {% endif %}
-                    </select>
-                </div>
+/* ── Chat Container & Status ───────────────────────────── */
+.iv-chat-wrap { display: none; flex-direction: column; flex: 1; min-height: 0; }
+.iv-status-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: var(--iv-bg-subtle);
+  border: 1px solid var(--iv-border); border-radius: 8px;
+  margin: 16px 0 8px; font-size: 0.82rem; color: #6b7280;
+}
+.iv-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 7px; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
 
-                <div class="mi-field">
-                    <label for="persona">Interviewer Persona</label>
-                    <select id="persona" name="persona">
-                        <option value="Friendly">Friendly</option>
-                        <option value="Neutral" selected>Neutral</option>
-                        <option value="Pressure Test" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>Pressure Test (Premium)</option>
-                    </select>
-                </div>
+.iv-messages {
+  flex: 1; overflow-y: auto; padding: 12px 2px;
+  display: flex; flex-direction: column; gap: 12px;
+  scroll-behavior: smooth;
+}
+.iv-messages::-webkit-scrollbar { width: 4px; }
+.iv-messages::-webkit-scrollbar-thumb { background: var(--iv-border-strong); border-radius: 4px; }
 
-                <div class="mi-actions">
-                    <button type="submit" class="btn-primary mi-button">Start Interview</button>
-                </div>
-            </form>
-        </section>
+/* ── Chat Bubbles ───────────────────────────────────────── */
+.iv-bubble { display: flex; gap: 10px; max-width: 85%; }
+.iv-bubble.interviewer { align-self: flex-start; }
+.iv-bubble.candidate { align-self: flex-end; flex-direction: row-reverse; }
 
-        {% if questions %}
-        {% set max_rounds = config.max_rounds or questions|length %}
-        <section class="mi-panel">
-            <div class="mi-q-header">
-                <h2>Current Question</h2>
-                <p>Round {{ current + 1 }} / {{ max_rounds }}</p>
-            </div>
+.iv-avatar {
+  width: 32px; height: 32px; border-radius: 4px; display: flex; /* Sharp square-ish radius */
+  align-items: center; justify-content: center; font-weight: 800;
+  font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;
+}
+.interviewer .iv-avatar { background: var(--iv-accent); color: var(--iv-surface); border: 1px solid var(--iv-border); }
+.candidate .iv-avatar { background: var(--iv-bg-subtle); color: #4b5563; border: 1px solid var(--iv-border); }
 
-            <p class="mi-question">{{ questions[current] }}</p>
+.iv-msg {
+  padding: 12px 18px; border-radius: 12px; font-size: 0.94rem; line-height: 1.62;
+  white-space: pre-wrap; word-break: break-word; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.interviewer .iv-msg {
+  background: rgba(255, 255, 255, 0.72); 
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--text, #111827); 
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.2);
+}
+.candidate .iv-msg {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed); 
+  color: white; border: none;
+  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.25);
+}
 
-            {% if next_followup %}
-            <div class="mi-followup">
-                <span>Next follow-up candidate</span>
-                <p>{{ next_followup }}</p>
-            </div>
-            {% endif %}
+.iv-typing { padding: 12px 16px; border: 1px solid var(--iv-border); border-radius: 8px; background: var(--iv-surface); }
+.iv-typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; animation: bounce 1.2s infinite; margin: 0 2px; }
+@keyframes bounce { 0%,80%,100%{ transform:translateY(0); } 40%{ transform:translateY(-5px); } }
 
-            {% if not finished %}
-            <form action="/evaluate" method="post" id="answerForm" class="mi-answer-form">
-                <input type="hidden" name="question" value="{{ questions[current] }}">
-                <input type="hidden" id="answer_time_sec" name="answer_time_sec" value="0">
-                <input type="hidden" id="is_recorded" name="is_recorded" value="false">
-                
-                <div class="mi-recording-area" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:16px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
-                        <div>
-                            <p style="margin:0; font-weight:600; font-size:0.95rem; color:#1e293b;">Live Presence Analytics</p>
-                            <p style="margin:2px 0 0; font-size:0.85rem; color:#64748b; max-width:400px;">Record your answer via webcam & microphone for pacing and expression analysis.</p>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button type="button" id="start-recording" class="btn-secondary" style="display:flex; align-items:center; gap:6px;">
-                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"></circle></svg>
-                                Start Recording
-                            </button>
-                            <button type="button" id="stop-recording" class="btn-secondary" style="display:none; align-items:center; gap:6px; color:#ef4444; border-color:#ef4444;">
-                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="10" height="10"></rect></svg>
-                                Stop Recording
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="video-container" style="display:none; justify-content:center; background:#0f172a; border-radius:8px; overflow:hidden; margin-bottom:16px;">
-                        <video id="webcam-video" autoplay muted playsinline style="max-height: 240px; transform: scaleX(-1);"></video>
-                    </div>
+/* ── Input Bar ─────────────────────────────────────────── */
+.iv-input-bar {
+  display: flex; gap: 10px; align-items: flex-end;
+  padding: 12px 0 20px; border-top: 1px solid var(--iv-border); margin-top: 8px;
+}
+.iv-input-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.iv-input-bar textarea {
+  width: 100%; resize: none; border: 1px solid var(--iv-border); border-radius: 8px;
+  padding: 11px 14px; font-size: 0.92rem; font-family: inherit;
+  min-height: 44px; max-height: 160px; overflow-y: auto;
+  background: var(--iv-surface); color: var(--text, #111827);
+  line-height: 1.5;
+}
+.iv-input-bar textarea:focus { outline: none; border-color: var(--iv-accent); }
 
-                    <div style="display:flex; gap:12px; font-size:0.85rem; color:#64748b; margin-bottom:8px;">
-                        <div id="recording-indicator" style="display:none; align-items:center; gap:6px; color:#ef4444; font-weight:600;">
-                            <span style="display:inline-block; width:8px; height:8px; background:#ef4444; border-radius:50%; box-shadow:0 0 8px #ef4444;"></span>
-                            Recording live...
-                        </div>
-                    </div>
+.iv-icon-btn {
+  width: 42px; height: 42px; border-radius: 6px; border: 1px solid var(--iv-border);
+  background: var(--iv-surface); cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background 0.1s;
+}
+.iv-icon-btn:hover { background: var(--iv-bg-subtle); }
+.iv-icon-btn.recording {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #ef4444 !important;
+  animation: iv-pulse 1.5s infinite;
+}
+@keyframes iv-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15); }
+  100% { transform: scale(1); }
+}
 
-                    <textarea id="answer-textarea" name="answer" placeholder="Speak to automatically transcribe your answer, or type it manually..." required style="width:100%; min-height:140px; border:1px solid #cbd5e1; border-radius:8px; padding:12px; font-family:inherit; resize:vertical;"></textarea>
-                </div>
+.iv-send-btn {
+  width: 44px; height: 44px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, #4f46e5, #6366f1); color: var(--iv-surface); 
+  cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+.iv-send-btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3); }
+.iv-send-btn:active:not(:disabled) { transform: translateY(0) scale(0.95); }
+.iv-send-btn:disabled { background: var(--iv-border); color: #9ca3af; cursor: not-allowed; transition: none; box-shadow: none; }
 
-                <div class="mi-actions" style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:16px;">
-                    <div id="lifeline-wrapper" style="flex:1; max-width:65%;">
-                        <button type="button" id="btn-lifeline" class="btn-secondary" style="display:flex; align-items:center; gap:6px;">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                            Use Interview Lifeline
-                        </button>
-                        <div id="lifeline-hints" style="display:none; margin-top:12px; padding:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:0.9rem; color:#166534;">
-                            <strong style="display:block; margin-bottom:8px;">Suggested Resume Hints:</strong>
-                            <ul id="lifeline-list" style="margin:0; padding-left:20px; line-height:1.5;"></ul>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary mi-button" id="submit-answer-btn">Submit Answer</button>
-                </div>
-            </form>
-            {% endif %}
-        </section>
-        {% endif %}
+.iv-end-btn {
+  background: transparent; border: 1px solid #f87171; color: #ef4444;
+  border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: background 0.1s;
+}
+.iv-end-btn:hover { background: #fee2e2; }
+.iv-silence { font-size: 0.78rem; color: #9ca3af; text-align: center; padding: 2px 0; display: none; }
 
-        {% if feedback %}
-        <section class="mi-panel">
-            <h2>Live Rubric Scoring</h2>
-            <div class="mi-score-grid">
-                <article><p>Overall</p><h3>{{ "%.1f"|format(feedback.overall) }}</h3></article>
-                <article><p>Correctness</p><h3>{{ "%.1f"|format(feedback.rubric.correctness) }}</h3></article>
-                <article><p>Structure</p><h3>{{ "%.1f"|format(feedback.rubric.structure) }}</h3></article>
-                <article><p>Clarity</p><h3>{{ "%.1f"|format(feedback.rubric.clarity) }}</h3></article>
-                <article><p>Tech Depth</p><h3>{{ "%.1f"|format(feedback.rubric.technical_depth) }}</h3></article>
-                <article><p>Impact</p><h3>{{ "%.1f"|format(feedback.rubric.impact) }}</h3></article>
-            </div>
+/* ── Verdict Screen ────────────────────────────────────── */
+.iv-verdict { display: none; padding: 20px 0; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
-            <div class="mi-grid-2">
-                <article class="mi-subpanel">
-                    <h3>Strengths</h3>
-                    <ul>
-                        {% for item in feedback.strengths %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </article>
-                <article class="mi-subpanel">
-                    <h3>Improve Next</h3>
-                    <ul>
-                        {% for item in feedback.improvements %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </article>
-            </div>
+.iv-verdict-card {
+  border: 1px solid var(--iv-border-strong); border-radius: 12px; padding: 32px 36px;
+  background: var(--iv-surface); text-align: center; margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.iv-verdict-title { font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.iv-verdict-decision { font-size: 2.1rem; font-weight: 800; color: var(--text, #111827); margin: 6px 0; letter-spacing: -0.02em; }
+.iv-verdict-score { font-size: 0.95rem; color: #4b5563; margin-bottom: 16px; }
 
-            <div class="mi-grid-2">
-                <article class="mi-subpanel">
-                    <h3>STAR Coach</h3>
-                    {% if config.round_type == "behavioral" %}
-                    <p class="mi-mono">Missing: {{ feedback.star_coach.missing|join(", ") if feedback.star_coach.missing else "None" }}</p>
-                    {% endif %}
-                    <p>{{ feedback.star_coach.tip }}</p>
-                </article>
+.iv-verdict-meta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.iv-verdict-badge {
+  background: var(--iv-bg-subtle); border: 1px solid var(--iv-border); border-radius: 6px;
+  padding: 5px 14px; font-size: 0.82rem; color: #4b5563; font-weight: 600;
+}
 
-                <article class="mi-subpanel">
-                    <h3>Voice + Pace Analysis</h3>
-                    <p class="mi-mono">WPM: {{ feedback.voice_pace.wpm }} · Pace: {{ feedback.voice_pace.pace_band }}</p>
-                    <p class="mi-mono">Filler hits: {{ feedback.voice_pace.filler_hits }} ({{ feedback.voice_pace.filler_density_pct }}%)</p>
-                    <p class="mi-mono">Answer time: {{ feedback.voice_pace.answer_time_sec }}s · Words: {{ feedback.voice_pace.word_count }}</p>
-                </article>
-            </div>
-        </section>
-        {% endif %}
+.iv-panel-notes { text-align: left; margin-top: 16px; padding-left: 20px; }
+.iv-panel-notes li { font-size: 0.88rem; color: #4b5563; line-height: 1.6; }
+.iv-curiosity { margin-top: 12px; font-size: 0.88rem; color: #6b7280; background: var(--iv-bg-subtle); padding: 10px; border-radius: 6px; }
 
-        {% if timeline %}
-        <section class="mi-panel">
-            <h2>Session Replay Timeline</h2>
-            <div class="mi-score-grid" style="margin-bottom:14px;">
-                <article><p>Avg Score</p><h3>{{ "%.1f"|format(session_metrics.avg_score) }}</h3></article>
-                <article><p>Avg WPM</p><h3>{{ session_metrics.avg_wpm }}</h3></article>
-                <article><p>Avg Filler %</p><h3>{{ "%.1f"|format(session_metrics.avg_filler_pct) }}</h3></article>
-            </div>
-            <div class="mi-timeline">
-                {% for item in timeline %}
-                <article class="mi-time-item">
-                    <div>
-                        <p class="mi-mono">Round {{ loop.index }}</p>
-                        <p class="mi-time-question">{{ item.question }}</p>
-                        <p class="mi-muted">{{ item.answer_preview }}</p>
-                    </div>
-                    <strong>{{ "%.1f"|format(item.overall) }}/10</strong>
-                </article>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
+/* ── QA List ────────────────────────────────────────────── */
+.iv-qa-list { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; }
+.iv-qa-item {
+  border: 1px solid var(--iv-border); border-radius: 10px; overflow: hidden;
+  background: var(--iv-surface);
+}
+.iv-qa-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: var(--iv-bg-subtle); border-bottom: 1px solid var(--iv-border);
+  font-weight: 600; font-size: 0.88rem; color: var(--text, #111827);
+}
+.iv-qa-score {
+  background: var(--iv-accent); color: var(--iv-surface); font-weight: 700;
+  padding: 3px 10px; border-radius: 4px; font-size: 0.8rem;
+}
+.iv-qa-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+.iv-qa-col { padding: 14px; }
+.iv-qa-col + .iv-qa-col { border-left: 1px solid var(--iv-border); }
+.iv-qa-col h4 { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 6px; }
+.iv-qa-col p { font-size: 0.85rem; color: #4b5563; line-height: 1.5; margin: 0; }
 
-        {% if finished %}
-        <section class="mi-panel mi-final">
-            <h2>Hiring Decision Simulator</h2>
-            <p class="mi-final-score">Overall Session Score: <strong>{{ "%.1f"|format(final_score) }}/10</strong></p>
-            <p class="mi-final-decision">Decision: <strong>{{ hiring_result.decision }}</strong> ({{ hiring_result.confidence }} confidence)</p>
-            <p>{{ hiring_result.summary }}</p>
-            <ul>
-                {% for note in hiring_result.panel_notes %}
-                <li>{{ note }}</li>
-                {% endfor %}
-            </ul>
-        </section>
-        {% endif %}
+.col-you h4 { color: #6b7280; }
+.col-ideal h4 { color: #059669; }
+.col-ideal { background: rgba(16, 185, 129, 0.03); } /* very subtle tint */
+.col-feedback h4 { color: #d97706; }
+.col-feedback { background: rgba(245, 158, 11, 0.03); }
+
+.iv-new-btn {
+  display: inline-block; background: var(--iv-accent); color: var(--iv-surface); text-decoration: none;
+  border-radius: 6px; padding: 11px 24px; font-size: 0.95rem; font-weight: 600;
+  margin-top: 20px; transition: background 0.1s;
+}
+.iv-new-btn:hover { background: var(--iv-accent-hover); }
+.iv-lock { color: #ef4444; font-size: 0.85rem; margin-bottom: 12px; }
+
+.iv-msg-wrap { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; position: relative; }
+.iv-replay-btn {
+  background: rgba(255, 255, 255, 0.4); border: none; color: #475569; 
+  cursor: pointer; padding: 6px; border-radius: 6px; display: flex; 
+  align-items: center; justify-content: center; transition: all 0.2s;
+  position: absolute; top: 8px; right: 8px; z-index: 10;
+}
+.iv-replay-btn:hover { background: #f1f5f9; color: #475569; }
+.theme-dark .iv-replay-btn:hover { background: #1e293b; color: #cbd5e1; }
+.iv-replay-btn.speaking { color: var(--iv-accent) !important; animation: iv-audio-pulse 1s infinite alternate; }
+@keyframes iv-audio-pulse { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+.iv-stt-live {
+  font-size: 0.85rem; color: var(--iv-accent); margin-top: 6px;
+  min-height: 1.2em; font-style: italic; opacity: 0.7;
+}
+.app-loader.hidden { display: none !important; }
+</style>
+
+
+<section class="rr-page" id="ivPageWrap">
+  <div class="rr-container">
+    <div class="rr-header" id="ivHeader">
+      <p class="rr-eyebrow">Mock Interview 2.0</p>
+      <h1>Conversational AI Simulator</h1>
+      <p>Practice back-and-forth dialogue with realistic interviewer personas, feedback loops, and deferred scoring.</p>
+      <div class="rr-chip-row">
+          <span class="rr-chip">Dynamic state simulator</span>
+          <span class="rr-chip">Voice + silence analytics</span>
+          <span class="rr-chip">Stress test personas</span>
+      </div>
     </div>
-</section>
 
-<div id="globalLoader" class="app-loader" hidden>
-    <div class="app-loader-card">
-        <span class="app-loader-spinner" aria-hidden="true"></span>
-        <span id="globalLoaderText" class="app-loader-text">Generating interview questions...</span>
+    <!-- ── Setup Form ─────────────────────────────── -->
+    <div class="iv-setup rr-form" id="ivSetup" style="margin-top:0;">
+
+    {% if (user_plan or "free") != "premium" %}
+    <p class="iv-lock">Free plan: up to 3 rounds. Pressure Test mode requires Premium. <a href="/pricing">Upgrade →</a></p>
+    {% endif %}
+    {% if premium_notice %}
+    <p style="color:#ef4444; font-size:0.88rem; margin-bottom:12px;">{{ premium_notice }}</p>
+    {% endif %}
+    <form id="ivSetupForm" action="/generate" method="post" class="iv-form-grid">
+      <div class="iv-field">
+        <label>Topic</label>
+        <select name="topic" id="iv-topic">
+          <option value="Python">Python</option>
+          <option value="SQL">SQL</option>
+          <option value="React">React</option>
+          <option value="System Design">System Design</option>
+          <option value="Behavioral">Behavioral</option>
+        </select>
+      </div>
+      <div class="iv-field">
+        <label>Target Role</label>
+        <input name="role" type="text" placeholder="e.g. Backend Engineer" value="{{ (config.role if config else '') or (default_setup.role if default_setup else '') }}">
+      </div>
+      <div class="iv-field">
+        <label>Company Style</label>
+        <input name="company" type="text" placeholder="e.g. Stripe, FAANG" value="{{ (config.company if config else '') or (default_setup.company if default_setup else '') }}">
+      </div>
+      <div class="iv-field">
+        <label>Round Type</label>
+        <select name="round_type">
+          <option value="technical">Technical</option>
+          <option value="behavioral">Behavioral</option>
+          <option value="system_design">System Design</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="iv-field">
+        <label>Rounds</label>
+        <select name="max_rounds">
+          <option value="3" {% if (user_plan or "free") != "premium" %}selected{% endif %}>3</option>
+          <option value="5" {% if (user_plan or "free") == "premium" %}selected{% endif %}>5{% if (user_plan or "free") != "premium" %} (Premium){% endif %}</option>
+          {% if (user_plan or "free") == "premium" %}
+          <option value="7">7</option>
+          <option value="8">8</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="iv-field">
+        <label>Persona</label>
+        <select name="persona">
+          <option value="Friendly">Friendly</option>
+          <option value="Neutral" selected>Neutral</option>
+          <option value="Pressure Test" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>Pressure Test (Premium)</option>
+        </select>
+      </div>
+      <div class="iv-field" style="grid-column:span 2;">
+        <label>Difficulty</label>
+        <select name="difficulty">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate" selected>Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
+      <div style="grid-column: span 2; text-align: right; margin-top: 12px;">
+        <button type="submit" class="iv-start-btn" style="width: auto; padding: 11px 28px;">Start Interview →</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Chat Interface ─────────────────────────── -->
+  {% if questions %}
+  <div class="iv-chat-wrap" id="ivChat" style="display:flex;">
+    <div id="ivChat-container" style="display:none;" data-persona="{{ config.persona if config else 'Neutral' }}"></div>
+    <div class="iv-status-bar">
+      <span><span class="iv-status-dot"></span> Interview in progress</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="ivPhaseLabel" style="font-size:0.82rem; color:#94a3b8; text-transform:capitalize;"></span>
+        <button class="iv-end-btn" id="ivEndBtn" onclick="endInterview()">End Interview</button>
+      </div>
     </div>
+
+    <div class="iv-silence" id="ivSilence">⏱ Take your time…</div>
+
+    <div class="iv-messages" id="ivMessages"></div>
+
+    <div class="iv-input-bar" id="ivInputBar">
+      <div class="iv-input-main">
+        <textarea id="ivInput" placeholder="Type your answer…" rows="2"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}
+                     resetSilenceTimer();"
+          oninput="autoGrow(this); resetSilenceTimer();"></textarea>
+        <div id="ivSttLive" class="iv-stt-live"></div>
+      </div>
+      <button class="iv-icon-btn" id="ivMicBtn" onclick="toggleMic()" title="Speak your answer">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 10a6 6 0 0 1-12 0H4a8 8 0 0 0 16 0h-2zm-6 8a8 8 0 0 0 7.94-7H18a6 6 0 0 1-12 0H6.06A8 8 0 0 0 12 19z"/></svg>
+      </button>
+      <button class="iv-send-btn" id="ivSendBtn" onclick="sendMessage()" title="Send">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+  {% else %}
+  <div class="iv-chat-wrap" id="ivChat" style="display:none;"></div>
+  {% endif %}
+
+  <!-- ── Verdict Screen ─────────────────────────── -->
+  <div class="iv-verdict" id="ivVerdict">
+    <div class="iv-verdict-card" id="ivVerdictCard"></div>
+    <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:24px 0 12px;">Question Breakdown</h3>
+    <div class="iv-qa-list" id="ivQaList"></div>
+    <div style="text-align:center;">
+      <a href="/interview/new" class="iv-new-btn">Start New Session</a>
+    </div>
+  </div>
+
+    </div> <!-- .iv-setup / .iv-chat-wrap / .iv-verdict -->
+  </div> <!-- .rr-container -->
+</section> <!-- .rr-page -->
+
+
+<!-- Loading overlay -->
+<div id="ivLoader" class="app-loader hidden">
+  <div class="app-loader-card">
+    <div class="app-loader-spinner"></div>
+    <p class="app-loader-text" id="ivLoaderText">Generating your interview session…</p>
+  </div>
 </div>
 
 <script>
 (function() {
-    const loader = document.getElementById("globalLoader");
-    const loaderText = document.getElementById("globalLoaderText");
-    const setupForm = document.getElementById("interviewSetupForm");
-    if (setupForm && loader && loaderText) {
-        setupForm.addEventListener("submit", function() {
-            loaderText.textContent = "Generating interview questions...";
-            loader.hidden = false;
-        });
-    }
+// ── State ──────────────────────────────────────────────────────
+let conversationHistory = [];
+let currentPhase = 'warmup';
+let selectedVoice = null;
+let recognition = null;
+let isRecording = false;
+let silenceTimer = null;
+let candidateQuestionsText = '';
+let restartAttempts = 0;
+const PERSONA = document.getElementById('ivChat-container')?.dataset.persona || 'Neutral';
 
-    const form = document.getElementById("answerForm");
-    if (!form) return;
-    
-    let startedAt = Date.now();
-    let stream = null;
-    let recognition = null;
-    let finalTranscript = '';
-
-    const startBtn = document.getElementById("start-recording");
-    const stopBtn = document.getElementById("stop-recording");
-    const video = document.getElementById("webcam-video");
-    const videoContainer = document.getElementById("video-container");
-    const textarea = document.getElementById("answer-textarea");
-    const indicator = document.getElementById("recording-indicator");
-    const isRecordedInput = document.getElementById("is_recorded");
-
-    if (startBtn && stopBtn) {
-        startBtn.addEventListener("click", async () => {
-            try {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error("Your browser does not support media devices. Make sure you are using HTTPS or localhost.");
-                }
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                video.srcObject = stream;
-                videoContainer.style.display = "flex";
-                startBtn.style.display = "none";
-                stopBtn.style.display = "flex";
-                indicator.style.display = "flex";
-                isRecordedInput.value = "true";
-
-                // Reset timer once speaking starts
-                startedAt = Date.now();
-                finalTranscript = textarea.value ? textarea.value + " " : "";
-
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (SpeechRecognition) {
-                    recognition = new SpeechRecognition();
-                    recognition.continuous = true;
-                    recognition.interimResults = true;
-                    recognition.lang = 'en-US';
-
-                    recognition.onresult = (event) => {
-                        let interimTranscript = '';
-                        for (let i = event.resultIndex; i < event.results.length; i++) {
-                            const chunk = event.results[i][0].transcript;
-                            if (event.results[i].isFinal) {
-                                finalTranscript += chunk + ' ';
-                            } else {
-                                interimTranscript += chunk;
-                            }
-                        }
-                        textarea.value = finalTranscript + interimTranscript;
-                    };
-
-                    // Handle edge cases where recognition silently crashes
-                    recognition.onend = () => {
-                        if (stream && stream.active) recognition.start();
-                    };
-
-                    recognition.start();
-                } else {
-                    textarea.placeholder = "Speech recognition is not supported in your browser (try Chrome/Edge). Video is recording, but please type your answer manually...";
-                }
-
-            } catch (err) {
-                console.error("Recording error:", err);
-                alert(`Recording failed: ${err.message || err.name}\n\nPlease ensure you are accessing the site via localhost or HTTPS, and have granted camera and microphone permissions.`);
-            }
-        });
-
-        stopBtn.addEventListener("click", () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-            if (recognition) {
-                recognition.onend = null; // Prevent auto-restart
-                recognition.stop();
-            }
-            videoContainer.style.display = "none";
-            startBtn.style.display = "flex";
-            stopBtn.style.display = "none";
-            indicator.style.display = "none";
-        });
-    }
-
-    const btnLifeline = document.getElementById("btn-lifeline");
-    const lifelineHints = document.getElementById("lifeline-hints");
-    const lifelineList = document.getElementById("lifeline-list");
-
-    if (btnLifeline) {
-        btnLifeline.addEventListener("click", async () => {
-            btnLifeline.disabled = true;
-            btnLifeline.innerHTML = "Loading hints...";
-            try {
-                const formData = new FormData();
-                formData.append("question", document.querySelector("input[name='question']").value);
-                const res = await fetch("/interview/lifeline", {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await res.json();
-                if (data.hints && data.hints.length) {
-                    lifelineList.innerHTML = "";
-                    data.hints.forEach(hint => {
-                        const li = document.createElement("li");
-                        li.textContent = hint;
-                        li.style.marginBottom = "6px";
-                        lifelineList.appendChild(li);
-                    });
-                    lifelineHints.style.display = "block";
-                    btnLifeline.style.display = "none";
-                } else {
-                    btnLifeline.innerHTML = "Lifeline (Unavailable)";
-                }
-            } catch (err) {
-                console.error(err);
-                btnLifeline.innerHTML = "Lifeline (Error)";
-            }
-        });
-    }
-
-    form.addEventListener("submit", function() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-        const sec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
-        const target = document.getElementById("answer_time_sec");
-        if (target) target.value = sec;
-        if (loader && loaderText) {
-            loaderText.textContent = "Evaluating your answer...";
-            loader.hidden = false;
-        }
+// ── Init ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Setup form loader
+  const setupForm = document.getElementById('ivSetupForm');
+  if (setupForm) {
+    setupForm.addEventListener('submit', () => {
+      showLoader('Generating your interview session…');
     });
+  }
+
+  // If questions exist, auto-start the conversation
+  {% if questions %}
+  const wrap = document.getElementById('ivPageWrap');
+  if (wrap) wrap.classList.add('chat-session-active');
+  initVoice();
+  startConversation();
+  {% endif %}
+
+  // Get speech synthesis voices
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = initVoice;
+    initVoice();
+  }
+});
+function showTroubleModal() {
+  alert('Microphone access failed. Please check your browser permissions and ensure you are using a secure connection (HTTPS or localhost).');
+}
+
+function hideTroubleModal() {
+  // No-op for standard mode
+}
+
+// Gap 4: always select voice after voiceschanged fires; poll on first call too
+function initVoice() {
+  if (!window.speechSynthesis) return;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return; // voices not loaded yet — will fire again on voiceschanged
+  const preferred = ['Google UK English Male', 'Microsoft David Desktop', 'Alex', 'Daniel', 'Google US English'];
+  for (const name of preferred) {
+    const v = voices.find(v => v.name === name);
+    if (v) { selectedVoice = v; return; }
+  }
+  // Fallback: first English voice, then any voice
+  selectedVoice = voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0] || null;
+}
+
+// ── Conversation start ─────────────────────────────────────────
+async function startConversation() {
+  showLoader('Your interview is starting…');
+  try {
+    const res = await fetch('/interview/start', { method: 'POST' });
+    const data = await res.json();
+    hideLoader();
+    if (data.reply) {
+      currentPhase = data.phase || 'warmup';
+      addMessage('interviewer', data.reply);
+      interviewerSpeaks(data.reply);
+      conversationHistory = [{ speaker: 'interviewer', text: data.reply }];
+      updatePhaseLabel();
+      startSilenceTimer();
+    }
+  } catch(e) {
+    hideLoader();
+    addMessage('interviewer', 'Hi — let\'s get started. Tell me about your background and what you\'re currently working on.');
+    conversationHistory = [{ speaker: 'interviewer', text: 'Tell me about your background.' }];
+    currentPhase = 'warmup';
+    updatePhaseLabel();
+  }
+}
+
+// ── Send message ───────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('ivInput');
+  const text = (input.value || '').trim();
+  if (!text) return;
+
+  clearSilenceTimer();
+  input.value = '';
+  autoGrow(input);
+  addMessage('candidate', text);
+  conversationHistory.push({ speaker: 'candidate', text });
+
+  // Track questions-for-me text
+  if (currentPhase === 'closing' || currentPhase === 'questions_for_me') {
+    candidateQuestionsText += ' ' + text;
+  }
+
+  // Disable input while waiting
+  setInputEnabled(false);
+  addTypingIndicator();
+
+  try {
+    const res = await fetch('/interview/chat-json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        conversation_history: conversationHistory.slice(0, -1), // backend appends internally
+        phase: currentPhase,
+      }),
+    });
+    const data = await res.json();
+    removeTypingIndicator();
+    setInputEnabled(true);
+
+    if (data.reply) {
+      conversationHistory.push({ speaker: 'interviewer', text: data.reply });
+      currentPhase = data.phase || currentPhase;
+      updatePhaseLabel();
+      addMessage('interviewer', data.reply);
+      interviewerSpeaks(data.reply);
+
+      if (data.phase === 'done') {
+        setTimeout(triggerFinish, 2000);
+      } else {
+        startSilenceTimer();
+      }
+    }
+  } catch(e) {
+    removeTypingIndicator();
+    setInputEnabled(true);
+    addMessage('interviewer', 'Sorry, something went wrong. Please try again.');
+  }
+}
+
+// ── Finish interview ───────────────────────────────────────────
+async function endInterview() {
+  // Gap 3 edge case: if still in warmup, skip straight to closing without confirm
+  const earlyExit = (currentPhase === 'warmup');
+  if (!earlyExit) {
+    if (!confirm('End the interview now? The session will be scored and your verdict will be revealed.')) return;
+  }
+  // Force phase to closing so the AI gives a proper wrap-up
+  if (currentPhase === 'warmup' || currentPhase === 'interview') {
+    currentPhase = 'closing';
+    updatePhaseLabel();
+  }
+  triggerFinish();
+}
+
+async function triggerFinish() {
+  clearSilenceTimer();
+  setInputEnabled(false);
+  document.getElementById('ivEndBtn').style.display = 'none';
+  showLoader('Scoring your session… this takes about 30 seconds.');
+
+  try {
+    const res = await fetch('/interview/finish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation_history: conversationHistory,
+        candidate_questions: candidateQuestionsText.trim(),
+      }),
+    });
+    const data = await res.json();
+    hideLoader();
+    showVerdict(data);
+  } catch(e) {
+    hideLoader();
+    addMessage('interviewer', 'There was a problem scoring your session. Please refresh and try again.');
+    setInputEnabled(true);
+  }
+}
+
+// ── Render verdict ─────────────────────────────────────────────
+function showVerdict(data) {
+  document.getElementById('ivChat').style.display = 'none';
+  document.getElementById('ivVerdict').style.display = 'block';
+
+  const hr = data.hiring_result || {};
+  const score = data.final_score || 0;
+  const decision = hr.decision || 'Unknown';
+  const confidence = hr.confidence || '';
+  const summary = hr.summary || '';
+  const panelNotes = hr.panel_notes || [];
+  const curiosity = (hr.curiosity_score || {});
+  const qScore = data.questions_score || {};
+
+  // Colour decision
+  const decisionColors = {
+    'Strong Hire': '#16a34a', 'Lean Hire': '#2563eb',
+    'Borderline': '#d97706', 'No Hire': '#dc2626'
+  };
+  const color = decisionColors[decision] || '#6366f1';
+
+  // Gap 5: show partial result notice if scoring was cut short
+  const partialNotice = data.partial
+    ? `<div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:10px 14px; font-size:0.85rem; color:#92400e; margin-top:12px; text-align:left;">
+        ⚠️ Scoring ran long and was cut short. Some rounds show a default score — the full session has been saved.
+       </div>` : '';
+
+  document.getElementById('ivVerdictCard').innerHTML = `
+    <div class="iv-verdict-title">Hiring Decision Simulator</div>
+    <div class="iv-verdict-decision" style="color:${color}">${decision}</div>
+    <div class="iv-verdict-score">Session Score: <strong>${score}/10</strong> &middot; Confidence: ${confidence}</div>
+    <p style="color:#475569; font-size:0.93rem; margin:10px 0 0">${summary}</p>
+    ${panelNotes.length ? `<ul class="iv-panel-notes">${panelNotes.map(n => `<li>${n}</li>`).join('')}</ul>` : ''}
+    ${curiosity.notes ? `<div class="iv-curiosity">💬 End-of-interview questions: <strong>${curiosity.score}/10</strong> — ${curiosity.notes}</div>` : ''}
+    <div class="iv-verdict-meta">
+      <span class="iv-verdict-badge">Score: ${score}/10</span>
+      <span class="iv-verdict-badge">${decision}</span>
+      <span class="iv-verdict-badge">${confidence} confidence</span>
+    </div>
+    ${partialNotice}
+  `;
+
+  const qaList = document.getElementById('ivQaList');
+  (data.qa_history || []).forEach((item, i) => {
+    const rubric = item.rubric || {};
+    const rubricHtml = Object.keys(rubric).length
+      ? `<div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">${Object.entries(rubric).map(([k, v]) =>
+          `<span style="background:#f1f5f9; border-radius:12px; padding:3px 10px; font-size:0.78rem; color:#475569;"><strong>${k.replace(/_/g,' ')}</strong> ${v}</span>`
+        ).join('')}</div>` : '';
+
+    const strengths = (item.strengths || []).map(s => `<li style="color:#166534">✓ ${s}</li>`).join('');
+    const improvements = (item.improvements || []).map(s => `<li style="color:#92400e">→ ${s}</li>`).join('');
+
+    qaList.innerHTML += `
+      <div class="iv-qa-item">
+        <div class="iv-qa-header">
+          <span>Round ${i+1}: ${item.question ? item.question.substring(0, 70) + (item.question.length > 70 ? '…' : '') : 'Opening'}</span>
+          <span class="iv-qa-score">${(item.score||0).toFixed(1)}/10</span>
+        </div>
+        <div class="iv-qa-body">
+          <div class="iv-qa-col col-you"><h4>Your Answer</h4><p>${item.user_answer || ''}</p>${rubricHtml}</div>
+          <div class="iv-qa-col col-ideal"><h4>Ideal Answer</h4><p>${item.ideal_answer || 'N/A'}</p></div>
+          <div class="iv-qa-col col-feedback"><h4>Feedback</h4>
+            ${strengths ? `<ul style="margin:0 0 8px; padding-left:16px; font-size:0.88rem;">${strengths}</ul>` : ''}
+            ${improvements ? `<ul style="margin:0; padding-left:16px; font-size:0.88rem;">${improvements}</ul>` : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── TTS ────────────────────────────────────────────────────────
+async function interviewerSpeaks(text, btnElement = null) {
+  if (!window.speechSynthesis) return;
+  if (!selectedVoice) initVoice(); // Ensure voices are initialized
+  
+  window.speechSynthesis.cancel();
+  
+  // Clear previous speaking states
+  document.querySelectorAll('.iv-replay-btn.speaking').forEach(b => b.classList.remove('speaking'));
+  if (btnElement) btnElement.classList.add('speaking');
+
+  // Chunking for Chrome bug (splits by punctuation)
+  const chunks = text.match(/[^.!?]+[.!?]*/g) || [text];
+  
+  for (let i = 0; i < chunks.length; i++) {
+    const utterance = new SpeechSynthesisUtterance(chunks[i].trim());
+    utterance.voice = selectedVoice;
+    utterance.rate = 0.95;
+    
+    // Last chunk marks completion
+    if (i === chunks.length - 1) {
+      utterance.onend = () => { if (btnElement) btnElement.classList.remove('speaking'); };
+    }
+    utterance.onerror = () => { if (btnElement) btnElement.classList.remove('speaking'); };
+    
+    window.speechSynthesis.speak(utterance);
+    
+    // Pause briefly between chunks for natural cadence
+    if (chunks.length > 1) await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+// ── STT ────────────────────────────────────────────────────────
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your answer.');
+    return;
+  }
+  if (isRecording) {
+    stopMic();
+  } else {
+    startMic();
+  }
+}
+
+let micIsPermanentlyBlocked = false;
+
+async function startMic() {
+  if (micIsPermanentlyBlocked) {
+    alert('Microphone access was denied. Please check your browser settings.');
+    return;
+  }
+  
+  const input = document.getElementById('ivInput');
+  const liveEl = document.getElementById('ivSttLive');
+  
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Speech recognition is not supported in this browser.');
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  input.setAttribute('data-mic-start-text', input.value || '');
+  if (liveEl) liveEl.textContent = 'Listening...';
+
+  recognition.onresult = (event) => {
+    restartAttempts = 0;
+    let interimTranscript = '';
+    let finalTranscript = '';
+    
+    for (let i = 0; i < event.results.length; ++i) {
+      const res = event.results[i];
+      if (res.isFinal) {
+        finalTranscript += res[0].transcript + ' ';
+      } else {
+        interimTranscript += res[0].transcript;
+      }
+    }
+    
+    const baseText = input.getAttribute('data-mic-start-text') || '';
+    const fullText = (baseText + ' ' + finalTranscript).trim();
+    input.value = fullText + (interimTranscript ? (fullText ? ' ' : '') + interimTranscript : '');
+    
+    if (liveEl) liveEl.textContent = interimTranscript ? `Listening: ${interimTranscript}...` : '';
+    
+    autoGrow(input);
+    resetSilenceTimer();
+  };
+
+  recognition.onerror = (e) => {
+    console.error('STT error:', e.error);
+    if (e.error === 'not-allowed' || e.error === 'permission-denied') {
+      micIsPermanentlyBlocked = true;
+      alert('Microphone permission denied. Please enable it in your browser settings.');
+      stopMic();
+    } else if (e.error !== 'no-speech' && e.error !== 'network') {
+      stopMic();
+    }
+  };
+
+  recognition.onend = () => {
+    if (isRecording && restartAttempts < 5) {
+      restartAttempts++;
+      setTimeout(() => { if (isRecording) { try { recognition.start(); } catch(err) {} } }, 500);
+    } else {
+      stopMic();
+    }
+  };
+
+  try {
+    recognition.start();
+    isRecording = true;
+    const btn = document.getElementById('ivMicBtn');
+    btn.classList.add('recording');
+    btn.title = 'Stop recording';
+  } catch (err) {
+    console.error('STT start failed:', err);
+    stopMic();
+  }
+}
+
+function stopMic() {
+  if (recognition) recognition.stop();
+  isRecording = false;
+  const btn = document.getElementById('ivMicBtn');
+  btn.classList.remove('recording');
+  btn.title = 'Speak your answer';
+  
+  // Clear live status
+  const liveEl = document.getElementById('ivSttLive');
+  if (liveEl) liveEl.textContent = '';
+}
+
+// ── Silence detection ───────────────────────────────────────────
+function startSilenceTimer() {
+  clearSilenceTimer();
+  const silenceEl = document.getElementById('ivSilence');
+  silenceTimer = setTimeout(() => {
+    if (currentPhase === 'warmup' || currentPhase === 'interview') {
+      if (PERSONA === 'Pressure Test') {
+        silenceEl.textContent = '\u23F1 Take your time \u2014 but we are about halfway through our session.';
+        interviewerSpeaks('Take your time. We are about halfway through our session.');
+      } else if (PERSONA === 'Friendly') {
+        silenceEl.textContent = '💬 No rush — what\'s your initial instinct on this?';
+        interviewerSpeaks('No rush — what\'s your initial instinct on this?');
+      }
+      // Neutral: stays silent
+      if (PERSONA !== 'Neutral') {
+        silenceEl.style.display = 'block';
+        setTimeout(() => { silenceEl.style.display = 'none'; }, 5000);
+      }
+    }
+  }, 30000);
+}
+
+function clearSilenceTimer() {
+  if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+}
+
+function resetSilenceTimer() {
+  clearSilenceTimer();
+  startSilenceTimer();
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function addMessage(speaker, text) {
+  const container = document.getElementById('ivMessages');
+  const avatarLetter = speaker === 'interviewer' ? 'AI' : 'Me';
+  const div = document.createElement('div');
+  div.className = `iv-bubble ${speaker}`;
+  
+  let replayBtn = '';
+  if (speaker === 'interviewer') {
+    replayBtn = `
+      <button class="iv-replay-btn" onclick="interviewerSpeaks(this.parentElement.getAttribute('data-text'), this)" title="Replay audio">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>`;
+  }
+
+  div.innerHTML = `
+    <div class="iv-avatar">${avatarLetter}</div>
+    <div class="iv-msg-wrap" data-text="${escapeHtml(text).replace(/"/g, '&quot;')}">
+      <div class="iv-msg" style="padding-right: 40px;">${escapeHtml(text)}</div>
+      ${replayBtn}
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const container = document.getElementById('ivMessages');
+  const div = document.createElement('div');
+  div.className = 'iv-bubble interviewer';
+  div.id = 'ivTyping';
+  div.innerHTML = `<div class="iv-avatar">AI</div>
+    <div class="iv-typing"><span></span><span></span><span></span></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('ivTyping');
+  if (el) el.remove();
+}
+
+function setInputEnabled(enabled) {
+  document.getElementById('ivInput').disabled = !enabled;
+  document.getElementById('ivSendBtn').disabled = !enabled;
+  document.getElementById('ivMicBtn').disabled = !enabled;
+}
+
+function updatePhaseLabel() {
+  const labels = {
+    warmup: 'Warmup', interview: 'In progress',
+    closing: 'Wrapping up', questions_for_me: 'Your questions',
+    done: 'Complete',
+  };
+  const el = document.getElementById('ivPhaseLabel');
+  if (el) el.textContent = labels[currentPhase] || currentPhase;
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/\n/g, '<br>');
+}
+
+function showLoader(msg) {
+  document.getElementById('ivLoaderText').textContent = msg || 'Loading…';
+  document.getElementById('ivLoader').classList.remove('hidden');
+}
+
+function hideLoader() {
+  document.getElementById('ivLoader').classList.add('hidden');
+}
+
+// Expose endInterview globally
+window.endInterview = endInterview;
+window.sendMessage = sendMessage;
+window.toggleMic = toggleMic;
+window.resetSilenceTimer = resetSilenceTimer;
+
 })();
 </script>
+
 {% endblock %}

@@ -25,7 +25,10 @@
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export JSON (Premium)</a>
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export TXT (Premium)</a>
                 {% endif %}
-                <a href="/interview" class="btn-primary">Mock Interview</a>
+                <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;">
+                    <button type="submit" class="btn-primary">✨ Fix My Resume</button>
+                </form>
+                <a href="/interview/new" class="btn-primary">Mock Interview</a>
             </div>
         </header>
 
@@ -46,6 +49,7 @@
             <button class="rd-tab-btn" data-target="tab-deepdive">Deep Dive</button>
             <button class="rd-tab-btn" data-target="tab-nextsteps">Next Steps</button>
             <button class="rd-tab-btn" data-target="tab-history">History</button>
+            <button class="rd-tab-btn" data-target="tab-multirole">Compare Roles</button>
         </nav>
 
         <div id="tab-overview" class="rd-tab-content rd-active-section">
@@ -72,6 +76,12 @@
                 </article>
             </section>
 
+            <section class="rd-panel" style="margin-top:24px;">
+                <h2>Interview Progress Trend</h2>
+                <div style="height:280px; width:100%; position:relative; margin-top: 16px;">
+                    <canvas id="interviewProgressChart"></canvas>
+                </div>
+            </section>
             {% if report.critical_changes_required %}
             <section class="rd-panel" style="border: 2px solid #fee2e2; background: #fef2f2; margin-top:24px;">
                 <h2 style="color: #991b1b; display: flex; align-items: center; gap: 8px;">
@@ -107,13 +117,41 @@
                 </section>
 
                 <section class="rd-panel">
-                    <h2>Role benchmark</h2>
-                    <p><strong>Cohort:</strong> {{ report.benchmarking.cohort or "N/A" }}</p>
-                    <p><strong>Percentile:</strong> {{ report.benchmarking.percentile or 0 }}th</p>
-                    <p class="rd-muted">{{ report.benchmarking.summary or "" }}</p>
-                    <div class="rd-meter"><div style="width: {{ report.benchmarking.percentile or 0 }}%;"></div></div>
+                    <h2>Role Requirements</h2>
+                    <p class="rd-muted" style="margin-top:-4px; margin-bottom:8px; font-size:0.85rem;">Calibrated for: <strong>{{ report.company_tier or "General" }}</strong></p>
+                    {% if report.benchmarking.matched_requirements is not none %}
+                    <p style="font-size: 1.1rem; font-weight: 600;">{{ report.benchmarking.matched_requirements or 0 }} of {{ report.benchmarking.total_requirements or 10 }} matched</p>
+                    {% elif report.benchmarking.percentile is not none %}
+                    <p style="font-size: 1.1rem; font-weight: 600;">Percentile: {{ report.benchmarking.percentile or 0 }}th</p>
+                    {% endif %}
+                    <p class="rd-muted" style="margin-top: 4px;">{{ report.benchmarking.summary or "" }}</p>
+                    
+                    {% if report.benchmarking.missing_critical %}
+                    <p class="rd-subtitle" style="margin-top:12px; margin-bottom:6px; color: #b91c1c;">Missing Critical Gaps</p>
+                    <ul style="padding-left: 18px; color: #b91c1c;">
+                        {% for item in report.benchmarking.missing_critical %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
                 </section>
             </div>
+            <section class="rd-panel" style="margin-top: 24px;">
+                <h2>Portfolio and proof links</h2>
+                {% if report.link_validation %}
+                <div class="rd-link-grid">
+                    {% for item in report.link_validation %}
+                    <article class="rd-link">
+                        <p class="rd-link-url">{{ item.url or "N/A" }}</p>
+                        <p class="rd-link-status">{{ item.status or "unknown" }}</p>
+                        <p class="rd-muted">{{ item.note or "" }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="rd-empty">No links found in resume.</p>
+                {% endif %}
+            </section>
         </div>
 
         <div id="tab-deepdive" class="rd-tab-content">
@@ -211,18 +249,16 @@
                 {% endif %}
             </section>
 
+            {% if report.region_advice %}
             <section class="rd-panel">
                 <h2>Region advice</h2>
-                {% if report.region_advice %}
                 <ul>
                     {% for item in report.region_advice %}
                     <li>{{ item }}</li>
                     {% endfor %}
                 </ul>
-                {% else %}
-                <p class="rd-empty">No region-specific guidance available.</p>
-                {% endif %}
             </section>
+            {% endif %}
         </div>
         </div>
 
@@ -287,20 +323,88 @@
                 </div>
             </section>
             {% endif %}
+
+        </div>
+
+        <!-- Added by Multi-Role Comparison -->
+        <div id="tab-multirole" class="rd-tab-content">
+            <section class="rd-panel" style="margin-bottom: 24px;">
+                <h2>Test Fit for Another Role</h2>
+                <p class="rd-subtitle">Compare your current resume against different Job Descriptions (Max 5 items).</p>
+
+                {% if report.multi_fit_error %}
+                <div style="background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                    ⚠️ {{ report.multi_fit_error }}
+                </div>
+                {% endif %}
+
+                <form action="/resume/{{ report.id or 0 }}/test_fit" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Target Role *</label>
+                            <input type="text" name="target_role" placeholder="e.g. Solution Architect" required style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Company Tier</label>
+                            <select name="company_tier" style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                <option value="General">General</option>
+                                <option value="FAANG">FAANG / Big Tech</option>
+                                <option value="Startup">Growth Startups</option>
+                                <option value="Enterprise">Traditional Enterprise</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Job Description (Optional)</label>
+                        <textarea name="jd_text" rows="4" placeholder="Paste the job description to address keyword gaps..." style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-family: sans-serif;"></textarea>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-primary">Check Fit</button>
+                    </div>
+                </form>
+            </section>
+
             <section class="rd-panel">
-                <h2>Portfolio and proof links</h2>
-                {% if report.link_validation %}
-                <div class="rd-link-grid">
-                    {% for item in report.link_validation %}
-                    <article class="rd-link">
-                        <p class="rd-link-url">{{ item.url or "N/A" }}</p>
-                        <p class="rd-link-status">{{ item.status or "unknown" }}</p>
-                        <p class="rd-muted">{{ item.note or "" }}</p>
-                    </article>
-                    {% endfor %}
+                <h2>Alternative Role Comparisons</h2>
+                {% if report.alternative_fits %}
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
+                                <th style="padding: 12px 8px;">Role</th>
+                                <th style="padding: 12px 8px;">Tier</th>
+                                <th style="padding: 12px 8px;">Score</th>
+                                <th style="padding: 12px 8px;">Match</th>
+                                <th style="padding: 12px 8px;">Verdict</th>
+                                <th style="padding: 12px 8px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e2e8f0; background: #fafbfe;">
+                                <td style="padding: 12px 8px; font-weight: 600;">{{ analysis_inputs.target_role or "Original" }} (Current)</td>
+                                <td style="padding: 12px 8px;">{{ report.company_tier or "General" }}</td>
+                                <td style="padding: 12px 8px;">{{ report.scores.Overall or "0" }}/10</td>
+                                <td style="padding: 12px 8px;">{{ report.job_match_percent or "0" }}%</td>
+                                <td style="padding: 12px 8px; color: #64748b; font-size: 0.85rem;">Current primary review.</td>
+                                <td style="padding: 12px 8px;">-</td>
+                            </tr>
+                            {% for f in report.alternative_fits %}
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 12px 8px; font-weight: 600;">{{ f.role }}</td>
+                                <td style="padding: 12px 8px;">{{ f.tier }}</td>
+                                <td style="padding: 12px 8px;">{{ f.score or 0 }}/10</td>
+                                <td style="padding: 12px 8px;">{{ f.match or 0 }}%</td>
+                                <td style="padding: 12px 8px; font-size: 0.85rem;">{{ f.summary or "N/A" }}</td>
+                                <td style="padding: 12px 8px;">
+                                    <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" style="color: #ef4444; font-size: 0.8rem; text-decoration: none; font-weight:600;">✕ Remove</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% else %}
-                <p class="rd-empty">No links found in resume.</p>
+                <p style="text-align: center; color: #64748b; padding: 40px 20px;">No alternative roles tested yet. Use the form above to add your first comparison targets.</p>
                 {% endif %}
             </section>
         </div>
@@ -324,6 +428,38 @@
                 document.getElementById(targetId).classList.add("rd-active-section");
             });
         });
+
+        fetch("/api/interview-progress").then(r => r.json()).then(data => {
+            if (!data || data.length === 0) {
+                var c = document.getElementById('interviewProgressChart');
+                if(c) c.parentElement.innerHTML = "<p style='color:#64748b; margin-top:20px;'>Complete your first Mock Interview to see progress scoring trends here.</p>";
+                return;
+            }
+            const ctx = document.getElementById('interviewProgressChart');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Overall Score (out of 10)',
+                        data: data.map(d => d.score),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 10 }
+                    }
+                }
+            });
+        }).catch(e => console.error(e));
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

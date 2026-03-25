@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from core import *
 
@@ -202,6 +202,12 @@ def compare_resumes(request: Request, current_id: int = None, previous_id: int =
         warning = "Roles differ ({} vs {}). Evaluation weights might not be comparable.".format(
             current_report.get("target_role") or "Generic", previous_report.get("target_role") or "Generic"
         )
+    
+    tier_a = current_report.get("company_tier", "General") or "General"
+    tier_b = previous_report.get("company_tier", "General") or "General"
+    if tier_a != tier_b:
+        tier_warning = "Company Tiers differ ({} vs {}). Evaluation weights are calibrated to different bars.".format(tier_a, tier_b)
+        warning = (warning + " " + tier_warning) if warning else tier_warning
 
     return templates.TemplateResponse(
         "resume_compare.html",
@@ -221,10 +227,43 @@ def compare_resumes(request: Request, current_id: int = None, previous_id: int =
 
 # UPLOAD ROUTE
 @router.get("/interview", response_class=HTMLResponse)
-def interview(request: Request):
+def interview(request: Request, db_conn = Depends(db.get_conn)):
     log_event("page_view", "interview_page", metadata={"path": "/interview"})
-    return templates.TemplateResponse("interview.html", interview_context_payload(request))
+    payload = interview_context_payload(request)
+    session_id_val = request.session.get("interview_id")
+    if session_id_val:
+        import json
+        cur = db_conn.cursor()
+        db.execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE session_id=?", (session_id_val,))
+        row = cur.fetchone()
+        if row:
+            try:
+                payload["qa_history"] = json.loads(row[0])
+            except Exception:
+                payload["qa_history"] = []
+    return templates.TemplateResponse("interview.html", payload)
 
+
+@router.get("/api/interview-progress", response_class=JSONResponse)
+def api_interview_progress(request: Request, db_conn = Depends(db.get_conn)):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return JSONResponse([])
+    cur = db_conn.cursor()
+    db.execute(cur, "SELECT overall_score, created_at FROM interview_sessions WHERE user_email=? AND overall_score > 0 ORDER BY created_at ASC LIMIT 20", (user_email,))
+    rows = cur.fetchall()
+    
+    import time
+    history = []
+    for row in rows:
+        ts = row[1]
+        if ts > 9999999999:
+            ts = ts / 1000.0
+        history.append({
+            "score": row[0],
+            "date": time.strftime('%b %d', time.localtime(ts))
+        })
+    return JSONResponse(history)
 
 @router.get("/coding", response_class=HTMLResponse)
 def coding_page(request: Request, problem: str = "", language: str = "", job_id: str = ""):
