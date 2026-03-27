@@ -52,7 +52,23 @@
       <div class="adm-kv-row"><span>Mentor quality</span><strong>{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong></div>
       <div class="adm-kv-row"><span>Reschedule rate</span><strong>{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong></div>
     </section>
+
+    <section class="adm-panel">
+      <h2>Recent Users</h2>
+      <div class="adm-mini-table">
+        <div class="adm-mini-head"><span>Name</span><span>Email</span><span>Joined</span><span></span></div>
+        {% for u in recent_users %}
+        <div class="adm-mini-row">
+          <span>{{ u[0] or "-" }}</span>
+          <span>{{ u[1] or "-" }}</span>
+          <span>{{ u[2] or "-" }}</span>
+          <span></span>
+        </div>
+        {% else %}
+        <p class="cp-muted" style="padding:12px 0;font-size:0.82rem;">No users found yet.</p>
+        {% endfor %}
+      </div>
+    </section>
   </div>
 </section>
 {% endblock %}
-

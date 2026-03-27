@@ -1,10 +1,13 @@
 import csv
 import io
 import json
-import db_backend as db
+from db import backend as db
 import time
 from datetime import datetime
 from typing import Any, Dict, List
+from fastapi import Request
+from db.booking import get_bookings
+from features.coding.platform import get_submission_stats_extended, get_custom_problems, coverage_report, parse_test_lines
 
 DB_PATH = "bookings.db"
 
@@ -489,3 +492,68 @@ def get_setting(key: str, default: str = "") -> str:
     if not rows:
         return default
     return str(rows[0][0] or default)
+
+
+def admin_context_payload(request: Request):
+    data = get_bookings()
+    payload = dashboard_payload(data)
+    coding_stats = get_submission_stats_extended(limit=100)
+    custom_problems = get_custom_problems()
+    for p in custom_problems:
+        p["coverage"] = coverage_report(p)
+    return {
+        "request": request,
+        "data": data,
+        "admin": payload,
+        "coding_stats": coding_stats,
+        "custom_problems": custom_problems,
+    }
+
+def _parse_problem_admin_payload(
+    title: str,
+    difficulty: str,
+    tags: str,
+    description: str,
+    constraints: str,
+    examples: str,
+    sample_tests: str,
+    hidden_tests: str,
+    starter_py: str,
+    starter_js: str,
+    starter_java: str,
+    starter_cpp: str,
+):
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+    constraint_list = [c.strip() for c in constraints.splitlines() if c.strip()]
+
+    example_list = []
+    for line in (examples or "").splitlines():
+        raw = line.strip()
+        if not raw or "|||" not in raw:
+            continue
+        inp, out = raw.split("|||", 1)
+        example_list.append({"input": inp.strip().replace("\\n", "\n"), "output": out.strip().replace("\\n", "\n")})
+
+    parsed_sample_tests = parse_test_lines(sample_tests)
+    parsed_hidden_tests = parse_test_lines(hidden_tests)
+
+    defaults = {
+        "starter_py": "def solve(input_data: str) -> str:\n    # Write your solution here\n    return \"\"\n",
+        "starter_js": "function solve(inputData) {\n  // Write your solution here\n  return \"\";\n}\n",
+        "starter_java": "import java.util.*;\n\npublic class Solution {\n  public static String solve(String inputData) {\n    // Write your solution here\n    return \"\";\n  }\n}\n",
+        "starter_cpp": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring solve(const string& inputData) {\n    // Write your solution here\n    return \"\";\n}\n",
+    }
+    return {
+        "title": title,
+        "difficulty": difficulty,
+        "description": description,
+        "tags": tag_list,
+        "constraints": constraint_list,
+        "examples": example_list,
+        "sample_tests": parsed_sample_tests,
+        "hidden_tests": parsed_hidden_tests,
+        "starter_py": starter_py.strip() or defaults["starter_py"],
+        "starter_js": starter_js.strip() or defaults["starter_js"],
+        "starter_java": starter_java.strip() or defaults["starter_java"],
+        "starter_cpp": starter_cpp.strip() or defaults["starter_cpp"],
+    }

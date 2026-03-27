@@ -1,4 +1,6 @@
 import json
+from typing import Any, Dict, List, Tuple
+import uuid
 import os
 import shutil
 import subprocess
@@ -9,8 +11,22 @@ import csv
 import io
 import hashlib
 import re
-from typing import Any, Dict, List, Tuple
-import db_backend as db
+from db import backend as db
+from fastapi import Request
+from features.shared.config import CODING_MAX_CODE_CHARS, CODING_MAX_CUSTOM_INPUT_CHARS, CODING_ASYNC_JUDGE, DEFAULT_PROBLEMS
+from features.shared import _timed_mode_state, _readiness_from_summary, _daily_goal_from_attempts
+from db import current_user_plan
+
+def _timed_session_key(problem_id: str) -> str:
+    return f"timed_mode_{str(problem_id or '').strip()}"
+
+def _mark_timed_mode_submitted(request: Request, problem_id: str, job_id: str) -> None:
+    key = _timed_session_key(problem_id)
+    state = request.session.get(key)
+    if state:
+        state["submitted"] = True
+        state["job_id"] = str(job_id)
+        request.session[key] = state
 
 DB_PATH = "bookings.db"
 _SUBMISSION_TS_COL_CACHE: str = ""
@@ -27,386 +43,38 @@ GENERIC_STARTERS = {
     "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring solve(const string& inputData) {\n    // Parse inputData and return output string\n    return \"\";\n}\n",
 }
 
+def get_problem(problem_id: str) -> Dict[str, Any]:
+    for p in DEFAULT_PROBLEMS:
+        if str(p["id"]) == str(problem_id).strip():
+            return p
+    return DEFAULT_PROBLEMS[0]
 
-DEFAULT_PROBLEMS: List[Dict[str, Any]] = [
-    {
-        "id": "fizzbuzz",
-        "title": "FizzBuzz Stream",
-        "difficulty": "Easy",
-        "acceptance_rate": 87.1,
-        "tags": ["Math", "Simulation"],
-        "constraints": ["1 <= n <= 10^5"],
-        "examples": [
-            {"input": "5", "output": "1\\n2\\nFizz\\n4\\nBuzz"},
-            {"input": "3", "output": "1\\n2\\nFizz"},
-        ],
-        "description": (
-            "Given an integer n in input, print numbers 1..n. "
-            "For multiples of 3 print Fizz, for 5 print Buzz, for both print FizzBuzz. "
-            "Return lines joined by newline."
-        ),
-        "starter_codes": {
-            "python": "def solve(input_data: str) -> str:\n    n = int(input_data.strip())\n    # Write your solution here\n    return \"\"\n",
-            "javascript": "function solve(inputData) {\n  const n = parseInt(inputData.trim(), 10);\n  // Write your solution here\n  return \"\";\n}\n",
-            "java": "import java.util.*;\n\npublic class Solution {\n  public static String solve(String inputData) {\n    int n = Integer.parseInt(inputData.trim());\n    // Write your solution here\n    return \"\";\n  }\n}\n",
-            "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring solve(const string& inputData) {\n    // Write your solution here\n    return \"\";\n}\n",
-        },
-        "sample_tests": [
-            {"input": "5", "expected": "1\n2\nFizz\n4\nBuzz"},
-            {"input": "3", "expected": "1\n2\nFizz"},
-        ],
-        "hidden_tests": [
-            {"input": "15", "expected": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz"},
-        ],
-    },
-    {
-        "id": "two-sum-indices",
-        "title": "Two Sum Indices",
-        "difficulty": "Easy",
-        "acceptance_rate": 74.6,
-        "tags": ["Array", "Hash Map"],
-        "constraints": [
-            "2 <= n <= 10^5",
-            "-10^9 <= nums[i] <= 10^9",
-            "Exactly one valid answer",
-        ],
-        "examples": [
-            {"input": "2 7 11 15\\n9", "output": "0 1"},
-            {"input": "3 2 4\\n6", "output": "1 2"},
-        ],
-        "description": (
-            "Input format: first line has integers array space-separated, second line has target. "
-            "Return index pair i,j (0-based) as 'i j' where nums[i] + nums[j] = target."
-        ),
-        "starter_codes": {
-            "python": "def solve(input_data: str) -> str:\n    lines = [x.strip() for x in input_data.strip().splitlines() if x.strip()]\n    nums = list(map(int, lines[0].split()))\n    target = int(lines[1])\n    # Write your solution here\n    return \"\"\n",
-            "javascript": "function solve(inputData) {\n  const lines = inputData.trim().split(/\\n+/).map(s => s.trim()).filter(Boolean);\n  const nums = lines[0].split(/\\s+/).map(Number);\n  const target = Number(lines[1]);\n  // Write your solution here\n  return \"\";\n}\n",
-            "java": "import java.util.*;\n\npublic class Solution {\n  public static String solve(String inputData) {\n    String[] lines = inputData.trim().split(\"\\\\n+\");\n    String[] parts = lines[0].trim().split(\"\\\\s+\");\n    int[] nums = new int[parts.length];\n    for (int i = 0; i < parts.length; i++) nums[i] = Integer.parseInt(parts[i]);\n    int target = Integer.parseInt(lines[1].trim());\n    // Write your solution here\n    return \"\";\n  }\n}\n",
-            "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring solve(const string& inputData) {\n    // Write your solution here\n    return \"\";\n}\n",
-        },
-        "sample_tests": [
-            {"input": "2 7 11 15\n9", "expected": "0 1"},
-            {"input": "3 2 4\n6", "expected": "1 2"},
-        ],
-        "hidden_tests": [
-            {"input": "3 3\n6", "expected": "0 1"},
-        ],
-    },
-    {
-        "id": "valid-parentheses",
-        "title": "Valid Parentheses",
-        "difficulty": "Medium",
-        "acceptance_rate": 62.4,
-        "tags": ["Stack", "String"],
-        "constraints": ["1 <= len(s) <= 10^5", "s contains only ()[]{}"],
-        "examples": [
-            {"input": "()[]{}", "output": "true"},
-            {"input": "(]", "output": "false"},
-        ],
-        "description": "Input is a single string of brackets. Return 'true' if valid and balanced, else 'false'.",
-        "starter_codes": {
-            "python": "def solve(input_data: str) -> str:\n    s = input_data.strip()\n    # Write your solution here\n    return \"\"\n",
-            "javascript": "function solve(inputData) {\n  const s = inputData.trim();\n  // Write your solution here\n  return \"\";\n}\n",
-            "java": "import java.util.*;\n\npublic class Solution {\n  public static String solve(String inputData) {\n    String s = inputData.trim();\n    // Write your solution here\n    return \"\";\n  }\n}\n",
-            "cpp": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring solve(const string& inputData) {\n    string s = inputData;\n    // Write your solution here\n    return \"\";\n}\n",
-        },
-        "sample_tests": [
-            {"input": "()[]{}", "expected": "true"},
-            {"input": "(]", "expected": "false"},
-        ],
-        "hidden_tests": [
-            {"input": "([{}])", "expected": "true"},
-            {"input": "(((", "expected": "false"},
-        ],
-    },
-    {
-        "id": "reverse-string",
-        "title": "Reverse String",
-        "difficulty": "Easy",
-        "acceptance_rate": 89.4,
-        "tags": ["String", "Two Pointers"],
-        "constraints": ["1 <= len(s) <= 10^5"],
-        "examples": [{"input": "career", "output": "reerac"}],
-        "description": "Input is one line string s. Return s reversed.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "hello", "expected": "olleh"}],
-        "hidden_tests": [{"input": "abcd", "expected": "dcba"}],
-    },
-    {
-        "id": "palindrome-check",
-        "title": "Palindrome Check",
-        "difficulty": "Easy",
-        "acceptance_rate": 84.2,
-        "tags": ["String"],
-        "constraints": ["1 <= len(s) <= 10^5"],
-        "examples": [{"input": "madam", "output": "true"}],
-        "description": "Input is one string s. Return true if palindrome else false.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "level", "expected": "true"}],
-        "hidden_tests": [{"input": "hello", "expected": "false"}],
-    },
-    {
-        "id": "max-of-three",
-        "title": "Maximum of Three Numbers",
-        "difficulty": "Easy",
-        "acceptance_rate": 92.1,
-        "tags": ["Math"],
-        "constraints": ["-10^9 <= a,b,c <= 10^9"],
-        "examples": [{"input": "2 9 5", "output": "9"}],
-        "description": "Input has three integers a b c. Return the maximum value.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "2 9 5", "expected": "9"}],
-        "hidden_tests": [{"input": "-1 -4 -3", "expected": "-1"}],
-    },
-    {
-        "id": "sum-array",
-        "title": "Sum of Array",
-        "difficulty": "Easy",
-        "acceptance_rate": 90.7,
-        "tags": ["Array"],
-        "constraints": ["1 <= n <= 10^5"],
-        "examples": [{"input": "1 2 3 4", "output": "10"}],
-        "description": "Input is space-separated integers. Return total sum.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "1 2 3 4", "expected": "10"}],
-        "hidden_tests": [{"input": "5 5 5", "expected": "15"}],
-    },
-    {
-        "id": "count-vowels",
-        "title": "Count Vowels",
-        "difficulty": "Easy",
-        "acceptance_rate": 83.5,
-        "tags": ["String"],
-        "constraints": ["1 <= len(s) <= 10^5"],
-        "examples": [{"input": "education", "output": "5"}],
-        "description": "Input is one line string. Return number of vowels (a,e,i,o,u).",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "hello", "expected": "2"}],
-        "hidden_tests": [{"input": "rhythm", "expected": "0"}],
-    },
-    {
-        "id": "factorial-number",
-        "title": "Factorial Number",
-        "difficulty": "Easy",
-        "acceptance_rate": 79.8,
-        "tags": ["Math", "Recursion"],
-        "constraints": ["0 <= n <= 12"],
-        "examples": [{"input": "5", "output": "120"}],
-        "description": "Input integer n. Return n! as integer string.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "5", "expected": "120"}],
-        "hidden_tests": [{"input": "0", "expected": "1"}],
-    },
-    {
-        "id": "fibonacci-nth",
-        "title": "Nth Fibonacci",
-        "difficulty": "Easy",
-        "acceptance_rate": 74.9,
-        "tags": ["DP", "Math"],
-        "constraints": ["0 <= n <= 40"],
-        "examples": [{"input": "7", "output": "13"}],
-        "description": "Input n. Return nth Fibonacci with F(0)=0, F(1)=1.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "7", "expected": "13"}],
-        "hidden_tests": [{"input": "10", "expected": "55"}],
-    },
-    {
-        "id": "binary-search-index",
-        "title": "Binary Search Index",
-        "difficulty": "Easy",
-        "acceptance_rate": 71.5,
-        "tags": ["Binary Search", "Array"],
-        "constraints": ["Sorted array"],
-        "examples": [{"input": "1 3 5 7 9\n7", "output": "3"}],
-        "description": "Line1 sorted nums, line2 target. Return index or -1.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "1 3 5 7 9\n7", "expected": "3"}],
-        "hidden_tests": [{"input": "1 2 4 8\n3", "expected": "-1"}],
-    },
-    {
-        "id": "merge-two-sorted",
-        "title": "Merge Two Sorted Arrays",
-        "difficulty": "Medium",
-        "acceptance_rate": 68.8,
-        "tags": ["Array", "Two Pointers"],
-        "constraints": ["Input has two lines of sorted integers"],
-        "examples": [{"input": "1 3 5\n2 4 6", "output": "1 2 3 4 5 6"}],
-        "description": "Merge two sorted arrays and return sorted merged list space-separated.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "1 3 5\n2 4 6", "expected": "1 2 3 4 5 6"}],
-        "hidden_tests": [{"input": "1 2 2\n2 2 3", "expected": "1 2 2 2 2 3"}],
-    },
-    {
-        "id": "move-zeroes",
-        "title": "Move Zeroes",
-        "difficulty": "Easy",
-        "acceptance_rate": 72.9,
-        "tags": ["Array", "Two Pointers"],
-        "constraints": ["1 <= n <= 10^5"],
-        "examples": [{"input": "0 1 0 3 12", "output": "1 3 12 0 0"}],
-        "description": "Move all zeroes to end preserving non-zero order.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "0 1 0 3 12", "expected": "1 3 12 0 0"}],
-        "hidden_tests": [{"input": "0 0 1", "expected": "1 0 0"}],
-    },
-    {
-        "id": "anagram-check",
-        "title": "Valid Anagram",
-        "difficulty": "Easy",
-        "acceptance_rate": 80.2,
-        "tags": ["Hash Map", "String"],
-        "constraints": ["lowercase english letters"],
-        "examples": [{"input": "anagram\nnagaram", "output": "true"}],
-        "description": "Two lines s and t. Return true if anagrams else false.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "anagram\nnagaram", "expected": "true"}],
-        "hidden_tests": [{"input": "rat\ncar", "expected": "false"}],
-    },
-    {
-        "id": "first-unique-char",
-        "title": "First Unique Character",
-        "difficulty": "Easy",
-        "acceptance_rate": 66.1,
-        "tags": ["Hash Map", "String"],
-        "constraints": ["1 <= len(s) <= 10^5"],
-        "examples": [{"input": "leetcode", "output": "0"}],
-        "description": "Return index of first non-repeating char, else -1.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "leetcode", "expected": "0"}],
-        "hidden_tests": [{"input": "aabb", "expected": "-1"}],
-    },
-    {
-        "id": "longest-common-prefix",
-        "title": "Longest Common Prefix",
-        "difficulty": "Easy",
-        "acceptance_rate": 64.9,
-        "tags": ["String"],
-        "constraints": ["Input: words space-separated in one line"],
-        "examples": [{"input": "flower flow flight", "output": "fl"}],
-        "description": "Return longest common prefix among given words.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "flower flow flight", "expected": "fl"}],
-        "hidden_tests": [{"input": "dog racecar car", "expected": ""}],
-    },
-    {
-        "id": "product-except-self",
-        "title": "Product of Array Except Self",
-        "difficulty": "Medium",
-        "acceptance_rate": 58.7,
-        "tags": ["Array", "Prefix"],
-        "constraints": ["No division"],
-        "examples": [{"input": "1 2 3 4", "output": "24 12 8 6"}],
-        "description": "Return array where each index has product of all other elements.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "1 2 3 4", "expected": "24 12 8 6"}],
-        "hidden_tests": [{"input": "-1 1 0 -3 3", "expected": "0 0 9 0 0"}],
-    },
-    {
-        "id": "majority-element",
-        "title": "Majority Element",
-        "difficulty": "Easy",
-        "acceptance_rate": 77.6,
-        "tags": ["Array", "Voting"],
-        "constraints": ["Majority always exists"],
-        "examples": [{"input": "3 2 3", "output": "3"}],
-        "description": "Return element appearing more than n/2 times.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "3 2 3", "expected": "3"}],
-        "hidden_tests": [{"input": "2 2 1 1 1 2 2", "expected": "2"}],
-    },
-    {
-        "id": "max-subarray-sum",
-        "title": "Maximum Subarray Sum",
-        "difficulty": "Medium",
-        "acceptance_rate": 61.8,
-        "tags": ["Array", "DP"],
-        "constraints": ["1 <= n <= 10^5"],
-        "examples": [{"input": "-2 1 -3 4 -1 2 1 -5 4", "output": "6"}],
-        "description": "Return maximum sum of contiguous subarray.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "-2 1 -3 4 -1 2 1 -5 4", "expected": "6"}],
-        "hidden_tests": [{"input": "1", "expected": "1"}],
-    },
-    {
-        "id": "climbing-stairs",
-        "title": "Climbing Stairs",
-        "difficulty": "Easy",
-        "acceptance_rate": 73.1,
-        "tags": ["DP"],
-        "constraints": ["1 <= n <= 45"],
-        "examples": [{"input": "3", "output": "3"}],
-        "description": "You can climb 1 or 2 steps. Return number of ways to reach n.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "3", "expected": "3"}],
-        "hidden_tests": [{"input": "5", "expected": "8"}],
-    },
-    {
-        "id": "coin-change-min",
-        "title": "Coin Change Minimum Coins",
-        "difficulty": "Medium",
-        "acceptance_rate": 52.4,
-        "tags": ["DP"],
-        "constraints": ["Line1 coins, line2 amount"],
-        "examples": [{"input": "1 2 5\n11", "output": "3"}],
-        "description": "Return fewest number of coins needed to make amount, else -1.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "1 2 5\n11", "expected": "3"}],
-        "hidden_tests": [{"input": "2\n3", "expected": "-1"}],
-    },
-    {
-        "id": "longest-substring-no-repeat",
-        "title": "Longest Substring Without Repeating",
-        "difficulty": "Medium",
-        "acceptance_rate": 49.6,
-        "tags": ["Sliding Window", "String"],
-        "constraints": ["0 <= len(s) <= 10^5"],
-        "examples": [{"input": "abcabcbb", "output": "3"}],
-        "description": "Return length of longest substring without repeated characters.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "abcabcbb", "expected": "3"}],
-        "hidden_tests": [{"input": "bbbbb", "expected": "1"}],
-    },
-    {
-        "id": "group-anagrams",
-        "title": "Group Anagrams",
-        "difficulty": "Medium",
-        "acceptance_rate": 57.2,
-        "tags": ["Hash Map", "String"],
-        "constraints": ["Input words space-separated; output groups separated by |"],
-        "examples": [{"input": "eat tea tan ate nat bat", "output": "ate eat tea|nat tan|bat"}],
-        "description": "Group anagrams. Output each group sorted, groups sorted by first word, joined by '|'.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "eat tea tan ate nat bat", "expected": "ate eat tea|nat tan|bat"}],
-        "hidden_tests": [{"input": "ab ba abc", "expected": "ab ba|abc"}],
-    },
-    {
-        "id": "kth-largest-element",
-        "title": "Kth Largest Element",
-        "difficulty": "Medium",
-        "acceptance_rate": 63.7,
-        "tags": ["Heap", "Array"],
-        "constraints": ["Line1 nums, line2 k"],
-        "examples": [{"input": "3 2 1 5 6 4\n2", "output": "5"}],
-        "description": "Return kth largest element in array.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "3 2 1 5 6 4\n2", "expected": "5"}],
-        "hidden_tests": [{"input": "3 2 3 1 2 4 5 5 6\n4", "expected": "4"}],
-    },
-    {
-        "id": "lru-cache-ops",
-        "title": "LRU Cache Operations",
-        "difficulty": "Hard",
-        "acceptance_rate": 41.3,
-        "tags": ["Design", "Hash Map"],
-        "constraints": ["Input format simplified for operations"],
-        "examples": [{"input": "2\nput 1 1\nput 2 2\nget 1\nput 3 3\nget 2", "output": "1 -1"}],
-        "description": "Line1 capacity. Next lines ops: put k v / get k. Return get outputs space-separated.",
-        "starter_codes": dict(GENERIC_STARTERS),
-        "sample_tests": [{"input": "2\nput 1 1\nput 2 2\nget 1\nput 3 3\nget 2", "expected": "1 -1"}],
-        "hidden_tests": [{"input": "1\nput 1 1\nput 2 2\nget 1\nget 2", "expected": "-1 2"}],
-    },
-]
+def get_all_problems() -> List[Dict[str, Any]]:
+    return DEFAULT_PROBLEMS
 
+def get_company_problems(company_name: str) -> List[Dict[str, Any]]:
+    from features.shared.config import DEFAULT_PROBLEMS
+    ids = COMPANY_SETS.get(company_name, [])
+    return [p for p in DEFAULT_PROBLEMS if p["id"] in ids]
+
+def coding_context_payload(request: Request, problem_id: str, **kwargs) -> Dict[str, Any]:
+    selected = get_problem(problem_id)
+    lang = request.session.get(f"lang_{problem_id}") or "python"
+    code = request.session.get(f"code_{problem_id}_{lang}") or starter_for_language(selected, lang)
+    custom_input = request.session.get(f"custom_input_{problem_id}") or ""
+    
+    context = {
+        "request": request,
+        "selected": selected,
+        "language": lang,
+        "current_code": code,
+        "last_custom_input": custom_input,
+        "problems": get_all_problems(),
+        "company_sets": company_sets(),
+        **_timed_mode_state(request, problem_id),
+        **kwargs
+    }
+    return context
 
 def _conn():
     return db.get_conn()
@@ -795,9 +463,76 @@ def update_custom_problem(
     changed = cur.rowcount > 0
     conn.commit()
     conn.close()
-    if changed:
-        save_problem_version(problem_id)
     return changed
+
+def _select_problem(problems, problem_id: str):
+    pid = str(problem_id or "").strip()
+    for p in problems:
+        if str((p or {}).get("id") or "") == pid:
+            return p
+    if problems:
+        return problems[0]
+    return dict(DEFAULT_PROBLEMS[0])
+
+def _recommended_from_problems(problems: list, selected_id: str, attempts: list) -> Dict[str, Any]:
+    solved = set(str(a.get("problem_id") or "") for a in attempts if str(a.get("mode") or "") == "submit" and str(a.get("status") or "") == "Accepted")
+    for p in problems:
+        pid = str((p or {}).get("id") or "")
+        if pid and pid != selected_id and pid not in solved: return p
+    for p in problems:
+        pid = str((p or {}).get("id") or "")
+        if pid and pid != selected_id: return p
+    return {}
+
+def _practice_queue_from_problems(problems: list, selected_id: str, attempts: list, limit: int = 5) -> list:
+    solved = set(str(a.get("problem_id") or "") for a in attempts if str(a.get("mode") or "") == "submit" and str(a.get("status") or "") == "Accepted")
+    queue = []
+    for p in problems:
+        pid = str((p or {}).get("id") or "")
+        if not pid or pid == selected_id: continue
+        queue.append({"id": pid, "title": str(p.get("title") or pid), "difficulty": str(p.get("difficulty") or "Easy"), "tags": list(p.get("tags") or []), "reason": "Not solved yet" if pid not in solved else "Revision suggested", "score": 2 if pid not in solved else 1})
+        if len(queue) >= max(1, int(limit)): break
+    return queue
+
+def _light_contest_snapshot(problems: list) -> Dict[str, Any]:
+    chosen = []
+    for d in ("Easy", "Medium", "Hard"):
+        for p in problems:
+            if str((p or {}).get("difficulty") or "") == d:
+                chosen.append(p); break
+    if not chosen: chosen = list(problems[:3])
+    return {
+        "contest": {"id": "local", "title": "Weekly Contest (Preview)", "problem_ids": [str(p.get("id") or "") for p in chosen], "problems": [{"id": str(p.get("id") or ""), "title": str(p.get("title") or ""), "difficulty": str(p.get("difficulty") or "Easy")} for p in chosen], "start_ts": 0, "end_ts": 0},
+        "leaderboard": [], "user_rank": 0, "user_percentile": 0.0
+    }
+
+def starter_for_language(problem: dict, language: str) -> str:
+    return problem.get("starter_codes", {}).get(language, GENERIC_STARTERS.get(language, ""))
+
+def coding_context_payload(request: Request, problem_id: str, **extra):
+    attempts = request.session.get("coding_attempts", [])
+    problems = get_all_problems()
+    selected = _select_problem(problems, problem_id)
+    email = (request.session.get("user_email") or "").strip().lower()
+    language = request.session.get(f"lang_{selected['id']}", "python")
+    problem_attempts = [a for a in attempts if a.get("problem_id") == selected["id"]][:12]
+    timed_state = _timed_mode_state(request, selected["id"])
+    
+    user_summary = get_user_submission_summary(email) if email else {"total": 0, "accepted": 0, "accept_rate": 0.0, "avg_runtime_ms": 0.0}
+    
+    payload = {
+        "request": request, "problems": problems, "problem": selected, "selected_problem_id": selected["id"],
+        "language": language, "languages": list(SUPPORTED_LANGUAGES),
+        "code": request.session.get(f"code_{selected['id']}_{language}", starter_for_language(selected, language)),
+        "result": None, "attempts": attempts[:20], "problem_attempts": problem_attempts,
+        "solved_count": len(set(a.get("problem_id") for a in attempts if a.get("mode") == "submit" and a.get("status") == "Accepted")),
+        "user_submission_summary": user_summary, "readiness": _readiness_from_summary(user_summary),
+        "daily_goal": _daily_goal_from_attempts(attempts), "contest_snapshot": _light_contest_snapshot(problems),
+        "timed_state": timed_state, "user_plan": current_user_plan(request),
+        "submit_idem_key": f"submit-{int(time.time()*1000)}-{uuid.uuid4().hex[:10]}"
+    }
+    payload.update(extra)
+    return payload
 
 
 def delete_custom_problem(problem_id: str) -> bool:

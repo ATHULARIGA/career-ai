@@ -10,7 +10,7 @@ app.include_router(pages.router)
 
 from fastapi import Request
 from fastapi.responses import HTMLResponse
-from core import templates, logger
+from core import templates, logger, APP_ENV
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -18,10 +18,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     import traceback
     traceback.print_exc()
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
+    message = str(exc) if APP_ENV != "production" else ""
     return templates.TemplateResponse(
         request=request,
         name="error.html",
-        context={"request": request, "request_id": req_id},
+        context={"request": request, "request_id": req_id, "message": message},
         status_code=500,
     )
-

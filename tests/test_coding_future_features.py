@@ -1,7 +1,7 @@
 from pathlib import Path
 
-import db_backend as db
-import coding_platform
+from db import backend as db
+from features.coding import platform as coding_platform
 
 
 def _set_temp_sqlite(tmp_path: Path) -> Path:

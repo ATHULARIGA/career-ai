@@ -6,7 +6,7 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import core
-import db_backend as db
+from db import backend as db
 from routers.pages import api_interview_progress
 
 class MockSessionRequest:

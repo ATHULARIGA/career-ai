@@ -1,8 +1,33 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from core import *
+from db import is_rate_limited, record_auth_failure, record_auth_success, get_admin_settings
+from features.shared.analytics import log_audit
 
 router = APIRouter()
+
+@router.get("/admin-login", response_class=HTMLResponse)
+def admin_login_page(request: Request):
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={"request": request},
+        )
+    except Exception as e:
+        logger.exception("admin_login_page_render_failed: %s", e)
+        return HTMLResponse(
+            content=(
+                "<h1>Admin Login</h1>"
+                "<p>Template render failed. You can still log in below.</p>"
+                "<form method='post' action='/admin-login'>"
+                "<input type='text' name='username' placeholder='Username' required/><br/><br/>"
+                "<input type='password' name='password' placeholder='Password' required/><br/><br/>"
+                "<button type='submit'>Login</button>"
+                "</form>"
+            ),
+            status_code=200,
+        )
 
 @router.post("/admin/coding-problem/add")
 def admin_add_coding_problem(

@@ -1,11 +1,6 @@
 import os
 import json
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY"),
-)
+from features.shared import call_ai_with_fallback
 
 def generate_mindmap(role):
 
@@ -87,29 +82,14 @@ def generate_mindmap(role):
     Do NOT include explanations, markdown, or additional text.
     """
 
-    response = client.chat.completions.create(
-        model="openai/gpt-4o-mini",
-        temperature=0,
-        messages=[{"role":"user","content":prompt}],
-        max_tokens=8000
-    )
-
-    raw = response.choices[0].message.content
-    cleaned = raw.replace("```json", "").replace("```", "").strip()
-    
-    # Simple cleanup for any potential text before/after JSON
-    if "{" in cleaned and "}" in cleaned:
-        cleaned = cleaned[cleaned.find("{"):cleaned.rfind("}")+1]
-
     try:
-        data = json.loads(cleaned)
+        parsed = call_ai_with_fallback("", prompt, max_tokens=8000)
         # Ensure it has a root 'name' and 'children'
-        if "name" not in data: data["name"] = role
-        if "children" not in data: data["children"] = []
-        return data
+        if "name" not in parsed: parsed["name"] = role
+        if "children" not in parsed: parsed["children"] = []
+        return parsed
     except Exception as e:
-        print(f"JSON Parse Error: {e}")
-        print(f"Cleaned Content: {cleaned}")
+        print(f"MINDMAP GEN ERROR: {e}")
         return {
             "name": role,
             "children": [

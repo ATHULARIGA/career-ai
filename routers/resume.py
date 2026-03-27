@@ -1,7 +1,33 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
-from core import *
-from scoring import clean_scraped_jd
+import time
+import logging
+import json
+from core import templates, MAX_UPLOAD_BYTES, logger, log_event, log_model_health
+from features.resume import (
+    score_resume, 
+    scrape_job_link, 
+    clean_scraped_jd, 
+    generate_cover_letter, 
+    generate_resume_rewrite, 
+    score_resume_lightweight,
+    resume_quota_state,
+    consume_resume_quota,
+    get_latest_resume_report_for_user,
+    get_resume_report_by_id_for_user
+)
+from db import (
+    get_user_memory,
+    save_user_memory,
+    get_recent_resume_runs_for_user,
+    save_resume_report_for_user,
+    update_resume_report_json,
+    is_rate_limited,
+    current_user_plan,
+    safe_user_progress_summary,
+    is_premium_user
+)
+from features.resume.parser import extract_text
 
 router = APIRouter()
 
@@ -16,24 +42,23 @@ async def upload(
     company_tier: str = Form("General"),
     file: UploadFile = File(...),
 ):
-    with open("/tmp/upload_debug.txt", "w") as f:
-        f.write(f"company_tier: {company_tier}\n")
     start = time.time()
-    quota = resume_quota_state(request)
-    if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
-        user_email = (request.session.get("user_email") or "").strip().lower()
-        return templates.TemplateResponse(
-            request=request,
-            name="upload.html",
-            context={
-                "request": request,
-                "user_plan": quota.get("plan", "free"),
-                "resume_quota": quota,
-                "quota_error": "Free plan daily limit reached. Upgrade to Premium for unlimited resume reviews.",
-                "memory": get_user_memory(user_email),
-            },
-        )
     try:
+        quota = resume_quota_state(request)
+        if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
+            user_email = (request.session.get("user_email") or "").strip().lower()
+            return templates.TemplateResponse(
+                request=request,
+                name="upload.html",
+                context={
+                    "request": request,
+                    "user_plan": quota.get("plan", "free"),
+                    "resume_quota": quota,
+                    "quota_error": "Free plan daily limit reached. Upgrade to Premium for unlimited resume reviews.",
+                    "memory": get_user_memory(user_email),
+                },
+            )
+
         filename = (file.filename or "").lower()
         if not filename.endswith(".pdf"):
             raise ValueError("Only PDF resumes are currently supported.")
@@ -127,8 +152,6 @@ async def upload(
                 version_history = get_recent_resume_runs_for_user(user_email, limit=10)
                 if version_history:
                     report["id"] = max(v["id"] for v in version_history)
-                    with open("/tmp/id_debug.txt", "w") as f:
-                        f.write(f"Assigned ID: {report['id']}\nVersion History: {[v['id'] for v in version_history]}\n")
             except Exception as persist_error:
                 logger.warning("resume_report_persist_failed user=%s err=%s", user_email, str(persist_error))
                 version_history.append(run_entry)
@@ -153,7 +176,23 @@ async def upload(
             fallback_used=False,
         )
 
+        return templates.TemplateResponse(request=request, name="dashboard.html", context={
+            "request": request,
+            "report": report,
+            "resume_versions": version_history,
+            "user_plan": current_user_plan(request),
+            "progress": safe_user_progress_summary(user_email),
+            "analysis_inputs": {
+                "target_role": target_role,
+                "seniority": seniority,
+                "region": region,
+                "has_job_description": bool((job_description or "").strip()),
+            },
+        })
+
     except Exception as e:
+        import urllib.parse
+        logger.exception("resume_review_upload_crash: %s", str(e))
         log_event("resume_review_failed", "resume_review", metadata={"error": str(e)})
         log_model_health(
             "resume_review",
@@ -163,23 +202,8 @@ async def upload(
             fallback_used=True,
             error_message=str(e),
         )
-        import urllib.parse
         error_msg = urllib.parse.quote(str(e))
         return RedirectResponse(f"/resume?error={error_msg}", status_code=303)
-
-    return templates.TemplateResponse(request=request, name="dashboard.html", context={
-        "request": request,
-        "report": report,
-        "resume_versions": version_history if 'version_history' in locals() else request.session.get("resume_versions", []),
-        "user_plan": current_user_plan(request),
-        "progress": safe_user_progress_summary((request.session.get("user_email") or "").strip().lower()),
-        "analysis_inputs": {
-            "target_role": target_role,
-            "seniority": seniority,
-            "region": region,
-            "has_job_description": bool(job_description.strip()),
-        },
-    })
 
 
 @router.get("/resume/export")
@@ -233,7 +257,7 @@ async def generate_cover_letter_endpoint(request: Request, report_id: int):
     resume_text = report.get("resume_text", "")
     jd_text = report.get("jd_text", "")
     
-    from scoring import generate_cover_letter
+    # Import moved to top-level from features.resume
     cover_letter = generate_cover_letter(resume_text, jd_text, report)
     
     report["cover_letter_text"] = cover_letter
@@ -283,7 +307,6 @@ async def fix_resume_endpoint(request: Request, report_id: int):
         update_resume_report_json(report_id, user_email, report)
         return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
         
-    from scoring import generate_resume_rewrite
     fixed_md = generate_resume_rewrite(resume_text, report)
     
     report["fixed_resume_md"] = fixed_md
@@ -327,7 +350,7 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
         report["resume_text"] = text
         report.pop("fixed_resume_error", None)
 
-        from scoring import generate_resume_rewrite
+        # Import moved to top-level from features.resume
         fixed_md = generate_resume_rewrite(text, report)
         report["fixed_resume_md"] = fixed_md
         update_resume_report_json(report_id, user_email, report)
@@ -346,6 +369,8 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
          return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
     fixed_md = report.get("fixed_resume_md", "")
+    if isinstance(fixed_md, str) and fixed_md.strip() in ("{}", "[]", "null", "None"):
+        fixed_md = ""
     error = report.get("fixed_resume_error", "")
     warning = ""
     if not fixed_md and not error:
@@ -425,7 +450,7 @@ async def test_fit_endpoint(
         update_resume_report_json(report_id, user_email, report)
         return RedirectResponse(f"/resume/{report_id}#tab-multirole", status_code=303)
 
-    from scoring import score_resume_lightweight
+    # Import moved to top-level from features.resume
     result = score_resume_lightweight(resume_text, jd_text, target_role, company_tier)
     
     fit_entry = {

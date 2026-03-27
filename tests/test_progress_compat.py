@@ -3,8 +3,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-import db_backend as db
-import coding_platform
+from db import backend as db
+from features.coding import platform as coding_platform
 import main
 
 

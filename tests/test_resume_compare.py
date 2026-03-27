@@ -3,7 +3,7 @@ import sqlite3
 import time
 import json
 from fastapi.testclient import TestClient
-import db_backend as db
+from db import backend as db
 
 def _setup_tables():
     from core import app, hash_password, init_resume_tables
