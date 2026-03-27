@@ -141,11 +141,16 @@ def interview_page(request: Request, db_conn = Depends(get_conn)):
     payload = interview_context_payload(request)
     session_id_val = request.session.get("interview_id")
     if session_id_val:
-        import json
-        cur = db_conn.cursor()
-        execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE session_id=?", (session_id_val,))
-        row = cur.fetchone()
-        if row: payload["qa_history"] = json.loads(row[0] or "[]")
+        try:
+            import json
+            cur = db_conn.cursor()
+            execute(cur, "SELECT qa_history_json FROM interview_sessions WHERE session_id=?", (session_id_val,))
+            row = cur.fetchone()
+            if row:
+                payload["qa_history"] = json.loads(row[0] or "[]")
+        except Exception as e:
+            logger.warning("interview_page_history_load_failed session_id=%s err=%s", session_id_val, str(e))
+            payload["qa_history"] = []
     return templates.TemplateResponse(request=request, name="interview.html", context=payload)
 
 @router.get("/api/interview-progress", response_class=JSONResponse)
@@ -426,8 +431,9 @@ def career_map_page(request: Request):
     log_event("page_view", "career_map_page", metadata={"path": "/career-map"})
     user_email = (request.session.get("user_email") or "").strip().lower()
     return templates.TemplateResponse(
-        "mindmap.html",
-        {
+        request=request,
+        name="mindmap.html",
+        context={
             "request": request,
             "user_plan": current_user_plan(request),
             "memory": get_user_memory(user_email),
