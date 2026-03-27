@@ -60,3 +60,6 @@ app.add_middleware(AuthGateMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=session_secret, https_only=(APP_ENV == "production"), same_site="lax")
 @app.get("/healthz")
 async def healthz(): return {"status": "ok"}
+
+@app.get("/health")
+async def health(): return {"status": "ok"}
