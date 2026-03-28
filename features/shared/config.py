@@ -1,4 +1,5 @@
 import os
+from .problem_bank import PROBLEM_BANK_50
 
 # Coding Platform Config
 CODING_MAX_CODE_CHARS = 12000
@@ -70,3 +71,6 @@ DEFAULT_PROBLEMS = [
         ],
     },
 ]
+
+# Add seeded coding practice bank (50 lightweight interview-style problems).
+DEFAULT_PROBLEMS = DEFAULT_PROBLEMS + PROBLEM_BANK_50
