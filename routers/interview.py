@@ -831,51 +831,23 @@ async def create_mindmap(request: Request, role: str = Form(...)):
         print(f"Error generating mindmap: {e}")
         log_event("roadmap_failed", "career_roadmap", role=role, metadata={"error": str(e)})
         log_model_health("career_roadmap", "openai/gpt-4o-mini", success=False, latency_ms=(time.time() - start) * 1000.0, fallback_used=True, error_message=str(e))
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        from mindmap_generator import get_curated_fallback
+        fallback_data = get_curated_fallback(role)
+        return JSONResponse(content=fallback_data, status_code=200)
 
 @router.post("/skill-info")
 async def skill_info(request: Request, skill: str = Form(...)):
-    if not is_premium_user(request):
-        return JSONResponse(
-            content={
-                "description": "Detailed skill insights are Premium only.",
-                "resources": [],
-                "premium_required": True,
-            },
-            status_code=200,
-        )
-    from mindmap_generator import client
-    prompt = f"Provide a brief 2-sentence description of the skill '{skill}' and 3 learning resource links (Label and URL) in JSON format: {{'description': '...', 'resources': [{{'label': '...', 'url': '...'}}]}}"
+    from mindmap_generator import get_skill_info
     try:
-        response = client.chat.completions.create(
-            model="openai/gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=800
-        )
-        parsed = parse_json_object(response.choices[0].message.content)
-        description = str(parsed.get("description", "No description available.")).strip()
-        resources = parsed.get("resources", [])
-        if not isinstance(resources, list):
-            resources = []
-
-        safe_resources = []
-        for item in resources[:3]:
-            if not isinstance(item, dict):
-                continue
-            label = str(item.get("label", "Resource")).strip() or "Resource"
-            url = str(item.get("url", "")).strip()
-            if url.startswith("http://") or url.startswith("https://"):
-                safe_resources.append({"label": label, "url": url})
-
-        return JSONResponse(content={
-            "description": description,
-            "resources": safe_resources
-        })
+        info = get_skill_info(skill)
+        return JSONResponse(content=info, status_code=200)
     except Exception as e:
         print(f"Skill info error: {e}")
         return JSONResponse(content={
-            "description": "Skill details are temporarily unavailable.",
-            "resources": []
+            "description": f"Core competency in {skill} is essential for engineering workflows.",
+            "resources": [
+                {"label": f"{skill} Documentation", "url": f"https://www.google.com/search?q={skill}+documentation"}
+            ]
         }, status_code=200)
 
 @router.post("/interview/lifeline")

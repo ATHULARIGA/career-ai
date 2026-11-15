@@ -1282,8 +1282,10 @@ def get_user_memory(user_email: str, conn=None) -> dict:
             conn.close()
     if not row:
         return {"target_role": "", "target_company": "", "focus_area": ""}
+    raw_role = str(row[0] or "")
+    clean_role = re.sub(r'(Developer|Engineer|Architect|Designer|Manager)\1+', r'\1', raw_role, flags=re.IGNORECASE)
     return {
-        "target_role": str(row[0] or ""),
+        "target_role": clean_role,
         "target_company": str(row[1] or ""),
         "focus_area": str(row[2] or ""),
     }
@@ -1293,6 +1295,7 @@ def save_user_memory(user_email: str, target_role: str, target_company: str, foc
     email = (user_email or "").strip().lower()
     if not email:
         return
+    clean_role = re.sub(r'(Developer|Engineer|Architect|Designer|Manager)\1+', r'\1', (target_role or "").strip(), flags=re.IGNORECASE)
     conn = db.get_conn()
     cur = conn.cursor()
     db.execute(
@@ -1306,7 +1309,7 @@ def save_user_memory(user_email: str, target_role: str, target_company: str, foc
             focus_area=excluded.focus_area,
             updated_ts=excluded.updated_ts
         """,
-        (email, (target_role or "").strip()[:120], (target_company or "").strip()[:120], (focus_area or "").strip()[:120], int(time.time())),
+        (email, clean_role[:120], (target_company or "").strip()[:120], (focus_area or "").strip()[:120], int(time.time())),
     )
     conn.commit()
     conn.close()
@@ -1519,8 +1522,14 @@ PUBLIC_PATHS = {
     "/reset-password",
     "/privacy",
     "/terms",
+    "/pricing",
+    "/career-map",
+    "/mindmap",
+    "/skill-info",
     "/healthz",
     "/readyz",
+    "/robots.txt",
+    "/sitemap.xml",
 }
 PUBLIC_PREFIXES = ("/static",)
 

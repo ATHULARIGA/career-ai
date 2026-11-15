@@ -5,16 +5,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ResuMate | AI Career Coach</title>
-  <meta name="description" content="AI-Powered Career Prep Platform to practice mock interviews, audit resumes for ATS, and land your dream job with precision.">
-  <meta name="keywords" content="AI Career Coach, Resume Analyzer, Mock Interview practice, ATS Optimizer, Career Roadmap">
+  <title>{% block title %}ResuMate | AI Career Coach & ATS Resume Optimizer{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.{% endblock %}">
+  <meta name="keywords" content="AI Career Coach, Resume Analyzer, ATS Optimizer, Mock Interview Simulator, Career Roadmap, Coding Interview Practice">
+  <link rel="canonical" href="{% block canonical %}https://career-ai-psi-dun.vercel.app{{ request.url.path }}{% endblock %}">
   
   <meta property="og:type" content="website">
-  <meta property="og:title" content="ResuMate | AI Career Coach">
-  <meta property="og:description" content="AI-Powered Career Prep Platform to practice mock interviews & audit resumes for optimal target matching.">
-  <meta property="og:url" content="https://career-ai-foom.onrender.com/">
+  <meta property="og:title" content="{% block og_title %}ResuMate | AI Career Coach & ATS Resume Optimizer{% endblock %}">
+  <meta property="og:description" content="{% block og_desc %}AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.{% endblock %}">
+  <meta property="og:url" content="https://career-ai-psi-dun.vercel.app{{ request.url.path }}">
+  <meta property="og:site_name" content="ResuMate">
+  <meta property="og:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
   
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ResuMate | AI Career Coach & ATS Resume Optimizer">
+  <meta name="twitter:description" content="Audit resumes for ATS compliance, practice realistic mock interviews, and build personalized skill roadmaps.">
+  <meta name="twitter:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ResuMate",
+    "operatingSystem": "All",
+    "applicationCategory": "BusinessApplication",
+    "url": "https://career-ai-psi-dun.vercel.app/",
+    "description": "AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link

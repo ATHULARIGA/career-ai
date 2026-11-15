@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
 from core import *
 
 router = APIRouter()
@@ -11,8 +11,74 @@ def healthz():
 
 @router.get("/robots.txt", response_class=PlainTextResponse)
 def robots_txt():
-    content = "User-agent: *\nAllow: /\nDisallow: /admin\n"
+    content = """User-agent: *
+Allow: /
+Allow: /resume
+Allow: /interview/new
+Allow: /coding/problems
+Allow: /career-map
+Allow: /book-call
+Allow: /pricing
+Disallow: /admin
+Disallow: /account
+Disallow: /api/
+
+Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
+"""
     return content
+
+
+@router.get("/sitemap.xml")
+def sitemap_xml():
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/resume</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/career-map</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/interview/new</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/coding/problems</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/book-call</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/pricing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>"""
+    return Response(content=xml, media_type="application/xml")
 
 
 @router.get("/readyz")
