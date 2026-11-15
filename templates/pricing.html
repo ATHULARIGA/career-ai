@@ -1,68 +1,86 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="al-page">
-  <div class="al-card" style="max-width:760px;">
-    <p class="al-eyebrow">Premium</p>
-    <h1>Upgrade (Manual UPI)</h1>
-    <p style="margin:8px 0 14px;color:#64748b;">
-      Temporary flow: pay via UPI and submit payment details. Admin will manually verify and activate Premium.
-    </p>
+<section class="rr-page">
+  <div class="rr-container" style="max-width: 820px;">
+    <div class="rr-header">
+      <p class="rr-eyebrow">Pricing & Upgrade</p>
+      <h1>ResuMate Premium Access</h1>
+      <p>Unlock unlimited ATS resume reviews, advanced multi-round mock interviews, and deep career insights.</p>
+      <div class="rr-chip-row">
+        <span class="rr-chip">Unlimited ATS Reviews</span>
+        <span class="rr-chip">Full Interview Loops</span>
+        <span class="rr-chip">Deep Roadmap Insights</span>
+      </div>
+    </div>
 
     {% if status == "submitted" %}
-    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 10px;">Request submitted. We will review it soon.</p>
+    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">✓ Request submitted successfully. We will review and activate it shortly.</p>
     {% elif status == "already-pending" %}
-    <p class="al-error">A pending request already exists for your account.</p>
+    <p class="al-error" style="margin-bottom:16px;">A pending request already exists for your account.</p>
     {% elif status == "already-premium" %}
-    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 10px;">Your account is already on Premium.</p>
+    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">Your account is already on Premium.</p>
     {% elif status == "premium-required" %}
-    <p class="al-error">This feature requires Premium.</p>
+    <p class="al-error" style="margin-bottom:16px;">This feature requires Premium access.</p>
     {% elif status == "invalid-ref" %}
-    <p class="al-error">Please enter a valid UPI transaction reference.</p>
+    <p class="al-error" style="margin-bottom:16px;">Please enter a valid UPI transaction reference.</p>
     {% elif status == "invalid-link" %}
-    <p class="al-error">Screenshot link must start with http:// or https://</p>
+    <p class="al-error" style="margin-bottom:16px;">Screenshot link must start with http:// or https://</p>
     {% endif %}
 
-    <div style="padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin:10px 0 14px;">
-      <p style="margin:0 0 6px;"><strong>Premium includes:</strong></p>
-      <ul style="margin:0;padding-left:18px;color:#334155;">
-        <li>Unlimited resume reviews (free plan capped per day)</li>
-        <li>Resume report export (JSON/TXT)</li>
-        <li>Mock Interview advanced mode (5-8 rounds + Red-Team mode)</li>
-        <li>Coding Practice code submit + full judged results</li>
-        <li>Career Roadmap unlimited generation + detailed skill insights</li>
-      </ul>
-    </div>
+    <div class="rr-form">
+      <div style="padding: 16px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-bg);">
+        <p style="margin: 0 0 8px; font-weight: 700; color: var(--ui-text);">Premium includes:</p>
+        <ul style="margin: 0; padding-left: 20px; color: var(--ui-text-muted); line-height: 1.6;">
+          <li>Unlimited resume reviews (free plan capped at daily limit)</li>
+          <li>Detailed report exports (JSON / Text)</li>
+          <li>Mock Interview advanced modes (5–8 rounds + Pressure Test)</li>
+          <li>Full judged coding submissions with algorithmic feedback</li>
+          <li>Unlimited career roadmap generation with skill milestones</li>
+        </ul>
+      </div>
 
-    {% if (user_plan or "free") == "premium" %}
-    <p style="margin:10px 0 0;color:#065f46;">Current plan: <strong>Premium</strong></p>
-    {% else %}
-    <form class="al-form" method="post" action="/premium/request">
-      <label for="upi_txn_ref">UPI transaction reference</label>
-      <input id="upi_txn_ref" name="upi_txn_ref" type="text" placeholder="Example: 423456789012" required>
+      {% if (user_plan or "free") == "premium" %}
+      <p style="margin: 10px 0 0; color: #10b981; font-weight: 700;">✓ Current plan: Premium Active</p>
+      {% else %}
+      <form method="post" action="/premium/request" style="display: grid; gap: 14px; margin-top: 10px;">
+        <div class="rr-field">
+          <label for="upi_txn_ref">UPI Transaction Reference</label>
+          <input id="upi_txn_ref" name="upi_txn_ref" type="text" placeholder="Example: 423456789012" required>
+        </div>
 
-      <label for="amount">Amount paid (optional)</label>
-      <input id="amount" name="amount" type="text" placeholder="e.g. 499">
+        <div class="rr-grid-2">
+          <div class="rr-field">
+            <label for="amount">Amount Paid (Optional)</label>
+            <input id="amount" name="amount" type="text" placeholder="e.g. ₹499">
+          </div>
+          <div class="rr-field">
+            <label for="screenshot_url">Payment Screenshot URL (Optional)</label>
+            <input id="screenshot_url" name="screenshot_url" type="url" placeholder="https://...">
+          </div>
+        </div>
 
-      <label for="screenshot_url">Payment screenshot URL (optional)</label>
-      <input id="screenshot_url" name="screenshot_url" type="url" placeholder="https://...">
+        <div class="rr-field">
+          <label for="notes">Notes (Optional)</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Any additional notes for admin verification..."></textarea>
+        </div>
 
-      <label for="notes">Notes (optional)</label>
-      <textarea id="notes" name="notes" rows="3" placeholder="Any details for admin verification"></textarea>
+        <div class="rr-actions">
+          <button class="rr-submit" type="submit">Submit Premium Request →</button>
+        </div>
+      </form>
+      {% endif %}
 
-      <button class="btn-primary" type="submit">Submit Premium Request</button>
-    </form>
-    {% endif %}
-
-    {% if latest_request %}
-    <div style="margin-top:14px;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">
-      <p style="margin:0 0 8px;"><strong>Latest request</strong></p>
-      <p style="margin:0;color:#475569;">Status: <strong style="text-transform:capitalize;">{{ latest_request[5] }}</strong></p>
-      <p style="margin:0;color:#475569;">UPI Ref: {{ latest_request[1] }}</p>
-      {% if latest_request[6] %}
-      <p style="margin:0;color:#b91c1c;">Reason: {{ latest_request[6] }}</p>
+      {% if latest_request %}
+      <div style="margin-top: 14px; padding: 14px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-bg);">
+        <p style="margin: 0 0 6px; font-weight: 700;">Latest Request</p>
+        <p style="margin: 0; color: var(--ui-text-muted); font-size: 0.9rem;">Status: <strong style="text-transform: capitalize; color: var(--ui-text);">{{ latest_request[5] }}</strong></p>
+        <p style="margin: 2px 0 0; color: var(--ui-text-muted); font-size: 0.9rem;">UPI Ref: {{ latest_request[1] }}</p>
+        {% if latest_request[6] %}
+        <p style="margin: 4px 0 0; color: #ef4444; font-size: 0.88rem;">Reason: {{ latest_request[6] }}</p>
+        {% endif %}
+      </div>
       {% endif %}
     </div>
-    {% endif %}
   </div>
 </section>
 {% endblock %}

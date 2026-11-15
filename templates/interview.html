@@ -80,40 +80,62 @@
 
 /* ── Setup Form ────────────────────────────────────────── */
 .iv-setup {
-  background: var(--iv-surface);
-  border: 1px solid var(--iv-border);
-  border-radius: 12px;
-  padding: 30px 40px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 24px 28px;
   margin: 10px 0 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* slight shadow for light mode raise */
+  box-shadow: var(--ui-shadow);
 }
-.iv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.theme-dark .iv-setup {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+}
+.iv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .iv-field { display: flex; flex-direction: column; gap: 6px; }
-.iv-field label { font-size: 0.75rem; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; }
+.iv-field label { font-size: 0.84rem; font-weight: 700; color: #374151; }
+.theme-dark .iv-field label { color: #94a3b8 !important; }
 .iv-field select, .iv-field input {
-  padding: 10px 12px; 
-  border: 1px solid #d1d5db !important; /* crisper border for light mode */
-  border-radius: 8px;
-  font-size: 0.95rem; font-family: inherit; background: #ffffff; color: #111827;
-  transition: border-color 0.15s;
+  padding: 11px 14px; 
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 10px;
+  font-size: 0.95rem; font-family: inherit; background: #ffffff; color: #0f172a;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.theme-dark .iv-field select,
+.theme-dark .iv-field input {
+  background: #0b0f19 !important;
+  color: #f8fafc !important;
+  border: 1px solid #1f2937 !important;
 }
 .iv-field select:focus, .iv-field input:focus { 
   outline: none !important; 
-  border-color: #111827 !important; 
-  box-shadow: 0 0 0 1px #111827 !important; 
+  border-color: #64748b !important; 
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15) !important; 
 }
 
 .iv-start-btn {
-  grid-column: span 2; margin-top: 12px;
-  background: #111827 !important; /* solid black button */
-  color: #ffffff !important; /* white text */
-  border: none; border-radius: 8px;
-  padding: 12px 0; font-size: 0.95rem; font-weight: 700; cursor: pointer;
-  transition: background 0.15s;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid #0f172a !important;
+  border-radius: 10px !important;
+  padding: 11px 24px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
 }
-.iv-start-btn:hover { background: #1f2937 !important; }
-
-html.theme-dark .iv-start-btn { color: #111827; } /* inverted text on white button */
+.theme-dark .iv-start-btn {
+  background: #f8fafc !important;
+  color: #0b0f19 !important;
+  border-color: #f8fafc !important;
+}
+.iv-start-btn:hover {
+  background: #1e293b !important;
+}
+.theme-dark .iv-start-btn:hover {
+  background: #ffffff !important;
+}
 
 /* ── Chat Container & Status ───────────────────────────── */
 .iv-chat-wrap { display: none; flex-direction: column; flex: 1; min-height: 0; }

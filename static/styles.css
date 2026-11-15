@@ -1391,15 +1391,27 @@ html.theme-dark .stats-bar {
 /* Resume review redesign: Notion/Linear/Vercel inspired */
 
 :root {
-  --ui-bg: #f6f7f9;
+  --ui-bg: #f8fafc;
   --ui-surface: #ffffff;
-  --ui-border: #e5e7eb;
-  --ui-border-strong: #d1d5db;
-  --ui-text: #111827;
-  --ui-text-muted: #6b7280;
-  --ui-accent: #111111;
-  --ui-accent-soft: #f3f4f6;
-  --ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 10px 28px rgba(0, 0, 0, 0.04);
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+  --ui-text: #0f172a;
+  --ui-text-muted: #64748b;
+  --ui-accent: #0f172a;
+  --ui-accent-soft: #f1f5f9;
+  --ui-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.03);
+}
+
+.theme-dark {
+  --ui-bg: #0b0f19;
+  --ui-surface: #111827;
+  --ui-border: #1f2937;
+  --ui-border-strong: #374151;
+  --ui-text: #f8fafc;
+  --ui-text-muted: #94a3b8;
+  --ui-accent: #f8fafc;
+  --ui-accent-soft: #1f2937;
+  --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -1555,24 +1567,36 @@ body {
   border: 1px solid var(--ui-border);
   background: #fff;
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 7px 14px;
   font-size: 0.8rem;
   color: #374151;
+  font-weight: 500;
+}
+
+.theme-dark .rr-chip {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
 }
 
 .rr-form {
   background: var(--ui-surface);
   border: 1px solid var(--ui-border);
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--ui-shadow);
   display: grid;
   gap: 16px;
 }
 
+.theme-dark .rr-form {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+}
+
 .rr-grid-2 {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   grid-template-columns: 1fr 1fr;
 }
 
@@ -1591,6 +1615,10 @@ body {
   color: #374151;
 }
 
+.theme-dark .rr-field label {
+  color: #94a3b8 !important;
+}
+
 .rr-field input,
 .rr-field select,
 .rr-field textarea {
@@ -1599,17 +1627,34 @@ body {
   border: 1px solid var(--ui-border);
   background: #fff;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 11px 14px;
   font-size: 0.95rem;
+  font-family: inherit;
+  color: #0f172a;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-dark .rr-field input,
+.theme-dark .rr-field select,
+.theme-dark .rr-field textarea {
+  background: #0b0f19 !important;
+  border-color: #1f2937 !important;
+  color: #f8fafc !important;
 }
 
 .rr-field input:focus,
 .rr-field select:focus,
 .rr-field textarea:focus {
   outline: none;
-  border-color: #9ca3af;
-  box-shadow: 0 0 0 3px #f3f4f6;
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15);
+}
+
+.theme-dark .rr-field input:focus,
+.theme-dark .rr-field select:focus,
+.theme-dark .rr-field textarea:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2) !important;
 }
 
 .rr-file-field input {
@@ -1637,18 +1682,29 @@ body {
 }
 
 .rr-submit {
-  background: #111;
+  background: #0f172a;
   color: #fff;
-  border: 1px solid #111;
+  border: 1px solid #0f172a;
   border-radius: 10px;
-  padding: 10px 15px;
+  padding: 11px 22px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   cursor: pointer;
+  transition: all 0.15s;
 }
 
 .rr-submit:hover {
-  background: #000;
+  background: #1e293b;
+}
+
+.theme-dark .rr-submit {
+  background: #f8fafc !important;
+  color: #0b0f19 !important;
+  border-color: #f8fafc !important;
+}
+
+.theme-dark .rr-submit:hover {
+  background: #ffffff !important;
 }
 
 .rd-header {

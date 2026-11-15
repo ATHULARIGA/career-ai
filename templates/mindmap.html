@@ -99,75 +99,88 @@
   margin-bottom: 16px;
 }
 .rm-search-wrap {
-  background: var(--rm-canvas-bg);
-  border: 1px solid var(--rm-border);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
   border-radius: 12px;
   display: flex;
   align-items: center;
   padding: 6px 8px 6px 16px;
-  box-shadow: var(--rm-shadow);
+  box-shadow: var(--ui-shadow);
   max-width: 600px;
   margin: 0 auto;
   transition: border-color 0.2s;
 }
-.rm-search-wrap:focus-within { border-color: var(--rm-accent); }
+.theme-dark .rm-search-wrap {
+  background: #111827;
+  border-color: #1f2937;
+}
+.rm-search-wrap:focus-within { border-color: #64748b; }
 .rm-search-wrap input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  color: var(--rm-text-primary);
+  color: var(--ui-text);
   font-size: 0.95rem;
   font-weight: 500;
   padding: 8px 0;
 }
-.rm-search-wrap input::placeholder { color: var(--rm-text-secondary); }
+.rm-search-wrap input::placeholder { color: var(--ui-text-muted); }
 
 .rm-gen-btn {
-  background: var(--rm-accent);
+  background: #0f172a;
   color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 20px;
-  font-weight: 600;
+  border: 1px solid #0f172a;
+  border-radius: 9px;
+  padding: 9px 20px;
+  font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 .rm-gen-btn:hover { 
-  background: var(--rm-accent-hover);
+  background: #1e293b;
   transform: translateY(-1px);
 }
 .theme-dark .rm-gen-btn { 
-  background: var(--rm-accent) !important; 
-  color: #ffffff !important; 
+  background: #f8fafc !important; 
+  color: #0b0f19 !important; 
+  border-color: #f8fafc !important;
 }
 .theme-dark .rm-gen-btn:hover {
-  background: var(--rm-accent-hover) !important;
+  background: #ffffff !important;
 }
 
 /* Status */
 .rm-status {
   text-align: center; 
-  font-size: 0.7rem; 
+  font-size: 0.75rem; 
   font-weight: 700; 
   text-transform: uppercase;
-  letter-spacing: 0.1em; 
+  letter-spacing: 0.08em; 
   height: 20px; 
   margin-bottom: 12px;
-  color: var(--rm-text-secondary);
+  color: var(--ui-text-muted);
 }
 
 /* Canvas Area */
 .rm-viewport {
   position: relative;
-  background-color: var(--rm-canvas-bg);
-  background-image: radial-gradient(var(--rm-dot-color) 1.2px, transparent 1.2px);
+  background-color: var(--ui-surface);
+  background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
   background-size: 20px 20px;
-  border: 1px solid var(--rm-border);
-  border-radius: 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
   height: 680px;
+  overflow: hidden;
+  box-shadow: var(--ui-shadow);
+}
+.theme-dark .rm-viewport {
+  background-color: #0b0f19;
+  background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+  border-color: #1f2937;
+}
   overflow: hidden;
   box-shadow: var(--rm-shadow);
 }
@@ -217,20 +230,25 @@
 .welcome-msg p { font-size: 0.9rem; font-weight: 600; color: #94a3b8; }
 </style>
 
-<div class="rm-page">
-  <div class="rm-container">
+<div class="rr-page">
+  <div class="rr-container">
     
-    <header class="rm-header">
+    <div class="rr-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
       <div>
-        <p class="rm-eyebrow">Smart Career Mapping</p>
-        <h1 class="rm-title">Career Roadmap</h1>
-        <p class="rm-subtitle">Visualization of skills and path to mastery</p>
+        <p class="rr-eyebrow">Smart Career Mapping 2.0</p>
+        <h1>Career Roadmap</h1>
+        <p>Interactive graph canvas mapping critical skills, milestones, and prerequisites to mastery.</p>
+        <div class="rr-chip-row">
+            <span class="rr-chip">Obsidian Graph Canvas</span>
+            <span class="rr-chip">Milestone Hierarchy</span>
+            <span class="rr-chip">Target Role Readiness</span>
+        </div>
       </div>
-      <div class="rm-actions">
-        <a href="/resume" class="rm-action-btn">Analyze Resume</a>
-        <a href="/dashboard" class="rm-action-btn">Back home</a>
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+        <a href="/resume" class="btn-secondary" style="text-decoration: none; font-size: 0.88rem; padding: 9px 16px;">Analyze Resume</a>
+        <a href="/" class="btn-secondary" style="text-decoration: none; font-size: 0.88rem; padding: 9px 16px;">Back home</a>
       </div>
-    </header>
+    </div>
 
     <div class="rm-toolbar">
       <div class="rm-search-wrap">

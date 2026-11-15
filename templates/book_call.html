@@ -1,96 +1,119 @@
 {% extends "layout.html" %}
 {% block content %}
-<div style="max-width: 600px; margin: 60px auto; padding: 0 20px;">
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;">1:1 Mentorship</h1>
-        <p style="color: #64748b;">Book a live mock interview with an industry expert.</p>
-    </div>
+<section class="rr-page">
+    <div class="rr-container">
+        <div class="rr-header">
+            <p class="rr-eyebrow">1:1 Mentorship</p>
+            <h1>Expert Mock Interview & Mentorship</h1>
+            <p>Book a live mock interview and strategic portfolio review with an industry expert.</p>
+            <div class="rr-chip-row">
+                <span class="rr-chip">FAANG & Senior Mentors</span>
+                <span class="rr-chip">Real-Time Mock Interview</span>
+                <span class="rr-chip">Actionable Offer Feedback</span>
+            </div>
+        </div>
 
-    <div style="background: white; padding: 40px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
         {% if error %}
-        <p style="margin:0 0 14px;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;">{{ error }}</p>
+        <p class="al-error" style="margin-bottom:14px; background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-weight: 500;">
+            ⚠️ {{ error }}
+        </p>
         {% endif %}
-        <form action="/schedule" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+
+        <form action="/schedule" method="post" class="rr-form">
             <input type="text" name="website" autocomplete="off" tabindex="-1" style="display:none">
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Full Name</label>
-                <input name="name" value="{{ prefill.name if prefill else '' }}" placeholder="John Doe" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
-            </div>
             
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Email Address</label>
-                <input name="email" value="{{ prefill.email if prefill else '' }}" type="email" placeholder="john@example.com" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+            <div class="rr-grid-2">
+                <div class="rr-field">
+                    <label for="name">Full Name</label>
+                    <input id="name" name="name" value="{{ prefill.name if prefill else '' }}" placeholder="John Doe" required>
+                </div>
+                <div class="rr-field">
+                    <label for="email">Email Address</label>
+                    <input id="email" name="email" value="{{ prefill.email if prefill else '' }}" type="email" placeholder="john@example.com" required>
+                </div>
             </div>
 
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Specialization</label>
-                <select name="topic" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 1rem;">
-                    <option {% if prefill and prefill.topic == "Python Developer" %}selected{% endif %}>Python Developer</option>
-                    <option {% if prefill and prefill.topic == "Data Analyst (SQL)" %}selected{% endif %}>Data Analyst (SQL)</option>
-                    <option {% if prefill and prefill.topic == "Frontend Engineer (React)" %}selected{% endif %}>Frontend Engineer (React)</option>
-                    <option {% if prefill and prefill.topic == "Product Manager" %}selected{% endif %}>Product Manager</option>
-                </select>
+            <div class="rr-grid-2">
+                <div class="rr-field">
+                    <label for="topic">Specialization</label>
+                    <select id="topic" name="topic">
+                        <option {% if prefill and prefill.topic == "Python Developer" %}selected{% endif %}>Python Developer</option>
+                        <option {% if prefill and prefill.topic == "Data Analyst (SQL)" %}selected{% endif %}>Data Analyst (SQL)</option>
+                        <option {% if prefill and prefill.topic == "Frontend Engineer (React)" %}selected{% endif %}>Frontend Engineer (React)</option>
+                        <option {% if prefill and prefill.topic == "Product Manager" %}selected{% endif %}>Product Manager</option>
+                    </select>
+                </div>
+                <div class="rr-field">
+                    <label for="outcome">Target Outcome</label>
+                    <input id="outcome" name="outcome" value="{{ prefill.outcome if prefill else '' }}" placeholder="Example: improve system design answers" required>
+                </div>
             </div>
 
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Target Outcome</label>
-                <input name="outcome" value="{{ prefill.outcome if prefill else '' }}" placeholder="Example: improve system design answers" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+            <div class="rr-field">
+                <label for="datetime">Preferred Date & Time</label>
+                <input id="datetime" type="datetime-local" name="datetime" required>
             </div>
 
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Context Notes (Optional)</label>
-                <textarea name="context_notes" rows="4" placeholder="Share your current challenge, interview stage, or portfolio context..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;"></textarea>
+            <div class="rr-field">
+                <label for="context_notes">Context Notes (Optional)</label>
+                <textarea id="context_notes" name="context_notes" rows="4" placeholder="Share your current challenge, interview stage, or portfolio context..."></textarea>
             </div>
 
-            <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Preferred Date & Time</label>
-                <input type="datetime-local" name="datetime" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 1rem;">
+            <div class="rr-actions">
+                <button type="submit" class="rr-submit">Confirm Booking</button>
             </div>
-
-            <button type="submit" class="btn-primary" style="margin-top: 10px; border: none; cursor: pointer; padding: 16px;">Confirm Booking</button>
         </form>
 
         {% if link %}
-        <div style="margin-top: 32px; padding: 24px; background: #eef2ff; border-radius: 12px; text-align: center; border: 1px solid #c7d2fe;">
-            <p style="margin: 0 0 12px 0; font-weight: 600; color: #000000;">Booking Confirmed!</p>
-            <p style="margin: 0 0 16px 0; font-size: 0.875rem; color: #374151;">Your meeting link is ready:</p>
-            <a href="{{link}}" target="_blank" style="display: inline-block; background: #111827; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">Join Meeting</a>
+        <div class="rr-form" style="margin-top: 24px; text-align: center;">
+            <p style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 700; color: #10b981;">✓ Booking Confirmed!</p>
+            <p style="margin: 0 0 16px 0; font-size: 0.92rem; color: var(--ui-text-muted);">Your meeting link is ready:</p>
+            <div>
+                <a href="{{link}}" target="_blank" class="rr-submit" style="display: inline-block; text-decoration: none; padding: 12px 24px;">Join Meeting →</a>
+            </div>
+            
             {% if mentor_notified %}
-            <p style="margin: 12px 0 0 0; color: #334155; font-size: 0.9rem;">Mentor has been notified by email.</p>
+            <p style="margin: 14px 0 0 0; color: var(--ui-text-muted); font-size: 0.88rem;">Mentor has been notified by email.</p>
             {% else %}
-            <p style="margin: 12px 0 0 0; color: #334155; font-size: 0.9rem;">Assign mentor email for this meeting from Admin to send the brief.</p>
+            <p style="margin: 14px 0 0 0; color: var(--ui-text-muted); font-size: 0.88rem;">Assign mentor email for this meeting from Admin to send the brief.</p>
             {% endif %}
+
             {% if brief %}
-            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Auto-generated pre-session brief</p>
-                <pre style="white-space: pre-wrap; margin: 0; color: #334155; font-size: 0.85rem; font-family: inherit;">{{ brief }}</pre>
+            <div style="margin-top: 18px; text-align: left; background: var(--ui-bg); border: 1px solid var(--ui-border); border-radius: 10px; padding: 16px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700;">Auto-generated pre-session brief</p>
+                <pre style="white-space: pre-wrap; margin: 0; font-size: 0.86rem; font-family: inherit;">{{ brief }}</pre>
             </div>
             {% endif %}
+
             {% if checklist %}
-            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Pre-session checklist</p>
-                <ul style="margin: 0; padding-left: 18px; color: #334155;">
+            <div style="margin-top: 14px; text-align: left; background: var(--ui-bg); border: 1px solid var(--ui-border); border-radius: 10px; padding: 16px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700;">Pre-session checklist</p>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
                     {% for item in checklist %}
                     <li style="margin: 4px 0;">{{ item }}</li>
                     {% endfor %}
                 </ul>
             </div>
             {% endif %}
+
             {% if action_plan %}
-            <div style="margin-top: 14px; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <p style="margin: 0 0 8px 0; font-weight: 700; color: #1e293b;">Post-session action plan</p>
-                <ol style="margin: 0; padding-left: 18px; color: #334155;">
+            <div style="margin-top: 14px; text-align: left; background: var(--ui-bg); border: 1px solid var(--ui-border); border-radius: 10px; padding: 16px;">
+                <p style="margin: 0 0 8px 0; font-weight: 700;">Post-session action plan</p>
+                <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
                     {% for item in action_plan %}
                     <li style="margin: 4px 0;">{{ item }}</li>
                     {% endfor %}
                 </ol>
             </div>
             {% endif %}
+
             {% if rebook_url %}
-            <a href="{{ rebook_url }}" style="display: inline-block; margin-top: 14px; background: #111827; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">Rebook same setup</a>
+            <div style="margin-top: 18px;">
+                <a href="{{ rebook_url }}" class="btn-secondary" style="display: inline-block; padding: 10px 18px; text-decoration: none;">Rebook same setup</a>
+            </div>
             {% endif %}
         </div>
         {% endif %}
     </div>
-</div>
+</section>
 {% endblock %}
