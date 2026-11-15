@@ -18,8 +18,8 @@
         </div>
 
         {% if error %}
-        <p class="al-error" style="margin-bottom:14px; background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-weight: 500;">
-            ⚠️ {{ error }}
+        <p class="al-error" style="margin-bottom:14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; padding: 10px 14px; border-radius: 8px; font-weight: 500;">
+            {{ error }}
         </p>
         {% endif %}
 
@@ -70,7 +70,7 @@
 
         {% if link %}
         <div class="rr-form" style="margin-top: 24px; text-align: center;">
-            <p style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 700; color: #10b981;">✓ Booking Confirmed!</p>
+            <p style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 700; color: #10b981;">Booking Confirmed</p>
             <p style="margin: 0 0 16px 0; font-size: 0.92rem; color: var(--ui-text-muted);">Your meeting link is ready:</p>
             <div>
                 <a href="{{link}}" target="_blank" class="rr-submit" style="display: inline-block; text-decoration: none; padding: 12px 24px;">Join Meeting →</a>

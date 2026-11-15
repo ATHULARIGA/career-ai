@@ -33,13 +33,13 @@
 
         {% if warning %}
         <div class="comp-banner">
-            <span>⚠️</span> {{ warning }}
+            {{ warning }}
         </div>
         {% endif %}
 
         {% if all_zero %}
-        <div class="comp-banner" style="background:#f1f5f9; border-color:#e2e8f0; color:#475569;">
-            <span>ℹ️</span> No changes detected between these two resume versions.
+        <div class="comp-banner" style="background:var(--ui-bg); border-color:var(--ui-border); color:var(--ui-text-muted);">
+            No changes detected between these two resume versions.
         </div>
         {% endif %}
 

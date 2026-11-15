@@ -326,7 +326,7 @@ input:-webkit-autofill:focus {
           onclick="document.getElementById('skill-panel').style.display='none'"
           style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--ui-text-muted);font-size:1.1rem;line-height:1;"
           aria-label="Close"
-        >✕</button>
+        >&times;</button>
         <div class="skill-panel-label">Learning Track</div>
         <h2 class="skill-title" id="panel-title">Skill Title</h2>
         <p class="skill-desc" id="panel-desc">Loading skill details...</p>
@@ -415,7 +415,7 @@ input:-webkit-autofill:focus {
       render();
       statusContainer.style.display = 'block';
       statusEl.className = 'rm-status-badge success';
-      statusEl.textContent = `✓ Roadmap generated for ${query}`;
+      statusEl.textContent = `Roadmap generated for ${query}`;
     } catch (e) {
       statusContainer.style.display = 'block';
       statusEl.className = 'rm-status-badge error';

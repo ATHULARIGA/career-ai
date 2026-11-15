@@ -24,7 +24,7 @@
 
         {% if warning %}
         <div class="cl-banner">
-            <span>⚠️</span> {{ warning }}
+            {{ warning }}
         </div>
         {% endif %}
 
@@ -50,7 +50,7 @@
                 <button onclick="copyCoverLetter()" class="cl-btn btn-primary" id="copyBtn">Copy to Clipboard</button>
             {% else %}
                 {% if "requires resume text" in (cover_letter or "") %}
-                    <a href="/resume" class="cl-btn btn-primary">➕ Start New Review</a>
+                    <a href="/resume" class="cl-btn btn-primary">Start New Review</a>
                 {% else %}
                     <form action="/resume/{{ report_id }}/cover_letter" method="POST" style="display:inline;">
                         <button type="submit" class="cl-btn btn-primary">Generate Cover Letter</button>

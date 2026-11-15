@@ -41,40 +41,40 @@
 
         {% if error %}
         <div class="rf-error">
-            <span>⚠️</span> {{ error }}
+            {{ error }}
         </div>
         {% endif %}
 
         {% if warning %}
         <div class="rf-banner">
-            <span>💡</span> {{ warning }}
+            {{ warning }}
         </div>
         {% endif %}
 
         <div class="rf-card">
             {% if fixed_md %}
-                <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px; font-weight: 500;">💡 Tip: This area is editable. Tweak any details directly on page before copying.</p>
+                <p style="font-size: 0.82rem; color: var(--ui-text-muted); margin-bottom: 12px; font-weight: 500;">Tip: This text is directly editable before copying or downloading.</p>
                 <div class="rf-text" id="resumeText" contenteditable="true">{{ fixed_md }}</div>
             {% else %}
                 <div class="rf-empty">
-                    <svg style="margin: 0 auto 16px; color: #94a3b8;" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <svg style="margin: 0 auto 16px; color: var(--ui-text-muted);" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     {% if "historical report" in (error or "") or "pre-update" in (error or "") %}
                         <div style="text-align:center; padding: 32px 20px;">
-                            <svg style="margin: 0 auto 16px; color: #94a3b8;" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p style="font-size: 1rem; font-weight: 600; margin-bottom: 6px;">Re-upload your resume PDF</p>
-                            <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 20px;">This report predates our resume storage. Upload your PDF once and we'll fix it instantly — no new review needed.</p>
+                            <svg style="margin: 0 auto 16px; color: var(--ui-text-muted);" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p style="font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--ui-text);">Re-upload your resume PDF</p>
+                            <p style="font-size: 0.88rem; color: var(--ui-text-muted); margin-bottom: 20px;">Upload your PDF once and we'll apply suggestions directly without needing a new audit.</p>
                             <form action="/resume/{{ report_id }}/fix-upload" method="POST" enctype="multipart/form-data" style="display:inline-flex; flex-direction:column; align-items:center; gap:12px;">
-                                <label style="display:flex; align-items:center; gap:10px; background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:10px; padding:14px 24px; cursor:pointer; font-size:0.92rem; font-weight:600; color:#475569;">
+                                <label style="display:flex; align-items:center; gap:10px; background:var(--ui-bg); border:1.5px dashed var(--ui-border-strong); border-radius:10px; padding:14px 24px; cursor:pointer; font-size:0.92rem; font-weight:600; color:var(--ui-text);">
                                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     <span id="fileLabel">Choose your PDF resume</span>
                                     <input type="file" name="file" accept=".pdf" required style="display:none;" onchange="document.getElementById('fileLabel').textContent=this.files[0]?this.files[0].name:'Choose your PDF resume'">
                                 </label>
-                                <button type="submit" class="rf-btn btn-primary">✨ Fix My Resume</button>
+                                <button type="submit" class="rf-btn btn-primary">Optimize Resume</button>
                             </form>
                         </div>
                     {% else %}
-                        <p style="font-size: 1.1rem; font-weight: 500;">No Rewrite Generated Yet</p>
-                        <p style="font-size: 0.9rem; margin-top: 4px;">Click the button below to generate full coverage.</p>
+                        <p style="font-size: 1.1rem; font-weight: 500; color: var(--ui-text);">No Rewrite Generated Yet</p>
+                        <p style="font-size: 0.9rem; margin-top: 4px; color: var(--ui-text-muted);">Click the button below to generate full coverage.</p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -82,20 +82,20 @@
 
         <div class="rf-actions">
             {% if fixed_md %}
-                <button onclick="copyResume()" class="rf-btn btn-primary" id="copyBtn">📋 Copy to Clipboard</button>
+                <button onclick="copyResume()" class="rf-btn btn-primary" id="copyBtn">Copy to Clipboard</button>
                 <form action="/resume/{{ report_id }}/fix" method="POST" style="display:inline;">
-                    <button type="submit" class="rf-btn btn-secondary">🔄 Regenerate</button>
+                    <button type="submit" class="rf-btn btn-secondary">Regenerate</button>
                 </form>
             {% else %}
                 {% if "historical report" in (error or "") %}
-                    <a href="/resume" class="rf-btn btn-primary">➕ Start New Review</a>
+                    <a href="/resume" class="rf-btn btn-primary">Start New Review</a>
                 {% else %}
                     <form action="/resume/{{ report_id }}/fix" method="POST" style="display:inline;">
-                        <button type="submit" class="rf-btn btn-primary">✨ Generate Fixed Resume</button>
+                        <button type="submit" class="rf-btn btn-primary">Generate Optimized Resume</button>
                     </form>
                 {% endif %}
             {% endif %}
-            <a href="/resume" class="rf-btn btn-secondary">🏠 Back to Dashboard</a>
+            <a href="/resume" class="rf-btn btn-secondary">Back to Dashboard</a>
         </div>
         <p class="rf-tip">We only use data provided in your original resume file (No Hallucinations).</p>
 

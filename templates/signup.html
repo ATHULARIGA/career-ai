@@ -284,15 +284,14 @@
 <div class="auth-root">
   <div class="auth-card">
     <div class="auth-header">
-      <span class="floating-icon">🚀</span>
-      <h1 class="auth-title">Get Started</h1>
+      <h1 class="auth-title">Create Account</h1>
       <p class="auth-subtitle">
         Already have an account? <a href="/login">Sign in</a>
       </p>
     </div>
 
     {% if error %}
-    <div class="af-alert af-alert-error">⚠ {{ error }}</div>
+    <div class="af-alert af-alert-error">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="/signup" autocomplete="on" id="signup-form">
@@ -349,7 +348,7 @@
     { score: 1,  pct: 25,  color: "#ef4444", text: "Weak" },
     { score: 2,  pct: 50,  color: "#f59e0b", text: "Fair" },
     { score: 3,  pct: 75,  color: "#3b82f6", text: "Good" },
-    { score: 4,  pct: 100, color: "#10b981", text: "Strong 💪" },
+    { score: 4,  pct: 100, color: "#10b981", text: "Strong" },
   ];
 
   function score(v) {

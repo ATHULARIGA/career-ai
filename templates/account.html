@@ -11,14 +11,14 @@
         {% if (user_plan or "free") != "premium" %}
         <a href="/pricing" class="rr-chip" style="text-decoration: none; color: #4f46e5; font-weight: 700;">Upgrade to Premium →</a>
         {% else %}
-        <span class="rr-chip" style="color: #10b981; font-weight: 700;">✓ Premium Active</span>
+        <span class="rr-chip" style="color: #10b981; font-weight: 700;">Premium Active</span>
         {% endif %}
       </div>
     </div>
 
     {% if status == "memory-saved" %}
-    <p style="margin: 0 0 16px; color: #065f46; background: #ecfdf5; border: 1px solid #86efac; border-radius: 10px; padding: 10px 14px; font-weight: 500;">
-      ✓ Personal preferences updated successfully.
+    <p style="margin: 0 0 16px; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; font-weight: 500;">
+      Personal preferences updated successfully.
     </p>
     {% endif %}
 

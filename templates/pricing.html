@@ -18,11 +18,11 @@
     </div>
 
     {% if status == "submitted" %}
-    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">✓ Request submitted successfully. We will review and activate it shortly.</p>
+    <p style="color:#10b981;background:rgba(16, 185, 129, 0.1);border:1px solid rgba(16, 185, 129, 0.25);border-radius:8px;padding:12px 14px;margin-bottom:16px;">Request submitted successfully. Entitlements will activate once confirmed.</p>
     {% elif status == "already-pending" %}
     <p class="al-error" style="margin-bottom:16px;">A pending request already exists for your account.</p>
     {% elif status == "already-premium" %}
-    <p style="color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">Your account is already on Premium.</p>
+    <p style="color:#10b981;background:rgba(16, 185, 129, 0.1);border:1px solid rgba(16, 185, 129, 0.25);border-radius:8px;padding:12px 14px;margin-bottom:16px;">Your account is already on Premium.</p>
     {% elif status == "premium-required" %}
     <p class="al-error" style="margin-bottom:16px;">This feature requires Premium access.</p>
     {% elif status == "invalid-ref" %}
@@ -44,7 +44,7 @@
       </div>
 
       {% if (user_plan or "free") == "premium" %}
-      <p style="margin: 10px 0 0; color: #10b981; font-weight: 700;">✓ Current plan: Premium Active</p>
+      <p style="margin: 10px 0 0; color: #10b981; font-weight: 700;">Current plan: Premium Active</p>
       {% else %}
       <form method="post" action="/premium/request" style="display: grid; gap: 14px; margin-top: 10px;">
         <div class="rr-field">

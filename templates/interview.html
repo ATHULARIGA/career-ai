@@ -433,7 +433,7 @@
       </div>
     </div>
 
-    <div class="iv-silence" id="ivSilence">⏱ Take your time…</div>
+    <div class="iv-silence" id="ivSilence">Take your time…</div>
 
     <div class="iv-messages" id="ivMessages"></div>
 
@@ -681,8 +681,8 @@ function showVerdict(data) {
 
   // Gap 5: show partial result notice if scoring was cut short
   const partialNotice = data.partial
-    ? `<div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:10px 14px; font-size:0.85rem; color:#92400e; margin-top:12px; text-align:left;">
-        ⚠️ Scoring ran long and was cut short. Some rounds show a default score — the full session has been saved.
+    ? `<div style="background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:10px 14px; font-size:0.85rem; color:#f59e0b; margin-top:12px; text-align:left;">
+        Scoring timed out. Some rounds show a default baseline score — the full session transcript is preserved.
        </div>` : '';
 
   document.getElementById('ivVerdictCard').innerHTML = `
@@ -691,7 +691,7 @@ function showVerdict(data) {
     <div class="iv-verdict-score">Session Score: <strong>${score}/10</strong> &middot; Confidence: ${confidence}</div>
     <p style="color:#475569; font-size:0.93rem; margin:10px 0 0">${summary}</p>
     ${panelNotes.length ? `<ul class="iv-panel-notes">${panelNotes.map(n => `<li>${n}</li>`).join('')}</ul>` : ''}
-    ${curiosity.notes ? `<div class="iv-curiosity">💬 End-of-interview questions: <strong>${curiosity.score}/10</strong> — ${curiosity.notes}</div>` : ''}
+    ${curiosity.notes ? `<div class="iv-curiosity">Candidate inquiry evaluation: <strong>${curiosity.score}/10</strong> — ${curiosity.notes}</div>` : ''}
     <div class="iv-verdict-meta">
       <span class="iv-verdict-badge">Score: ${score}/10</span>
       <span class="iv-verdict-badge">${decision}</span>
@@ -705,10 +705,10 @@ function showVerdict(data) {
     const rubric = item.rubric || {};
     const rubricHtml = Object.keys(rubric).length
       ? `<div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">${Object.entries(rubric).map(([k, v]) =>
-          `<span style="background:#f1f5f9; border-radius:12px; padding:3px 10px; font-size:0.78rem; color:#475569;"><strong>${k.replace(/_/g,' ')}</strong> ${v}</span>`
+          `<span style="background:var(--ui-bg); border-radius:12px; padding:3px 10px; font-size:0.78rem; color:var(--ui-text-muted);"><strong>${k.replace(/_/g,' ')}</strong> ${v}</span>`
         ).join('')}</div>` : '';
 
-    const strengths = (item.strengths || []).map(s => `<li style="color:#166534">✓ ${s}</li>`).join('');
+    const strengths = (item.strengths || []).map(s => `<li style="color:#10b981">${s}</li>`).join('');
     const improvements = (item.improvements || []).map(s => `<li style="color:#92400e">→ ${s}</li>`).join('');
 
     qaList.innerHTML += `
@@ -879,7 +879,7 @@ function startSilenceTimer() {
         silenceEl.textContent = '\u23F1 Take your time \u2014 but we are about halfway through our session.';
         interviewerSpeaks('Take your time. We are about halfway through our session.');
       } else if (PERSONA === 'Friendly') {
-        silenceEl.textContent = '💬 No rush — what\'s your initial instinct on this?';
+        silenceEl.textContent = 'No rush — what\'s your initial instinct on this?';
         interviewerSpeaks('No rush — what\'s your initial instinct on this?');
       }
       // Neutral: stays silent

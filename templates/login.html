@@ -300,7 +300,6 @@
 
   <div class="auth-card">
     <div class="auth-header">
-      <span class="floating-icon">🎯</span>
       <h1 class="auth-title">Welcome back</h1>
       <p class="auth-subtitle">
         New here? <a href="/signup">Create account for free</a>
@@ -308,10 +307,10 @@
     </div>
 
     {% if message %}
-    <div class="af-alert af-alert-success">✓ {{ message }}</div>
+    <div class="af-alert af-alert-success">{{ message }}</div>
     {% endif %}
     {% if error %}
-    <div class="af-alert af-alert-error">⚠ {{ error }}</div>
+    <div class="af-alert af-alert-error">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="/login" autocomplete="on">

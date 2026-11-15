@@ -580,14 +580,29 @@ body {
 
 /* Global dark theme */
 
+html.theme-dark,
+.theme-dark {
+  --ui-bg: #090d16 !important;
+  --ui-surface: #0f172a !important;
+  --ui-surface-subtle: #141d2e !important;
+  --ui-border: #1e293b !important;
+  --ui-border-strong: #334155 !important;
+  --ui-text: #f8fafc !important;
+  --ui-text-muted: #94a3b8 !important;
+  --ui-accent: #f8fafc !important;
+  --ui-accent-soft: #141d2e !important;
+  --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.theme-dark body,
 .theme-dark body {
-  background: #0b0f19 !important;
-  color: #e5e7eb !important;
+  background: #090d16 !important;
+  color: #f8fafc !important;
 }
 
 .theme-dark .navbar {
-  background: rgba(11, 15, 25, 0.84) !important;
-  border-bottom-color: #1f2937 !important;
+  background: rgba(9, 13, 22, 0.88) !important;
+  border-bottom-color: #1e293b !important;
 }
 
 .theme-dark .logo,
@@ -1402,22 +1417,30 @@ html.theme-dark .stats-bar {
   --ui-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.03);
 }
 
+html.theme-dark,
 .theme-dark {
-  --ui-bg: #0b0f19;
-  --ui-surface: #111827;
-  --ui-border: #1f2937;
-  --ui-border-strong: #374151;
+  --ui-bg: #090d16;
+  --ui-surface: #0f172a;
+  --ui-surface-subtle: #141d2e;
+  --ui-border: #1e293b;
+  --ui-border-strong: #334155;
   --ui-text: #f8fafc;
   --ui-text-muted: #94a3b8;
   --ui-accent: #f8fafc;
-  --ui-accent-soft: #1f2937;
+  --ui-accent-soft: #141d2e;
   --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 body {
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at 0 0, #fbfbfc 0, var(--ui-bg) 52%);
+  background: var(--ui-bg);
   color: var(--ui-text);
+}
+
+html.theme-dark body,
+.theme-dark body {
+  background: #090d16 !important;
+  color: #f8fafc !important;
 }
 
 .navbar {

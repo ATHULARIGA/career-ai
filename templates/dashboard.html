@@ -27,10 +27,10 @@
                 {% endif %}
                 {% if report.resume_text %}
                     <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;" id="autoFixForm">
-                        <button type="submit" class="btn-primary" onclick="this.innerHTML='⏳ Generating...'; this.disabled=true; document.getElementById('autoFixForm').submit();">✨ Fix My Resume</button>
+                        <button type="submit" class="btn-primary" onclick="this.innerHTML='Generating...'; this.disabled=true; document.getElementById('autoFixForm').submit();">Optimize Resume</button>
                     </form>
                 {% else %}
-                    <button type="button" class="btn-primary" onclick="openFixModal()">✨ Fix My Resume</button>
+                    <button type="button" class="btn-primary" onclick="openFixModal()">Optimize Resume</button>
                 {% endif %}
                 <a href="/interview/new" class="btn-primary">Mock Interview</a>
             </div>
@@ -337,8 +337,8 @@
                 <p class="rd-subtitle">Compare your current resume against different Job Descriptions (Max 5 items).</p>
 
                 {% if report.multi_fit_error %}
-                <div style="background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-                    ⚠️ {{ report.multi_fit_error }}
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.88rem;">
+                    {{ report.multi_fit_error }}
                 </div>
                 {% endif %}
 
@@ -400,7 +400,7 @@
                                 <td style="padding: 12px 8px;">{{ f.match or 0 }}%</td>
                                 <td style="padding: 12px 8px; font-size: 0.85rem;">{{ f.summary or "N/A" }}</td>
                                 <td style="padding: 12px 8px;">
-                                    <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" style="color: #ef4444; font-size: 0.8rem; text-decoration: none; font-weight:600;">✕ Remove</a>
+                                    <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" style="color: #ef4444; font-size: 0.8rem; text-decoration: none; font-weight:600;">Remove</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -468,21 +468,21 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Fix My Resume Modal -->
-<div id="fixResumeModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:16px; padding:36px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.2); position:relative;">
-    <button onclick="closeFixModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;font-size:1.4rem;color:#94a3b8;">×</button>
-    <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin:0 0 8px;">AI Resume Optimizer</p>
-    <h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;">Fix My Resume</h2>
-    <p style="color:#64748b;font-size:0.92rem;margin:0 0 24px;line-height:1.6;">Upload your PDF resume and we'll apply action-verb rewrites, quantification suggestions, and keyword anchors from your report.</p>
+<div id="fixResumeModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+  <div style="background:var(--ui-surface); border:1px solid var(--ui-border); border-radius:16px; padding:36px; max-width:480px; width:90%; box-shadow:var(--ui-shadow); position:relative;">
+    <button onclick="closeFixModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--ui-text-muted);">×</button>
+    <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ui-text-muted);margin:0 0 8px;">Resume Optimizer</p>
+    <h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;color:var(--ui-text);">Optimize Resume</h2>
+    <p style="color:var(--ui-text-muted);font-size:0.92rem;margin:0 0 24px;line-height:1.6;">Upload your PDF resume to apply action-verb rewrites, quantification suggestions, and keyword anchors from your audit.</p>
     <form id="fixResumeForm" action="/resume/{{ report.id or 0 }}/fix-upload" method="POST" enctype="multipart/form-data">
-      <label id="fixDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:32px 20px;cursor:pointer;transition:all 0.2s;" ondragover="event.preventDefault();this.style.borderColor='#4f46e5'" ondragleave="this.style.borderColor='#cbd5e1'" ondrop="handleDrop(event)">
-        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#94a3b8;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-        <span id="fixFileLabel" style="font-weight:600;color:#475569;font-size:0.92rem;">Drop your PDF here or click to browse</span>
-        <span style="font-size:0.78rem;color:#94a3b8;">PDF only · Max 10MB</span>
+      <label id="fixDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--ui-bg);border:2px dashed var(--ui-border-strong);border-radius:12px;padding:32px 20px;cursor:pointer;transition:all 0.2s;" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor='var(--ui-border-strong)'" ondrop="handleDrop(event)">
+        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--ui-text-muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <span id="fixFileLabel" style="font-weight:600;color:var(--ui-text);font-size:0.92rem;">Drop your PDF here or click to browse</span>
+        <span style="font-size:0.78rem;color:var(--ui-text-muted);">PDF only · Max 10MB</span>
         <input type="file" name="file" id="fixFileInput" accept=".pdf" required style="display:none;" onchange="onFileSelected(this)">
       </label>
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button type="submit" id="fixSubmitBtn" class="btn-primary" style="flex:1;padding:13px;font-size:1rem;border-radius:10px;">✨ Generate Fix</button>
+        <button type="submit" id="fixSubmitBtn" class="btn-primary" style="flex:1;padding:13px;font-size:1rem;border-radius:10px;">Generate Optimized Resume</button>
         <button type="button" onclick="closeFixModal()" class="btn-secondary" style="padding:13px 20px;border-radius:10px;">Cancel</button>
       </div>
     </form>
@@ -503,7 +503,7 @@ function closeFixModal() {
 function onFileSelected(input) {
   const label = document.getElementById('fixFileLabel');
   label.textContent = input.files[0] ? input.files[0].name : 'Drop your PDF here or click to browse';
-  document.getElementById('fixDropZone').style.borderColor = '#4f46e5';
+  document.getElementById('fixDropZone').style.borderColor = '#3b82f6';
 }
 function handleDrop(e) {
   e.preventDefault();
@@ -513,12 +513,12 @@ function handleDrop(e) {
     input.files = dt.files;
     onFileSelected(input);
   }
-  e.currentTarget.style.borderColor = '#4f46e5';
+  e.currentTarget.style.borderColor = '#3b82f6';
 }
 document.getElementById('fixResumeForm').addEventListener('submit', function() {
   const btn = document.getElementById('fixSubmitBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ Generating…';
+  btn.textContent = 'Generating…';
 });
 document.getElementById('fixResumeModal').addEventListener('click', function(e) {
   if (e.target === this) closeFixModal();

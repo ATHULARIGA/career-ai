@@ -36,8 +36,8 @@
         {% endif %}
 
         {% if general_error %}
-        <p class="al-error" style="margin-bottom:10px; background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 10px 12px; border-radius: 8px; font-weight: 500;">
-            ⚠️ {{ general_error }}
+        <p class="al-error" style="margin-bottom:12px;">
+            {{ general_error }}
         </p>
         {% endif %}
 
@@ -94,7 +94,7 @@
 
             <div class="rr-field">
                 <label for="job_link">Job link (optional)</label>
-                <input type="url" id="job_link" name="job_link" placeholder="https://linkedin.com/jobs/view/12345" style="width:100%; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                <input type="url" id="job_link" name="job_link" placeholder="https://linkedin.com/jobs/view/12345">
                 <p style="font-size: 0.8rem; color:#64748b; margin-top:4px;">We'll scrape this URL automatically.</p>
             </div>
 
