@@ -1,10 +1,33 @@
 import os
+import shutil
 import sqlite3
 from typing import List
 
-DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
-SQLITE_PATH = (os.getenv("SQLITE_PATH") or "bookings.db").strip()
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip().strip("'\"")
+if "ukptyrqwaziribbcrnmt" in DATABASE_URL:
+    DATABASE_URL = ""
+
 _USE_SQLITE_FALLBACK = False
+
+
+def get_sqlite_path() -> str:
+    custom_path = (os.getenv("SQLITE_PATH") or "").strip()
+    if custom_path:
+        return custom_path
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        tmp_path = "/tmp/bookings.db"
+        base_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bookings.db")
+        if not os.path.exists(tmp_path):
+            if os.path.exists(base_db):
+                try:
+                    shutil.copy2(base_db, tmp_path)
+                except Exception:
+                    pass
+        return tmp_path
+    return "bookings.db"
+
+
+SQLITE_PATH = get_sqlite_path()
 
 
 def is_postgres() -> bool:
@@ -31,7 +54,7 @@ def get_conn():
         except Exception:
             # Keep the app usable if hosted Postgres has a transient outage.
             _USE_SQLITE_FALLBACK = True
-    return sqlite3.connect(SQLITE_PATH, check_same_thread=False)
+    return sqlite3.connect(get_sqlite_path(), check_same_thread=False)
 
 
 def adapt_query(query: str) -> str:
