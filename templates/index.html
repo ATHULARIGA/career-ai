@@ -1,216 +1,163 @@
 {% extends "layout.html" %}
 {% block content %}
 
+<!-- HERO SECTION WITH MOVING COMPONENTS -->
+<div class="hero">
+    <!-- Moving Ambient Orbs -->
+    <div class="hero-orb orb-a"></div>
+    <div class="hero-orb orb-b"></div>
+    <div class="hero-orb orb-c"></div>
+
+    <div class="badge">✨ AI-Powered Career Prep Platform</div>
+
+    {% if auth_notice %}
+    <div style="margin: 0 auto 20px; max-width: 520px; background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 0.95rem;">
+        Please login or sign up to access that page.
+    </div>
+    {% endif %}
+
+    <h1>
+        Land your dream job <br>
+        <span>with AI precision.</span>
+    </h1>
+
+    <p>
+        The all-in-one AI career suite to optimize your resume for ATS, <br>
+        ace realistic mock interviews, and master tailored career roadmaps.
+    </p>
+
+    <div class="buttons">
+        <a href="/resume" class="btn-primary">Start for Free →</a>
+        <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
+    </div>
+
+    <!-- Moving Floating Resume Card -->
+    <div class="float-card resume-card">
+        <div class="icon green">✓</div>
+        <div>
+            <h4>Resume Score</h4>
+            <p>ATS Match: 92%</p>
+            <div class="progress">
+                <div class="bar"></div>
+            </div>
+            <span class="score">9.2 / 10</span>
+        </div>
+    </div>
+
+    <!-- Moving Floating Mock Interview Card -->
+    <div class="float-card interview-card">
+        <div class="icon purple">💬</div>
+        <div>
+            <h4>Mock Interview</h4>
+            <p>AI Feedback Ready</p>
+            <div style="margin-top: 6px; font-size: 0.76rem; color: #10b981; font-weight: 600;">
+                ✓ Strong Technical Depth
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MOVING CONTINUOUS SKILL TICKER -->
+<div class="skill-ticker" aria-hidden="true">
+    <div class="skill-track">
+        <span>Resume Optimization</span>
+        <span>ATS Keyword Alignment</span>
+        <span>AI Mock Interviews</span>
+        <span>Career Roadmapping</span>
+        <span>Coding Practice</span>
+        <span>System Design Prep</span>
+        <span>Behavioral Feedback</span>
+        <span>Skill Gap Analysis</span>
+        <span>Resume Optimization</span>
+        <span>ATS Keyword Alignment</span>
+        <span>AI Mock Interviews</span>
+        <span>Career Roadmapping</span>
+        <span>Coding Practice</span>
+        <span>System Design Prep</span>
+    </div>
+</div>
+
 <style>
-  .simple-hero {
-    text-align: center;
-    padding: 90px 24px 60px;
-    max-width: 860px;
+  /* Simplified Content Section */
+  .content-container {
+    max-width: 1100px;
     margin: 0 auto;
-    position: relative;
+    padding: 70px 24px 90px;
   }
 
-  .simple-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #f1f5f9;
-    color: #475569;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 24px;
+  .section-heading {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 48px;
   }
 
-  .theme-dark .simple-badge {
-    background: #111827;
-    color: #94a3b8;
-    border-color: #1f2937;
-  }
-
-  .simple-hero h1 {
-    font-size: clamp(2.4rem, 5vw, 3.8rem);
+  .section-heading h2 {
+    font-size: 2.1rem;
     font-weight: 800;
-    letter-spacing: -0.03em;
-    color: #0f172a;
-    line-height: 1.15;
-    margin: 0 0 18px;
-  }
-
-  .theme-dark .simple-hero h1 {
-    color: #f8fafc;
-  }
-
-  .simple-hero h1 span {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .simple-hero p {
-    font-size: 1.2rem;
-    color: #64748b;
-    max-width: 620px;
-    margin: 0 auto 34px;
-    line-height: 1.6;
-    font-weight: 400;
-  }
-
-  .theme-dark .simple-hero p {
-    color: #94a3b8;
-  }
-
-  .simple-cta-group {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  .simple-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #0f172a;
-    color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-  }
-
-  .theme-dark .simple-btn-primary {
-    background: #f8fafc;
-    color: #0b0f19;
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
-  }
-
-  .simple-btn-primary:hover {
-    transform: translateY(-1px);
-    background: #1e293b;
-  }
-
-  .theme-dark .simple-btn-primary:hover {
-    background: #ffffff;
-  }
-
-  .simple-btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #ffffff;
-    color: #334155;
-    padding: 12px 22px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid #e2e8f0;
-    transition: background 0.15s, border-color 0.15s;
-  }
-
-  .theme-dark .simple-btn-secondary {
-    background: #111827;
-    color: #cbd5e1;
-    border-color: #1f2937;
-  }
-
-  .simple-btn-secondary:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-  }
-
-  .theme-dark .simple-btn-secondary:hover {
-    background: #1f2937;
-    border-color: #374151;
-  }
-
-  /* Section Styling */
-  .simple-section {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 40px 24px 70px;
-  }
-
-  .section-header {
-    text-align: center;
-    max-width: 580px;
-    margin: 0 auto 44px;
-  }
-
-  .section-header h2 {
-    font-size: 1.9rem;
-    font-weight: 700;
     letter-spacing: -0.02em;
     color: #0f172a;
     margin: 0 0 10px;
   }
 
-  .theme-dark .section-header h2 {
+  .theme-dark .section-heading h2 {
     color: #f8fafc;
   }
 
-  .section-header p {
+  .section-heading p {
     color: #64748b;
-    font-size: 0.98rem;
+    font-size: 1.05rem;
     margin: 0;
   }
 
-  .theme-dark .section-header p {
+  .theme-dark .section-heading p {
     color: #94a3b8;
   }
 
-  /* Cards Grid */
-  .simple-grid {
+  /* 4 Core Pillars Grid */
+  .clean-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    gap: 22px;
   }
 
-  .simple-card {
+  .clean-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 26px 22px;
+    padding: 28px 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-decoration: none;
     color: inherit;
-    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
   }
 
-  .theme-dark .simple-card {
+  .theme-dark .clean-card {
     background: #111827;
     border-color: #1f2937;
   }
 
-  .simple-card:hover {
-    transform: translateY(-2px);
+  .clean-card:hover {
+    transform: translateY(-4px);
     border-color: #cbd5e1;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.06);
   }
 
-  .theme-dark .simple-card:hover {
+  .theme-dark .clean-card:hover {
     border-color: #374151;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.35);
   }
 
-  .card-icon {
-    width: 42px;
-    height: 42px;
+  .card-icon-box {
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    margin-bottom: 18px;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
   }
 
   .icon-indigo { background: #eef2ff; color: #4f46e5; }
@@ -223,31 +170,31 @@
   .theme-dark .icon-purple { background: rgba(124, 58, 237, 0.15); color: #c084fc; }
   .theme-dark .icon-blue { background: rgba(37, 99, 235, 0.15); color: #60a5fa; }
 
-  .simple-card h3 {
-    font-size: 1.1rem;
+  .clean-card h3 {
+    font-size: 1.18rem;
     font-weight: 700;
     color: #0f172a;
     margin: 0 0 8px;
     letter-spacing: -0.01em;
   }
 
-  .theme-dark .simple-card h3 {
+  .theme-dark .clean-card h3 {
     color: #f8fafc;
   }
 
-  .simple-card p {
-    font-size: 0.9rem;
+  .clean-card p {
+    font-size: 0.92rem;
     color: #64748b;
-    line-height: 1.5;
-    margin: 0 0 18px;
+    line-height: 1.55;
+    margin: 0 0 20px;
   }
 
-  .theme-dark .simple-card p {
+  .theme-dark .clean-card p {
     color: #94a3b8;
   }
 
-  .card-link {
-    font-size: 0.85rem;
+  .card-action {
+    font-size: 0.88rem;
     font-weight: 600;
     color: #4f46e5;
     display: inline-flex;
@@ -255,209 +202,217 @@
     gap: 4px;
   }
 
-  .theme-dark .card-link {
+  .theme-dark .card-action {
     color: #818cf8;
   }
 
-  /* Steps Row */
-  .steps-row {
+  /* 3-Step Process Row */
+  .process-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
   }
 
-  .step-box {
-    padding: 22px 20px;
+  .process-step {
+    padding: 24px 22px;
     border-radius: 14px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
   }
 
-  .theme-dark .step-box {
+  .theme-dark .process-step {
     background: #111827;
     border-color: #1f2937;
   }
 
-  .step-num {
+  .step-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: #4f46e5;
     margin-bottom: 8px;
+    letter-spacing: 0.05em;
   }
 
-  .theme-dark .step-num {
+  .theme-dark .step-tag {
     color: #818cf8;
   }
 
-  .step-box h4 {
-    font-size: 0.98rem;
+  .process-step h4 {
+    font-size: 1.05rem;
     font-weight: 700;
     color: #0f172a;
     margin: 0 0 6px;
   }
 
-  .theme-dark .step-box h4 {
+  .theme-dark .process-step h4 {
     color: #f8fafc;
   }
 
-  .step-box p {
-    font-size: 0.88rem;
+  .process-step p {
+    font-size: 0.9rem;
     color: #64748b;
     margin: 0;
-    line-height: 1.45;
+    line-height: 1.5;
   }
 
-  .theme-dark .step-box p {
+  .theme-dark .process-step p {
     color: #94a3b8;
   }
 
-  /* Simple CTA Banner */
-  .simple-banner {
+  /* Sleek Modern Banner */
+  .clean-banner {
     background: #0f172a;
     border-radius: 20px;
-    padding: 44px 28px;
+    padding: 48px 32px;
     text-align: center;
     color: #ffffff;
-    margin-top: 50px;
+    margin-top: 60px;
+    position: relative;
+    overflow: hidden;
   }
 
-  .theme-dark .simple-banner {
+  .theme-dark .clean-banner {
     background: #111827;
     border: 1px solid #1f2937;
   }
 
-  .simple-banner h3 {
-    font-size: 1.75rem;
+  .clean-banner h3 {
+    font-size: 1.85rem;
     font-weight: 800;
     margin: 0 0 10px;
     letter-spacing: -0.02em;
   }
 
-  .simple-banner p {
+  .clean-banner p {
     color: #94a3b8;
-    font-size: 0.98rem;
-    max-width: 500px;
-    margin: 0 auto 24px;
-    line-height: 1.5;
+    font-size: 1rem;
+    max-width: 520px;
+    margin: 0 auto 28px;
+    line-height: 1.55;
   }
 
-  .simple-banner-btn {
+  .clean-banner-btn {
     display: inline-flex;
     align-items: center;
     background: #ffffff;
     color: #0f172a;
-    padding: 11px 22px;
+    padding: 12px 24px;
     border-radius: 9px;
     font-weight: 700;
     text-decoration: none;
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     transition: transform 0.15s, background 0.15s;
   }
 
-  .simple-banner-btn:hover {
+  .clean-banner-btn:hover {
     transform: translateY(-1px);
     background: #f1f5f9;
   }
+
+  @media (max-width: 1024px) {
+    .float-card {
+      display: none;
+    }
+  }
 </style>
 
-<!-- HERO -->
-<div class="simple-hero">
-  <div class="simple-badge">✨ AI-Powered Career Prep Platform</div>
-
-  {% if auth_notice %}
-  <div style="margin: 0 auto 24px; max-width: 520px; background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 0.92rem;">
-    Please login or sign up to access that page.
-  </div>
-  {% endif %}
-
-  <h1>Land your dream job <br><span>with AI precision.</span></h1>
-
-  <p>The all-in-one suite to audit your resume for ATS, master technical & behavioral interviews, and navigate your personalized career roadmap.</p>
-
-  <div class="simple-cta-group">
-    <a href="/resume" class="simple-btn-primary">Start with Resume Review →</a>
-    <a href="/career-map" class="simple-btn-secondary">Explore Career Roadmap</a>
-  </div>
-</div>
-
-<!-- CAPABILITIES -->
-<div class="simple-section">
-  <div class="section-header">
-    <h2>Everything you need to get hired</h2>
-    <p>Targeted tools designed to accelerate each stage of your job search.</p>
-  </div>
-
-  <div class="simple-grid">
-    <a href="/resume" class="simple-card">
-      <div>
-        <div class="card-icon icon-indigo">📄</div>
-        <h3>Resume Review</h3>
-        <p>Instant ATS compatibility check, keyword density analysis, and bullet-point rewrites.</p>
-      </div>
-      <span class="card-link">Audit your resume →</span>
-    </a>
-
-    <a href="/interview/new" class="simple-card">
-      <div>
-        <div class="card-icon icon-emerald">💬</div>
-        <h3>Mock Interviews</h3>
-        <p>Realistic AI interview simulations tailored to your industry, target role, and seniority level.</p>
-      </div>
-      <span class="card-link">Start practice session →</span>
-    </a>
-
-    <a href="/career-map" class="simple-card">
-      <div>
-        <div class="card-icon icon-purple">🗺️</div>
-        <h3>Career Roadmap</h3>
-        <p>Visual graph canvas mapping critical skills, milestones, and resources to reach mastery.</p>
-      </div>
-      <span class="card-link">Build your roadmap →</span>
-    </a>
-
-    <a href="/coding/problems" class="simple-card">
-      <div>
-        <div class="card-icon icon-blue">💻</div>
-        <h3>Coding Practice</h3>
-        <p>Curated technical coding challenges with in-browser execution and smart hints.</p>
-      </div>
-      <span class="card-link">Solve challenges →</span>
-    </a>
-  </div>
-
-  <!-- HOW IT WORKS -->
-  <div style="margin-top: 64px;">
-    <div class="section-header" style="margin-bottom: 32px;">
-      <h2>How it works</h2>
-      <p>Three straightforward steps to interview readiness.</p>
+<!-- CORE CAPABILITIES (REVEAL ON SCROLL) -->
+<div class="content-container">
+    <div class="section-heading reveal-on-scroll">
+        <h2>Everything you need to land your next role</h2>
+        <p>AI precision tools designed for each step of your application journey.</p>
     </div>
 
-    <div class="steps-row">
-      <div class="step-box">
-        <div class="step-num">STEP 01</div>
-        <h4>Input Target Role</h4>
-        <p>Upload your current resume or choose the role and industry you want to transition into.</p>
-      </div>
-      <div class="step-box">
-        <div class="step-num">STEP 02</div>
-        <h4>AI Analysis & Prep</h4>
-        <p>Identify missing keywords, practice realistic interview questions, and solve coding tasks.</p>
-      </div>
-      <div class="step-box">
-        <div class="step-num">STEP 03</div>
-        <h4>Apply with Confidence</h4>
-        <p>Follow your tailored milestone roadmap and walk into every interview prepared.</p>
-      </div>
-    </div>
-  </div>
+    <div class="clean-grid reveal-on-scroll">
+        <a href="/resume" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-indigo">📄</div>
+                <h3>Resume Review</h3>
+                <p>Instant ATS scan, keyword matching, and recruiter-focused bullet rewrites.</p>
+            </div>
+            <span class="card-action">Audit your resume →</span>
+        </a>
 
-  <!-- BOTTOM CTA -->
-  <div class="simple-banner">
-    <h3>Ready to elevate your career?</h3>
-    <p>Join candidates using ResuMate to optimize their profiles and land top offers.</p>
-    <a href="/signup" class="simple-banner-btn">Get Started for Free →</a>
-  </div>
+        <a href="/interview/new" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-emerald">💬</div>
+                <h3>Mock Interviews</h3>
+                <p>Simulate realistic behavioral & technical interview rounds with instant feedback.</p>
+            </div>
+            <span class="card-action">Start practice round →</span>
+        </a>
+
+        <a href="/career-map" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-purple">🗺️</div>
+                <h3>Career Roadmap</h3>
+                <p>Interactive Obsidian-style canvas mapping your target milestones & skills.</p>
+            </div>
+            <span class="card-action">Build roadmap →</span>
+        </a>
+
+        <a href="/coding/problems" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-blue">💻</div>
+                <h3>Coding Practice</h3>
+                <p>Hands-on coding challenges with multi-language in-browser execution.</p>
+            </div>
+            <span class="card-action">Solve challenges →</span>
+        </a>
+    </div>
+
+    <!-- HOW IT WORKS (REVEAL ON SCROLL) -->
+    <div style="margin-top: 70px;" class="reveal-on-scroll">
+        <div class="section-heading" style="margin-bottom: 34px;">
+            <h2>How it works</h2>
+            <p>A proven, structured approach to interview preparation.</p>
+        </div>
+
+        <div class="process-row">
+            <div class="process-step">
+                <div class="step-tag">STEP 01</div>
+                <h4>Set Target Role</h4>
+                <p>Upload your current resume or choose the exact role you're targeting.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-tag">STEP 02</div>
+                <h4>Analyze & Practice</h4>
+                <p>Fix ATS gaps, simulate live interviews, and sharpen your technical skills.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-tag">STEP 03</div>
+                <h4>Ace the Offer</h4>
+                <p>Track your milestone progress and interview with data-backed confidence.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLEAN CTA BANNER (REVEAL ON SCROLL) -->
+    <div class="clean-banner reveal-on-scroll">
+        <h3>Ready to accelerate your career?</h3>
+        <p>Join candidates using ResuMate to prepare faster, interview better, and land top roles.</p>
+        <a href="/signup" class="clean-banner-btn">Get Started for Free →</a>
+    </div>
 </div>
+
+<script>
+(() => {
+  const items = document.querySelectorAll(".reveal-on-scroll");
+  if (!("IntersectionObserver" in window)) {
+    items.forEach((item) => item.classList.add("is-visible"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  items.forEach((item) => observer.observe(item));
+})();
+</script>
 
 {% endblock %}
