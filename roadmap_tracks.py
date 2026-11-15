@@ -11,9 +11,9 @@ TRACKS_DATA = {
         "seo_title": "Python Developer Roadmap 2026: Skills, Milestones & Career Guide | ResuMate",
         "meta_desc": "Complete step-by-step 2026 roadmap for Python developers. Learn required skills, FastAPI, Django, PostgreSQL, system design, and interview expectations.",
         "tagline": "Master modern Python 3.12+, high-performance async APIs, database optimization, and cloud-native backend architectures.",
-        "avg_salary": "$115,000 – $165,000 / yr",
+        "avg_salary": "₹12,00,000 – ₹26,00,000 / yr",
         "est_time": "4 – 6 Months",
-        "demand_level": "Very High 🔥",
+        "demand_level": "Very High",
         "overview": (
             "Python remains one of the most in-demand backend and data languages in 2026. "
             "Modern engineering teams look beyond syntax: hiring managers test your depth in async programming (asyncio), "
@@ -194,9 +194,9 @@ TRACKS_DATA = {
         "seo_title": "React & Frontend Engineer Roadmap 2026: Modern Web Skills & Path | ResuMate",
         "meta_desc": "Comprehensive 2026 guide and milestone roadmap for React and Frontend developers. Master Next.js App Router, TypeScript, Tailwind, and Core Web Vitals.",
         "tagline": "Build fast, accessible, and reactive web applications with React 19, Next.js, TypeScript, and state-of-the-art styling.",
-        "avg_salary": "$110,000 – $160,000 / yr",
+        "avg_salary": "₹10,00,000 – ₹24,00,000 / yr",
         "est_time": "4 – 5 Months",
-        "demand_level": "Extremely High 🔥",
+        "demand_level": "Extremely High",
         "overview": (
             "Frontend engineering in 2026 has matured dramatically. Modern teams demand strong TypeScript proficiency, "
             "deep understanding of React Server Components (RSC), Next.js App Router, optimistic UI updates, "
@@ -334,9 +334,9 @@ TRACKS_DATA = {
         "seo_title": "Data Scientist Roadmap 2026: Math, Python, ML & Production | ResuMate",
         "meta_desc": "Definitive 2026 Data Science career roadmap. Learn statistics, SQL, pandas, machine learning, deep learning, LLMs, and real-world deployment.",
         "tagline": "Turn messy enterprise data into high-accuracy predictive models, statistical insights, and business value.",
-        "avg_salary": "$120,000 – $175,000 / yr",
+        "avg_salary": "₹14,00,000 – ₹30,00,000 / yr",
         "est_time": "5 – 7 Months",
-        "demand_level": "High 📊",
+        "demand_level": "High",
         "overview": (
             "Data Science in 2026 bridges classical statistics, predictive machine learning, and modern Generative AI. "
             "Companies expect candidates to conduct rigorous A/B experimentation, extract complex features with SQL and Python, "
@@ -468,9 +468,9 @@ TRACKS_DATA = {
         "seo_title": "DevOps & Cloud Engineer Roadmap 2026: Kubernetes, CI/CD, Terraform | ResuMate",
         "meta_desc": "Comprehensive 2026 DevOps engineering roadmap. Learn Linux, Docker, Kubernetes, Terraform IaC, GitHub Actions CI/CD, and AWS cloud architecture.",
         "tagline": "Automate infrastructure, build zero-downtime deployment pipelines, and ensure 99.99% system reliability.",
-        "avg_salary": "$125,000 – $180,000 / yr",
+        "avg_salary": "₹14,00,000 – ₹32,00,000 / yr",
         "est_time": "5 – 6 Months",
-        "demand_level": "Extremely High 🔥",
+        "demand_level": "Extremely High",
         "overview": (
             "DevOps and Platform Engineering in 2026 focus on GitOps automation, container orchestration with Kubernetes, "
             "declarative Infrastructure as Code (Terraform), and robust observability. Top companies test your ability to debug "
