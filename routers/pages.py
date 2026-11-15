@@ -17,6 +17,8 @@ Allow: /resume
 Allow: /interview/new
 Allow: /coding/problems
 Allow: /career-map
+Allow: /roadmap
+Allow: /roadmap/
 Allow: /book-call
 Allow: /pricing
 Disallow: /admin
@@ -43,9 +45,34 @@ def sitemap_xml():
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://career-ai-psi-dun.vercel.app/career-map</loc>
+    <loc>https://career-ai-psi-dun.vercel.app/roadmap</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/roadmap/python-developer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/roadmap/react-frontend-engineer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/roadmap/data-scientist</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/roadmap/devops-engineer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/career-map</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://career-ai-psi-dun.vercel.app/interview/new</loc>
@@ -79,6 +106,30 @@ def sitemap_xml():
   </url>
 </urlset>"""
     return Response(content=xml, media_type="application/xml")
+
+
+@router.get("/roadmap", response_class=HTMLResponse)
+def roadmap_index(request: Request):
+    from roadmap_tracks import get_all_tracks
+    tracks = get_all_tracks()
+    return templates.TemplateResponse(
+        request=request,
+        name="roadmap_index.html",
+        context={"request": request, "tracks": tracks}
+    )
+
+
+@router.get("/roadmap/{slug}", response_class=HTMLResponse)
+def roadmap_detail(request: Request, slug: str):
+    from roadmap_tracks import get_track_by_slug
+    track = get_track_by_slug(slug)
+    if not track:
+        return RedirectResponse("/roadmap", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="roadmap_detail.html",
+        context={"request": request, "track": track}
+    )
 
 
 @router.get("/google0159a71a230a2359.html")

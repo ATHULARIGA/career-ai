@@ -1525,6 +1525,7 @@ PUBLIC_PATHS = {
     "/terms",
     "/pricing",
     "/career-map",
+    "/roadmap",
     "/mindmap",
     "/skill-info",
     "/healthz",
@@ -1533,6 +1534,6 @@ PUBLIC_PATHS = {
     "/sitemap.xml",
     "/google0159a71a230a2359.html",
 }
-PUBLIC_PREFIXES = ("/static",)
+PUBLIC_PREFIXES = ("/static", "/roadmap")
 
 

@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block title %}Software Engineering Career Roadmaps 2026: Guides & Skill Trees | ResuMate{% endblock %}
+{% block meta_desc %}Explore community-standard 2026 career roadmaps for Python, React, Data Science, and DevOps. Learn required skills, salary benchmarks, and interview questions.{% endblock %}
+{% block canonical %}https://career-ai-psi-dun.vercel.app/roadmap{% endblock %}
+{% block og_title %}Software Engineering Career Roadmaps 2026 | ResuMate{% endblock %}
+{% block og_desc %}Explore community-standard 2026 career roadmaps for Python, React, Data Science, and DevOps.{% endblock %}
+
+{% block content %}
+<section class="rr-page">
+  <div class="rr-container">
+
+    <div class="rr-header">
+      <p class="rr-eyebrow">CAREER ROADMAPS 2026</p>
+      <h1>Developer Career Roadmaps</h1>
+      <p>
+        Step-by-step guides, milestone skill trees, and interview benchmarks for modern tech roles.
+        Backed by actual hiring manager rubrics and ATS keyword standards.
+      </p>
+      <div class="rr-chip-row">
+        <span class="rr-chip">Curated Industry Trees</span>
+        <span class="rr-chip">Salary Benchmarks</span>
+        <span class="rr-chip">Interview Question Rubrics</span>
+      </div>
+    </div>
+
+    <!-- Custom Role Generator Callout -->
+    <div class="rr-form" style="margin-bottom: 32px; padding: 22px 28px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(15, 23, 42, 0) 100%);">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <div>
+          <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 4px; color: var(--ui-text);">
+            Targeting a specialized or hybrid role?
+          </h2>
+          <p style="font-size: 0.9rem; color: var(--ui-text-muted); margin: 0;">
+            Use our AI Career Mapping Engine to generate an interactive Obsidian skill tree for any custom position.
+          </p>
+        </div>
+        <div>
+          <a href="/career-map" class="rr-submit" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 0.9rem;">
+            <span>Generate Custom Map</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px; margin-bottom: 40px;">
+      {% for track in tracks %}
+      <article class="rr-form" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, border-color 0.2s;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="rr-chip" style="font-size: 0.72rem; padding: 3px 10px;">
+              {{ track.demand_level }}
+            </span>
+            <span style="font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted);">
+              {{ track.est_time }}
+            </span>
+          </div>
+
+          <h3 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 8px; color: var(--ui-text); letter-spacing: -0.02em;">
+            <a href="/roadmap/{{ track.slug }}" style="color: inherit; text-decoration: none;">
+              {{ track.role_name }}
+            </a>
+          </h3>
+
+          <p style="font-size: 0.88rem; color: var(--ui-text-muted); line-height: 1.5; margin: 0 0 16px;">
+            {{ track.tagline }}
+          </p>
+
+          <div style="margin-bottom: 18px; padding: 10px 12px; background: var(--ui-bg); border-radius: 8px; border: 1px solid var(--ui-border); font-size: 0.82rem; color: var(--ui-text-muted);">
+            Avg. Salary: <strong style="color: var(--ui-text);">{{ track.avg_salary }}</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--ui-border); padding-top: 16px;">
+          <a href="/roadmap/{{ track.slug }}" style="font-size: 0.88rem; font-weight: 700; color: #3b82f6; text-decoration: none;">
+            Explore Roadmap →
+          </a>
+          <a href="/resume?target_role={{ track.role_name | urlencode }}" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px; text-decoration: none;">
+            Audit Resume
+          </a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

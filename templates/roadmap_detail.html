@@ -1,0 +1,486 @@
+{% extends "layout.html" %}
+{% block title %}{{ track.seo_title }}{% endblock %}
+{% block meta_desc %}{{ track.meta_desc }}{% endblock %}
+{% block canonical %}https://career-ai-psi-dun.vercel.app/roadmap/{{ track.slug }}{% endblock %}
+{% block og_title %}{{ track.seo_title }}{% endblock %}
+{% block og_desc %}{{ track.meta_desc }}{% endblock %}
+
+{% block content %}
+
+<!-- Schema.org Structured Data for Google Rich Snippets (Course & FAQ) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "headline": "{{ track.h1_title }}",
+      "description": "{{ track.meta_desc }}",
+      "author": {
+        "@type": "Organization",
+        "name": "ResuMate",
+        "url": "https://career-ai-psi-dun.vercel.app/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "ResuMate",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://career-ai-psi-dun.vercel.app/static/hero-bg.png"
+        }
+      },
+      "mainEntityOfPage": "https://career-ai-psi-dun.vercel.app/roadmap/{{ track.slug }}"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {% for faq in track.faqs %}
+        {
+          "@type": "Question",
+          "name": "{{ faq.q }}",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "{{ faq.a }}"
+          }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+/* ── Programmatic Roadmap Detail Styles ───────────────────────── */
+.rm-detail-hero {
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--ui-border);
+  margin-bottom: 32px;
+}
+
+.rm-meta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+  align-items: center;
+}
+
+.rm-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--ui-text-muted);
+}
+.rm-meta-item strong {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.rm-cta-banner {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+  box-shadow: var(--ui-shadow);
+}
+.theme-dark .rm-cta-banner {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+.rm-canvas-container {
+  position: relative;
+  background-color: var(--ui-surface);
+  background-image: radial-gradient(var(--ui-border) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  height: 540px;
+  overflow: hidden;
+  box-shadow: var(--ui-shadow);
+  margin-bottom: 48px;
+}
+.theme-dark .rm-canvas-container {
+  background-color: #0b0f19;
+  background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+  border-color: #1f2937;
+}
+
+#detail-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Node styles */
+.node rect {
+  rx: 8; ry: 8;
+  cursor: pointer;
+}
+.node text {
+  font-family: inherit;
+  pointer-events: none;
+  user-select: none;
+}
+.node-root rect { fill: #2563eb; stroke: #60a5fa; stroke-width: 2px; }
+.node-root text { fill: #ffffff; font-weight: 700; font-size: 13.5px; }
+
+.node-cat rect { fill: #1e293b; stroke: #334155; }
+.node-cat text { fill: #f8fafc; font-weight: 600; font-size: 11px; }
+
+.node-leaf rect { fill: #111827; stroke: #1f2937; }
+.node-leaf text { fill: #94a3b8; font-weight: 500; font-size: 10.5px; }
+
+.link {
+  stroke: #1f2937;
+  stroke-width: 1.5px;
+  fill: none;
+  opacity: 0.8;
+}
+
+/* Phase Breakdown */
+.rm-phase-section {
+  margin-bottom: 40px;
+}
+
+.rm-phase-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--ui-shadow);
+}
+.theme-dark .rm-phase-card {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+.rm-phase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rm-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.rm-skill-item {
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.theme-dark .rm-skill-item {
+  background: #0b0f19;
+  border-color: #1f2937;
+}
+
+.rm-tool-tag {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  margin-right: 6px;
+  margin-top: 6px;
+}
+
+.rm-interview-tip {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--ui-border);
+  font-size: 0.82rem;
+  color: #10b981;
+  line-height: 1.45;
+}
+.theme-dark .rm-interview-tip {
+  border-color: #1f2937;
+}
+
+/* FAQ Accordion */
+.rm-faq-item {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+}
+.theme-dark .rm-faq-item {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+.rm-faq-q {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  margin: 0 0 8px;
+}
+
+.rm-faq-a {
+  font-size: 0.92rem;
+  color: var(--ui-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+</style>
+
+<div class="rr-page">
+  <div class="rr-container">
+
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 14px; font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted);">
+      <a href="/" style="color: var(--ui-text-muted); text-decoration: none;">Home</a>
+      <span style="margin: 0 6px;">/</span>
+      <a href="/roadmap" style="color: var(--ui-text-muted); text-decoration: none;">Roadmaps</a>
+      <span style="margin: 0 6px;">/</span>
+      <span style="color: var(--ui-text);">{{ track.role_name }}</span>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="rm-detail-hero">
+      <p class="rr-eyebrow">CAREER ROADMAP 2026</p>
+      <h1 style="font-size: clamp(2.2rem, 3.5vw, 3rem); font-weight: 800; letter-spacing: -0.03em; margin: 0 0 12px;">
+        {{ track.h1_title }}
+      </h1>
+      <p style="font-size: 1.12rem; color: var(--ui-text-muted); max-width: 820px; line-height: 1.6; margin: 0;">
+        {{ track.tagline }}
+      </p>
+
+      <div class="rm-meta-bar">
+        <div class="rm-meta-item">
+          <span>Avg. Salary:</span>
+          <strong>{{ track.avg_salary }}</strong>
+        </div>
+        <span style="color: var(--ui-border);">•</span>
+        <div class="rm-meta-item">
+          <span>Est. Learning Time:</span>
+          <strong>{{ track.est_time }}</strong>
+        </div>
+        <span style="color: var(--ui-border);">•</span>
+        <div class="rm-meta-item">
+          <span>Hiring Demand:</span>
+          <strong>{{ track.demand_level }}</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- Quick Conversion Action Banner -->
+    <div class="rm-cta-banner">
+      <div>
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; color: var(--ui-text);">
+          Ready to verify your {{ track.role_name }} readiness?
+        </h2>
+        <p style="font-size: 0.88rem; color: var(--ui-text-muted); margin: 0;">
+          Run an instant ATS resume audit or test your knowledge in a realistic AI mock interview.
+        </p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="/resume?target_role={{ track.role_name | urlencode }}" class="rr-submit" style="text-decoration: none; padding: 10px 18px; font-size: 0.88rem;">
+          Audit Resume →
+        </a>
+        <a href="/interview/new?role={{ track.role_name | urlencode }}&topic={{ track.role_name | urlencode }}" class="btn-secondary" style="text-decoration: none; padding: 10px 18px; font-size: 0.88rem;">
+          Mock Interview →
+        </a>
+      </div>
+    </div>
+
+    <!-- Overview Text (SEO Content) -->
+    <section style="margin-bottom: 32px;">
+      <h2 style="font-size: 1.35rem; font-weight: 700; margin: 0 0 10px;">Market Overview & Hiring Expectations</h2>
+      <p style="font-size: 1rem; color: var(--ui-text-muted); line-height: 1.7; max-width: 900px; margin: 0;">
+        {{ track.overview }}
+      </p>
+    </section>
+
+    <!-- Interactive Canvas Graph -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700; margin: 0 0 4px;">Interactive Skill Graph</h2>
+          <p style="font-size: 0.86rem; color: var(--ui-text-muted); margin: 0;">Scroll to zoom, drag to pan, and click nodes to view milestones.</p>
+        </div>
+        <a href="/career-map" class="btn-secondary" style="text-decoration: none; font-size: 0.8rem; padding: 6px 14px;">
+          Custom Role Generator ↗
+        </a>
+      </div>
+
+      <div class="rm-canvas-container" id="detail-viewport">
+        <svg id="detail-svg"></svg>
+      </div>
+    </section>
+
+    <!-- Semantic Phase Breakdown for SEO Crawlers & Humans -->
+    <section class="rm-phase-section">
+      <h2 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 20px;">
+        Step-by-Step Curriculum & Competencies
+      </h2>
+
+      {% for phase in track.phases %}
+      <article class="rm-phase-card">
+        <div class="rm-phase-header">
+          <div>
+            <span class="rr-chip" style="font-size: 0.75rem; padding: 4px 10px; margin-bottom: 8px; display: inline-block;">
+              {{ phase.badge }}
+            </span>
+            <h3 style="font-size: 1.3rem; font-weight: 700; margin: 0 0 6px; color: var(--ui-text);">
+              {{ phase.title }}
+            </h3>
+            <p style="font-size: 0.95rem; color: var(--ui-text-muted); margin: 0; max-width: 800px; line-height: 1.5;">
+              {{ phase.summary }}
+            </p>
+          </div>
+        </div>
+
+        <div class="rm-skill-grid">
+          {% for skill in phase.skills %}
+          <div class="rm-skill-item">
+            <div>
+              <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 6px; color: var(--ui-text);">
+                {{ skill.name }}
+              </h4>
+              <p style="font-size: 0.86rem; color: var(--ui-text-muted); line-height: 1.5; margin: 0 0 10px;">
+                {{ skill.desc }}
+              </p>
+              <div style="margin-top: 6px;">
+                {% for tool in skill.tools %}
+                <span class="rm-tool-tag">{{ tool }}</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            {% if skill.interview_tip %}
+            <div class="rm-interview-tip">
+              <strong>💡 Interview Tip:</strong> {{ skill.interview_tip }}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    <!-- Frequently Asked Questions (FAQ) -->
+    <section style="margin-bottom: 50px;">
+      <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 20px;">Frequently Asked Questions</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for faq in track.faqs %}
+        <div class="rm-faq-item">
+          <h3 class="rm-faq-q">{{ faq.q }}</h3>
+          <p class="rm-faq-a">{{ faq.a }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Explore Other Tracks -->
+    <section style="border-top: 1px solid var(--ui-border); padding-top: 36px;">
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 16px;">Explore Other 2026 Roadmaps</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <a href="/roadmap/python-developer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">Python Developer →</a>
+        <a href="/roadmap/react-frontend-engineer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">React & Frontend →</a>
+        <a href="/roadmap/data-scientist" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">Data Scientist →</a>
+        <a href="/roadmap/devops-engineer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">DevOps Engineer →</a>
+        <a href="/career-map" class="rr-chip" style="text-decoration: none; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">All Tracks & Custom Generator →</a>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+(function() {
+  const rootData = {{ track.mindmap_root | tojson }};
+  const viewport = document.getElementById('detail-viewport');
+  const width = viewport.clientWidth || 1120;
+  const height = 540;
+
+  const svg = d3.select("#detail-svg");
+  const g = svg.append("g");
+  const zoom = d3.zoom().scaleExtent([0.3, 2.5]).on("zoom", (e) => g.attr("transform", e.transform));
+  svg.call(zoom);
+
+  let id = 0;
+  function tag(n, d) {
+    n.id = id++;
+    n.depth = d;
+    if (n.children) n.children.forEach(c => tag(c, d + 1));
+  }
+  tag(rootData, 0);
+
+  let nodes = [], links = [];
+  function flatten(n, p) {
+    nodes.push(n);
+    if (p) links.push({ source: p, target: n });
+    if (n.children) n.children.forEach(c => flatten(c, n));
+  }
+  flatten(rootData, null);
+
+  const sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.source.depth === 0 ? 170 : 110))
+    .force("charge", d3.forceManyBody().strength(-700))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collision", d3.forceCollide().radius(50));
+
+  const link = g.append("g").selectAll("path").data(links).enter().append("path")
+    .attr("class", "link");
+
+  const node = g.append("g").selectAll(".node").data(nodes).enter().append("g")
+    .attr("class", d => "node " + (d.depth === 0 ? "node-root" : (d.children ? "node-cat" : "node-leaf")))
+    .call(d3.drag()
+      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); if (d.depth !== 0) { d.fx = null; d.fy = null; } }));
+
+  node.append("rect")
+    .attr("height", d => d.depth === 0 ? 40 : (d.depth === 1 ? 32 : 26))
+    .attr("y", d => d.depth === 0 ? -20 : (d.depth === 1 ? -16 : -13));
+
+  node.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", 4)
+    .text(d => d.name);
+
+  node.selectAll("rect").attr("width", function(d) {
+    const textNode = this.parentNode.querySelector("text");
+    const tw = textNode ? textNode.getBBox().width : 60;
+    d.w = Math.max(70, tw + 24);
+    return d.w;
+  }).attr("x", d => -d.w / 2);
+
+  sim.on("tick", () => {
+    link.attr("d", d => {
+      const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+      return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+    });
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+})();
+</script>
+
+{% endblock %}
