@@ -1,297 +1,463 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="hero">
-    <div class="hero-orb orb-a"></div>
-    <div class="hero-orb orb-b"></div>
-    <div class="hero-orb orb-c"></div>
+<style>
+  .simple-hero {
+    text-align: center;
+    padding: 90px 24px 60px;
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+  }
 
-    <div class="badge">AI-Powered Career Prep</div>
-    {% if auth_notice %}
-    <div style="margin: 14px auto 0; max-width: 520px; background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 0.95rem;">
-        Please login or sign up to access that page.
-    </div>
-    {% endif %}
+  .simple-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+  }
 
-    <h1>
-        Land your dream job <br>
-        <span>with AI precision.</span>
-    </h1>
+  .theme-dark .simple-badge {
+    background: #111827;
+    color: #94a3b8;
+    border-color: #1f2937;
+  }
 
-    <p style="font-size: 1.5rem; color: #475569; font-weight: 500;">
-        The all-in-one AI career suite to optimize your resume, <br> 
-        ace your interviews, and get hired faster.
-    </p>
+  .simple-hero h1 {
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    line-height: 1.15;
+    margin: 0 0 18px;
+  }
 
-    <div class="buttons">
-        <a href="/resume" class="btn-primary">Start for Free →</a>
-        <a href="/interview/new" class="btn-secondary">View Demo</a>
-    </div>
+  .theme-dark .simple-hero h1 {
+    color: #f8fafc;
+  }
 
-    <div style="margin-top: 70px; position: relative; z-index: 1; max-width: 940px; margin-left: auto; margin-right: auto;">
-        <div style="background: linear-gradient(140deg, #ffffff 0%, #eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(79, 70, 229, 0.10); text-align: left;">
-            <p style="margin: 0 0 12px; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7280; font-family: 'IBM Plex Mono', monospace;">Live Career Snapshot</p>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Resume Health</p>
-                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">89%</strong>
-                </div>
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Interview Readiness</p>
-                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">74%</strong>
-                </div>
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-                    <p style="margin:0;color:#64748b;font-size:0.78rem;">Action Items</p>
-                    <strong style="font-size:1.5rem;letter-spacing:-0.02em;">6</strong>
-                </div>
-            </div>
-        </div>
-    </div>
+  .simple-hero h1 span {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-    <!-- FLOATING RESUME SCORE -->
-    <div class="float-card resume-card">
-        <div class="icon green">✓</div>
-        <div>
-            <h4>Resume Score</h4>
-            <p>Just now</p>
-            <div class="progress">
-                <div class="bar"></div>
-            </div>
-            <span class="score">9.2/10</span>
-        </div>
-    </div>
-    
-    <div style="margin-top:30px;">
-        <a href="/career-map" class="btn-primary" style="text-decoration: none;">
-            Explore Career Roadmap
-        </a>
-    </div>
+  .simple-hero p {
+    font-size: 1.2rem;
+    color: #64748b;
+    max-width: 620px;
+    margin: 0 auto 34px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
 
-    <!-- FLOATING MOCK INTERVIEW -->
-    <div class="float-card interview-card">
-        <div class="icon purple">💬</div>
-        <div>
-            <h4>Mock Interview</h4>
-            <p>"Great answer on scalability..."</p>
-        </div>
-    </div>
+  .theme-dark .simple-hero p {
+    color: #94a3b8;
+  }
 
+  .simple-cta-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .simple-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  }
+
+  .theme-dark .simple-btn-primary {
+    background: #f8fafc;
+    color: #0b0f19;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
+  }
+
+  .simple-btn-primary:hover {
+    transform: translateY(-1px);
+    background: #1e293b;
+  }
+
+  .theme-dark .simple-btn-primary:hover {
+    background: #ffffff;
+  }
+
+  .simple-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    color: #334155;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid #e2e8f0;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .theme-dark .simple-btn-secondary {
+    background: #111827;
+    color: #cbd5e1;
+    border-color: #1f2937;
+  }
+
+  .simple-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  .theme-dark .simple-btn-secondary:hover {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  /* Section Styling */
+  .simple-section {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 70px;
+  }
+
+  .section-header {
+    text-align: center;
+    max-width: 580px;
+    margin: 0 auto 44px;
+  }
+
+  .section-header h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin: 0 0 10px;
+  }
+
+  .theme-dark .section-header h2 {
+    color: #f8fafc;
+  }
+
+  .section-header p {
+    color: #64748b;
+    font-size: 0.98rem;
+    margin: 0;
+  }
+
+  .theme-dark .section-header p {
+    color: #94a3b8;
+  }
+
+  /* Cards Grid */
+  .simple-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .simple-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+
+  .theme-dark .simple-card {
+    background: #111827;
+    border-color: #1f2937;
+  }
+
+  .simple-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  }
+
+  .theme-dark .simple-card:hover {
+    border-color: #374151;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 18px;
+  }
+
+  .icon-indigo { background: #eef2ff; color: #4f46e5; }
+  .icon-emerald { background: #ecfdf5; color: #059669; }
+  .icon-purple { background: #f3e8ff; color: #7c3aed; }
+  .icon-blue { background: #eff6ff; color: #2563eb; }
+
+  .theme-dark .icon-indigo { background: rgba(79, 70, 229, 0.15); color: #818cf8; }
+  .theme-dark .icon-emerald { background: rgba(5, 150, 105, 0.15); color: #34d399; }
+  .theme-dark .icon-purple { background: rgba(124, 58, 237, 0.15); color: #c084fc; }
+  .theme-dark .icon-blue { background: rgba(37, 99, 235, 0.15); color: #60a5fa; }
+
+  .simple-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .theme-dark .simple-card h3 {
+    color: #f8fafc;
+  }
+
+  .simple-card p {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+
+  .theme-dark .simple-card p {
+    color: #94a3b8;
+  }
+
+  .card-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4f46e5;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .theme-dark .card-link {
+    color: #818cf8;
+  }
+
+  /* Steps Row */
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .step-box {
+    padding: 22px 20px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+
+  .theme-dark .step-box {
+    background: #111827;
+    border-color: #1f2937;
+  }
+
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4f46e5;
+    margin-bottom: 8px;
+  }
+
+  .theme-dark .step-num {
+    color: #818cf8;
+  }
+
+  .step-box h4 {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px;
+  }
+
+  .theme-dark .step-box h4 {
+    color: #f8fafc;
+  }
+
+  .step-box p {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .theme-dark .step-box p {
+    color: #94a3b8;
+  }
+
+  /* Simple CTA Banner */
+  .simple-banner {
+    background: #0f172a;
+    border-radius: 20px;
+    padding: 44px 28px;
+    text-align: center;
+    color: #ffffff;
+    margin-top: 50px;
+  }
+
+  .theme-dark .simple-banner {
+    background: #111827;
+    border: 1px solid #1f2937;
+  }
+
+  .simple-banner h3 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .simple-banner p {
+    color: #94a3b8;
+    font-size: 0.98rem;
+    max-width: 500px;
+    margin: 0 auto 24px;
+    line-height: 1.5;
+  }
+
+  .simple-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 11px 22px;
+    border-radius: 9px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.92rem;
+    transition: transform 0.15s, background 0.15s;
+  }
+
+  .simple-banner-btn:hover {
+    transform: translateY(-1px);
+    background: #f1f5f9;
+  }
+</style>
+
+<!-- HERO -->
+<div class="simple-hero">
+  <div class="simple-badge">✨ AI-Powered Career Prep Platform</div>
+
+  {% if auth_notice %}
+  <div style="margin: 0 auto 24px; max-width: 520px; background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 0.92rem;">
+    Please login or sign up to access that page.
+  </div>
+  {% endif %}
+
+  <h1>Land your dream job <br><span>with AI precision.</span></h1>
+
+  <p>The all-in-one suite to audit your resume for ATS, master technical & behavioral interviews, and navigate your personalized career roadmap.</p>
+
+  <div class="simple-cta-group">
+    <a href="/resume" class="simple-btn-primary">Start with Resume Review →</a>
+    <a href="/career-map" class="simple-btn-secondary">Explore Career Roadmap</a>
+  </div>
 </div>
 
-<div class="skill-ticker" aria-hidden="true">
-    <div class="skill-track">
-        <span>Resume Optimization</span>
-        <span>ATS Alignment</span>
-        <span>Mock Interviews</span>
-        <span>Career Roadmapping</span>
-        <span>Mentor Sessions</span>
-        <span>Portfolio Positioning</span>
-        <span>Salary Storytelling</span>
-        <span>Behavioral Prep</span>
-        <span>Resume Optimization</span>
-        <span>ATS Alignment</span>
-        <span>Mock Interviews</span>
-        <span>Career Roadmapping</span>
+<!-- CAPABILITIES -->
+<div class="simple-section">
+  <div class="section-header">
+    <h2>Everything you need to get hired</h2>
+    <p>Targeted tools designed to accelerate each stage of your job search.</p>
+  </div>
+
+  <div class="simple-grid">
+    <a href="/resume" class="simple-card">
+      <div>
+        <div class="card-icon icon-indigo">📄</div>
+        <h3>Resume Review</h3>
+        <p>Instant ATS compatibility check, keyword density analysis, and bullet-point rewrites.</p>
+      </div>
+      <span class="card-link">Audit your resume →</span>
+    </a>
+
+    <a href="/interview/new" class="simple-card">
+      <div>
+        <div class="card-icon icon-emerald">💬</div>
+        <h3>Mock Interviews</h3>
+        <p>Realistic AI interview simulations tailored to your industry, target role, and seniority level.</p>
+      </div>
+      <span class="card-link">Start practice session →</span>
+    </a>
+
+    <a href="/career-map" class="simple-card">
+      <div>
+        <div class="card-icon icon-purple">🗺️</div>
+        <h3>Career Roadmap</h3>
+        <p>Visual graph canvas mapping critical skills, milestones, and resources to reach mastery.</p>
+      </div>
+      <span class="card-link">Build your roadmap →</span>
+    </a>
+
+    <a href="/coding/problems" class="simple-card">
+      <div>
+        <div class="card-icon icon-blue">💻</div>
+        <h3>Coding Practice</h3>
+        <p>Curated technical coding challenges with in-browser execution and smart hints.</p>
+      </div>
+      <span class="card-link">Solve challenges →</span>
+    </a>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div style="margin-top: 64px;">
+    <div class="section-header" style="margin-bottom: 32px;">
+      <h2>How it works</h2>
+      <p>Three straightforward steps to interview readiness.</p>
     </div>
+
+    <div class="steps-row">
+      <div class="step-box">
+        <div class="step-num">STEP 01</div>
+        <h4>Input Target Role</h4>
+        <p>Upload your current resume or choose the role and industry you want to transition into.</p>
+      </div>
+      <div class="step-box">
+        <div class="step-num">STEP 02</div>
+        <h4>AI Analysis & Prep</h4>
+        <p>Identify missing keywords, practice realistic interview questions, and solve coding tasks.</p>
+      </div>
+      <div class="step-box">
+        <div class="step-num">STEP 03</div>
+        <h4>Apply with Confidence</h4>
+        <p>Follow your tailored milestone roadmap and walk into every interview prepared.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="simple-banner">
+    <h3>Ready to elevate your career?</h3>
+    <p>Join candidates using ResuMate to optimize their profiles and land top offers.</p>
+    <a href="/signup" class="simple-banner-btn">Get Started for Free →</a>
+  </div>
 </div>
-
-<!-- INTERACTIVE TOOLS SECTION -->
-<div class="reveal-on-scroll" style="padding: 100px 40px; background: white;">
-    <div style="text-align: center; max-width: 800px; margin: 0 auto 60px;">
-        <div class="badge">Interactive Tools</div>
-        <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-top: 16px;">Try a mini AI session</h2>
-        <p style="color: #64748b; font-size: 1.125rem;">Experience the power of ResuMate before you even sign up.</p>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; max-width: 1200px; margin: 0 auto;">
-        <!-- QUICK QUESTION -->
-        <div style="background: #f8fafc; padding: 40px; border-radius: 24px; border: 1px solid #e2e8f0;">
-            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 12px;">
-                <span style="background: #111111; color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1rem;">?</span>
-                Interview Prep
-            </h3>
-            <p style="color: #64748b; margin-bottom: 24px;">Ask a common interview question and get a sample "Perfect Answer".</p>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <button class="btn-secondary" style="margin-left: 0; text-align: left; background: white; padding: 12px 16px;" onclick="alert('Sample Answer: I believe my strongest quality is my ability to simplify complex technical problems into actionable steps...')">"What is your greatest strength?"</button>
-                <button class="btn-secondary" style="margin-left: 0; text-align: left; background: white; padding: 12px 16px;" onclick="alert('Sample Answer: In my previous role, I encountered a conflict where... I resolved it by focusing on data-driven decisions...')">"Tell me about a time you had a conflict."</button>
-            </div>
-        </div>
-
-        <!-- QUICK ATS SCAN -->
-        <div style="background: #f8fafc; padding: 40px; border-radius: 24px; border: 1px solid #e2e8f0;">
-            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 12px;">
-                <span style="background: #10b981; color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1rem;">✓</span>
-                ATS Keyword Check
-            </h3>
-            <p style="color: #64748b; margin-bottom: 24px;">Check if your role includes these "Must-Have" keywords for 2026.</p>
-            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <span style="background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; font-weight: 600;">AI/ML</span>
-                    <span style="background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; font-weight: 600;">Scalability</span>
-                    <span style="background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; font-weight: 600;">System Architecture</span>
-                    <span style="background: #fef2f2; color: #dc2626; padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; font-weight: 600;">Legacy Support</span>
-                </div>
-                <p style="margin: 16px 0 0 0; font-size: 0.875rem; color: #64748b;">Missing "Scalability" in 40% of resumes.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- STATS BAR -->
-<div class="stats-bar">
-    <div class="stat-item">
-        <h3>50k+</h3>
-        <p>Resumes Scanned</p>
-    </div>
-    <div class="stat-item">
-        <h3>12k+</h3>
-        <p>Interviews Mocked</p>
-    </div>
-    <div class="stat-item">
-        <h3>98%</h3>
-        <p>Success Rate</p>
-    </div>
-</div>
-
-<!-- FEATURE CARDS -->
-<div class="features reveal-on-scroll">
-    <div class="feature-card">
-        <div class="feature-icon blue">📄</div>
-        <h3>Resume Analysis</h3>
-        <p>Upload your PDF/DOCX and get deep ATS-based scoring and improvement tips.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon purple">💬</div>
-        <h3>AI Mock Interviews</h3>
-        <p>Practice behavioral & technical questions with an AI that adapts to your field.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon green">📹</div>
-        <h3>1:1 Mentorship</h3>
-        <p>Schedule live sessions with industry experts via seamless video calls.</p>
-    </div>
-</div>
-
-<!-- TESTIMONIALS -->
-<div class="testimonials reveal-on-scroll">
-    <div class="badge">Success Stories</div>
-    <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin: 16px 0 48px;">Trusted by candidates at top companies</h2>
-    <div class="testimonial-grid">
-        <div class="testimonial-card">
-            <p>"The AI interview feedback was spot on. I landed a Senior Dev role at a top tech firm thanks to the practice I got here."</p>
-            <div class="user-info">
-                <div class="user-avatar">JD</div>
-                <div>
-                    <h4 style="margin: 0; font-size: 1rem;">Jane Doe</h4>
-                    <p style="margin: 0; font-size: 0.875rem; color: #64748b; font-style: normal;">Software Engineer</p>
-                </div>
-            </div>
-        </div>
-        <div class="testimonial-card">
-            <p>"My resume went from getting ignored to multiple callbacks a week. The ATS scoring is a game changer."</p>
-            <div class="user-info">
-                <div class="user-avatar">SM</div>
-                <div>
-                    <h4 style="margin: 0; font-size: 1rem;">Sam Miller</h4>
-                    <p style="margin: 0; font-size: 0.875rem; color: #64748b; font-style: normal;">Product Designer</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MARKET TRENDS WIDGET -->
-<div class="reveal-on-scroll" style="padding: 60px 40px; background: #0f172a; color: white;">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap;">
-        <div>
-            <h2 style="font-size: 2rem; font-weight: 800; margin: 0;">2026 Job Market Pulse</h2>
-            <p style="opacity: 0.7; margin: 8px 0 0 0;">Real-time AI-driven career trends.</p>
-        </div>
-        <div style="display: flex; gap: 32px; overflow-x: auto; padding-bottom: 10px;">
-            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); min-width: 200px;">
-                <div style="color: #10b981; font-weight: 700; font-size: 0.875rem;">↑ 14%</div>
-                <div style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;">Python Roles</div>
-                <div style="opacity: 0.5; font-size: 0.75rem;">Strong demand in Fintech</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); min-width: 200px;">
-                <div style="color: #10b981; font-weight: 700; font-size: 0.875rem;">↑ 22%</div>
-                <div style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;">AI Engineers</div>
-                <div style="opacity: 0.5; font-size: 0.75rem;">Highest growth sector</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); min-width: 200px;">
-                <div style="color: #fbbf24; font-weight: 700; font-size: 0.875rem;">↔ Stable</div>
-                <div style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;">PM Roles</div>
-                <div style="opacity: 0.5; font-size: 0.75rem;">Focus on Technical PMs</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- FAQ SECTION -->
-<div class="faq-section reveal-on-scroll">
-    <div class="badge">FAQ</div>
-    <h2 style="font-size: 2.5rem; font-weight: 800; color: #0f172a; margin: 16px 0 48px; text-align: center;">Frequently Asked Questions</h2>
-    
-    <div class="faq-item">
-        <div class="faq-question">How accurate is the AI scoring? <span>+</span></div>
-        <div class="faq-answer">Our AI uses the same algorithms as modern Applicant Tracking Systems (ATS), providing 95%+ accuracy in identifying keywords and formatting issues.</div>
-    </div>
-    
-    <div class="faq-item">
-        <div class="faq-question">Can I practice for specific companies? <span>+</span></div>
-        <div class="faq-answer">Yes! You can specify the company and role, and our AI will generate questions based on real interview data from those firms.</div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">Is my data secure? <span>+</span></div>
-        <div class="faq-answer">Absolutely. We use industry-standard encryption, and your resumes are never shared with third parties.</div>
-    </div>
-</div>
-
-<!-- NEWSLETTER -->
-<div class="newsletter reveal-on-scroll">
-    <div class="badge">Newsletter</div>
-    <h2>Get career tips in your inbox</h2>
-    <p style="color: #64748b; margin-bottom: 24px;">Join 10,000+ job seekers receiving weekly AI-powered career advice.</p>
-    <form>
-        <input type="email" placeholder="Enter your email" required>
-        <button type="submit" class="btn-primary" style="border: none; cursor: pointer;">Subscribe</button>
-    </form>
-</div>
-
-<!-- CTA SECTION -->
-<div class="cta-section reveal-on-scroll">
-    <h2>Ready to elevate your career?</h2>
-    <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">Join thousands of job seekers using ResuMate to land their dream roles.</p>
-    <div class="buttons">
-        <a href="/resume" class="btn-primary" style="background: white; color: #111111; box-shadow: none;">Get Started Now →</a>
-        <a href="/book-call" class="btn-secondary">Talk to a Mentor</a>
-    </div>
-</div>
-
-<!-- FOOTER -->
-<footer style="padding: 60px 40px; background: white; border-top: 1px solid #e2e8f0; text-align: center;">
-    <div class="logo" style="justify-content: center; margin-bottom: 24px;">
-        <div class="logo-box">R</div>
-        <span>ResuMate</span>
-    </div>
-    <p style="color: #94a3b8; font-size: 0.875rem;">&copy; 2026 ResuMate AI. All rights reserved.</p>
-</footer>
-
-<script>
-(() => {
-  const items = document.querySelectorAll(".reveal-on-scroll");
-  if (!("IntersectionObserver" in window)) return;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  items.forEach((item) => observer.observe(item));
-})();
-</script>
 
 {% endblock %}
