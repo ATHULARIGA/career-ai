@@ -4,61 +4,61 @@
 <!-- Safety & Feedback KPI row -->
 <div class="adm-kpi-row">
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">OPEN FEEDBACK TICKETS</p>
+    <p class="adm-kpi-label">OPEN FEEDBACK</p>
     {% set open_tickets = admin.feedback_queue|selectattr('5', 'equalto', 'open')|list %}
-    <h3 class="adm-kpi-val" style="color: {% if open_tickets|length > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+    <h3 class="adm-kpi-val" style="color: {% if open_tickets|length > 0 %}var(--adm-warning){% else %}var(--adm-success){% endif %};">
       {{ open_tickets|length }}
     </h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Awaiting investigation</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Awaiting review</span>
   </div>
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">TOTAL FEEDBACK REPORTS</p>
+    <p class="adm-kpi-label">TOTAL FEEDBACK</p>
     <h3 class="adm-kpi-val">{{ admin.feedback_queue|length }}</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Interview / Resume / Platform</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Candidate reports</span>
   </div>
   <div class="adm-kpi-card">
     <p class="adm-kpi-label">MODERATION EVENTS</p>
-    <h3 class="adm-kpi-val" style="color: {% if admin.safety_events|length > 0 %}#ef4444{% else %}#10b981{% endif %};">
+    <h3 class="adm-kpi-val" style="color: {% if admin.safety_events|length > 0 %}var(--adm-danger){% else %}var(--adm-success){% endif %};">
       {{ admin.safety_events|length }}
     </h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Prompt abuse & guardrail trips</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Guardrail triggers</span>
   </div>
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">AUDIT LOG ENTRIES</p>
+    <p class="adm-kpi-label">AUDIT LOGS</p>
     <h3 class="adm-kpi-val">{{ admin.audit_logs|length }}</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Admin and auth events</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Security actions</span>
   </div>
 </div>
 
 <!-- Feedback & Moderation Grid -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
 
   <!-- Feedback Queue -->
-  <section class="adm-card" style="margin-bottom:0;">
+  <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
-        <h2>User Feedback & Triage Queue</h2>
-        <p>Candidate reports and feature evaluations.</p>
+        <h2>Feedback Triage</h2>
+        <p>Candidate reports and quality assessments.</p>
       </div>
     </div>
 
     <!-- Feedback Table -->
-    <div class="adm-table-container" style="margin-bottom:20px; max-height: 480px; overflow-y: auto;">
+    <div class="adm-table-container" style="margin-bottom: 16px; max-height: 440px; overflow-y: auto;">
       <table class="adm-table">
         <thead>
           <tr>
-            <th>Ticket / Source</th>
+            <th>Ticket</th>
             <th>Severity</th>
             <th>Issue Details</th>
-            <th>Status / Update</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {% for f in admin.feedback_queue %}
           <tr>
             <td>
-              <strong style="color:var(--ui-text);">#{{ f[0] }}</strong>
-              <div style="font-size:0.75rem; color:var(--ui-text-muted); margin-top:2px;">
+              <strong style="color: var(--adm-text);">#{{ f[0] }}</strong>
+              <div style="font-size: 0.74rem; color: var(--adm-text-muted); margin-top: 2px;">
                 {{ f[2]|capitalize }}
               </div>
             </td>
@@ -66,7 +66,7 @@
               {% if f[3] == 'critical' %}
               <span class="badge-fail">Critical</span>
               {% elif f[3] == 'high' %}
-              <span class="badge-pending" style="color:#ef4444; border-color:rgba(239,68,68,0.25);">High</span>
+              <span class="badge-pending" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.25);">High</span>
               {% elif f[3] == 'medium' %}
               <span class="badge-pending">Medium</span>
               {% else %}
@@ -74,22 +74,22 @@
               {% endif %}
             </td>
             <td>
-              <p style="margin:0; font-size:0.82rem; line-height:1.4; max-width:260px;">{{ f[4] }}</p>
+              <p style="margin: 0; font-size: 0.8rem; line-height: 1.4; max-width: 240px; color: var(--adm-text);">{{ f[4] }}</p>
             </td>
             <td>
-              <form method="post" action="/admin/feedback/{{ f[0] }}/status" style="display:flex; gap:6px; align-items:center;">
-                <select name="status" style="padding:4px 6px; font-size:0.75rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+              <form method="post" action="/admin/feedback/{{ f[0] }}/status" style="display: flex; gap: 5px; align-items: center;">
+                <select name="status" class="adm-input" style="padding: 3px 6px; font-size: 0.72rem; width: 100px;">
                   <option value="open" {% if f[5] == "open" %}selected{% endif %}>open</option>
                   <option value="in_progress" {% if f[5] == "in_progress" %}selected{% endif %}>in_progress</option>
                   <option value="resolved" {% if f[5] == "resolved" %}selected{% endif %}>resolved</option>
                 </select>
-                <button type="submit" class="adm-btn-subtle" style="padding:4px 8px; font-size:0.72rem;">Save</button>
+                <button type="submit" class="adm-btn" style="padding: 3px 6px; font-size: 0.7rem;">Save</button>
               </form>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="4" style="text-align:center; color:var(--ui-text-muted); padding:24px;">
+            <td colspan="4" style="text-align: center; color: var(--adm-text-muted); padding: 20px; font-size: 0.82rem;">
               No feedback items reported.
             </td>
           </tr>
@@ -99,17 +99,17 @@
     </div>
 
     <!-- Manual Feedback Logging Form -->
-    <div style="padding:16px; border-radius:10px; background:var(--ui-bg); border:1px solid var(--ui-border);">
-      <h3 style="font-size:0.88rem; font-weight:700; margin:0 0 12px; color:var(--ui-text);">Log Feedback Ticket</h3>
-      <form method="post" action="/admin/feedback" style="display:flex; flex-direction:column; gap:10px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div class="adm-sub-card">
+      <h3 style="font-size: 0.82rem; font-weight: 600; margin: 0 0 10px; color: var(--adm-text);">Log Feedback Item</h3>
+      <form method="post" action="/admin/feedback" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Source</label>
-            <input name="source" placeholder="e.g. interview / resume / roadmap" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Source</label>
+            <input name="source" placeholder="interview / resume / roadmap" required class="adm-input" style="padding: 6px 8px;">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Severity</label>
-            <select name="severity" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Severity</label>
+            <select name="severity" class="adm-input" style="padding: 6px 8px;">
               <option>low</option>
               <option>medium</option>
               <option>high</option>
@@ -118,33 +118,35 @@
           </div>
         </div>
         <div>
-          <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Issue Details</label>
-          <textarea name="message" rows="2" placeholder="Candidate reported inaccurate feedback on behavioral question #3..." required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:inherit;"></textarea>
+          <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Details</label>
+          <textarea name="message" rows="2" placeholder="Candidate issue summary..." required class="adm-input" style="padding: 6px 8px; font-family: inherit;"></textarea>
         </div>
-        <div style="text-align:right;">
-          <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb;">Add to Queue</button>
+        <div style="text-align: right;">
+          <button type="submit" class="adm-btn" style="background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary); padding: 5px 12px; font-size: 0.8rem;">
+            Add Ticket
+          </button>
         </div>
       </form>
     </div>
   </section>
 
   <!-- Safety & Moderation Console -->
-  <section class="adm-card" style="margin-bottom:0;">
+  <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
-        <h2>Safety & Moderation Events</h2>
-        <p>Guardrail breaches, prompt injections, and flagged requests.</p>
+        <h2>Safety Events</h2>
+        <p>Guardrail breaches, prompt injections, and flagged input.</p>
       </div>
     </div>
 
     <!-- Safety Events Table -->
-    <div class="adm-table-container" style="margin-bottom:20px; max-height: 480px; overflow-y: auto;">
+    <div class="adm-table-container" style="margin-bottom: 16px; max-height: 440px; overflow-y: auto;">
       <table class="adm-table">
         <thead>
           <tr>
-            <th>Event / Level</th>
+            <th>Event</th>
             <th>Type</th>
-            <th>Payload Preview</th>
+            <th>Payload</th>
           </tr>
         </thead>
         <tbody>
@@ -152,23 +154,23 @@
           <tr>
             <td>
               <span class="badge-fail">{{ s[2]|upper }}</span>
-              <div style="font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ui-text-muted); margin-top:4px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--adm-text-muted); margin-top: 3px;">
                 #{{ s[0] }}
               </div>
             </td>
             <td>
-              <strong style="font-size:0.82rem; color:var(--ui-text);">{{ s[3] }}</strong>
+              <strong style="font-size: 0.8rem; color: var(--adm-text);">{{ s[3] }}</strong>
             </td>
             <td>
-              <code style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem; display:block; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ui-text-muted);">
+              <code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; display: block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--adm-text-muted);">
                 {{ s[4] }}
               </code>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="3" style="text-align:center; color:var(--ui-text-muted); padding:24px;">
-              No safety or moderation incidents on record.
+            <td colspan="3" style="text-align: center; color: var(--adm-text-muted); padding: 20px; font-size: 0.82rem;">
+              No safety or moderation incidents logged.
             </td>
           </tr>
           {% endfor %}
@@ -177,13 +179,13 @@
     </div>
 
     <!-- Manual Safety Event Logger -->
-    <div style="padding:16px; border-radius:10px; background:var(--ui-bg); border:1px solid var(--ui-border);">
-      <h3 style="font-size:0.88rem; font-weight:700; margin:0 0 12px; color:var(--ui-text);">Report Safety Incident</h3>
-      <form method="post" action="/admin/safety/report" style="display:flex; flex-direction:column; gap:10px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div class="adm-sub-card">
+      <h3 style="font-size: 0.82rem; font-weight: 600; margin: 0 0 10px; color: var(--adm-text);">Report Incident</h3>
+      <form method="post" action="/admin/safety/report" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Threat Level</label>
-            <select name="level" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Threat Level</label>
+            <select name="level" class="adm-input" style="padding: 6px 8px;">
               <option>low</option>
               <option>medium</option>
               <option>high</option>
@@ -191,16 +193,18 @@
             </select>
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Event Type</label>
-            <input name="event_type" placeholder="e.g. prompt_abuse, spam_submission" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Event Type</label>
+            <input name="event_type" placeholder="prompt_abuse, rate_limit_spike" required class="adm-input" style="padding: 6px 8px;">
           </div>
         </div>
         <div>
-          <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Payload / Evidence</label>
-          <textarea name="payload" rows="2" placeholder="System prompt extraction attempt: Ignore previous instructions..." style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;"></textarea>
+          <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Payload Evidence</label>
+          <textarea name="payload" rows="2" placeholder="Evidence payload..." class="adm-input" style="padding: 6px 8px; font-family: monospace; font-size: 0.76rem;"></textarea>
         </div>
-        <div style="text-align:right;">
-          <button type="submit" class="adm-btn-subtle" style="background:#dc2626; color:#fff; border-color:#dc2626;">Log Incident</button>
+        <div style="text-align: right;">
+          <button type="submit" class="adm-btn adm-btn-danger" style="padding: 5px 12px; font-size: 0.8rem;">
+            Log Event
+          </button>
         </div>
       </form>
     </div>
@@ -212,8 +216,8 @@
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>Administrative Audit Log</h2>
-      <p>Immutable record of administrative actions, config updates, and access events.</p>
+      <h2>Security & Audit Trail</h2>
+      <p>Immutable record of administrative actions and access events.</p>
     </div>
   </div>
 
@@ -229,16 +233,16 @@
       <tbody>
         {% for a in admin.audit_logs[:25] %}
         <tr>
-          <td><strong style="color:#60a5fa; font-family:'IBM Plex Mono', monospace; font-size:0.78rem;">{{ a[1] }}</strong></td>
-          <td><span class="badge-ok" style="font-size:0.74rem;">{{ a[2] }}</span></td>
-          <td style="font-size:0.82rem; color:var(--ui-text-muted); max-width:500px; word-break:break-word;">
+          <td><strong style="color: var(--adm-primary); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;">{{ a[1] }}</strong></td>
+          <td><span class="badge-ok" style="font-size: 0.72rem;">{{ a[2] }}</span></td>
+          <td style="font-size: 0.8rem; color: var(--adm-text-muted); max-width: 500px; word-break: break-word;">
             {{ a[3] }}
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="3" style="text-align:center; color:var(--ui-text-muted); padding:24px;">
-            No audit records found.
+          <td colspan="3" style="text-align: center; color: var(--adm-text-muted); padding: 24px; font-size: 0.84rem;">
+            No audit log entries recorded.
           </td>
         </tr>
         {% endfor %}

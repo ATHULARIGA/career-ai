@@ -2,11 +2,63 @@
 {% block content %}
 
 <style>
-/* ── Modern SaaS Admin Console Design System ──────────────────────── */
+/* ── Premium SaaS Admin Console Design System ──────────────────────── */
+:root {
+  --adm-bg: #f8fafc;
+  --adm-surface: #ffffff;
+  --adm-surface-subtle: #f1f5f9;
+  --adm-surface-elevated: #ffffff;
+  --adm-border: #e2e8f0;
+  --adm-border-subtle: #edf2f7;
+  --adm-text: #0f172a;
+  --adm-text-muted: #64748b;
+  --adm-text-dim: #94a3b8;
+  --adm-primary: #0f172a;
+  --adm-primary-text: #ffffff;
+  --adm-accent: #2563eb;
+  --adm-accent-glow: rgba(37, 99, 235, 0.12);
+  --adm-danger: #dc2626;
+  --adm-success: #16a34a;
+  --adm-warning: #d97706;
+  --adm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --adm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+html.theme-dark,
+.theme-dark {
+  --adm-bg: #090d16 !important;
+  --adm-surface: #0f172a !important;
+  --adm-surface-subtle: #141d2e !important;
+  --adm-surface-elevated: #111a2c !important;
+  --adm-border: #1e293b !important;
+  --adm-border-subtle: #192438 !important;
+  --adm-text: #f8fafc !important;
+  --adm-text-muted: #94a3b8 !important;
+  --adm-text-dim: #64748b !important;
+  --adm-primary: #3b82f6 !important;
+  --adm-primary-text: #ffffff !important;
+  --adm-accent: #60a5fa !important;
+  --adm-accent-glow: rgba(96, 165, 250, 0.12);
+  --adm-danger: #ef4444 !important;
+  --adm-success: #10b981 !important;
+  --adm-warning: #f59e0b !important;
+  --adm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --adm-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Page Canvas */
 .adm-page {
-  padding: 36px 20px 80px;
-  background: var(--ui-bg);
+  padding: 32px 24px 80px;
+  background-color: var(--adm-bg);
   min-height: calc(100vh - 72px);
+  color: var(--adm-text);
+}
+
+html.theme-dark .adm-page,
+.theme-dark .adm-page,
+.theme-dark body {
+  background-color: #090d16 !important;
+  color: #f8fafc !important;
 }
 
 .adm-container {
@@ -22,228 +74,363 @@
   gap: 20px;
   flex-wrap: wrap;
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--ui-border);
   padding-bottom: 20px;
+  border-bottom: 1px solid var(--adm-border);
 }
 
 .adm-eyebrow {
   margin: 0 0 6px;
-  color: var(--ui-text-muted);
+  color: var(--adm-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .adm-header h1 {
-  margin: 0 0 6px;
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--ui-text);
+  margin: 0 0 4px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--adm-text);
 }
 
 .adm-header p {
   margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.95rem;
+  color: var(--adm-text-muted);
+  font-size: 0.9rem;
 }
 
 .adm-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.adm-btn-subtle {
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-border);
-  color: var(--ui-text);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.84rem;
+.adm-btn {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  color: var(--adm-text);
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s;
-}
-.theme-dark .adm-btn-subtle {
-  background: #111827;
-  border-color: #1f2937;
-}
-.adm-btn-subtle:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Tab Navigation Bar */
+html.theme-dark .adm-btn,
+.theme-dark .adm-btn {
+  background: #111a2c !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.adm-btn:hover {
+  border-color: var(--adm-primary);
+  color: var(--adm-primary);
+}
+
+.adm-btn-danger {
+  color: var(--adm-danger) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.adm-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: var(--adm-danger) !important;
+}
+
+/* Tab Navigation */
 .adm-nav-wrap {
   display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--ui-border);
+  gap: 6px;
+  border-bottom: 1px solid var(--adm-border);
   margin-bottom: 28px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
 
 .adm-nav-item {
-  padding: 10px 18px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--ui-text-muted);
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--adm-text-muted);
   text-decoration: none;
-  border-radius: 8px 8px 0 0;
+  border-radius: 6px 6px 0 0;
   border-bottom: 2px solid transparent;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 .adm-nav-item:hover {
-  color: var(--ui-text);
+  color: var(--adm-text);
 }
 
 .adm-nav-item.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-  font-weight: 700;
-}
-.theme-dark .adm-nav-item.active {
-  color: #60a5fa;
-  border-bottom-color: #60a5fa;
+  color: var(--adm-primary);
+  border-bottom-color: var(--adm-primary);
+  font-weight: 600;
 }
 
 .adm-nav-badge {
-  background: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
-  font-size: 0.72rem;
+  background: var(--adm-surface-subtle);
+  color: var(--adm-text-muted);
+  font-size: 0.7rem;
   font-family: "IBM Plex Mono", monospace;
-  font-weight: 700;
-  padding: 2px 7px;
+  font-weight: 600;
+  padding: 1px 6px;
   border-radius: 999px;
+  border: 1px solid var(--adm-border);
+}
+
+.adm-nav-item.active .adm-nav-badge {
+  background: var(--adm-accent-glow);
+  color: var(--adm-primary);
+  border-color: transparent;
 }
 
 /* KPI Cards */
 .adm-kpi-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .adm-kpi-card {
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-border);
-  border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: var(--ui-shadow);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: var(--adm-shadow-sm);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
+
+html.theme-dark .adm-kpi-card,
 .theme-dark .adm-kpi-card {
-  background: #111827 !important;
-  border-color: #1f2937 !important;
+  background: #0f172a !important;
+  border-color: #1e293b !important;
 }
 
 .adm-kpi-label {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-family: "IBM Plex Mono", monospace;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ui-text-muted);
+  letter-spacing: 0.08em;
+  color: var(--adm-text-dim);
   margin: 0 0 8px;
 }
 
 .adm-kpi-val {
-  font-size: 1.85rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
   margin: 0;
-  color: var(--ui-text);
+  color: var(--adm-text);
 }
 
-/* Panel Containers */
+/* Main Container Cards */
 .adm-card {
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-border);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: var(--ui-shadow);
-  margin-bottom: 24px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: var(--adm-shadow-sm);
+  margin-bottom: 20px;
 }
+
+html.theme-dark .adm-card,
 .theme-dark .adm-card {
-  background: #111827 !important;
-  border-color: #1f2937 !important;
+  background: #0f172a !important;
+  border-color: #1e293b !important;
 }
 
 .adm-card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--ui-border);
+  border-bottom: 1px solid var(--adm-border);
 }
 
 .adm-card-head h2 {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0;
-  color: var(--ui-text);
+  color: var(--adm-text);
 }
 
 .adm-card-head p {
-  font-size: 0.85rem;
-  color: var(--ui-text-muted);
+  font-size: 0.82rem;
+  color: var(--adm-text-muted);
   margin: 2px 0 0;
+}
+
+/* Sub-cards and nested tiles (Guaranteed Dark in Theme Dark) */
+.adm-sub-card {
+  background: var(--adm-surface-subtle);
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+html.theme-dark .adm-sub-card,
+.theme-dark .adm-sub-card {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Funnel Step Item */
+.adm-funnel-step {
+  background: var(--adm-surface-subtle);
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.15s ease;
+}
+
+html.theme-dark .adm-funnel-step,
+.theme-dark .adm-funnel-step {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+}
+
+.adm-funnel-step.highlight {
+  background: var(--adm-accent-glow);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.adm-step-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--adm-text-muted);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+html.theme-dark .adm-step-num,
+.theme-dark .adm-step-num {
+  background: #090d16 !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+/* Metric tile */
+.adm-metric-tile {
+  background: var(--adm-surface-subtle);
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+html.theme-dark .adm-metric-tile,
+.theme-dark .adm-metric-tile {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+}
+
+/* Inputs & Form Controls */
+.adm-input {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 6px;
+  color: var(--adm-text);
+  padding: 8px 12px;
+  font-size: 0.84rem;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+html.theme-dark .adm-input,
+.theme-dark .adm-input,
+html.theme-dark select.adm-input,
+.theme-dark select.adm-input,
+html.theme-dark textarea.adm-input,
+.theme-dark textarea.adm-input {
+  background: #090d16 !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.adm-input:focus {
+  outline: none;
+  border-color: var(--adm-primary);
 }
 
 /* Tables */
 .adm-table-container {
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  border: 1px solid var(--adm-border);
+}
+
+html.theme-dark .adm-table-container,
+.theme-dark .adm-table-container {
+  border-color: #1e293b !important;
 }
 
 .adm-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 .adm-table th {
-  background: var(--ui-bg);
-  color: var(--ui-text-muted);
-  font-size: 0.75rem;
+  background: var(--adm-surface-subtle);
+  color: var(--adm-text-muted);
+  font-size: 0.72rem;
   font-family: "IBM Plex Mono", monospace;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 12px 16px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--ui-border);
+  padding: 10px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--adm-border);
 }
+
+html.theme-dark .adm-table th,
 .theme-dark .adm-table th {
-  background: #0b0f19 !important;
-  border-color: #1f2937 !important;
+  background: #090d16 !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
 }
 
 .adm-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--ui-border);
-  color: var(--ui-text);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--adm-border);
+  color: var(--adm-text);
   vertical-align: middle;
 }
+
+html.theme-dark .adm-table td,
 .theme-dark .adm-table td {
-  border-color: #1f2937 !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
 }
 
 .adm-table tr:last-child td {
@@ -251,91 +438,118 @@
 }
 
 .adm-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--adm-surface-subtle);
 }
 
-/* Pills & Status Badges */
+html.theme-dark .adm-table tr:hover td,
+.theme-dark .adm-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Status Badges (No Emojis) */
 .badge-ok {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16, 185, 129, 0.1);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.74rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
   font-family: "IBM Plex Mono", monospace;
-  font-weight: 700;
+  font-weight: 600;
+  display: inline-block;
 }
 
 .badge-pending {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.74rem;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
   font-family: "IBM Plex Mono", monospace;
-  font-weight: 700;
+  font-weight: 600;
+  display: inline-block;
 }
 
 .badge-fail {
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.74rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
   font-family: "IBM Plex Mono", monospace;
-  font-weight: 700;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-neutral {
+  background: var(--adm-surface-subtle);
+  color: var(--adm-text-muted);
+  border: 1px solid var(--adm-border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  display: inline-block;
+}
+
+html.theme-dark .badge-neutral,
+.theme-dark .badge-neutral {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
 }
 </style>
 
 <section class="adm-page">
   <div class="adm-container">
 
-    <!-- Top Command Center Header -->
+    <!-- Top Administration Header -->
     <header class="adm-header">
       <div>
-        <p class="adm-eyebrow">ADMIN CONSOLE 2.0</p>
-        <h1>Operations Command Center</h1>
-        <p>Monitor platform growth, review user upgrades, oversee mentorship, and manage AI systems.</p>
+        <p class="adm-eyebrow">SYSTEM ADMINISTRATION</p>
+        <h1>Platform Console</h1>
+        <p>Operational health, user conversion metrics, and system controls.</p>
       </div>
       <div class="adm-actions">
-        <a class="adm-btn-subtle" href="/admin/export?format=json">
-          <span>↓ Export JSON</span>
+        <a class="adm-btn" href="/admin/export?format=json">
+          <span>Export JSON</span>
         </a>
-        <a class="adm-btn-subtle" href="/admin/export?format=csv">
-          <span>↓ Export CSV</span>
+        <a class="adm-btn" href="/admin/export?format=csv">
+          <span>Export CSV</span>
         </a>
-        <a class="adm-btn-subtle" href="/admin-logout" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">
-          <span>Logout</span>
+        <a class="adm-btn adm-btn-danger" href="/admin-logout">
+          <span>Sign Out</span>
         </a>
       </div>
     </header>
 
-    <!-- Tabbed Navigation Bar -->
+    <!-- Clean Tab Navigation (No Emojis) -->
     <nav class="adm-nav-wrap">
       <a href="/admin" class="adm-nav-item {% if active_admin_page == 'overview' %}active{% endif %}">
-        <span>📊 Overview & Growth</span>
+        <span>Overview</span>
       </a>
       <a href="/admin/premium" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
-        <span>💎 Premium Queue</span>
+        <span>Premium Queue</span>
       </a>
       <a href="/admin/bookings" class="adm-nav-item {% if active_admin_page == 'bookings' %}active{% endif %}">
-        <span>📅 Mentorship Bookings</span>
+        <span>Mentorship Bookings</span>
         <span class="adm-nav-badge">{{ admin.kpis.total_bookings }}</span>
       </a>
       <a href="/admin/coding" class="adm-nav-item {% if active_admin_page == 'coding' %}active{% endif %}">
-        <span>💻 Coding Question Bank</span>
+        <span>Question Bank</span>
       </a>
       <a href="/admin/experiments" class="adm-nav-item {% if active_admin_page == 'experiments' %}active{% endif %}">
-        <span>🧪 AI Telemetry & Prompts</span>
+        <span>Model Telemetry</span>
       </a>
       <a href="/admin/safety" class="adm-nav-item {% if active_admin_page == 'safety' %}active{% endif %}">
-        <span>🛡️ Safety & Plagiarism</span>
+        <span>Safety & Moderation</span>
       </a>
     </nav>
 
-    <!-- Page Content Injected Here -->
+    <!-- Injected Subpage Content -->
     {% block admin_content %}{% endblock %}
 
   </div>

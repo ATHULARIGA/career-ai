@@ -4,59 +4,59 @@
 <!-- AI Performance Overview -->
 <div class="adm-kpi-row">
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">AI SUCCESS RATE</p>
-    <h3 class="adm-kpi-val" style="color: {% if admin.model_health.success_rate >= 90 %}#10b981{% else %}#ef4444{% endif %};">
+    <p class="adm-kpi-label">INFERENCE SUCCESS</p>
+    <h3 class="adm-kpi-val" style="color: {% if admin.model_health.success_rate >= 90 %}var(--adm-success){% else %}var(--adm-danger){% endif %};">
       {{ admin.model_health.success_rate }}%
     </h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Last 50 inferences</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Last 50 inferences</span>
   </div>
   <div class="adm-kpi-card">
     <p class="adm-kpi-label">AVG LATENCY</p>
     <h3 class="adm-kpi-val">{{ admin.model_health.avg_latency_ms }}ms</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">End-to-end API response time</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">End-to-end response time</span>
   </div>
   <div class="adm-kpi-card">
     <p class="adm-kpi-label">FALLBACK RATE</p>
-    <h3 class="adm-kpi-val" style="color: {% if admin.model_health.fallback_rate <= 10 %}#10b981{% else %}#f59e0b{% endif %};">
+    <h3 class="adm-kpi-val" style="color: {% if admin.model_health.fallback_rate <= 10 %}var(--adm-success){% else %}var(--adm-warning){% endif %};">
       {{ admin.model_health.fallback_rate }}%
     </h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Secondary model switch rate</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Secondary model switch rate</span>
   </div>
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">ACTIVE PROMPT EXPERIMENTS</p>
+    <p class="adm-kpi-label">ROUTING RULES</p>
     <h3 class="adm-kpi-val">{{ admin.experiments|length }}</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Configured features</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Configured features</span>
   </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
 
-  <!-- Prompt & Model Routing Matrix -->
-  <section class="adm-card" style="margin-bottom:0;">
+  <!-- Feature Model Routing -->
+  <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
-        <h2>Feature Model Routing</h2>
-        <p>Assign prompts and LLM engines per feature.</p>
+        <h2>Model Routing</h2>
+        <p>Assign prompt versions and inference providers per feature.</p>
       </div>
     </div>
 
     <!-- Active Experiments List -->
-    <div class="adm-table-container" style="margin-bottom:20px;">
+    <div class="adm-table-container" style="margin-bottom: 16px;">
       <table class="adm-table">
         <thead>
           <tr>
             <th>Feature</th>
             <th>Version</th>
-            <th>Target Model</th>
+            <th>Target Engine</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {% for exp in admin.experiments %}
           <tr>
-            <td><strong style="color:var(--ui-text);">{{ exp[0] }}</strong></td>
-            <td><code style="font-family:'IBM Plex Mono', monospace; font-size:0.78rem;">{{ exp[1] }}</code></td>
-            <td style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ui-text-muted);">{{ exp[2] }}</td>
+            <td><strong style="color: var(--adm-text);">{{ exp[0] }}</strong></td>
+            <td><code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;">{{ exp[1] }}</code></td>
+            <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--adm-text-muted);">{{ exp[2] }}</td>
             <td>
               {% if exp[3] == 1 %}
               <span class="badge-ok">Active</span>
@@ -67,8 +67,8 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="4" style="text-align:center; color:var(--ui-text-muted); padding:20px;">
-              No custom routing rules set. System defaults are active.
+            <td colspan="4" style="text-align: center; color: var(--adm-text-muted); padding: 18px; font-size: 0.82rem;">
+              No custom routing rules set. Standard defaults active.
             </td>
           </tr>
           {% endfor %}
@@ -77,28 +77,28 @@
     </div>
 
     <!-- Add/Update Experiment Form -->
-    <div style="padding:16px; border-radius:10px; background:var(--ui-bg); border:1px solid var(--ui-border);">
-      <h3 style="font-size:0.88rem; font-weight:700; margin:0 0 12px; color:var(--ui-text);">Configure Routing Rule</h3>
-      <form method="post" action="/admin/experiments/save" style="display:flex; flex-direction:column; gap:12px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div class="adm-sub-card">
+      <h3 style="font-size: 0.82rem; font-weight: 600; margin: 0 0 10px; color: var(--adm-text);">Configure Route</h3>
+      <form method="post" action="/admin/experiments/save" style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Feature Name</label>
-            <input name="feature" placeholder="e.g. resume_review" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Feature</label>
+            <input name="feature" placeholder="resume_review" required class="adm-input" style="padding: 6px 8px;">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Prompt Version</label>
-            <input name="prompt_version" placeholder="e.g. v2.4-strict" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Prompt Version</label>
+            <input name="prompt_version" placeholder="v2.4-strict" required class="adm-input" style="padding: 6px 8px;">
           </div>
         </div>
         <div>
-          <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">LLM Engine / Provider</label>
-          <input name="model_name" placeholder="e.g. gemini-2.5-flash or openai/gpt-4o-mini" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+          <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">LLM Engine / Provider</label>
+          <input name="model_name" placeholder="gemini-2.5-flash or openai/gpt-4o-mini" required class="adm-input" style="padding: 6px 8px;">
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-          <label style="font-size:0.82rem; color:var(--ui-text); display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <label style="font-size: 0.78rem; color: var(--adm-text); display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <input type="checkbox" name="enabled" checked> Enable rule
           </label>
-          <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb;">
+          <button type="submit" class="adm-btn" style="background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary); padding: 5px 12px; font-size: 0.8rem;">
             Save Route
           </button>
         </div>
@@ -107,43 +107,43 @@
   </section>
 
   <!-- A/B Testing Configuration -->
-  <section class="adm-card" style="margin-bottom:0;">
+  <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
         <h2>A/B Experiments</h2>
-        <p>Split traffic across prompt variants or scoring models.</p>
+        <p>Traffic splitting across prompt variants and rubrics.</p>
       </div>
     </div>
 
     <!-- Active A/B Tests Table -->
-    <div class="adm-table-container" style="margin-bottom:20px;">
+    <div class="adm-table-container" style="margin-bottom: 16px;">
       <table class="adm-table">
         <thead>
           <tr>
             <th>Experiment</th>
             <th>Variant A</th>
             <th>Variant B</th>
-            <th>Winning Variant</th>
+            <th>Result</th>
           </tr>
         </thead>
         <tbody>
           {% for ab in admin.ab_tests %}
           <tr>
-            <td><strong style="color:var(--ui-text);">{{ ab[0] }}</strong></td>
-            <td><code style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">{{ ab[1] }}</code></td>
-            <td><code style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">{{ ab[2] }}</code></td>
+            <td><strong style="color: var(--adm-text);">{{ ab[0] }}</strong></td>
+            <td><code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;">{{ ab[1] }}</code></td>
+            <td><code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;">{{ ab[2] }}</code></td>
             <td>
               {% if ab[3] %}
               <span class="badge-ok">{{ ab[3] }}</span>
               {% else %}
-              <span class="badge-pending">Active (50/50)</span>
+              <span class="badge-pending">Running (50/50)</span>
               {% endif %}
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="4" style="text-align:center; color:var(--ui-text-muted); padding:20px;">
-              No running A/B tests. Configure one below.
+            <td colspan="4" style="text-align: center; color: var(--adm-text-muted); padding: 18px; font-size: 0.82rem;">
+              No active A/B experiments.
             </td>
           </tr>
           {% endfor %}
@@ -152,30 +152,30 @@
     </div>
 
     <!-- Create A/B Test Form -->
-    <div style="padding:16px; border-radius:10px; background:var(--ui-bg); border:1px solid var(--ui-border);">
-      <h3 style="font-size:0.88rem; font-weight:700; margin:0 0 12px; color:var(--ui-text);">Set Up A/B Test</h3>
-      <form method="post" action="/admin/abtest/save" style="display:flex; flex-direction:column; gap:12px;">
+    <div class="adm-sub-card">
+      <h3 style="font-size: 0.82rem; font-weight: 600; margin: 0 0 10px; color: var(--adm-text);">Configure A/B Split</h3>
+      <form method="post" action="/admin/abtest/save" style="display: flex; flex-direction: column; gap: 10px;">
         <div>
-          <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Experiment Name</label>
-          <input name="experiment_name" placeholder="e.g. interview_feedback_tone" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+          <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Experiment Name</label>
+          <input name="experiment_name" placeholder="interview_feedback_tone" required class="adm-input" style="padding: 6px 8px;">
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Variant A</label>
-            <input name="variant_a" placeholder="e.g. prompt_concise" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Variant A</label>
+            <input name="variant_a" placeholder="prompt_concise" required class="adm-input" style="padding: 6px 8px;">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Variant B</label>
-            <input name="variant_b" placeholder="e.g. prompt_socratic" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Variant B</label>
+            <input name="variant_b" placeholder="prompt_detailed" required class="adm-input" style="padding: 6px 8px;">
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr auto; gap:10px; align-items:flex-end;">
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: flex-end;">
           <div>
-            <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600; display:block; margin-bottom:4px;">Lock Winner (Optional)</label>
-            <input name="winner" placeholder="Leave empty for 50/50 split" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+            <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600; display: block; margin-bottom: 3px;">Winning Variant (Optional)</label>
+            <input name="winner" placeholder="Leave blank for 50/50 split" class="adm-input" style="padding: 6px 8px;">
           </div>
-          <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb; height:38px;">
-            Deploy Test
+          <button type="submit" class="adm-btn" style="background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary); padding: 6px 12px; font-size: 0.8rem;">
+            Deploy
           </button>
         </div>
       </form>
@@ -188,8 +188,8 @@
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>Recent Model Inference Log</h2>
-      <p>Real-time telemetry on recent LLM requests, latency, and status.</p>
+      <h2>Inference Telemetry Stream</h2>
+      <p>Recent model calls, execution time, and error diagnostics.</p>
     </div>
   </div>
 
@@ -201,15 +201,15 @@
           <th>Model</th>
           <th>Status</th>
           <th>Latency</th>
-          <th>Fallback</th>
-          <th>Diagnostics / Error</th>
+          <th>Mode</th>
+          <th>Diagnostics</th>
         </tr>
       </thead>
       <tbody>
         {% for r in admin.model_health.recent[:20] %}
         <tr>
-          <td><strong style="color:var(--ui-text);">{{ r[0] }}</strong></td>
-          <td><span style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ui-text-muted);">{{ r[1] }}</span></td>
+          <td><strong style="color: var(--adm-text);">{{ r[0] }}</strong></td>
+          <td><span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--adm-text-muted);">{{ r[1] }}</span></td>
           <td>
             {% if r[2] == 1 %}
             <span class="badge-ok">Success</span>
@@ -217,21 +217,21 @@
             <span class="badge-fail">Failed</span>
             {% endif %}
           </td>
-          <td style="font-family:'IBM Plex Mono', monospace; font-size:0.8rem;">{{ r[3] }}ms</td>
+          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; font-variant-numeric: tabular-nums; color: var(--adm-text);">{{ r[3] }}ms</td>
           <td>
             {% if r[4] == 1 %}
             <span class="badge-pending">Fallback</span>
             {% else %}
-            <span style="color:var(--ui-text-muted); font-size:0.78rem;">Direct</span>
+            <span class="badge-neutral">Direct</span>
             {% endif %}
           </td>
-          <td style="font-size:0.78rem; color:var(--ui-text-muted);">
-            {{ r[5] or "OK" }}
+          <td style="font-size: 0.76rem; color: var(--adm-text-muted);">
+            {{ r[5] or "Nominal" }}
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="6" style="text-align:center; color:var(--ui-text-muted); padding:24px;">
+          <td colspan="6" style="text-align: center; color: var(--adm-text-muted); padding: 24px; font-size: 0.84rem;">
             No inference telemetry logged yet.
           </td>
         </tr>

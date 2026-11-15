@@ -1,47 +1,47 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
 
-<!-- Coding Bank Header & Quick Metrics -->
+<!-- Coding Bank Header & Summary Metrics -->
 <div class="adm-kpi-row">
   <div class="adm-kpi-card">
     <p class="adm-kpi-label">TOTAL SUBMISSIONS</p>
     <h3 class="adm-kpi-val">{{ coding_stats.total_submissions|default(0) }}</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Runtime & syntax test runs</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Runtime test runs</span>
   </div>
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">QUESTION BANK SIZE</p>
+    <p class="adm-kpi-label">CUSTOM PROBLEMS</p>
     <h3 class="adm-kpi-val">{{ custom_problems|length }}</h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Custom problems loaded</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Active in question bank</span>
   </div>
   <div class="adm-kpi-card">
-    <p class="adm-kpi-label">PLAGIARISM ALERTS</p>
-    <h3 class="adm-kpi-val" style="color: {% if plagiarism_alerts|length > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+    <p class="adm-kpi-label">DUPLICATE ALERTS</p>
+    <h3 class="adm-kpi-val" style="color: {% if plagiarism_alerts|length > 0 %}var(--adm-warning){% else %}var(--adm-success){% endif %};">
       {{ plagiarism_alerts|length }}
     </h3>
-    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Duplicate hash fingerprints</span>
+    <span style="font-size: 0.72rem; color: var(--adm-text-muted);">Shared code fingerprints</span>
   </div>
 </div>
 
 {% if import_status %}
-<div style="margin-bottom: 24px; padding: 12px 18px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between;">
-  <span><strong>Import Status:</strong> {{ import_status }}</span>
-  <a href="/admin/coding" style="color: #10b981; text-decoration: underline; font-size: 0.8rem;">Dismiss</a>
+<div style="margin-bottom: 20px; padding: 10px 14px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; font-size: 0.84rem; display: flex; align-items: center; justify-content: space-between;">
+  <span><strong>Import Result:</strong> {{ import_status }}</span>
+  <a href="/admin/coding" style="color: #10b981; text-decoration: underline; font-size: 0.78rem;">Dismiss</a>
 </div>
 {% endif %}
 
 <!-- Problem Bank & Stats Grid -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
 
   <!-- Custom Problems Table -->
   <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
-        <h2>Active Custom Problems</h2>
+        <h2>Question Bank</h2>
         <p>Curated coding challenges with autograded test suites.</p>
       </div>
-      <div style="display:flex; gap:8px;">
-        <a class="adm-btn-subtle" href="/admin/coding/export?format=json">Export JSON</a>
-        <a class="adm-btn-subtle" href="/admin/coding/export?format=csv">Export CSV</a>
+      <div style="display: flex; gap: 6px;">
+        <a class="adm-btn" href="/admin/coding/export?format=json">Export JSON</a>
+        <a class="adm-btn" href="/admin/coding/export?format=csv">Export CSV</a>
       </div>
     </div>
 
@@ -60,8 +60,8 @@
           {% for p in custom_problems %}
           <tr>
             <td>
-              <strong style="color:var(--ui-text);">{{ p.title }}</strong>
-              <div style="font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ui-text-muted); margin-top:2px;">
+              <strong style="color: var(--adm-text);">{{ p.title }}</strong>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--adm-text-muted); margin-top: 2px;">
                 ID: {{ p.id }}
                 {% if p.tags %} · {{ p.tags|join(', ') }}{% endif %}
               </div>
@@ -77,84 +77,74 @@
             </td>
             <td>
               {% if p.coverage %}
-              <div style="font-size:0.8rem;">
-                <span class="badge-ok" style="font-size:0.7rem;">Score: {{ p.coverage.coverage_score }}</span>
-                <div style="font-size:0.72rem; color:var(--ui-text-muted); margin-top:4px;">
+              <div style="font-size: 0.78rem;">
+                <span class="badge-ok" style="font-size: 0.7rem;">Score: {{ p.coverage.coverage_score }}</span>
+                <div style="font-size: 0.72rem; color: var(--adm-text-muted); margin-top: 2px;">
                   {{ p.coverage.sample_tests }} sample · {{ p.coverage.hidden_tests }} hidden
                 </div>
               </div>
               {% else %}
-              <span style="font-size:0.8rem; color:var(--ui-text-muted);">Standard</span>
+              <span style="font-size: 0.78rem; color: var(--adm-text-muted);">Standard</span>
               {% endif %}
             </td>
             <td>
-              <details style="position:relative;">
-                <summary class="adm-btn-subtle" style="padding:4px 10px; font-size:0.78rem; cursor:pointer; list-style:none;">
-                  Edit / Delete ▾
+              <details style="position: relative;">
+                <summary class="adm-btn" style="padding: 3px 8px; font-size: 0.74rem; cursor: pointer; list-style: none;">
+                  Manage ▾
                 </summary>
-                <div style="margin-top:12px; padding:16px; background:var(--ui-bg); border:1px solid var(--ui-border); border-radius:10px;">
-                  <form method="post" action="/admin/coding-problem/{{ p.id }}/edit" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="adm-sub-card" style="margin-top: 10px; padding: 14px;">
+                  <form method="post" action="/admin/coding-problem/{{ p.id }}/edit" style="display: flex; flex-direction: column; gap: 8px;">
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Title</label>
-                      <input name="title" value="{{ p.title }}" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Title</label>
+                      <input name="title" value="{{ p.title }}" required class="adm-input" style="padding: 6px 8px;">
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                       <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Difficulty</label>
-                        <select name="difficulty" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                        <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Difficulty</label>
+                        <select name="difficulty" class="adm-input" style="padding: 6px 8px;">
                           <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
                           <option value="Medium" {% if p.difficulty == "Medium" %}selected{% endif %}>Medium</option>
                           <option value="Hard" {% if p.difficulty == "Hard" %}selected{% endif %}>Hard</option>
                         </select>
                       </div>
                       <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Tags</label>
-                        <input name="tags" value="{{ p.tags|join(', ') }}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                        <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Tags</label>
+                        <input name="tags" value="{{ p.tags|join(', ') }}" class="adm-input" style="padding: 6px 8px;">
                       </div>
                     </div>
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Description</label>
-                      <textarea name="description" rows="3" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:inherit;">{{ p.description }}</textarea>
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Description</label>
+                      <textarea name="description" rows="3" required class="adm-input" style="padding: 6px 8px; font-family: inherit;">{{ p.description }}</textarea>
                     </div>
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Constraints</label>
-                      <textarea name="constraints" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:inherit;">{{ p.constraints|join('\n') }}</textarea>
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Constraints</label>
+                      <textarea name="constraints" rows="2" class="adm-input" style="padding: 6px 8px; font-family: monospace; font-size: 0.76rem;">{{ p.constraints|join('\n') }}</textarea>
                     </div>
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Sample Tests (input|||expected)</label>
-                      <textarea name="sample_tests" rows="2" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Sample Tests (input|||expected)</label>
+                      <textarea name="sample_tests" rows="2" required class="adm-input" style="padding: 6px 8px; font-family: monospace; font-size: 0.76rem;">{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
                     </div>
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Hidden Tests (input|||expected)</label>
-                      <textarea name="hidden_tests" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Hidden Tests (input|||expected)</label>
+                      <textarea name="hidden_tests" rows="2" class="adm-input" style="padding: 6px 8px; font-family: monospace; font-size: 0.76rem;">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
                     </div>
                     <div>
-                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Examples (input|||output)</label>
-                      <textarea name="examples" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                      <label style="font-size: 0.72rem; color: var(--adm-text-dim); font-weight: 600;">Examples (input|||output)</label>
+                      <textarea name="examples" rows="2" class="adm-input" style="padding: 6px 8px; font-family: monospace; font-size: 0.76rem;">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                       <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Python Starter</label>
-                        <textarea name="starter_py" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.python }}</textarea>
-                      </div>
-                      <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">JS Starter</label>
-                        <textarea name="starter_js" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.javascript }}</textarea>
-                      </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                      <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Java Starter</label>
-                        <textarea name="starter_java" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.java }}</textarea>
+                        <label style="font-size: 0.7rem; color: var(--adm-text-dim); font-weight: 600;">Python Starter</label>
+                        <textarea name="starter_py" rows="2" class="adm-input" style="padding: 5px; font-family: monospace; font-size: 0.74rem;">{{ p.starter_codes.python }}</textarea>
                       </div>
                       <div>
-                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">C++ Starter</label>
-                        <textarea name="starter_cpp" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.cpp }}</textarea>
+                        <label style="font-size: 0.7rem; color: var(--adm-text-dim); font-weight: 600;">JS Starter</label>
+                        <textarea name="starter_js" rows="2" class="adm-input" style="padding: 5px; font-family: monospace; font-size: 0.74rem;">{{ p.starter_codes.javascript }}</textarea>
                       </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px;">
-                      <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb;">Save Changes</button>
-                      <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="adm-btn-subtle" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" onclick="return confirm('Delete problem {{ p.title }}?');">Delete</button>
+                    <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                      <button type="submit" class="adm-btn" style="background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary);">Save</button>
+                      <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="adm-btn adm-btn-danger" onclick="return confirm('Delete problem {{ p.title }}?');">Delete</button>
                     </div>
                   </form>
                 </div>
@@ -166,17 +156,17 @@
       </table>
     </div>
     {% else %}
-    <div style="text-align:center; padding:32px 16px; color:var(--ui-text-muted);">
-      No custom coding problems created yet. Add one below or import from JSON.
+    <div style="text-align: center; padding: 28px 16px; color: var(--adm-text-muted); font-size: 0.84rem;">
+      No custom coding problems created yet.
     </div>
     {% endif %}
 
     <!-- Bulk Import Box -->
-    <div style="margin-top:20px; padding:16px; border-radius:10px; border:1px dashed var(--ui-border); background:rgba(255,255,255,0.01);">
-      <strong style="font-size:0.85rem; color:var(--ui-text);">Bulk Question Import (JSON)</strong>
-      <form method="post" action="/admin/coding/import" enctype="multipart/form-data" style="display:flex; gap:10px; margin-top:8px; align-items:center;">
-        <input type="file" name="file" accept=".json,application/json" required style="font-size:0.82rem; color:var(--ui-text-muted);">
-        <button type="submit" class="adm-btn-subtle">Import File</button>
+    <div class="adm-sub-card" style="margin-top: 16px; padding: 14px;">
+      <strong style="font-size: 0.82rem; color: var(--adm-text); display: block; margin-bottom: 6px;">Import Problems (JSON)</strong>
+      <form method="post" action="/admin/coding/import" enctype="multipart/form-data" style="display: flex; gap: 8px; align-items: center;">
+        <input type="file" name="file" accept=".json,application/json" required style="font-size: 0.78rem; color: var(--adm-text-muted);">
+        <button type="submit" class="adm-btn" style="padding: 5px 10px; font-size: 0.78rem;">Upload JSON</button>
       </form>
     </div>
   </section>
@@ -191,8 +181,8 @@
     </div>
 
     <!-- By Difficulty -->
-    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">By Difficulty</h3>
-    <div class="adm-table-container" style="margin-bottom:20px;">
+    <h3 style="font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--adm-text-dim); margin: 0 0 8px;">By Difficulty</h3>
+    <div class="adm-table-container" style="margin-bottom: 16px;">
       <table class="adm-table">
         <thead>
           <tr>
@@ -204,20 +194,20 @@
         <tbody>
           {% for s in coding_stats.by_difficulty %}
           <tr>
-            <td><strong>{{ s.difficulty }}</strong></td>
+            <td><strong style="color: var(--adm-text);">{{ s.difficulty }}</strong></td>
             <td>{{ s.total_runs }}</td>
             <td><span class="badge-ok">{{ s.accept_rate }}%</span></td>
           </tr>
           {% else %}
-          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No submissions recorded yet</td></tr>
+          <tr><td colspan="3" style="color: var(--adm-text-muted); text-align: center; font-size: 0.78rem;">No submissions yet</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
     <!-- By Language -->
-    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">By Language</h3>
-    <div class="adm-table-container" style="margin-bottom:20px;">
+    <h3 style="font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--adm-text-dim); margin: 0 0 8px;">By Language</h3>
+    <div class="adm-table-container" style="margin-bottom: 16px;">
       <table class="adm-table">
         <thead>
           <tr>
@@ -229,19 +219,19 @@
         <tbody>
           {% for s in coding_stats.by_language %}
           <tr>
-            <td><strong>{{ s.language|capitalize }}</strong></td>
+            <td><strong style="color: var(--adm-text);">{{ s.language|capitalize }}</strong></td>
             <td>{{ s.total_runs }}</td>
             <td><span class="badge-ok">{{ s.accept_rate }}%</span></td>
           </tr>
           {% else %}
-          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No language data yet</td></tr>
+          <tr><td colspan="3" style="color: var(--adm-text-muted); text-align: center; font-size: 0.78rem;">No language data yet</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
-    <!-- Top Problems Run -->
-    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">Problem Latency</h3>
+    <!-- Problem Latency -->
+    <h3 style="font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--adm-text-dim); margin: 0 0 8px;">Problem Latency</h3>
     <div class="adm-table-container">
       <table class="adm-table">
         <thead>
@@ -254,12 +244,12 @@
         <tbody>
           {% for s in coding_stats.by_problem[:5] %}
           <tr>
-            <td>{{ s.problem_id }}</td>
+            <td><span style="color: var(--adm-text);">{{ s.problem_id }}</span></td>
             <td>{{ s.total_runs }}</td>
-            <td style="font-family:'IBM Plex Mono', monospace; font-size:0.8rem;">{{ s.avg_runtime_ms }}ms</td>
+            <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;">{{ s.avg_runtime_ms }}ms</td>
           </tr>
           {% else %}
-          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No run data yet</td></tr>
+          <tr><td colspan="3" style="color: var(--adm-text-muted); text-align: center; font-size: 0.78rem;">No run data yet</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -272,88 +262,88 @@
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>Add New Coding Practice Question</h2>
-      <p>Compose custom algorithm problem with autograded sample and hidden test cases.</p>
+      <h2>Create Question</h2>
+      <p>Compose custom challenge with autograded sample and hidden test cases.</p>
     </div>
   </div>
 
-  <form method="post" action="/admin/coding-problem/add" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+  <form method="post" action="/admin/coding-problem/add" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
     <!-- Left Column: Problem Metadata -->
-    <div style="display:flex; flex-direction:column; gap:12px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Problem Title *</label>
-        <input name="title" placeholder="e.g. Reverse Linked List II" required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Problem Title</label>
+        <input name="title" placeholder="Reverse Linked List II" required class="adm-input">
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div>
-          <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Difficulty</label>
-          <select name="difficulty" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+          <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Difficulty</label>
+          <select name="difficulty" class="adm-input">
             <option>Easy</option>
             <option>Medium</option>
             <option>Hard</option>
           </select>
         </div>
         <div>
-          <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Tags</label>
-          <input name="tags" placeholder="e.g. array, hash-map, two-pointers" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+          <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Tags</label>
+          <input name="tags" placeholder="array, hash-map" class="adm-input">
         </div>
       </div>
 
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Problem Description (Markdown supported) *</label>
-        <textarea name="description" rows="5" placeholder="Given an array of integers nums and an integer target, return indices..." required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:inherit;"></textarea>
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Description</label>
+        <textarea name="description" rows="5" placeholder="Given an array of integers nums and an integer target, return indices..." required class="adm-input"></textarea>
       </div>
 
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Constraints (one per line)</label>
-        <textarea name="constraints" rows="3" placeholder="1 <= nums.length <= 10^4&#10;-10^9 <= nums[i] <= 10^9" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Constraints (one per line)</label>
+        <textarea name="constraints" rows="3" placeholder="1 <= nums.length <= 10^4&#10;-10^9 <= nums[i] <= 10^9" class="adm-input" style="font-family: monospace; font-size: 0.78rem;"></textarea>
       </div>
     </div>
 
     <!-- Right Column: Test Suites & Code Starters -->
-    <div style="display:flex; flex-direction:column; gap:12px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Sample Tests (Required, format: input|||expected) *</label>
-        <textarea name="sample_tests" rows="3" placeholder="[2,7,11,15]\n9|||[0,1]" required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Sample Tests (input|||expected)</label>
+        <textarea name="sample_tests" rows="3" placeholder="[2,7,11,15]\n9|||[0,1]" required class="adm-input" style="font-family: monospace; font-size: 0.78rem;"></textarea>
       </div>
 
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Hidden Tests (Grading, format: input|||expected)</label>
-        <textarea name="hidden_tests" rows="3" placeholder="[3,3]\n6|||[0,1]" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Hidden Tests (input|||expected)</label>
+        <textarea name="hidden_tests" rows="3" placeholder="[3,3]\n6|||[0,1]" class="adm-input" style="font-family: monospace; font-size: 0.78rem;"></textarea>
       </div>
 
       <div>
-        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Examples (format: input|||output)</label>
-        <textarea name="examples" rows="2" placeholder="nums = [2,7,11,15], target = 9|||[0,1]" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--adm-text); margin-bottom: 4px; display: block;">Examples (input|||output)</label>
+        <textarea name="examples" rows="2" placeholder="nums = [2,7,11,15], target = 9|||[0,1]" class="adm-input" style="font-family: monospace; font-size: 0.78rem;"></textarea>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div>
-          <label style="font-size:0.75rem; font-weight:600; color:var(--ui-text-muted);">Python Starter</label>
-          <textarea name="starter_py" rows="3" placeholder="def solution(nums, target):&#10;    pass" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.78rem;"></textarea>
+          <label style="font-size: 0.72rem; font-weight: 600; color: var(--adm-text-dim);">Python Starter</label>
+          <textarea name="starter_py" rows="3" placeholder="def solution(nums, target):&#10;    pass" class="adm-input" style="font-family: monospace; font-size: 0.74rem;"></textarea>
         </div>
         <div>
-          <label style="font-size:0.75rem; font-weight:600; color:var(--ui-text-muted);">JavaScript Starter</label>
-          <textarea name="starter_js" rows="3" placeholder="function solution(nums, target) {&#10;}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.78rem;"></textarea>
+          <label style="font-size: 0.72rem; font-weight: 600; color: var(--adm-text-dim);">JavaScript Starter</label>
+          <textarea name="starter_js" rows="3" placeholder="function solution(nums, target) {&#10;}" class="adm-input" style="font-family: monospace; font-size: 0.74rem;"></textarea>
         </div>
       </div>
 
-      <div style="margin-top:8px;">
-        <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb; width:100%; justify-content:center; padding:12px; font-size:0.95rem;">
-          + Create Question
+      <div style="margin-top: 6px;">
+        <button type="submit" class="adm-btn" style="background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary); width: 100%; justify-content: center; padding: 10px; font-size: 0.86rem;">
+          Publish Question
         </button>
       </div>
     </div>
   </form>
 </section>
 
-<!-- Plagiarism & Duplicate Submission Signals -->
+<!-- Duplicate Fingerprints & Plagiarism Signals -->
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>Duplicate Fingerprints & Plagiarism Signals</h2>
-      <p>Auto-flagged identical code submissions across different candidate accounts.</p>
+      <h2>Code Fingerprints & Duplicate Signals</h2>
+      <p>Auto-flagged identical code submissions across candidate accounts.</p>
     </div>
   </div>
 
@@ -372,17 +362,17 @@
       <tbody>
         {% for a in plagiarism_alerts %}
         <tr>
-          <td><strong style="color:var(--ui-text);">{{ a.problem_id }}</strong></td>
-          <td><code style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:#60a5fa;">{{ a.code_hash[:12] }}...</code></td>
+          <td><strong style="color: var(--adm-text);">{{ a.problem_id }}</strong></td>
+          <td><code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--adm-primary);">{{ a.code_hash[:12] }}...</code></td>
           <td>{{ a.total_rows }} submissions</td>
           <td><span class="badge-pending">{{ a.user_count }} candidates</span></td>
           <td>
             <details>
-              <summary class="adm-btn-subtle" style="padding:3px 8px; font-size:0.74rem; cursor:pointer;">View Code Samples</summary>
-              <div style="margin-top:8px; padding:10px; background:var(--ui-bg); border-radius:6px; border:1px solid var(--ui-border);">
+              <summary class="adm-btn" style="padding: 2px 7px; font-size: 0.72rem; cursor: pointer;">Inspect</summary>
+              <div class="adm-sub-card" style="margin-top: 8px; padding: 8px;">
                 {% for s in a.samples %}
-                <p style="font-size:0.75rem; color:var(--ui-text-muted); margin:0 0 4px;"><strong>{{ s.user_email }}</strong></p>
-                <pre style="margin:0 0 8px; font-size:0.72rem; max-height:80px; overflow:auto; background:var(--ui-surface); padding:6px; border-radius:4px;">{{ s.code_preview }}</pre>
+                <p style="font-size: 0.74rem; color: var(--adm-text-muted); margin: 0 0 3px;"><strong>{{ s.user_email }}</strong></p>
+                <pre class="adm-input" style="margin: 0 0 6px; font-size: 0.7rem; max-height: 80px; overflow: auto; padding: 6px;">{{ s.code_preview }}</pre>
                 {% endfor %}
               </div>
             </details>
@@ -393,8 +383,8 @@
     </table>
   </div>
   {% else %}
-  <div style="text-align:center; padding:24px; color:var(--ui-text-muted);">
-    ✓ No duplicate code fingerprints or suspicious plagiarism signals detected.
+  <div style="text-align: center; padding: 24px; color: var(--adm-text-muted); font-size: 0.84rem;">
+    No duplicate submission fingerprints detected.
   </div>
   {% endif %}
 </section>

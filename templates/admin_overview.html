@@ -1,102 +1,102 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
 
-<!-- 1. Executive Platform Metrics -->
-<section style="margin-bottom: 28px;">
-  <div style="margin-bottom: 14px;">
-    <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--ui-text);">Platform Growth Pulse</h2>
-    <p style="font-size: 0.85rem; color: var(--ui-text-muted); margin: 2px 0 0;">Cumulative user engagement and feature adoption metrics.</p>
+<!-- 1. Executive Platform Metrics (No Emojis) -->
+<section style="margin-bottom: 24px;">
+  <div style="margin-bottom: 12px;">
+    <h2 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--adm-text);">Platform Metrics</h2>
+    <p style="font-size: 0.8rem; color: var(--adm-text-muted); margin: 2px 0 0;">Aggregate user engagement and pipeline volume.</p>
   </div>
 
   <div class="adm-kpi-row">
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">👥 Unique Users</p>
+      <p class="adm-kpi-label">UNIQUE USERS</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.unique_users }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">📄 Resume Reviews</p>
+      <p class="adm-kpi-label">RESUME REVIEWS</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.resume_reviews }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">🎙️ Interview Runs</p>
+      <p class="adm-kpi-label">INTERVIEWS COMPLETED</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.interview_completed }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">🗺️ Career Maps</p>
+      <p class="adm-kpi-label">ROADMAPS BUILT</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.roadmap_generated }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">📅 1:1 Bookings</p>
+      <p class="adm-kpi-label">MENTORSHIP SESSIONS</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.total_bookings }}</h3>
     </article>
 
     <article class="adm-kpi-card" style="border-color: rgba(59, 130, 246, 0.4);">
-      <p class="adm-kpi-label" style="color: #60a5fa;">⚡ Today's Bookings</p>
-      <h3 class="adm-kpi-val" style="color: #60a5fa;">{{ admin.kpis.today_bookings }}</h3>
+      <p class="adm-kpi-label" style="color: var(--adm-primary);">TODAY'S SESSIONS</p>
+      <h3 class="adm-kpi-val" style="color: var(--adm-primary);">{{ admin.kpis.today_bookings }}</h3>
     </article>
   </div>
 </section>
 
-<!-- 2. Conversion Funnel & Operations Row -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 24px;">
+<!-- 2. Conversion Pipeline & Operations -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; margin-bottom: 20px;">
 
   <!-- User Journey Conversion Funnel -->
   <section class="adm-card" style="margin-bottom: 0;">
     <div class="adm-card-head">
       <div>
-        <h2>User Journey Funnel</h2>
-        <p>Progression from resume scan to senior mentorship.</p>
+        <h2>Conversion Pipeline</h2>
+        <p>Candidate progression from resume scan to mentorship call.</p>
       </div>
-      <span class="badge-ok">Active Flow</span>
+      <span class="badge-ok">Active</span>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 14px;">
-      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.1rem;">1️⃣</span>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="adm-funnel-step">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="adm-step-num">01</span>
           <div>
-            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Resume Audit Run</strong>
-            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Initial ATS diagnostic completed</span>
+            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Resume Audit Run</strong>
+            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Initial ATS diagnostic completed</span>
           </div>
         </div>
-        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.resume_reviews }}</strong>
+        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.resume_reviews }}</strong>
       </div>
 
-      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.1rem;">2️⃣</span>
+      <div class="adm-funnel-step">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="adm-step-num">02</span>
           <div>
-            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Mock Interview Started</strong>
-            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Conversational session triggered</span>
+            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Mock Interview Started</strong>
+            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Conversational practice triggered</span>
           </div>
         </div>
-        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.interview_started }}</strong>
+        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.interview_started }}</strong>
       </div>
 
-      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.1rem;">3️⃣</span>
+      <div class="adm-funnel-step">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="adm-step-num">03</span>
           <div>
-            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Interview Completed</strong>
-            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Full evaluation feedback received</span>
+            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Interview Completed</strong>
+            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Evaluation and rubric generated</span>
           </div>
         </div>
-        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.interview_completed }}</strong>
+        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.interview_completed }}</strong>
       </div>
 
-      <div style="background: rgba(59, 130, 246, 0.08); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.25); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.1rem;">4️⃣</span>
+      <div class="adm-funnel-step highlight">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="adm-step-num" style="background: rgba(59, 130, 246, 0.2); color: var(--adm-primary); border-color: transparent;">04</span>
           <div>
-            <strong style="font-size: 0.92rem; color: #60a5fa; display: block;">1:1 Mentorship Session Booked</strong>
-            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Senior expert call scheduled</span>
+            <strong style="font-size: 0.88rem; color: var(--adm-primary); display: block;">1:1 Mentorship Session Booked</strong>
+            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Senior mentor call scheduled</span>
           </div>
         </div>
-        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace; color: #60a5fa;">{{ admin.conversion.mentor_bookings }}</strong>
+        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; color: var(--adm-primary); font-variant-numeric: tabular-nums;">{{ admin.conversion.mentor_bookings }}</strong>
       </div>
     </div>
   </section>
@@ -106,63 +106,63 @@
     <div class="adm-card-head">
       <div>
         <h2>Mentorship Operations</h2>
-        <p>Quality scores, scheduling load, and candidate cohorts.</p>
+        <p>Capacity utilization, rating, and candidate distribution.</p>
       </div>
-      <a href="/admin/bookings" style="font-size: 0.82rem; color: #3b82f6; text-decoration: none; font-weight: 600;">Manage Bookings →</a>
+      <a href="/admin/bookings" style="font-size: 0.8rem; color: var(--adm-primary); text-decoration: none; font-weight: 600;">Manage Bookings →</a>
     </div>
 
     <!-- Ops Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
-        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">CALENDAR LOAD</span>
-        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+      <div class="adm-metric-tile">
+        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">CALENDAR LOAD</span>
+        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
       </div>
 
-      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
-        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">MENTOR RATING</span>
-        <strong style="font-size: 1.25rem; color: #10b981;">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
+      <div class="adm-metric-tile">
+        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">MENTOR RATING</span>
+        <strong style="font-size: 1.25rem; color: #10b981; font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
       </div>
 
-      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
-        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">NO-SHOW RATE</span>
-        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
+      <div class="adm-metric-tile">
+        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">NO-SHOW RATE</span>
+        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
       </div>
 
-      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
-        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">RESCHEDULES</span>
-        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
+      <div class="adm-metric-tile">
+        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">RESCHEDULES</span>
+        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
       </div>
     </div>
 
     <!-- Top Candidate Specializations -->
-    <h3 style="font-size: 0.88rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; color: var(--ui-text-muted); margin: 0 0 10px;">
-      Top Candidate Specializations
+    <h3 style="font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--adm-text-dim); margin: 0 0 8px;">
+      Candidate Specializations
     </h3>
-    <div style="display: flex; flex-direction: column; gap: 8px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
       {% for c in admin.cohorts[:4] %}
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--ui-bg); border-radius: 8px; border: 1px solid var(--ui-border); font-size: 0.85rem;">
-        <span style="font-weight: 600;">{{ c[0] or "General Tech" }}</span>
-        <span class="rr-chip" style="font-size: 0.75rem; padding: 2px 8px;">{{ c[1] }} candidates</span>
+      <div class="adm-sub-card" style="display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; font-size: 0.82rem;">
+        <span style="font-weight: 500; color: var(--adm-text);">{{ c[0] or "General Software" }}</span>
+        <span class="badge-neutral" style="font-size: 0.72rem;">{{ c[1] }} candidates</span>
       </div>
       {% else %}
-      <p style="font-size: 0.85rem; color: var(--ui-text-muted); margin: 0;">No candidate cohort data recorded yet.</p>
+      <p style="font-size: 0.8rem; color: var(--adm-text-muted); margin: 0;">No candidate cohort data recorded yet.</p>
       {% endfor %}
     </div>
   </section>
 
 </div>
 
-<!-- 3. AI Quality Monitor & Model Telemetry -->
+<!-- 3. AI Inference Health & Model Telemetry -->
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>AI Quality & Inference Telemetry</h2>
-      <p>Live health monitoring across OpenRouter / OpenAI inference endpoints.</p>
+      <h2>Inference Health & Latency</h2>
+      <p>Performance telemetry across LLM providers and endpoints.</p>
     </div>
-    <div style="display: flex; gap: 10px; align-items: center;">
-      <span class="badge-ok">Success: {{ admin.model_health.success_rate }}%</span>
-      <span class="rr-chip" style="font-size: 0.75rem; padding: 3px 8px;">Latency: {{ admin.model_health.avg_latency_ms }}ms</span>
-      <span class="rr-chip" style="font-size: 0.75rem; padding: 3px 8px;">Fallback: {{ admin.model_health.fallback_rate }}%</span>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <span class="badge-ok">Success {{ admin.model_health.success_rate }}%</span>
+      <span class="badge-neutral">Latency {{ admin.model_health.avg_latency_ms }}ms</span>
+      <span class="badge-neutral">Fallback {{ admin.model_health.fallback_rate }}%</span>
     </div>
   </div>
 
@@ -179,23 +179,23 @@
       <tbody>
         {% for r in admin.model_health.recent[:8] %}
         <tr>
-          <td><strong style="text-transform: capitalize;">{{ r[0]|replace('_', ' ') }}</strong></td>
-          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--ui-text-muted);">{{ r[1] }}</td>
+          <td><strong style="text-transform: capitalize; color: var(--adm-text);">{{ r[0]|replace('_', ' ') }}</strong></td>
+          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--adm-text-muted);">{{ r[1] }}</td>
           <td>
             {% if r[2] == 1 %}
-            <span class="badge-ok">✓ Successful</span>
+            <span class="badge-ok">Success</span>
             {% else %}
-            <span class="badge-fail">✕ Fallback</span>
+            <span class="badge-fail">Fallback</span>
             {% endif %}
           </td>
-          <td style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">
+          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--adm-text);">
             {{ "%.0f"|format(r[3]) }} ms
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="4" style="text-align: center; color: var(--ui-text-muted); padding: 28px 0;">
-            No AI inference calls logged yet. Logs populate in real time as candidates run reviews and mock interviews.
+          <td colspan="4" style="text-align: center; color: var(--adm-text-muted); padding: 24px 0;">
+            No model telemetry logged yet. Logs populate in real time as candidates run reviews and mock interviews.
           </td>
         </tr>
         {% endfor %}

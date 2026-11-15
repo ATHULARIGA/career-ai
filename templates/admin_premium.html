@@ -4,22 +4,22 @@
 <section class="adm-card">
   <div class="adm-card-head">
     <div>
-      <h2>Premium Subscription Queue</h2>
-      <p>Verify manual UPI payment proofs and activate unlimited access.</p>
+      <h2>Premium Verification Queue</h2>
+      <p>Manual UPI payment verification and entitlement activation.</p>
     </div>
   </div>
 
   {% if status == "approved" %}
-  <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.88rem; font-weight: 600;">
-    ✓ Premium subscription request approved. User account upgraded to unlimited access.
+  <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 500;">
+    Premium subscription approved. Candidate account upgraded to unlimited access.
   </div>
   {% elif status == "rejected" %}
-  <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.88rem; font-weight: 600;">
-    ✕ Premium request rejected. Status updated in user ledger.
+  <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #f59e0b; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 500;">
+    Premium request rejected. Status logged in user account history.
   </div>
   {% elif status == "not-found" %}
-  <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.88rem; font-weight: 600;">
-    ⚠️ Target premium request not found.
+  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 500;">
+    Target subscription record was not found.
   </div>
   {% endif %}
 
@@ -27,57 +27,57 @@
     <table class="adm-table">
       <thead>
         <tr>
-          <th>User Email</th>
-          <th>UPI Reference ID</th>
+          <th>Candidate</th>
+          <th>UPI Transaction Ref</th>
           <th>Amount</th>
           <th>Payment Proof</th>
           <th>Status</th>
-          <th>Review Actions</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
         {% for r in premium_requests %}
         <tr>
           <td>
-            <strong style="color: var(--ui-text); font-size: 0.92rem;">{{ r[1] }}</strong>
-            <span style="display: block; font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace;">ID: #{{ r[0] }}</span>
+            <strong style="color: var(--adm-text); font-size: 0.88rem;">{{ r[1] }}</strong>
+            <span style="display: block; font-size: 0.74rem; color: var(--adm-text-muted); font-family: 'IBM Plex Mono', monospace;">#{{ r[0] }}</span>
           </td>
 
           <td>
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; background: var(--ui-bg); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--ui-border);">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; background: var(--adm-surface-subtle); padding: 3px 7px; border-radius: 5px; border: 1px solid var(--adm-border); color: var(--adm-text);">
               {{ r[2] }}
             </span>
           </td>
 
-          <td style="font-weight: 700; color: var(--ui-text);">
-            ₹{{ r[3] or "499" }}
+          <td style="font-weight: 600; font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; color: var(--adm-text);">
+            INR {{ r[3] or "499" }}
           </td>
 
           <td>
             {% if r[4] %}
-            <a href="{{ r[4] }}" target="_blank" rel="noopener noreferrer" class="adm-btn-subtle" style="padding: 4px 10px; font-size: 0.78rem;">
-              View Screenshot ↗
+            <a href="{{ r[4] }}" target="_blank" rel="noopener noreferrer" class="adm-btn" style="padding: 3px 8px; font-size: 0.74rem;">
+              Screenshot
             </a>
             {% else %}
-            <span style="color: var(--ui-text-muted); font-size: 0.82rem;">None attached</span>
+            <span style="color: var(--adm-text-muted); font-size: 0.8rem;">None</span>
             {% endif %}
           </td>
 
           <td>
             {% if r[6] == "pending" %}
-            <span class="badge-pending">⏳ Pending Review</span>
+            <span class="badge-pending">Pending Review</span>
             {% elif r[6] == "approved" %}
-            <span class="badge-ok">✓ Active Premium</span>
+            <span class="badge-ok">Active</span>
             {% else %}
-            <span class="badge-fail">✕ {{ r[6]|capitalize }}</span>
+            <span class="badge-fail">{{ r[6]|capitalize }}</span>
             {% endif %}
           </td>
 
           <td>
             {% if r[6] == "pending" %}
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display: flex; gap: 6px; align-items: center;">
               <form method="post" action="/admin/premium/{{ r[0] }}/approve" style="display: inline;">
-                <button type="submit" class="rr-submit" style="padding: 6px 14px; font-size: 0.8rem; background: #10b981; border-color: #10b981; color: #fff;">
+                <button type="submit" class="adm-btn" style="padding: 4px 10px; font-size: 0.76rem; background: #10b981; border-color: #10b981; color: #ffffff;">
                   Approve
                 </button>
               </form>
@@ -85,24 +85,25 @@
                 <input
                   name="rejection_reason"
                   placeholder="Reason..."
-                  style="padding: 5px 8px; border-radius: 6px; border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-text); font-size: 0.78rem; width: 110px;"
+                  class="adm-input"
+                  style="padding: 3px 6px; font-size: 0.74rem; width: 110px;"
                 >
-                <button type="submit" class="adm-btn-subtle" style="padding: 5px 10px; font-size: 0.78rem; color: #ef4444; border-color: rgba(239,68,68,0.3);">
+                <button type="submit" class="adm-btn adm-btn-danger" style="padding: 3px 8px; font-size: 0.74rem;">
                   Reject
                 </button>
               </form>
             </div>
             {% else %}
-            <span style="font-size: 0.8rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace;">
-              Reviewed {% if r[10] %}by {{ r[10] }}{% endif %}
+            <span style="font-size: 0.76rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace;">
+              Processed {% if r[10] %}by {{ r[10] }}{% endif %}
             </span>
             {% endif %}
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="6" style="text-align: center; color: var(--ui-text-muted); padding: 40px 0;">
-            No premium upgrade requests in the queue. New submissions will appear here for verification.
+          <td colspan="6" style="text-align: center; color: var(--adm-text-muted); padding: 36px 0;">
+            No pending or processed premium upgrade requests found.
           </td>
         </tr>
         {% endfor %}
