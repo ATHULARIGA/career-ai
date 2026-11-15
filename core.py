@@ -1126,6 +1126,7 @@ if ENABLE_HTTPS_REDIRECT:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+templates.env.globals["google_site_verification"] = os.getenv("GOOGLE_SITE_VERIFICATION", "")
 init_admin_tables()
 init_coding_tables()
 
@@ -1531,6 +1532,6 @@ PUBLIC_PATHS = {
     "/robots.txt",
     "/sitemap.xml",
 }
-PUBLIC_PREFIXES = ("/static",)
+PUBLIC_PREFIXES = ("/static", "/google")
 
 

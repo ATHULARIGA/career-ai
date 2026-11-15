@@ -81,6 +81,12 @@ def sitemap_xml():
     return Response(content=xml, media_type="application/xml")
 
 
+@router.get("/google{code}.html")
+def google_file_verification(code: str):
+    clean_code = "".join(c for c in code if c.isalnum() or c in "-_")
+    return Response(content=f"google-site-verification: google{clean_code}.html", media_type="text/html")
+
+
 @router.get("/readyz")
 def readyz():
     try:
