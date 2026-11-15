@@ -1531,7 +1531,8 @@ PUBLIC_PATHS = {
     "/readyz",
     "/robots.txt",
     "/sitemap.xml",
+    "/google0159a71a230a2359.html",
 }
-PUBLIC_PREFIXES = ("/static", "/google")
+PUBLIC_PREFIXES = ("/static",)
 
 
