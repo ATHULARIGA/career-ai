@@ -1109,7 +1109,8 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 app.add_middleware(RequestGuardMiddleware)
 app.add_middleware(AuthGateMiddleware)
 app.add_middleware(
@@ -1123,7 +1124,7 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=TRUSTED_HOSTS or ["*"])
 if ENABLE_HTTPS_REDIRECT:
     app.add_middleware(HTTPSRedirectMiddleware)
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 init_admin_tables()
 init_coding_tables()
 

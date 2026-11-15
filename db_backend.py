@@ -40,7 +40,9 @@ def adapt_query(query: str) -> str:
     return query
 
 
-def execute(cur, query: str, params=()):
+def execute(cur, query: str, params=None):
+    if params is None:
+        return cur.execute(adapt_query(query))
     return cur.execute(adapt_query(query), params)
 
 
