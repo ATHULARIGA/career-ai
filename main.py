@@ -21,7 +21,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     return templates.TemplateResponse(
         request=request,
         name="error.html",
-        context={"request": request, "request_id": req_id},
+        context={"request": request, "request_id": req_id, "message": f"{type(exc).__name__}: {str(exc)}"},
         status_code=500,
     )
 

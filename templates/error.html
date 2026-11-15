@@ -5,7 +5,7 @@
     <p class="al-eyebrow">Error</p>
     <h1>Something went wrong</h1>
     <p>Please try again. If this keeps happening, contact support with request id:</p>
-    <p style="font-family:'IBM Plex Mono', monospace; background:#f3f4f6; border-radius:8px; padding:8px 10px;">{{ request_id }}</p>
+    <p style="font-family:'IBM Plex Mono', monospace; background:var(--ui-surface-subtle, #141d2e); border:1px solid var(--ui-border, #1e293b); color:var(--ui-text, #f1f5f9); border-radius:8px; padding:10px 12px; word-break:break-all;">{{ request_id }}</p>
     {% if message %}
     <p style="color: #ef4444; font-weight: 500; margin-top: 10px;">Error detail: {{ message }}</p>
     {% endif %}

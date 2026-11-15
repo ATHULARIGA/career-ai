@@ -5,6 +5,7 @@ from resume_parser import extract_text
 from scoring import score_resume
 from interview_engine import generate_questions, generate_follow_up, generate_lifeline_hints
 import time
+import re
 from booking_db import save_booking, get_bookings, get_booking, assign_mentor_email
 from email_sender import send_mail
 from fastapi.staticfiles import StaticFiles
