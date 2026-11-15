@@ -1,162 +1,402 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="adm-section">
-  <div class="adm-section-head">
-    <h2>Coding Management</h2>
-    <p>Question bank and submission insights.</p>
+
+<!-- Coding Bank Header & Quick Metrics -->
+<div class="adm-kpi-row">
+  <div class="adm-kpi-card">
+    <p class="adm-kpi-label">TOTAL SUBMISSIONS</p>
+    <h3 class="adm-kpi-val">{{ coding_stats.total_submissions|default(0) }}</h3>
+    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Runtime & syntax test runs</span>
   </div>
-  {% if import_status %}
-  <p style="margin:0 0 12px;color:#065f46;background:#ecfdf5;border:1px solid #86efac;border-radius:10px;padding:8px 10px;">
-    Import result: {{ import_status }}
-  </p>
-  {% endif %}
-  <div class="adm-grid-2">
-    <section class="adm-panel">
-      <h2>Add Coding Practice Question</h2>
-      <form class="adm-form" method="post" action="/admin/coding-problem/add">
-        <input name="title" placeholder="Question title" required>
-        <select name="difficulty">
-          <option>Easy</option>
-          <option>Medium</option>
-          <option>Hard</option>
-        </select>
-        <input name="tags" placeholder="Tags (comma-separated)">
-        <textarea name="description" rows="4" placeholder="Problem description" required></textarea>
-        <textarea name="constraints" rows="3" placeholder="Constraints (one per line)"></textarea>
-        <textarea name="examples" rows="3" placeholder="Examples as: input|||output (one per line, use \n for line breaks)"></textarea>
-        <textarea name="sample_tests" rows="3" placeholder="Sample tests (required): input|||expected (one per line)" required></textarea>
-        <textarea name="hidden_tests" rows="3" placeholder="Hidden tests: input|||expected (one per line)"></textarea>
-        <textarea name="starter_py" rows="4" placeholder="Python starter code"></textarea>
-        <textarea name="starter_js" rows="4" placeholder="JavaScript starter code"></textarea>
-        <textarea name="starter_java" rows="4" placeholder="Java starter code"></textarea>
-        <textarea name="starter_cpp" rows="4" placeholder="C++ starter code"></textarea>
-        <button type="submit" class="btn-primary">Add Question</button>
-      </form>
-    </section>
-
-    <section class="adm-panel">
-      <h2>Coding Submission Stats</h2>
-      <div class="adm-kv-row"><span>Total submissions</span><strong>{{ coding_stats.total_submissions }}</strong></div>
-      <div class="adm-mini-table">
-        <div class="adm-mini-head"><span>Problem</span><span>Runs</span><span>Accepted</span><span>Avg Runtime</span></div>
-        {% for s in coding_stats.by_problem %}
-        <div class="adm-mini-row">
-          <span>{{ s.problem_id }}</span>
-          <span>{{ s.total_runs }}</span>
-          <span>{{ s.accept_rate }}%</span>
-          <span>{{ s.avg_runtime_ms }} ms</span>
-        </div>
-        {% endfor %}
-      </div>
-      {% if coding_stats.by_language %}
-      <h3 style="margin-top:12px;">By Language</h3>
-      <div class="adm-mini-table">
-        <div class="adm-mini-head"><span>Language</span><span>Runs</span><span>Accept Rate</span><span></span></div>
-        {% for s in coding_stats.by_language %}
-        <div class="adm-mini-row">
-          <span>{{ s.language }}</span>
-          <span>{{ s.total_runs }}</span>
-          <span>{{ s.accept_rate }}%</span>
-          <span></span>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% if coding_stats.by_difficulty %}
-      <h3 style="margin-top:12px;">By Difficulty</h3>
-      <div class="adm-mini-table">
-        <div class="adm-mini-head"><span>Difficulty</span><span>Runs</span><span>Accept Rate</span><span></span></div>
-        {% for s in coding_stats.by_difficulty %}
-        <div class="adm-mini-row">
-          <span>{{ s.difficulty }}</span>
-          <span>{{ s.total_runs }}</span>
-          <span>{{ s.accept_rate }}%</span>
-          <span></span>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      <h3 style="margin-top:12px;">Bulk Operations</h3>
-      <div class="adm-inline-actions">
-        <a class="btn-secondary" href="/admin/coding/export?format=json">Export JSON</a>
-        <a class="btn-secondary" href="/admin/coding/export?format=csv">Export CSV</a>
-      </div>
-      <form class="adm-form" method="post" action="/admin/coding/import" enctype="multipart/form-data" style="margin-top:10px;">
-        <input type="file" name="file" accept=".json,application/json" required>
-        <button type="submit" class="btn-primary">Import JSON</button>
-      </form>
-    </section>
+  <div class="adm-kpi-card">
+    <p class="adm-kpi-label">QUESTION BANK SIZE</p>
+    <h3 class="adm-kpi-val">{{ custom_problems|length }}</h3>
+    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Custom problems loaded</span>
   </div>
+  <div class="adm-kpi-card">
+    <p class="adm-kpi-label">PLAGIARISM ALERTS</p>
+    <h3 class="adm-kpi-val" style="color: {% if plagiarism_alerts|length > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+      {{ plagiarism_alerts|length }}
+    </h3>
+    <span style="font-size:0.75rem; color:var(--ui-text-muted);">Duplicate hash fingerprints</span>
+  </div>
+</div>
 
-  <section class="adm-panel">
-    <h2>Edit / Delete Coding Problems</h2>
-    <div class="adm-list">
-      {% for p in custom_problems %}
-      <div class="adm-list-item adm-list-item-stack">
-        <strong>{{ p.title }} ({{ p.id }})</strong>
-        {% if p.coverage %}
-        <p class="cp-muted">
-          Coverage score: {{ p.coverage.coverage_score }} · Sample: {{ p.coverage.sample_tests }} · Hidden: {{ p.coverage.hidden_tests }}
-          · Ready: {{ "Yes" if p.coverage.ready_to_publish else "No" }}
-        </p>
-        {% endif %}
-        <form class="adm-form" method="post" action="/admin/coding-problem/{{ p.id }}/edit">
-          <input name="title" value="{{ p.title }}" required>
-          <select name="difficulty">
-            <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
-            <option value="Medium" {% if p.difficulty == "Medium" %}selected{% endif %}>Medium</option>
-            <option value="Hard" {% if p.difficulty == "Hard" %}selected{% endif %}>Hard</option>
-          </select>
-          <input name="tags" value="{{ p.tags|join(', ') }}" placeholder="Tags">
-          <textarea name="description" rows="3" required>{{ p.description }}</textarea>
-          <textarea name="constraints" rows="2">{{ p.constraints|join('\n') }}</textarea>
-          <textarea name="examples" rows="2">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
-          <textarea name="sample_tests" rows="2" required>{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
-          <textarea name="hidden_tests" rows="2">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
-          <textarea name="starter_py" rows="3">{{ p.starter_codes.python }}</textarea>
-          <textarea name="starter_js" rows="3">{{ p.starter_codes.javascript }}</textarea>
-          <textarea name="starter_java" rows="3">{{ p.starter_codes.java }}</textarea>
-          <textarea name="starter_cpp" rows="3">{{ p.starter_codes.cpp }}</textarea>
-          <div class="adm-inline-actions">
-            <button type="submit" class="btn-secondary">Save Changes</button>
-            <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="btn-primary">Delete</button>
-          </div>
-        </form>
-      </div>
-      {% endfor %}
-    </div>
-    {% if not custom_problems %}
-    <p class="cp-muted">No custom coding problems added yet.</p>
-    {% endif %}
-  </section>
+{% if import_status %}
+<div style="margin-bottom: 24px; padding: 12px 18px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between;">
+  <span><strong>Import Status:</strong> {{ import_status }}</span>
+  <a href="/admin/coding" style="color: #10b981; text-decoration: underline; font-size: 0.8rem;">Dismiss</a>
+</div>
+{% endif %}
 
-  <section class="adm-panel">
-    <h2>Similarity / Plagiarism Signals</h2>
-    <p class="cp-muted">Auto-detected near-identical submission fingerprints for manual review.</p>
-    {% if plagiarism_alerts %}
-    <div class="adm-mini-table">
-      <div class="adm-mini-head"><span>Problem</span><span>Hash</span><span>Rows</span><span>Users</span></div>
-      {% for a in plagiarism_alerts %}
-      <div class="adm-mini-row">
-        <span>{{ a.problem_id }}</span>
-        <span>{{ a.code_hash }}</span>
-        <span>{{ a.total_rows }}</span>
-        <span>{{ a.user_count }}</span>
+<!-- Problem Bank & Stats Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+
+  <!-- Custom Problems Table -->
+  <section class="adm-card" style="margin-bottom: 0;">
+    <div class="adm-card-head">
+      <div>
+        <h2>Active Custom Problems</h2>
+        <p>Curated coding challenges with autograded test suites.</p>
       </div>
-      {% endfor %}
+      <div style="display:flex; gap:8px;">
+        <a class="adm-btn-subtle" href="/admin/coding/export?format=json">Export JSON</a>
+        <a class="adm-btn-subtle" href="/admin/coding/export?format=csv">Export CSV</a>
+      </div>
     </div>
-    {% for a in plagiarism_alerts[:6] %}
-    <div class="cp-case bad" style="margin-top:10px;">
-      <p><strong>{{ a.problem_id }}</strong> · fingerprint {{ a.code_hash }}</p>
-      {% for s in a.samples %}
-      <p class="cp-muted">{{ s.user_email }}</p>
-      <pre>{{ s.code_preview }}</pre>
-      {% endfor %}
+
+    {% if custom_problems %}
+    <div class="adm-table-container">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Problem Title</th>
+            <th>Difficulty</th>
+            <th>Coverage</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in custom_problems %}
+          <tr>
+            <td>
+              <strong style="color:var(--ui-text);">{{ p.title }}</strong>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ui-text-muted); margin-top:2px;">
+                ID: {{ p.id }}
+                {% if p.tags %} · {{ p.tags|join(', ') }}{% endif %}
+              </div>
+            </td>
+            <td>
+              {% if p.difficulty == 'Easy' %}
+              <span class="badge-ok">Easy</span>
+              {% elif p.difficulty == 'Medium' %}
+              <span class="badge-pending">Medium</span>
+              {% else %}
+              <span class="badge-fail">Hard</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if p.coverage %}
+              <div style="font-size:0.8rem;">
+                <span class="badge-ok" style="font-size:0.7rem;">Score: {{ p.coverage.coverage_score }}</span>
+                <div style="font-size:0.72rem; color:var(--ui-text-muted); margin-top:4px;">
+                  {{ p.coverage.sample_tests }} sample · {{ p.coverage.hidden_tests }} hidden
+                </div>
+              </div>
+              {% else %}
+              <span style="font-size:0.8rem; color:var(--ui-text-muted);">Standard</span>
+              {% endif %}
+            </td>
+            <td>
+              <details style="position:relative;">
+                <summary class="adm-btn-subtle" style="padding:4px 10px; font-size:0.78rem; cursor:pointer; list-style:none;">
+                  Edit / Delete ▾
+                </summary>
+                <div style="margin-top:12px; padding:16px; background:var(--ui-bg); border:1px solid var(--ui-border); border-radius:10px;">
+                  <form method="post" action="/admin/coding-problem/{{ p.id }}/edit" style="display:flex; flex-direction:column; gap:10px;">
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Title</label>
+                      <input name="title" value="{{ p.title }}" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Difficulty</label>
+                        <select name="difficulty" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                          <option value="Easy" {% if p.difficulty == "Easy" %}selected{% endif %}>Easy</option>
+                          <option value="Medium" {% if p.difficulty == "Medium" %}selected{% endif %}>Medium</option>
+                          <option value="Hard" {% if p.difficulty == "Hard" %}selected{% endif %}>Hard</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Tags</label>
+                        <input name="tags" value="{{ p.tags|join(', ') }}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">
+                      </div>
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Description</label>
+                      <textarea name="description" rows="3" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:inherit;">{{ p.description }}</textarea>
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Constraints</label>
+                      <textarea name="constraints" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:inherit;">{{ p.constraints|join('\n') }}</textarea>
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Sample Tests (input|||expected)</label>
+                      <textarea name="sample_tests" rows="2" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for t in p.sample_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Hidden Tests (input|||expected)</label>
+                      <textarea name="hidden_tests" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for t in p.hidden_tests %}{{ t.input|replace('\n', '\\n') }}|||{{ t.expected|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Examples (input|||output)</label>
+                      <textarea name="examples" rows="2" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text); font-family:monospace; font-size:0.8rem;">{% for e in p.examples %}{{ e.input|replace('\n', '\\n') }}|||{{ e.output|replace('\n', '\\n') }}{% if not loop.last %}\n{% endif %}{% endfor %}</textarea>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Python Starter</label>
+                        <textarea name="starter_py" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.python }}</textarea>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">JS Starter</label>
+                        <textarea name="starter_js" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.javascript }}</textarea>
+                      </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">Java Starter</label>
+                        <textarea name="starter_java" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.java }}</textarea>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem; color:var(--ui-text-muted); font-weight:600;">C++ Starter</label>
+                        <textarea name="starter_cpp" rows="2" style="width:100%; padding:6px; font-family:monospace; font-size:0.78rem; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-surface); color:var(--ui-text);">{{ p.starter_codes.cpp }}</textarea>
+                      </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                      <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb;">Save Changes</button>
+                      <button type="submit" formaction="/admin/coding-problem/{{ p.id }}/delete" formmethod="post" class="adm-btn-subtle" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" onclick="return confirm('Delete problem {{ p.title }}?');">Delete</button>
+                    </div>
+                  </form>
+                </div>
+              </details>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    {% endfor %}
     {% else %}
-    <p class="cp-muted">No suspicious duplicate fingerprints detected.</p>
+    <div style="text-align:center; padding:32px 16px; color:var(--ui-text-muted);">
+      No custom coding problems created yet. Add one below or import from JSON.
+    </div>
     {% endif %}
+
+    <!-- Bulk Import Box -->
+    <div style="margin-top:20px; padding:16px; border-radius:10px; border:1px dashed var(--ui-border); background:rgba(255,255,255,0.01);">
+      <strong style="font-size:0.85rem; color:var(--ui-text);">Bulk Question Import (JSON)</strong>
+      <form method="post" action="/admin/coding/import" enctype="multipart/form-data" style="display:flex; gap:10px; margin-top:8px; align-items:center;">
+        <input type="file" name="file" accept=".json,application/json" required style="font-size:0.82rem; color:var(--ui-text-muted);">
+        <button type="submit" class="adm-btn-subtle">Import File</button>
+      </form>
+    </div>
   </section>
+
+  <!-- Submission Analytics Column -->
+  <section class="adm-card" style="margin-bottom: 0;">
+    <div class="adm-card-head">
+      <div>
+        <h2>Submission Insights</h2>
+        <p>Execution rates and compiler breakdown.</p>
+      </div>
+    </div>
+
+    <!-- By Difficulty -->
+    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">By Difficulty</h3>
+    <div class="adm-table-container" style="margin-bottom:20px;">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Runs</th>
+            <th>Accepted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in coding_stats.by_difficulty %}
+          <tr>
+            <td><strong>{{ s.difficulty }}</strong></td>
+            <td>{{ s.total_runs }}</td>
+            <td><span class="badge-ok">{{ s.accept_rate }}%</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No submissions recorded yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- By Language -->
+    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">By Language</h3>
+    <div class="adm-table-container" style="margin-bottom:20px;">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Runs</th>
+            <th>Accepted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in coding_stats.by_language %}
+          <tr>
+            <td><strong>{{ s.language|capitalize }}</strong></td>
+            <td>{{ s.total_runs }}</td>
+            <td><span class="badge-ok">{{ s.accept_rate }}%</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No language data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Top Problems Run -->
+    <h3 style="font-size:0.85rem; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; color:var(--ui-text-muted); margin:0 0 10px;">Problem Latency</h3>
+    <div class="adm-table-container">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Problem</th>
+            <th>Runs</th>
+            <th>Avg Runtime</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in coding_stats.by_problem[:5] %}
+          <tr>
+            <td>{{ s.problem_id }}</td>
+            <td>{{ s.total_runs }}</td>
+            <td style="font-family:'IBM Plex Mono', monospace; font-size:0.8rem;">{{ s.avg_runtime_ms }}ms</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" style="color:var(--ui-text-muted); text-align:center;">No run data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<!-- Add Coding Question Form -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Add New Coding Practice Question</h2>
+      <p>Compose custom algorithm problem with autograded sample and hidden test cases.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/admin/coding-problem/add" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <!-- Left Column: Problem Metadata -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Problem Title *</label>
+        <input name="title" placeholder="e.g. Reverse Linked List II" required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Difficulty</label>
+          <select name="difficulty" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Tags</label>
+          <input name="tags" placeholder="e.g. array, hash-map, two-pointers" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text);">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Problem Description (Markdown supported) *</label>
+        <textarea name="description" rows="5" placeholder="Given an array of integers nums and an integer target, return indices..." required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:inherit;"></textarea>
+      </div>
+
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Constraints (one per line)</label>
+        <textarea name="constraints" rows="3" placeholder="1 <= nums.length <= 10^4&#10;-10^9 <= nums[i] <= 10^9" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+      </div>
+    </div>
+
+    <!-- Right Column: Test Suites & Code Starters -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Sample Tests (Required, format: input|||expected) *</label>
+        <textarea name="sample_tests" rows="3" placeholder="[2,7,11,15]\n9|||[0,1]" required style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+      </div>
+
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Hidden Tests (Grading, format: input|||expected)</label>
+        <textarea name="hidden_tests" rows="3" placeholder="[3,3]\n6|||[0,1]" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+      </div>
+
+      <div>
+        <label style="font-size:0.8rem; font-weight:600; color:var(--ui-text); margin-bottom:4px; display:block;">Examples (format: input|||output)</label>
+        <textarea name="examples" rows="2" placeholder="nums = [2,7,11,15], target = 9|||[0,1]" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.82rem;"></textarea>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="font-size:0.75rem; font-weight:600; color:var(--ui-text-muted);">Python Starter</label>
+          <textarea name="starter_py" rows="3" placeholder="def solution(nums, target):&#10;    pass" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.78rem;"></textarea>
+        </div>
+        <div>
+          <label style="font-size:0.75rem; font-weight:600; color:var(--ui-text-muted);">JavaScript Starter</label>
+          <textarea name="starter_js" rows="3" placeholder="function solution(nums, target) {&#10;}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--ui-border); background:var(--ui-bg); color:var(--ui-text); font-family:monospace; font-size:0.78rem;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <button type="submit" class="adm-btn-subtle" style="background:#2563eb; color:#fff; border-color:#2563eb; width:100%; justify-content:center; padding:12px; font-size:0.95rem;">
+          + Create Question
+        </button>
+      </div>
+    </div>
+  </form>
 </section>
+
+<!-- Plagiarism & Duplicate Submission Signals -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Duplicate Fingerprints & Plagiarism Signals</h2>
+      <p>Auto-flagged identical code submissions across different candidate accounts.</p>
+    </div>
+  </div>
+
+  {% if plagiarism_alerts %}
+  <div class="adm-table-container">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Code Hash</th>
+          <th>Occurrences</th>
+          <th>Distinct Users</th>
+          <th>Candidate Samples</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in plagiarism_alerts %}
+        <tr>
+          <td><strong style="color:var(--ui-text);">{{ a.problem_id }}</strong></td>
+          <td><code style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:#60a5fa;">{{ a.code_hash[:12] }}...</code></td>
+          <td>{{ a.total_rows }} submissions</td>
+          <td><span class="badge-pending">{{ a.user_count }} candidates</span></td>
+          <td>
+            <details>
+              <summary class="adm-btn-subtle" style="padding:3px 8px; font-size:0.74rem; cursor:pointer;">View Code Samples</summary>
+              <div style="margin-top:8px; padding:10px; background:var(--ui-bg); border-radius:6px; border:1px solid var(--ui-border);">
+                {% for s in a.samples %}
+                <p style="font-size:0.75rem; color:var(--ui-text-muted); margin:0 0 4px;"><strong>{{ s.user_email }}</strong></p>
+                <pre style="margin:0 0 8px; font-size:0.72rem; max-height:80px; overflow:auto; background:var(--ui-surface); padding:6px; border-radius:4px;">{{ s.code_preview }}</pre>
+                {% endfor %}
+              </div>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:24px; color:var(--ui-text-muted);">
+    ✓ No duplicate code fingerprints or suspicious plagiarism signals detected.
+  </div>
+  {% endif %}
+</section>
+
 {% endblock %}

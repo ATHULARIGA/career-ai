@@ -599,3 +599,4 @@ def get_all_tracks():
 
 def get_track_by_slug(slug: str):
     return TRACKS_DATA.get(slug.lower().strip())
+

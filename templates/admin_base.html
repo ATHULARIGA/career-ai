@@ -1,39 +1,343 @@
 {% extends "layout.html" %}
 {% block content %}
+
+<style>
+/* ── Modern SaaS Admin Console Design System ──────────────────────── */
+.adm-page {
+  padding: 36px 20px 80px;
+  background: var(--ui-bg);
+  min-height: calc(100vh - 72px);
+}
+
+.adm-container {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Header */
+.adm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--ui-border);
+  padding-bottom: 20px;
+}
+
+.adm-eyebrow {
+  margin: 0 0 6px;
+  color: var(--ui-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.adm-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ui-text);
+}
+
+.adm-header p {
+  margin: 0;
+  color: var(--ui-text-muted);
+  font-size: 0.95rem;
+}
+
+.adm-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adm-btn-subtle {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.theme-dark .adm-btn-subtle {
+  background: #111827;
+  border-color: #1f2937;
+}
+.adm-btn-subtle:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Tab Navigation Bar */
+.adm-nav-wrap {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.adm-nav-item {
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.adm-nav-item:hover {
+  color: var(--ui-text);
+}
+
+.adm-nav-item.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  font-weight: 700;
+}
+.theme-dark .adm-nav-item.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+.adm-nav-badge {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* KPI Cards */
+.adm-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.adm-kpi-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--ui-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.theme-dark .adm-kpi-card {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+}
+
+.adm-kpi-label {
+  font-size: 0.74rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ui-text-muted);
+  margin: 0 0 8px;
+}
+
+.adm-kpi-val {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+  color: var(--ui-text);
+}
+
+/* Panel Containers */
+.adm-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--ui-shadow);
+  margin-bottom: 24px;
+}
+.theme-dark .adm-card {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+}
+
+.adm-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.adm-card-head h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ui-text);
+}
+
+.adm-card-head p {
+  font-size: 0.85rem;
+  color: var(--ui-text-muted);
+  margin: 2px 0 0;
+}
+
+/* Tables */
+.adm-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.adm-table th {
+  background: var(--ui-bg);
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 16px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--ui-border);
+}
+.theme-dark .adm-table th {
+  background: #0b0f19 !important;
+  border-color: #1f2937 !important;
+}
+
+.adm-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  vertical-align: middle;
+}
+.theme-dark .adm-table td {
+  border-color: #1f2937 !important;
+}
+
+.adm-table tr:last-child td {
+  border-bottom: none;
+}
+
+.adm-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Pills & Status Badges */
+.badge-ok {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+}
+
+.badge-pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+}
+
+.badge-fail {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+}
+</style>
+
 <section class="adm-page">
   <div class="adm-container">
+
+    <!-- Top Command Center Header -->
     <header class="adm-header">
       <div>
-        <p class="adm-eyebrow">Admin 2.0</p>
-        <h1>Operations command center</h1>
-        <p>Use section pages for focused workflows.</p>
+        <p class="adm-eyebrow">ADMIN CONSOLE 2.0</p>
+        <h1>Operations Command Center</h1>
+        <p>Monitor platform growth, review user upgrades, oversee mentorship, and manage AI systems.</p>
       </div>
       <div class="adm-actions">
-        <a class="btn-secondary" href="/admin/export?format=json">Export JSON</a>
-        <a class="btn-secondary" href="/admin/export?format=csv">Export CSV</a>
-        <a class="btn-primary" href="/admin-logout">Logout</a>
+        <a class="adm-btn-subtle" href="/admin/export?format=json">
+          <span>↓ Export JSON</span>
+        </a>
+        <a class="adm-btn-subtle" href="/admin/export?format=csv">
+          <span>↓ Export CSV</span>
+        </a>
+        <a class="adm-btn-subtle" href="/admin-logout" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">
+          <span>Logout</span>
+        </a>
       </div>
     </header>
 
-    <nav class="adm-nav">
-      <a href="/admin" class="{% if active_admin_page == 'overview' %}active{% endif %}">Overview</a>
-      <a href="/admin/experiments" class="{% if active_admin_page == 'experiments' %}active{% endif %}">Experiments</a>
-      <a href="/admin/coding" class="{% if active_admin_page == 'coding' %}active{% endif %}">Coding</a>
-      <a href="/admin/safety" class="{% if active_admin_page == 'safety' %}active{% endif %}">Safety</a>
-      <a href="/admin/bookings" class="{% if active_admin_page == 'bookings' %}active{% endif %}">Bookings</a>
-      <a href="/admin/premium" class="{% if active_admin_page == 'premium' %}active{% endif %}">Premium</a>
+    <!-- Tabbed Navigation Bar -->
+    <nav class="adm-nav-wrap">
+      <a href="/admin" class="adm-nav-item {% if active_admin_page == 'overview' %}active{% endif %}">
+        <span>📊 Overview & Growth</span>
+      </a>
+      <a href="/admin/premium" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
+        <span>💎 Premium Queue</span>
+      </a>
+      <a href="/admin/bookings" class="adm-nav-item {% if active_admin_page == 'bookings' %}active{% endif %}">
+        <span>📅 Mentorship Bookings</span>
+        <span class="adm-nav-badge">{{ admin.kpis.total_bookings }}</span>
+      </a>
+      <a href="/admin/coding" class="adm-nav-item {% if active_admin_page == 'coding' %}active{% endif %}">
+        <span>💻 Coding Question Bank</span>
+      </a>
+      <a href="/admin/experiments" class="adm-nav-item {% if active_admin_page == 'experiments' %}active{% endif %}">
+        <span>🧪 AI Telemetry & Prompts</span>
+      </a>
+      <a href="/admin/safety" class="adm-nav-item {% if active_admin_page == 'safety' %}active{% endif %}">
+        <span>🛡️ Safety & Plagiarism</span>
+      </a>
     </nav>
 
-    <section class="adm-kpi-grid">
-      <article><p>Total bookings</p><h3>{{ admin.kpis.total_bookings }}</h3></article>
-      <article><p>Unique users</p><h3>{{ admin.kpis.unique_users }}</h3></article>
-      <article><p>Today bookings</p><h3>{{ admin.kpis.today_bookings }}</h3></article>
-      <article><p>Resume reviews</p><h3>{{ admin.kpis.resume_reviews }}</h3></article>
-      <article><p>Interview completions</p><h3>{{ admin.kpis.interview_completed }}</h3></article>
-      <article><p>Roadmaps generated</p><h3>{{ admin.kpis.roadmap_generated }}</h3></article>
-    </section>
-
+    <!-- Page Content Injected Here -->
     {% block admin_content %}{% endblock %}
+
   </div>
 </section>
 {% endblock %}

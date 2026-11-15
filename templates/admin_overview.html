@@ -1,58 +1,207 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
-<section class="adm-section">
-  <div class="adm-section-head">
-    <h2>Overview</h2>
-    <p>Platform health and core business signals.</p>
+
+<!-- 1. Executive Platform Metrics -->
+<section style="margin-bottom: 28px;">
+  <div style="margin-bottom: 14px;">
+    <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--ui-text);">Platform Growth Pulse</h2>
+    <p style="font-size: 0.85rem; color: var(--ui-text-muted); margin: 2px 0 0;">Cumulative user engagement and feature adoption metrics.</p>
   </div>
-  <div class="adm-grid-3">
-    <section class="adm-panel">
-      <h2>AI quality monitor</h2>
-      <div class="adm-kv-row"><span>Success rate</span><strong>{{ admin.model_health.success_rate }}%</strong></div>
-      <div class="adm-kv-row"><span>Avg latency</span><strong>{{ admin.model_health.avg_latency_ms }} ms</strong></div>
-      <div class="adm-kv-row"><span>Fallback usage</span><strong>{{ admin.model_health.fallback_rate }}%</strong></div>
-      <div class="adm-mini-table">
-        <div class="adm-mini-head"><span>Feature</span><span>Model</span><span>Status</span><span>Latency</span></div>
-        {% for r in admin.model_health.recent[:8] %}
-        <div class="adm-mini-row">
-          <span>{{ r[0] }}</span>
-          <span>{{ r[1] }}</span>
-          <span>{{ "OK" if r[2] == 1 else "Fail" }}</span>
-          <span>{{ "%.0f"|format(r[3]) }} ms</span>
-        </div>
-        {% else %}
-        <p class="cp-muted" style="padding:12px 0;font-size:0.82rem;">No AI calls logged yet. Data will appear as users interact with the platform.</p>
-        {% endfor %}
-      </div>
-    </section>
 
-    <section class="adm-panel">
-      <h2>Conversion</h2>
-      <div class="adm-kv-row"><span>Resume Reviews</span><strong>{{ admin.conversion.resume_reviews }}</strong></div>
-      <div class="adm-kv-row"><span>Interview Started</span><strong>{{ admin.conversion.interview_started }}</strong></div>
-      <div class="adm-kv-row"><span>Interview Completed</span><strong>{{ admin.conversion.interview_completed }}</strong></div>
-      <div class="adm-kv-row"><span>Mentor Bookings</span><strong>{{ admin.conversion.mentor_bookings }}</strong></div>
-      {% if admin.conversion.resume_reviews == 0 and admin.conversion.interview_started == 0 %}
-      <p class="cp-muted" style="padding:12px 0 0;font-size:0.82rem;">No conversions recorded yet. Data populates as users complete actions.</p>
-      {% endif %}
-    </section>
+  <div class="adm-kpi-row">
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">👥 Unique Users</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.unique_users }}</h3>
+    </article>
 
-    <section class="adm-panel">
-      <h2>Cohorts + Mentor Ops</h2>
-      <div class="adm-list">
-        {% for c in admin.cohorts %}
-        <div class="adm-list-item"><strong>{{ c[0] or "unknown" }}</strong><em>{{ c[1] }} users</em></div>
-        {% else %}
-        <p class="cp-muted" style="font-size:0.82rem;">No cohort data yet.</p>
-        {% endfor %}
-      </div>
-      <h3>Mentor operations</h3>
-      <div class="adm-kv-row"><span>Calendar load</span><strong>{{ admin.mentor_ops.calendar_load_pct.value }}%</strong></div>
-      <div class="adm-kv-row"><span>No-show rate</span><strong>{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong></div>
-      <div class="adm-kv-row"><span>Mentor quality</span><strong>{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong></div>
-      <div class="adm-kv-row"><span>Reschedule rate</span><strong>{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong></div>
-    </section>
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">📄 Resume Reviews</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.resume_reviews }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">🎙️ Interview Runs</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.interview_completed }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">🗺️ Career Maps</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.roadmap_generated }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">📅 1:1 Bookings</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.total_bookings }}</h3>
+    </article>
+
+    <article class="adm-kpi-card" style="border-color: rgba(59, 130, 246, 0.4);">
+      <p class="adm-kpi-label" style="color: #60a5fa;">⚡ Today's Bookings</p>
+      <h3 class="adm-kpi-val" style="color: #60a5fa;">{{ admin.kpis.today_bookings }}</h3>
+    </article>
   </div>
 </section>
-{% endblock %}
 
+<!-- 2. Conversion Funnel & Operations Row -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 24px;">
+
+  <!-- User Journey Conversion Funnel -->
+  <section class="adm-card" style="margin-bottom: 0;">
+    <div class="adm-card-head">
+      <div>
+        <h2>User Journey Funnel</h2>
+        <p>Progression from resume scan to senior mentorship.</p>
+      </div>
+      <span class="badge-ok">Active Flow</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.1rem;">1️⃣</span>
+          <div>
+            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Resume Audit Run</strong>
+            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Initial ATS diagnostic completed</span>
+          </div>
+        </div>
+        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.resume_reviews }}</strong>
+      </div>
+
+      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.1rem;">2️⃣</span>
+          <div>
+            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Mock Interview Started</strong>
+            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Conversational session triggered</span>
+          </div>
+        </div>
+        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.interview_started }}</strong>
+      </div>
+
+      <div style="background: var(--ui-bg); padding: 14px 16px; border-radius: 10px; border: 1px solid var(--ui-border); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.1rem;">3️⃣</span>
+          <div>
+            <strong style="font-size: 0.92rem; color: var(--ui-text); display: block;">Interview Completed</strong>
+            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Full evaluation feedback received</span>
+          </div>
+        </div>
+        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace;">{{ admin.conversion.interview_completed }}</strong>
+      </div>
+
+      <div style="background: rgba(59, 130, 246, 0.08); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.25); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.1rem;">4️⃣</span>
+          <div>
+            <strong style="font-size: 0.92rem; color: #60a5fa; display: block;">1:1 Mentorship Session Booked</strong>
+            <span style="font-size: 0.78rem; color: var(--ui-text-muted);">Senior expert call scheduled</span>
+          </div>
+        </div>
+        <strong style="font-size: 1.2rem; font-family: 'IBM Plex Mono', monospace; color: #60a5fa;">{{ admin.conversion.mentor_bookings }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mentor Operations & Role Cohorts -->
+  <section class="adm-card" style="margin-bottom: 0;">
+    <div class="adm-card-head">
+      <div>
+        <h2>Mentorship Operations</h2>
+        <p>Quality scores, scheduling load, and candidate cohorts.</p>
+      </div>
+      <a href="/admin/bookings" style="font-size: 0.82rem; color: #3b82f6; text-decoration: none; font-weight: 600;">Manage Bookings →</a>
+    </div>
+
+    <!-- Ops Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
+        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">CALENDAR LOAD</span>
+        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
+      </div>
+
+      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
+        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">MENTOR RATING</span>
+        <strong style="font-size: 1.25rem; color: #10b981;">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
+      </div>
+
+      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
+        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">NO-SHOW RATE</span>
+        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
+      </div>
+
+      <div style="background: var(--ui-bg); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border);">
+        <span style="font-size: 0.75rem; color: var(--ui-text-muted); font-family: 'IBM Plex Mono', monospace; display: block;">RESCHEDULES</span>
+        <strong style="font-size: 1.25rem; color: var(--ui-text);">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
+      </div>
+    </div>
+
+    <!-- Top Candidate Specializations -->
+    <h3 style="font-size: 0.88rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; color: var(--ui-text-muted); margin: 0 0 10px;">
+      Top Candidate Specializations
+    </h3>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for c in admin.cohorts[:4] %}
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--ui-bg); border-radius: 8px; border: 1px solid var(--ui-border); font-size: 0.85rem;">
+        <span style="font-weight: 600;">{{ c[0] or "General Tech" }}</span>
+        <span class="rr-chip" style="font-size: 0.75rem; padding: 2px 8px;">{{ c[1] }} candidates</span>
+      </div>
+      {% else %}
+      <p style="font-size: 0.85rem; color: var(--ui-text-muted); margin: 0;">No candidate cohort data recorded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+
+<!-- 3. AI Quality Monitor & Model Telemetry -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>AI Quality & Inference Telemetry</h2>
+      <p>Live health monitoring across OpenRouter / OpenAI inference endpoints.</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <span class="badge-ok">Success: {{ admin.model_health.success_rate }}%</span>
+      <span class="rr-chip" style="font-size: 0.75rem; padding: 3px 8px;">Latency: {{ admin.model_health.avg_latency_ms }}ms</span>
+      <span class="rr-chip" style="font-size: 0.75rem; padding: 3px 8px;">Fallback: {{ admin.model_health.fallback_rate }}%</span>
+    </div>
+  </div>
+
+  <div class="adm-table-container">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Model Provider</th>
+          <th>Status</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in admin.model_health.recent[:8] %}
+        <tr>
+          <td><strong style="text-transform: capitalize;">{{ r[0]|replace('_', ' ') }}</strong></td>
+          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--ui-text-muted);">{{ r[1] }}</td>
+          <td>
+            {% if r[2] == 1 %}
+            <span class="badge-ok">✓ Successful</span>
+            {% else %}
+            <span class="badge-fail">✕ Fallback</span>
+            {% endif %}
+          </td>
+          <td style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">
+            {{ "%.0f"|format(r[3]) }} ms
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="text-align: center; color: var(--ui-text-muted); padding: 28px 0;">
+            No AI inference calls logged yet. Logs populate in real time as candidates run reviews and mock interviews.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}
