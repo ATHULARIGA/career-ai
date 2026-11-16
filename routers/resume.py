@@ -140,6 +140,7 @@ async def upload(
         report["resume_text"] = text
         if raw_latex:
             report["latex_code"] = raw_latex
+            report["original_latex"] = raw_latex
         report["jd_text"] = final_jd
         report["company_tier"] = company_tier
 
@@ -343,6 +344,8 @@ async def fix_resume_endpoint(request: Request, report_id: int, custom_jd: str =
         
     from scoring import generate_tailored_latex_resume, generate_resume_rewrite
     jd_text = report.get("jd_text", "")
+    if not report.get("original_latex") and report.get("latex_code"):
+        report["original_latex"] = report.get("latex_code")
     tailored_result = generate_tailored_latex_resume(resume_text, report, jd_text)
     fixed_md = generate_resume_rewrite(resume_text, report)
     

@@ -460,7 +460,7 @@
     <div class="rf-chips">
       <span class="rf-chip rf-chip-active">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        Jake's ATS Template
+        1-Page ATS Layout
       </span>
       <span class="rf-chip">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -624,7 +624,7 @@
     <div class="rf-editor-wrap">
       <div class="rf-editor-toolbar">
         <div class="rf-editor-title">
-          <span>resume.tex &bull; Jake's ATS Template</span>
+          <span>resume.tex &bull; ATS Format</span>
         </div>
         <div class="rf-editor-actions">
           <button type="button" onclick="copyLatexCode()" class="rf-btn rf-btn-secondary" id="copyLatexBtn">
@@ -817,16 +817,87 @@ function showToast(msg) {
   }, 3000);
 }
 
-// Extract candidate name from LaTeX code for the preview paper
+// Dynamic parser to render authentic resume preview from LaTeX code
+function updatePaperPreviewFromLatex() {
+  const editor = document.getElementById("latexEditor");
+  if (!editor) return;
+  const code = editor.value || "";
+  if (!code.trim()) return;
+
+  // 1. Name
+  const nameMatch = code.match(/\\LARGE\s*\\textbf\{([^}]+)\}/i) ||
+                    code.match(/\\textbf\{\\Huge\s*\\scshape\s*([^}]+)\}/i) ||
+                    code.match(/\\textbf\{([A-Z\s]{4,})\}/);
+  if (nameMatch && nameMatch[1]) {
+    const el = document.getElementById("previewName");
+    if (el) el.textContent = nameMatch[1].trim();
+  }
+
+  // 2. Contact details
+  const centerMatch = code.match(/\\begin\{center\}([\s\S]*?)\\end\{center\}/i);
+  if (centerMatch) {
+    let raw = centerMatch[1];
+    raw = raw.replace(/\\LARGE[\s\S]*?\\textbf\{[^}]+\}(\\\[.*?\])?/i, '');
+    raw = raw.replace(/\\href\{[^}]*\}\{([^}]+)\}/g, '$1');
+    raw = raw.replace(/\\hspace\{[^}]*\}/g, ' ');
+    raw = raw.replace(/\\textbullet/g, ' • ');
+    raw = raw.replace(/\\small/g, '');
+    raw = raw.replace(/\\[a-zA-Z]+/g, ' ');
+    raw = raw.replace(/[{}\\]/g, ' ');
+    raw = raw.replace(/\s+/g, ' ').trim();
+    if (raw) {
+      const el = document.getElementById("previewContact");
+      if (el) el.textContent = raw;
+    }
+  }
+
+  // 3. Summary
+  const sumMatch = code.match(/\\section\*?\{Professional Summary\}([\s\S]*?)(?=\\section\*?\{|\\end\{document\})/i);
+  if (sumMatch) {
+    let sum = sumMatch[1];
+    sum = sum.replace(/\\vspace\{[^}]*\}/g, '');
+    sum = sum.replace(/\\small/g, '');
+    sum = sum.replace(/\\textbf\{([^}]+)\}/g, '$1');
+    sum = sum.replace(/\\textit\{([^}]+)\}/g, '$1');
+    sum = sum.replace(/\\&/g, '&');
+    sum = sum.replace(/\\%/g, '%');
+    sum = sum.replace(/\\[a-zA-Z]+/g, ' ');
+    sum = sum.replace(/[{}\\]/g, ' ');
+    sum = sum.replace(/\s+/g, ' ').trim();
+    if (sum) {
+      const el = document.getElementById("previewSummary");
+      if (el) el.textContent = sum;
+    }
+  }
+
+  // 4. Skills
+  const skillsMatch = code.match(/\\section\*?\{Technical Skills\}([\s\S]*?)(?=\\section\*?\{|\\end\{document\})/i);
+  if (skillsMatch) {
+    let sk = skillsMatch[1];
+    sk = sk.replace(/\\begin\{tabular\}[^{}]*(\{[^{}]*\})?/g, '');
+    sk = sk.replace(/\\end\{tabular\}/g, '');
+    sk = sk.replace(/\\vspace\{[^}]*\}/g, '');
+    sk = sk.replace(/\\small/g, '');
+    sk = sk.replace(/\\&/g, '&');
+    sk = sk.replace(/\\%/g, '%');
+    sk = sk.replace(/\\textbf\{([^}]+)\}:?/g, '<strong style="color:var(--ui-text);">$1:</strong>');
+    sk = sk.replace(/\\\\(\[[^\]]*\])?/g, '<br>');
+    sk = sk.replace(/&/g, ' ');
+    sk = sk.replace(/\\[a-zA-Z]+/g, ' ');
+    sk = sk.replace(/[{}\\]/g, ' ');
+    sk = sk.trim();
+    if (sk) {
+      const el = document.getElementById("previewSkills");
+      if (el) el.innerHTML = sk;
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  updatePaperPreviewFromLatex();
   const editor = document.getElementById("latexEditor");
   if (editor) {
-    const code = editor.value;
-    const nameMatch = code.match(/\\textbf\{\\Huge\s*\\scshape\s*([^}]+)\}/);
-    if (nameMatch && nameMatch[1]) {
-      const nameEl = document.getElementById("previewName");
-      if (nameEl) nameEl.textContent = nameMatch[1].trim();
-    }
+    editor.addEventListener("input", updatePaperPreviewFromLatex);
   }
 });
 </script>

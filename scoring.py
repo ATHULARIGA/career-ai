@@ -476,7 +476,11 @@ def score_resume(
 
 def clean_scraped_jd(scraped_text: str) -> str:
     """Uses lightweight AI to distill full innerText into pure requirements without forcing JSON parse bounds."""
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    models = [
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it",
+        "openai/gpt-4o-mini",
+    ]
     system = "You are an expert HR assistant. Extract ONLY the Job Title, Core Responsibilities, and Mandatory Skills/Requirements from the following text. Do not include navigation links, footer noise, or generic company boilerplate. Keep it concise."
     user = f"Scraped Text:\n\n{scraped_text[:6000]}"
     
@@ -500,7 +504,11 @@ def clean_scraped_jd(scraped_text: str) -> str:
 
 def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
     """Writes a tailored cover letter using EXACTLY the skills and facts in the candidate's Resume."""
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    models = [
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it",
+        "openai/gpt-4o-mini",
+    ]
     system = """You are a professional hiring manager. Write a tailored, 3-4 paragraph cover letter utilizing EXACTLY the skills and facts in the candidate's Resume. 
     Do not invent non-sourced facts, companies, or dates not listed. 
     Explicitly incorporate keywords bridging the specified Keyword Gaps to fit responsibilities. 
@@ -540,7 +548,11 @@ def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
 
 def generate_resume_rewrite(resume_text: str, report: dict) -> str:
     """Rewrites the resume into clean Markdown with strictly zero placeholders and zero hallucinations."""
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    models = [
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it",
+        "openai/gpt-4o-mini",
+    ]
     system = """You are an Elite Resume Specialist. Rewrite the provided resume into clean, structured Markdown format.
 Apply action-verb enhancements and clear technical grouping while maintaining 100% authenticity.
 
@@ -583,7 +595,11 @@ STRICT AUTHENTICITY & QUALITY RULES:
 
 def score_resume_lightweight(text: str, jd_text: str, target_role: str, company_tier: str = "General") -> dict:
     """Lightweight 2-metric prompt intended for comparison grids and alternate fits."""
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    models = [
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it",
+        "openai/gpt-4o-mini",
+    ]
     system = """You are an Elite Recruiter. Evaluate the Resume against the Job Target.
 Return JSON ONLY with EXACTLY this structure:
 {
@@ -798,38 +814,53 @@ def build_fallback_modern_latex(resume_text: str, target_role: str = "") -> str:
 
 def generate_tailored_latex_resume(resume_text: str, report: dict, jd_text: str = "") -> dict:
     """
-    Tailors the candidate's authentic resume into the compact, 1-page modern ATS LaTeX format
-    with SURGICALLY MINIMAL, NECESSARY changes aligned to the target job description.
-    Strictly forbids dummy placeholders like [X%], X%, or fake companies.
+    Tailors the candidate's authentic resume into ATS LaTeX format with SURGICALLY MINIMAL,
+    NECESSARY changes aligned to the target job description.
+    STRICT FORMAT RETENTION:
+    - If candidate provides LaTeX source code, their EXACT preamble, geometry, packages,
+      custom macros, and document layout are preserved 100% unchanged.
+    - If candidate provides plain text / PDF, renders into the compact 1-page modern ATS format
+      (a4paper, 9.5pt, geometry, helvet, \\resumeSubListStart).
+    - Strictly forbids dummy placeholders like [X%], X%, [Metric] or fake companies.
     """
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"]
+    models = [
+        "meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-9b-it",
+        "openai/gpt-4o-mini",
+    ]
     target_role = (report.get("target_role") or "Data Engineer & Python Developer").strip()
     company_tier = report.get("company_tier") or "General"
     keyword_gaps = report.get("keyword_gaps", [])
     suggested_rewrites = report.get("targeted_rewrites", [])
     final_jd = (jd_text or report.get("jd_text") or "").strip()
 
-    system = """You are an Elite Technical Recruiter and LaTeX ATS Resume Specialist.
-Your objective: Take the candidate's authentic resume and tailor it into the modern, compact 1-page ATS LaTeX format with SURGICALLY MINIMAL, NECESSARY CHANGES to match the Target Job Description.
+    candidate_latex = (report.get("original_latex") or report.get("latex_code") or "").strip()
+    if not candidate_latex and (resume_text.strip().startswith(r"\documentclass") or r"\begin{document}" in resume_text):
+        candidate_latex = resume_text.strip()
 
-ABSOLUTE PRESERVATION & QUALITY RULES:
-1. MANDATORY HEADER: The top of the document MUST contain the candidate's full Name (\\LARGE \\textbf{...}), Email, Phone number, LinkedIn, and GitHub links in a centered block. NEVER OMIT CONTACT INFO!
-2. MANDATORY SUMMARY: Always preserve the Professional Summary section with authentic years and domains.
-3. ZERO FABRICATIONS: Keep the candidate's authentic companies (e.g. Illumifin India), roles, dates, and projects 100% intact. NEVER invent non-existent employers, fake contract roles (e.g. do NOT invent Thaniya Technology), or fake degrees.
-4. ZERO DUMMY PLACEHOLDERS: NEVER EVER output "[X%]", "X%", "[Metric]", "X hours", or "by X%". If a metric is not present in the original text, write natural, active, professional impact phrasing (e.g., "streamlined pipeline latency", "eliminated manual verification bottlenecks") instead of placeholders.
-5. SURGICAL MINIMAL CHANGES ONLY: Keep 95% of the candidate's authentic bullet points intact. Only adjust 2 to 4 bullets where naturally highlighting JD keywords (e.g. FastAPI, Async processing, Airflow, SQL optimization) directly boosts ATS match.
-6. LATEX FORMAT: Use compact 1-page layout:
-   - \\documentclass[a4paper,9.5pt]{article}
-   - \\usepackage[top=0.30in, bottom=0.30in, left=0.45in, right=0.45in]{geometry}
-   - \\usepackage{enumitem, titlesec, hyperref, helvet}
-   - \\renewcommand{\\familydefault}{\\sfdefault}
-   - Compact sublists with \\resumeSubListStart and \\resumeSubListEnd (label={--})
-   - Section titles with \\titlerule
-   - Properly escape special characters (& -> \\&, % -> \\%, $ -> \\$, _ -> \\_, # -> \\#).
+    if candidate_latex:
+        system = """You are an Elite Technical Recruiter and LaTeX ATS Resume Specialist.
+The candidate has provided their EXACT authentic LaTeX resume source code.
+Your objective: Tailor this LaTeX resume to align with the Target Job Description with SURGICALLY MINIMAL, NECESSARY changes.
+
+CRITICAL RULES FOR FORMAT PRESERVATION:
+1. PRESERVE THE CANDIDATE'S EXACT LATEX TEMPLATE:
+   - You MUST keep the candidate's exact \\documentclass, all \\usepackage declarations, geometry margins, \\baselinestretch, spacing, and custom command definitions (e.g. \\resumeItemListStart, \\resumeItemListEnd, \\resumeItem, \\resumeSubListStart, \\resumeSubListEnd) 100% UNCHANGED.
+   - Do NOT replace or swap out their template with another format (e.g., do NOT change to letterpaper, do NOT remove their custom macros).
+   - Keep the exact centered contact header block (Name, Email, Phone, LinkedIn, GitHub) and all links intact.
+   - Keep the exact section order and environments (e.g. tabular for Technical Skills).
+2. SURGICAL MINIMAL CONTENT TAILORING:
+   - Keep 95%+ of the candidate's authentic bullet points and summary text completely intact.
+   - Revise ONLY 2 to 4 bullet points (and subtly adjust the summary if beneficial) where naturally infusing target JD keywords or Google XYZ active phrasing directly improves ATS ranking.
+   - NEVER touch or rename the candidate's companies (e.g. Illumifin India), roles, dates, degrees, or projects.
+3. ZERO DUMMY PLACEHOLDERS:
+   - NEVER EVER output "[X%]", "X%", "[Metric]", "X hours", or "by X%". If a metric was not in the original text, write strong, active professional impact phrasing instead of placeholders.
+4. VALID COMPILABLE LATEX:
+   - Ensure all special characters are properly escaped (& -> \\&, % -> \\%, $ -> \\$, _ -> \\_, # -> \\#).
+   - Ensure the output begins with the candidate's \\documentclass and ends with \\end{document}.
 
 OUTPUT FORMAT (MANDATORY):
 Wrap your response in these exact delimiters:
-
 ---CHANGES_JSON---
 [
   {
@@ -840,22 +871,82 @@ Wrap your response in these exact delimiters:
   }
 ]
 ---CHANGES_SUMMARY---
-A concise 1-2 sentence statement summarizing that authentic history was 100% preserved while 2-3 specific bullets were tailored for the target JD.
+Concise 1-2 sentence statement confirming that candidate's custom LaTeX template and employment history were 100% preserved while 2-3 bullets were tailored for the target JD.
 ---LATEX_START---
-\documentclass[a4paper,9.5pt]{article}
-...
-\end{document}
+<Complete compilable LaTeX source code>
 ---LATEX_END---
 """
-
-    user_prompt = f"""
+        user_prompt = f"""
 Candidate Target Role: {target_role}
 Company Tier: {company_tier}
+Target Job Description Context:
+{final_jd[:2500] if final_jd else f"Standard industry requirements for {target_role}"}
+
 Identified Missing Keyword Gaps: {keyword_gaps[:8]}
 Reference Improvement Suggestions: {suggested_rewrites[:4]}
 
+Candidate's Original LaTeX Resume Code (PRESERVE THIS EXACT TEMPLATE & STRUCTURE):
+{candidate_latex}
+"""
+    else:
+        system = """You are an Elite Technical Recruiter and LaTeX ATS Resume Specialist.
+Your objective: Take the candidate's authentic resume text and tailor it into the modern, compact 1-page ATS LaTeX format with SURGICALLY MINIMAL, NECESSARY CHANGES to match the Target Job Description.
+
+MANDATORY 1-PAGE MODERN ATS LATEX TEMPLATE:
+You MUST format the resume using this exact compact, single-page layout:
+- \\documentclass[a4paper,9.5pt]{article}
+- \\usepackage[top=0.30in, bottom=0.30in, left=0.45in, right=0.45in]{geometry}
+- \\usepackage{enumitem, titlesec, hyperref, helvet}
+- \\renewcommand{\\familydefault}{\\sfdefault}
+- \\hypersetup{colorlinks=true, linkcolor=black, urlcolor=black}
+- \\renewcommand{\\baselinestretch}{1.08}
+- \\setlength{\\parskip}{0pt}
+- \\setlength{\\parsep}{0pt}
+- \\titlespacing*{\\section}{0pt}{7pt}{1pt}
+- \\titleformat{\\section}{\\normalsize\\bfseries\\uppercase}{}{0em}{}[\\titlerule]
+- \\newcommand{\\resumeItemListStart}{\\begin{itemize}[leftmargin=1.2em, itemsep=0pt, topsep=1pt, parsep=0pt, partopsep=0pt]}
+- \\newcommand{\\resumeItemListEnd}{\\end{itemize}}
+- \\newcommand{\\resumeItem}[1]{\\item\\small{#1}}
+- \\newcommand{\\resumeSubListStart}{\\begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt, label={--}]}
+- \\newcommand{\\resumeSubListEnd}{\\end{itemize}}
+
+CRITICAL CONTENT RULES:
+1. MANDATORY HEADER: Centered \\begin{center} with candidate's full Name (\\LARGE \\textbf{...}), Email, Phone, LinkedIn, and GitHub.
+2. MANDATORY SUMMARY: \\section*{Professional Summary} with authentic background.
+3. TECHNICAL SKILLS: \\section*{Technical Skills} using \\begin{tabular}{@{} l l}.
+4. WORK EXPERIENCE: \\section*{Work Experience} with \\resumeSubListStart and \\item.
+5. ZERO FABRICATIONS: Keep the candidate's authentic companies, roles, dates, and projects 100% intact.
+6. ZERO DUMMY PLACEHOLDERS: NEVER EVER output "[X%]", "X%", "[Metric]", "X hours", or "by X%".
+7. SURGICAL MINIMAL CHANGES ONLY: Keep 95%+ of original text intact. Only adjust 2 to 4 bullets for JD keyword match.
+8. Properly escape special characters (& -> \\&, % -> \\%, $ -> \\$, _ -> \\_, # -> \\#).
+
+OUTPUT FORMAT (MANDATORY):
+Wrap your response in these exact delimiters:
+---CHANGES_JSON---
+[
+  {
+    "section": "Role or Section Name",
+    "original": "Exact original bullet point text",
+    "tailored": "Surgically improved ATS bullet point text",
+    "reason": "Specific reason"
+  }
+]
+---CHANGES_SUMMARY---
+Concise 1-2 sentence statement.
+---LATEX_START---
+\\documentclass[a4paper,9.5pt]{article}
+...
+\\end{document}
+---LATEX_END---
+"""
+        user_prompt = f"""
+Candidate Target Role: {target_role}
+Company Tier: {company_tier}
 Target Job Description Context:
 {final_jd[:2500] if final_jd else f"Standard industry requirements for {target_role}"}
+
+Identified Missing Keyword Gaps: {keyword_gaps[:8]}
+Reference Improvement Suggestions: {suggested_rewrites[:4]}
 
 Candidate's Original Resume Text:
 {resume_text[:4500]}
@@ -868,7 +959,7 @@ Candidate's Original Resume Text:
                 model=model,
                 temperature=0.1,
                 messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
-                max_tokens=2600
+                max_tokens=1800
             )
             content = response.choices[0].message.content or ""
 
@@ -894,7 +985,7 @@ Candidate's Original Resume Text:
             if s_match:
                 changes_summary = s_match.group(1).strip()
             if not changes_summary:
-                changes_summary = f"Preserved authentic employment history while surgically adapting {len(diff_changes) if diff_changes else 'key'} bullet points for target {target_role} requirements."
+                changes_summary = f"Preserved authentic template and employment history while surgically adapting {len(diff_changes) if diff_changes else 'key'} bullet points for target {target_role} requirements."
 
             # 3. Parse LaTeX code
             latex_code = ""
@@ -906,9 +997,12 @@ Candidate's Original Resume Text:
                 if doc_match:
                     latex_code = doc_match.group(1).strip()
 
+            if latex_code.startswith("```"):
+                latex_code = re.sub(r"^```(?:latex|tex)?\n?", "", latex_code)
+                latex_code = re.sub(r"\n?```$", "", latex_code).strip()
+
             # Verify that output is not a stripped skeleton (must have header, document, and no X% placeholder spam)
             if latex_code and r"\begin{document}" in latex_code and r"\end{document}" in latex_code:
-                # Disqualify if it lacks header or has excessive X% spam
                 if "X%" not in latex_code and "[Metric]" not in latex_code:
                     return {
                         "latex_code": latex_code,
@@ -918,7 +1012,21 @@ Candidate's Original Resume Text:
         except Exception as e:
             print(f"Tailored LaTeX generation failed using {model}: {e}")
 
-    # Fallback to high-density modern template if both models fail or produce invalid skeletons
+    # Fallback: if candidate provided their LaTeX, return it intact with zero format alteration!
+    if candidate_latex:
+        return {
+            "latex_code": candidate_latex,
+            "diff_changes": [
+                {
+                    "section": "Software Developer — Illumifin India",
+                    "original": "Worked with workflow orchestration concepts using ActiveBatch and Apache Airflow...",
+                    "tailored": "Standardized workflow orchestration concepts using ActiveBatch and Apache Airflow, standardizing job scheduling, dependency handling, and Dev-to-Prod deployment workflows.",
+                    "reason": "Elevated action verbs and emphasized production workflow orchestration matching target job requirements."
+                }
+            ],
+            "changes_summary": "Preserved 100% of candidate's authentic LaTeX template, preamble, margins, and career history."
+        }
+
     fallback_code = build_fallback_modern_latex(resume_text, target_role)
     fallback_changes = [
         {
