@@ -279,29 +279,16 @@ def resume(request: Request):
     # If user doesn't have custom saved resumes yet, provide Athul's authentic sample LaTeX resume
     # so the resume selection tab is populated and immediately usable
     if not saved_resumes:
-        conn = db.get_conn()
-        cur = conn.cursor()
-        db.execute(
-            cur,
-            """
-            SELECT id, title, resume_type, raw_content, target_role, created_ts
-            FROM saved_resumes
-            WHERE user_email = 'athulariga12@gmail.com'
-            ORDER BY id ASC LIMIT 1
-            """
-        )
-        sample = cur.fetchone()
-        conn.close()
-        if sample:
-            saved_resumes = [{
-                "id": sample[0],
-                "title": sample[1],
-                "resume_type": sample[2],
-                "raw_content": sample[3],
-                "target_role": sample[4] or "Data Engineer & Python Developer",
-                "created_ts": sample[5],
-                "is_sample": True
-            }]
+        sample_id = seed_default_sample_resume()
+        saved_resumes = [{
+            "id": sample_id or 1,
+            "title": "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+            "resume_type": "latex",
+            "raw_content": DEFAULT_ATHUL_RESUME,
+            "target_role": "Data Engineer & Python Developer",
+            "created_ts": int(time.time()),
+            "is_sample": True
+        }]
 
     return templates.TemplateResponse(
         request=request,

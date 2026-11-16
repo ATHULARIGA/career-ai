@@ -1223,7 +1223,208 @@ def init_user_tables() -> None:
     conn.close()
 
 
+DEFAULT_ATHUL_RESUME = r"""\documentclass[a4paper,9.5pt]{article}
+
+% -------------------------
+% Layout
+% -------------------------
+\usepackage[top=0.30in, bottom=0.30in, left=0.45in, right=0.45in]{geometry}
+
+% -------------------------
+% Packages
+% -------------------------
+\usepackage{enumitem, titlesec, hyperref, fontawesome5}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=black}
+
+% -------------------------
+% Spacing
+% -------------------------
+\renewcommand{\baselinestretch}{1.08}
+\setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
+
+\titlespacing*{\section}{0pt}{7pt}{1pt}
+
+
+\titleformat{\section}{\normalsize\bfseries\uppercase}{}{0em}{}[\titlerule]
+
+% Custom compact list
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=1.2em, itemsep=0pt, topsep=1pt, parsep=0pt, partopsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+\newcommand{\resumeItem}[1]{\item\small{#1}}
+
+% Sub-list
+\newcommand{\resumeSubListStart}{\begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt, label={--}]}
+\newcommand{\resumeSubListEnd}{\end{itemize}}
+
+\begin{document}
+\pagestyle{empty}
+
+% -------------------------
+% Header
+% -------------------------
+\begin{center}
+    {\LARGE \textbf{ATHUL ANANTH ARIGA}}\\[3pt]
+    \small
+    \href{mailto:athulariga12@gmail.com}{athulariga12@gmail.com}
+    \hspace{4pt}\textbullet\hspace{4pt}
+    8310438364
+    \hspace{4pt}\textbullet\hspace{4pt}
+    \href{https://www.linkedin.com/in/athul-ariga-b4277a191}{LinkedIn}
+    \hspace{4pt}\textbullet\hspace{4pt}
+    \href{https://github.com/ATHULARIGA}{GitHub}
+\end{center}
+
+\vspace{-4pt}
+
+% -------------------------
+% Professional Summary
+% -------------------------
+\section*{Professional Summary}
+\vspace{1pt}
+\small Data Engineer \& Python Developer with 3 years of experience independently architecting and owning production-grade data systems in the insurance domain. Built and scaled a Python reporting platform serving 20+ clients team-wide, with a proven track record of reducing manual operations by up to 85\% through end-to-end ownership of ETL pipelines, automation frameworks, and workflow orchestration.
+
+\vspace{1.5pt}
+
+% -------------------------
+% Technical Skills
+% -------------------------
+\section*{Technical Skills}
+\small
+\begin{tabular}{@{} l l}
+  \textbf{Languages:}      & Python, SQL, Java, JavaScript \\[1pt]
+  \textbf{Backend \& APIs:}& Flask, FastAPI, Django, REST APIs, Async Job Processing \\[1pt]
+  \textbf{Data \& ETL:}    & SSIS, ActiveBatch, Pandas, NumPy, Scikit-learn ,Apache Airflow, NLP Inference \\[1pt]
+  \textbf{Databases:}      & MS SQL Server, MySQL \\[1pt]
+  \textbf{Tools:}          & Power BI, Git, Replit \\
+\end{tabular}
+
+\vspace{1.5pt}
+
+% -------------------------
+% Work Experience
+% -------------------------
+\section*{Work Experience}
+\vspace{1 pt}
+\noindent\textbf{Software Developer} \textemdash{} Illumifin India \hfill \textbf{Jan 2024 – Present}
+
+\vspace{2pt}
+\noindent\textit{Configuration-Driven Python Reporting Engine}
+\resumeSubListStart
+    \item Sole architect and end-to-end owner of a \textbf{Python}-based reporting platform that became the de facto standard for all new report generation across the team, replacing legacy \textbf{SSRS} infrastructure entirely.
+    \item Built an automated execution framework integrating \textbf{ActiveBatch} orchestration with runtime parameter injection (date ranges, client configs), and a robust \textbf{SQLAlchemy + pyodbc} layer with timestamp boundary handling to ensure accurate and complete data retrieval.
+    \item Developed a \textbf{Pandas}-based data processing engine to transform and combine multiple \textbf{SQL} datasets, with dynamic row-offset stacking to render multi-source data into unified \textbf{Excel} worksheets without overlap.
+    \item Engineered intelligent output generation using \textbf{XlsxWriter} with keyword-driven financial formatting; delivered multi-format outputs (\textbf{XLSX, CSV, TXT, PDF}) across client-specific directory structures.
+    \item Scaled the platform to serve \textbf{20+ insurance clients} across daily, weekly, monthly, and yearly reporting cycles, processing MS SQL datasets spanning multiple insurance lines — all without code changes per client or cycle. \item Designed the platform to be self-serve via \textbf{JSON configuration}, eliminating engineering involvement for routine report onboarding and enabling non-engineers to create new reports independently.
+\resumeSubListEnd
+
+\vspace{2pt}
+\noindent\textit{OCR-Based Document Indexing \& Sentiment Analysis Pipeline}
+\resumeSubListStart
+    \item Built a batch processing pipeline to extract and index scanned insurance documents using \textbf{OCR} and Python-based text processing, reducing manual effort by \textbf{85\%}.
+    \item Integrated \textbf{Case360 APIs} and implemented keyword extraction and sentiment analysis to automate document workflows, reducing turnaround time by \textbf{50\%}.
+\resumeSubListEnd
+
+\vspace{1.7pt}
+\noindent\textit{Additional Contributions}
+\resumeSubListStart
+    \item Worked with workflow orchestration concepts using \textbf{ActiveBatch} and \textbf{Apache Airflow}, standardizing job scheduling, dependency handling, and Dev-to-Prod deployment workflows.
+    \item Implemented automated data quality checks and alerting systems, eliminating undetected report failures and manual monitoring.
+    \item Designed and optimized \textbf{SSIS} ETL pipelines and \textbf{SQL} queries for large datasets, improving data reliability and processing efficiency.
+\resumeSubListEnd
+
+\vspace{1.5pt}
+
+% -------------------------
+% Projects
+% -------------------------
+\section*{Projects}
+\vspace{1pt}
+\noindent\textbf{ResuMate – AI-Powered Career Platform} \hfill \href{https://career-ai-psi-dun.vercel.app/}{Live} \textbullet{} \href{https://github.com/ATHULARIGA/career-ai}{GitHub}
+\resumeSubListStart
+    \item Built and deployed a full-stack AI-powered career platform enabling resume analysis, interview evaluation, and job preparation workflows.
+    \item Engineered an automated response evaluation system using \textbf{TF-IDF} and cosine similarity (scikit-learn), achieving sub-second grading latency.
+    \item Designed a structured analysis pipeline extracting speech metrics (WPM, filler density) and evaluating responses against the \textbf{STAR} framework.
+    \item Integrated LLM-based auditing (\textbf{GPT-4o, Llama-3}) to compute ATS-style resume scores and identify keyword gaps.
+    \item Deployed on Render with asynchronous job processing, idempotent execution, and stateful tracking for scalable evaluation workflows.
+\resumeSubListEnd
+
+\vspace{1.5pt}
+
+\noindent\textbf{Elavo – Sewage Overflow Detection System} \hfill \textit{Pitched at MSME Karnataka Pitch Fest}
+\resumeSubListStart
+    \item Designed and built an \textbf{IoT-based} real-time sewage overflow detection system using \textbf{Python}, \textbf{FastAPI}, and sensor integration.
+    \item Reduced incident response time by \textbf{30\%} through automated threshold-based alerting and a live monitoring dashboard.
+    \item Piloted across campus infrastructure; selected and pitched at \textbf{MSME Karnataka Government Pitch Fest} among state-level startups.
+\resumeSubListEnd
+
+\vspace{1pt}
+
+% -------------------------
+% Education
+% -------------------------
+\section*{Education}
+\vspace{1pt}
+\noindent\textbf{B.E. in Computer Science \& Engineering} – Sahyadri College of Engineering and Management, VTU \hfill \textbf{2019 – 2023}
+
+\vspace{0.5pt}
+
+% -------------------------
+% Achievements
+% -------------------------
+\section*{Certifications \& Achievements}
+\vspace{1pt}
+\resumeSubListStart
+    \item Pitched \textbf{Elavo} at MSME Karnataka Government Pitch Fest — selected among state-level startups
+    \item \textbf{2nd place} – Bot Race competition, Sahyadri College Tech Fest
+    
+\resumeSubListEnd
+
+
+\end{document}
+"""
+
+
+def seed_default_sample_resume() -> int:
+    try:
+        conn = db.get_conn()
+        cur = conn.cursor()
+        db.execute(cur, "SELECT id FROM saved_resumes WHERE user_email = 'athulariga12@gmail.com' LIMIT 1")
+        row = cur.fetchone()
+        if not row:
+            now = int(time.time())
+            db.execute(
+                cur,
+                """
+                INSERT INTO saved_resumes (user_email, title, resume_type, raw_content, target_role, created_ts, updated_ts)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "athulariga12@gmail.com",
+                    "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+                    "latex",
+                    DEFAULT_ATHUL_RESUME,
+                    "Data Engineer & Python Developer",
+                    now,
+                    now,
+                )
+            )
+            sample_id = getattr(cur, "lastrowid", 1)
+            conn.commit()
+            conn.close()
+            return sample_id
+        conn.close()
+        return row[0]
+    except Exception as e:
+        logger.warning("seed_default_sample_resume_failed err=%s", str(e))
+        return 1
+
+
 init_user_tables()
+seed_default_sample_resume()
 
 
 def extract_text_from_latex(code: str) -> str:
@@ -1334,6 +1535,15 @@ def get_saved_resume_by_id(resume_id: int, user_email: str) -> dict:
     r = cur.fetchone()
     conn.close()
     if not r:
+        if resume_id == 1 or not email:
+            return {
+                "id": 1,
+                "title": "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+                "resume_type": "latex",
+                "raw_content": DEFAULT_ATHUL_RESUME,
+                "target_role": "Data Engineer & Python Developer",
+                "created_ts": int(time.time()),
+            }
         return None
     return {
         "id": r[0],
