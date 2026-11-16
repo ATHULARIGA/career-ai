@@ -176,13 +176,13 @@
                 rewrite suggestions, keyword gap priorities, and recruiter-style feedback.
             </p>
             {% if (user_plan or "free") != "premium" %}
-            <p class="rr-subtle" style="margin-top:8px;color:#64748b;">
+            <p class="rr-subtle" style="margin-top:8px; color: var(--ui-text-muted);">
                 Free plan: {{ (resume_quota.limit if resume_quota else 3) }} reviews/day.
-                Remaining today: <strong>{{ (resume_quota.remaining if resume_quota else 0) }}</strong>.
-                <a href="/pricing">Upgrade</a>
+                Remaining today: <strong style="color: var(--ui-text);">{{ (resume_quota.remaining if resume_quota else 0) }}</strong>.
+                <a href="/pricing" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Upgrade</a>
             </p>
             {% else %}
-            <p class="rr-subtle" style="margin-top:8px;color:#065f46;">
+            <p class="rr-subtle" style="margin-top:8px; color: #10b981; font-weight: 600;">
                 Premium active: unlimited resume reviews.
             </p>
             {% endif %}

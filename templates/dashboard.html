@@ -278,10 +278,10 @@
                     <div><p>Coding subs</p><strong>{{ progress.coding_submissions_7d }}</strong></div>
                     <div><p>Accept rate</p><strong>{{ progress.coding_accept_rate_7d }}%</strong></div>
                 </div>
-                <div style="margin-top:10px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:10px;padding:10px 12px;">
-                    <p style="margin:0;color:#3730a3;font-size:0.85rem;">Next best action (10 min)</p>
-                    <p style="margin:4px 0 0;font-weight:600;">{{ progress.next_action }}</p>
-                    <p style="margin:6px 0 0;color:#475569;font-size:0.85rem;">
+                <div style="margin-top:10px; border:1px solid rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.08); border-radius:10px; padding:12px 14px;">
+                    <p style="margin:0; color: #60a5fa; font-size:0.82rem; font-family:'IBM Plex Mono', monospace; font-weight:700; text-transform:uppercase;">Next best action (10 min)</p>
+                    <p style="margin:4px 0 0; font-weight:600; color:var(--ui-text);">{{ progress.next_action }}</p>
+                    <p style="margin:6px 0 0; color:var(--ui-text-muted); font-size:0.85rem;">
                         Streak: <strong>{{ progress.current_streak_days }} day{{ '' if progress.current_streak_days == 1 else 's' }}</strong>
                         · Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
                     </p>
@@ -316,13 +316,13 @@
                         <div style="display:flex; justify-content:space-between; align-items:baseline;">
                             <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
                             {% if prev_v %}
-                            <a href="/resume/compare?current_id={{ v.id }}&previous_id={{ prev_v.id }}" style="font-size:0.75rem; color:#4f46e5; text-decoration:none; font-weight:600; background:#eef2ff; padding:2px 6px; border-radius:4px;">Compare delta</a>
+                            <a href="/resume/compare?current_id={{ v.id }}&previous_id={{ prev_v.id }}" style="font-size:0.75rem; color:#60a5fa; text-decoration:none; font-weight:600; background:rgba(59, 130, 246, 0.15); border:1px solid rgba(59, 130, 246, 0.3); padding:3px 8px; border-radius:6px;">Compare delta</a>
                             {% endif %}
                         </div>
                         <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
                         <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
                         <div style="margin-top: 8px; display: flex; gap: 8px;">
-                            <a href="/resume/{{ v.id }}/cover_letter" style="font-size:0.75rem; color:#16a34a; text-decoration:none; font-weight:600; background:#f0fdf4; padding:2px 6px; border-radius:4px;">Generate Cover Letter</a>
+                            <a href="/resume/{{ v.id }}/cover_letter" style="font-size:0.75rem; color:#34d399; text-decoration:none; font-weight:600; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.3); padding:3px 8px; border-radius:6px;">Generate Cover Letter</a>
                         </div>
                     </article>
                     {% endfor %}
@@ -347,12 +347,12 @@
                 <form action="/resume/{{ report.id or 0 }}/test_fit" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Target Role *</label>
-                            <input type="text" name="target_role" placeholder="e.g. Solution Architect" required style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Target Role *</label>
+                            <input type="text" name="target_role" placeholder="e.g. Solution Architect" required style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px;">
                         </div>
                         <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Company Tier</label>
-                            <select name="company_tier" style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Company Tier</label>
+                            <select name="company_tier" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px;">
                                 <option value="General">General</option>
                                 <option value="FAANG">FAANG / Big Tech</option>
                                 <option value="Startup">Growth Startups</option>
@@ -361,11 +361,11 @@
                         </div>
                     </div>
                     <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem;">Job Description (Optional)</label>
-                        <textarea name="jd_text" rows="4" placeholder="Paste the job description to address keyword gaps..." style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-family: sans-serif;"></textarea>
+                        <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Job Description (Optional)</label>
+                        <textarea name="jd_text" rows="4" placeholder="Paste the job description to address keyword gaps..." style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
                     </div>
                     <div>
-                        <button type="submit" class="btn-primary">Check Fit</button>
+                        <button type="submit" class="btn-primary" style="padding: 10px 22px;">Check Fit</button>
                     </div>
                 </form>
             </section>
@@ -376,31 +376,31 @@
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
                         <thead>
-                            <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
-                                <th style="padding: 12px 8px;">Role</th>
-                                <th style="padding: 12px 8px;">Tier</th>
-                                <th style="padding: 12px 8px;">Score</th>
-                                <th style="padding: 12px 8px;">Match</th>
-                                <th style="padding: 12px 8px;">Verdict</th>
-                                <th style="padding: 12px 8px;">Action</th>
+                            <tr style="border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted);">
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Role</th>
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Tier</th>
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Score</th>
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Match</th>
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Verdict</th>
+                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="border-bottom: 1px solid #e2e8f0; background: #fafbfe;">
-                                <td style="padding: 12px 8px; font-weight: 600;">{{ analysis_inputs.target_role or "Original" }} (Current)</td>
-                                <td style="padding: 12px 8px;">{{ report.company_tier or "General" }}</td>
-                                <td style="padding: 12px 8px;">{{ report.scores.Overall or "0" }}/10</td>
-                                <td style="padding: 12px 8px;">{{ report.job_match_percent or "0" }}%</td>
-                                <td style="padding: 12px 8px; color: #64748b; font-size: 0.85rem;">Current primary review.</td>
-                                <td style="padding: 12px 8px;">-</td>
+                            <tr style="border-bottom: 1px solid var(--ui-border); background: var(--ui-surface-subtle);">
+                                <td style="padding: 12px 8px; font-weight: 600; color: var(--ui-text);">{{ analysis_inputs.target_role or "Original" }} (Current)</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">{{ report.company_tier or "General" }}</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text); font-weight: 700;">{{ report.scores.Overall or "0" }}/10</td>
+                                <td style="padding: 12px 8px; color: #10b981; font-weight: 700;">{{ report.job_match_percent or "0" }}%</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text-muted); font-size: 0.85rem;">Current primary review.</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">-</td>
                             </tr>
                             {% for f in report.alternative_fits %}
-                            <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 12px 8px; font-weight: 600;">{{ f.role }}</td>
-                                <td style="padding: 12px 8px;">{{ f.tier }}</td>
-                                <td style="padding: 12px 8px;">{{ f.score or 0 }}/10</td>
-                                <td style="padding: 12px 8px;">{{ f.match or 0 }}%</td>
-                                <td style="padding: 12px 8px; font-size: 0.85rem;">{{ f.summary or "N/A" }}</td>
+                            <tr style="border-bottom: 1px solid var(--ui-border);">
+                                <td style="padding: 12px 8px; font-weight: 600; color: var(--ui-text);">{{ f.role }}</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">{{ f.tier }}</td>
+                                <td style="padding: 12px 8px; color: var(--ui-text); font-weight: 700;">{{ f.score or 0 }}/10</td>
+                                <td style="padding: 12px 8px; color: #10b981; font-weight: 700;">{{ f.match or 0 }}%</td>
+                                <td style="padding: 12px 8px; font-size: 0.85rem; color: var(--ui-text-muted);">{{ f.summary or "N/A" }}</td>
                                 <td style="padding: 12px 8px;">
                                     <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" style="color: #ef4444; font-size: 0.8rem; text-decoration: none; font-weight:600;">Remove</a>
                                 </td>

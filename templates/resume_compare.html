@@ -1,68 +1,52 @@
 {% extends "layout.html" %}
+{% block title %}Resume Version Comparison & Score Deltas | ResuMate{% endblock %}
+{% block meta_desc %}Visualize how your resume iterations affected dimensional ATS scores, keyword coverage, and critical gaps.{% endblock %}
 {% block content %}
-<style>
-    .comp-container { margin-top: 30px; }
-    .comp-banner { background: #fffbeb; border: 1px solid #f59e0b; color: #b45309; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-    .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 40px; }
-    .comp-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s; }
-    .comp-card:hover { transform: translateY(-2px); }
-    .comp-title { font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .comp-val-row { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
-    .comp-current { font-size: 2rem; font-weight: 700; color: #1e293b; }
-    .comp-prev { font-size: 1rem; color: #94a3b8; text-decoration: line-through; }
-    .comp-delta { font-size: 0.9rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
-    .delta-pos { background: #dcfce7; color: #166534; }
-    .delta-neg { background: #fee2e2; color: #991b1b; }
-    .delta-zero { background: #f1f5f9; color: #475569; }
-    
-    .comp-views { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .view-pane { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
-    .view-pane h3 { font-size: 1.1rem; color: #1e293b; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
-    .pane-list { list-style: none; padding: 0; }
-    .pane-list li { padding: 8px 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px; font-size: 0.9rem; color: #334155; }
-    .pane-list li::before { content: "•"; color: #3b82f6; font-weight: bold; display: inline-block; width: 1em; }
-</style>
-
 <section class="rr-page">
-    <div class="rr-container comp-container">
+    <div class="rr-container" style="max-width: 1040px;">
         <div class="rr-header">
-            <p class="rr-eyebrow">Versioning dashboard</p>
+            <p class="rr-eyebrow">Versioning & Audit Deltas</p>
             <h1>Score Delta Breakdown</h1>
-            <p>Visualize how your recent resume iterations affected dimensional weight scores.</p>
+            <p>Visualize how your recent resume iterations affected dimensional ATS weight scores and keyword coverage.</p>
+            <div class="rr-chip-row">
+                <span class="rr-chip">Surgical Iteration Tracking</span>
+                <span class="rr-chip">ATS Score Deltas</span>
+                <span class="rr-chip">Critical Gap Resolutions</span>
+            </div>
         </div>
 
         {% if warning %}
-        <div class="comp-banner">
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #f59e0b; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.92rem;">
             {{ warning }}
         </div>
         {% endif %}
 
         {% if all_zero %}
-        <div class="comp-banner" style="background:var(--ui-bg); border-color:var(--ui-border); color:var(--ui-text-muted);">
-            No changes detected between these two resume versions.
+        <div style="background: var(--ui-surface-subtle); border: 1px solid var(--ui-border); color: var(--ui-text-muted); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.92rem;">
+            No dimensional changes detected between these two resume versions.
         </div>
         {% endif %}
 
         <!-- DELTAS GRID -->
-        <h2 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 16px;">Dimension Comparisons</h2>
-        <div class="comp-grid">
+        <h2 style="font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted); margin-bottom: 14px;">Dimension Comparisons</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 32px;">
             {% for key, delta in deltas.items() %}
-            <div class="comp-card">
-                <div class="comp-title">{{ key }}</div>
-                <div class="comp-val-row">
-                    <span class="comp-current">
+            <div class="rd-stat">
+                <div style="font-size: 0.75rem; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--ui-text-muted);">{{ key }}</div>
+                <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 8px;">
+                    <span style="font-size: 1.9rem; font-weight: 800; color: var(--ui-text); letter-spacing: -0.03em;">
                         {{ "%.1f"|format(curr_scores.get(key, 0.0)) }}
                     </span>
-                    <span class="comp-prev">
+                    <span style="font-size: 0.95rem; color: var(--ui-text-muted); text-decoration: line-through;">
                         {{ "%.1f"|format(prev_scores.get(key, 0.0)) }}
                     </span>
                     
                     {% if delta > 0 %}
-                        <span class="comp-delta delta-pos">↑ +{{ "%.1f"|format(delta) }}</span>
+                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">↑ +{{ "%.1f"|format(delta) }}</span>
                     {% elif delta < 0 %}
-                        <span class="comp-delta delta-neg">↓ {{ "%.1f"|format(delta) }}</span>
+                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">↓ {{ "%.1f"|format(delta) }}</span>
                     {% else %}
-                        <span class="comp-delta delta-zero">0.0</span>
+                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--ui-surface-subtle); color: var(--ui-text-muted); border: 1px solid var(--ui-border);">0.0</span>
                     {% endif %}
                 </div>
             </div>
@@ -70,36 +54,40 @@
         </div>
 
         <!-- SIDE BY SIDE PANES -->
-        <h2 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 16px;">Fix Resolutions</h2>
-        <div class="comp-views">
-            <div class="view-pane">
-                <h3>V1 Critical Gaps (Previous)</h3>
-                <ul class="pane-list">
+        <h2 style="font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted); margin-bottom: 14px;">Fix Resolutions</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 36px;">
+            <div class="rd-panel">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--ui-text); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ui-border);">V1 Critical Gaps (Previous)</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
                     {% if previous.get("critical_changes_required") %}
                         {% for item in previous.get("critical_changes_required", []) %}
-                            <li>{{ item }}</li>
+                            <li class="rd-item" style="margin-bottom: 8px;">{{ item }}</li>
                         {% endfor %}
                     {% else %}
-                        <li style="color:#64748b; background:transparent;">No critical changes listed in previous version.</li>
+                        <li style="color: var(--ui-text-muted); font-size: 0.9rem; padding: 12px 0;">No critical changes listed in previous version.</li>
                     {% endif %}
                 </ul>
             </div>
-            <div class="view-pane">
-                <h3>V2 Critical Gaps (Current)</h3>
-                <ul class="pane-list">
+            <div class="rd-panel">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--ui-text); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ui-border);">V2 Critical Gaps (Current)</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
                     {% if current.get("critical_changes_required") %}
                         {% for item in current.get("critical_changes_required", []) %}
-                            <li>{{ item }}</li>
+                            <li class="rd-item" style="margin-bottom: 8px;">{{ item }}</li>
                         {% endfor %}
                     {% else %}
-                        <li style="color:#64748b; background:transparent;">No remaining critical items listed! Great job.</li>
+                        <li style="color: #10b981; font-weight: 600; font-size: 0.9rem; padding: 12px 0; display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            All critical items resolved.
+                        </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
 
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="/resume" class="rr-submit" style="display:inline-block; text-decoration:none;">Run Another Review</a>
+        <div style="text-align: center; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="/resume" class="btn-primary" style="text-decoration: none; padding: 10px 22px;">Run Another Review</a>
+            <a href="/resume/{{ current_id if current_id else 0 }}" class="btn-secondary" style="text-decoration: none; padding: 10px 22px;">Back to Audit</a>
         </div>
 
     </div>

@@ -1496,43 +1496,45 @@ html.theme-dark body,
 
 /* Tab Navigation */
 .rd-tabs {
-  display: flex;
-  gap: 16px;
-  border-bottom: 1px solid var(--ui-border);
+  display: inline-flex;
+  background: var(--ui-surface-subtle, #141d2e);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-border, #1e293b);
+  gap: 4px;
   margin-bottom: 24px;
-  padding-bottom: 0;
+  flex-wrap: wrap;
 }
 
 .rd-tab-btn {
-  background: none;
   border: none;
-  padding: 8px 12px 10px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--ui-text-muted);
+  background: transparent;
+  color: var(--ui-text-muted, #94a3b8);
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  position: relative;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .rd-tab-btn:hover {
-  color: var(--ui-text);
+  color: var(--ui-text, #ffffff);
 }
 
 .rd-tab-btn.rd-tab-active {
-  color: var(--ui-text);
-  font-weight: 600;
+  background: var(--ui-surface, #0f172a);
+  color: var(--ui-text, #ffffff);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  font-weight: 700;
 }
 
-.rd-tab-btn.rd-tab-active::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #111;
-  border-radius: 2px 2px 0 0;
+.theme-dark .rd-tab-btn.rd-tab-active {
+  background: #0f172a !important;
+  color: #f8fafc !important;
 }
 
 /* Tab Content */
@@ -1758,50 +1760,55 @@ html.theme-dark body,
   margin-bottom: 12px;
 }
 
-/* ── Notion/Obsidian Dashboard System ───────────────────── */
+/* ── Premium SaaS Resume Review Dashboard System ───────────────────── */
 .rd-stat,
 .rd-panel {
-  background: #ffffff;
-  border: 1px solid #e8e8e4;
-  border-radius: 10px;
-  box-shadow: none;
-  transition: border-color 0.15s;
+  background: var(--ui-surface, #0f172a);
+  border: 1px solid var(--ui-border, #1e293b);
+  border-radius: 12px;
+  box-shadow: var(--ui-shadow, 0 4px 20px rgba(0,0,0,0.25));
+  transition: border-color 0.15s ease;
 }
+
 .theme-dark .rd-stat,
 .theme-dark .rd-panel {
-  background: #1c1c1c;
-  border-color: #2e2e2e;
+  background: #0f172a !important;
+  border-color: #1e293b !important;
 }
 
 .rd-stat {
-  padding: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .rd-stat p {
   margin: 0;
-  color: #888;
+  color: var(--ui-text-muted, #94a3b8);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-family: "IBM Plex Mono", monospace;
   font-weight: 700;
 }
-.theme-dark .rd-stat p { color: #666; }
+.theme-dark .rd-stat p { color: #94a3b8 !important; }
 
 .rd-stat h3 {
-  margin: 6px 0 2px;
-  font-size: 1.9rem;
+  margin: 8px 0 4px;
+  font-size: 2.1rem;
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: #191919;
+  color: var(--ui-text, #f8fafc);
 }
-.theme-dark .rd-stat h3 { color: #ebebeb; }
+.theme-dark .rd-stat h3 { color: #f8fafc !important; }
 
 .rd-stat span {
-  color: #999;
+  color: var(--ui-text-muted, #94a3b8);
   font-size: 0.8rem;
   font-weight: 500;
 }
-.theme-dark .rd-stat span { color: #666; }
+.theme-dark .rd-stat span { color: #94a3b8 !important; }
 
 .rd-grid-2 {
   display: grid;
@@ -1811,51 +1818,63 @@ html.theme-dark body,
 }
 
 .rd-panel {
-  padding: 20px;
+  padding: 24px;
 }
 
 .rd-panel h2 {
   margin: 0 0 16px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #999;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--ui-text-muted, #94a3b8);
 }
-.theme-dark .rd-panel h2 { color: #555; }
+.theme-dark .rd-panel h2 { color: #94a3b8 !important; }
 
 .rd-item,
 .rd-gap,
 .rd-link {
-  border: 1px solid #f0f0ec;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: #fafaf8;
-  margin-bottom: 8px;
-  transition: border-color 0.15s;
+  border: 1px solid var(--ui-border, #1e293b);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--ui-surface-subtle, #141d2e);
+  margin-bottom: 10px;
+  color: var(--ui-text, #f8fafc);
+  transition: all 0.15s ease;
 }
-.rd-item:hover, .rd-gap:hover { border-color: #d0d0cc; }
+.rd-item:hover, .rd-gap:hover, .rd-link:hover { 
+  border-color: var(--ui-border-strong, #334155); 
+}
 .theme-dark .rd-item,
 .theme-dark .rd-gap,
 .theme-dark .rd-link {
-  background: #252525;
-  border-color: #303030;
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
 }
-.theme-dark .rd-item:hover, .theme-dark .rd-gap:hover { border-color: #444; }
+.theme-dark .rd-item:hover, .theme-dark .rd-gap:hover, .theme-dark .rd-link:hover { 
+  border-color: #334155 !important; 
+}
 
 .rd-tag {
   display: inline-block;
-  background: #f0f0ed;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  color: #666;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #60a5fa;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
 }
-.theme-dark .rd-tag { background: #333; color: #888; }
+.theme-dark .rd-tag { 
+  background: rgba(59, 130, 246, 0.15) !important; 
+  color: #60a5fa !important; 
+}
 
 .rd-quote {
   font-weight: 600;
