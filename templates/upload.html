@@ -3,7 +3,169 @@
 {% block meta_desc %}Audit your resume against any job description with instant ATS scoring, missing keyword detection, and recruiter-ready bullet points.{% endblock %}
 {% block og_title %}Free AI Resume Reviewer & ATS Score Checker | ResuMate{% endblock %}
 {% block og_desc %}Scan and optimize your resume for ATS compliance and role matching with instant actionable suggestions.{% endblock %}
+
 {% block content %}
+<style>
+  .rr-source-tabs {
+    display: inline-flex;
+    background: var(--ui-surface-subtle, #141d2e);
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--ui-border, #1e293b);
+    margin-bottom: 20px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .rr-source-btn {
+    border: none;
+    background: transparent;
+    color: var(--ui-text-muted, #94a3b8);
+    font-weight: 600;
+    font-size: 0.86rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rr-source-btn.active {
+    background: var(--ui-surface, #0f172a);
+    color: var(--ui-text, #ffffff);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .rr-source-panel {
+    display: none;
+    margin-bottom: 20px;
+  }
+  .rr-source-panel.active {
+    display: block;
+  }
+
+  /* Saved Resumes List */
+  .rr-saved-list {
+    display: grid;
+    gap: 10px;
+  }
+  .rr-saved-card {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .rr-saved-card:hover {
+    border-color: var(--ui-border-strong, #334155);
+    background: var(--ui-surface-subtle, #141d2e);
+  }
+  .rr-saved-card.selected {
+    border-color: var(--ui-primary, #3b82f6);
+    background: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 1px var(--ui-primary, #3b82f6);
+  }
+  .rr-saved-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rr-saved-radio {
+    accent-color: var(--ui-primary, #3b82f6);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  .rr-saved-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ui-text, #f1f5f9);
+    margin: 0 0 3px;
+  }
+  .rr-saved-meta {
+    font-size: 0.78rem;
+    color: var(--ui-text-muted, #94a3b8);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .rr-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .rr-pill-latex {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .rr-pill-pdf {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  .rr-del-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rr-del-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+
+  /* Textarea editor for LaTeX */
+  .rr-latex-textarea {
+    width: 100%;
+    min-height: 220px;
+    background: var(--ui-bg, #090d16);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-family: 'IBM Plex Mono', Consolas, Menlo, monospace;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    padding: 14px;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+  .rr-latex-textarea:focus {
+    border-color: var(--ui-primary, #3b82f6);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  .rr-save-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--ui-text, #f1f5f9);
+    margin-top: 10px;
+    cursor: pointer;
+  }
+  .rr-save-check input {
+    accent-color: var(--ui-primary, #3b82f6);
+    width: 15px;
+    height: 15px;
+  }
+</style>
+
 <section class="rr-page">
     <div class="rr-container">
         <div class="rr-header">
@@ -27,7 +189,7 @@
             <div class="rr-chip-row">
                 <span class="rr-chip">ATS + recruiter lens</span>
                 <span class="rr-chip">Keyword priority engine</span>
-                <span class="rr-chip">Interview handoff ready</span>
+                <span class="rr-chip">Overleaf + LaTeX ready</span>
             </div>
         </div>
 
@@ -42,18 +204,114 @@
         {% endif %}
 
         <form id="resumeReviewForm" action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
-            <div class="rr-field rr-file-field">
-                <label for="file">Resume PDF</label>
-                <input
-                    type="file"
-                    name="file"
-                    id="file"
-                    accept=".pdf,application/pdf"
-                    required
-                >
-                <p>Single-page or multi-page PDF supported.</p>
+            <!-- Hidden inputs tracking resume source -->
+            <input type="hidden" name="source_type" id="sourceTypeInput" value="{% if saved_resumes %}saved{% else %}latex{% endif %}">
+            <input type="hidden" name="saved_resume_id" id="savedResumeIdInput" value="{% if saved_resumes %}{{ saved_resumes[0].id }}{% else %}0{% endif %}">
+
+            <!-- Resume Source Navigation Tabs -->
+            <div class="rr-field">
+                <label style="margin-bottom: 8px; display: block; font-size: 0.9rem; font-weight: 700;">Resume Input Method</label>
+                <div class="rr-source-tabs">
+                    {% if saved_resumes %}
+                    <button type="button" class="rr-source-btn active" id="btnTabSaved" onclick="switchResumeSource('saved')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Saved Resumes ({{ saved_resumes|length }})
+                    </button>
+                    {% endif %}
+                    <button type="button" class="rr-source-btn {% if not saved_resumes %}active{% endif %}" id="btnTabLatex" onclick="switchResumeSource('latex')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        Paste LaTeX Code
+                    </button>
+                    <button type="button" class="rr-source-btn" id="btnTabFile" onclick="switchResumeSource('file')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Attach Resume File (.pdf, .tex)
+                    </button>
+                </div>
             </div>
 
+            <!-- TAB 1: Saved Resumes -->
+            {% if saved_resumes %}
+            <div id="panelSaved" class="rr-source-panel active">
+                <div class="rr-saved-list">
+                    {% for r in saved_resumes %}
+                    <div class="rr-saved-card {% if loop.first %}selected{% endif %}" id="savedCard{{ r.id }}" onclick="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
+                        <div class="rr-saved-info">
+                            <input type="radio" name="savedRadio" value="{{ r.id }}" class="rr-saved-radio" {% if loop.first %}checked{% endif %}>
+                            <div>
+                                <p class="rr-saved-title">{{ r.title }}</p>
+                                <div class="rr-saved-meta">
+                                    <span class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{ r.resume_type }}</span>
+                                    {% if r.target_role %}
+                                    <span>&bull; {{ r.target_role }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="rr-del-btn" onclick="deleteSavedResume(event, {{ r.id }}, '{{ r.title }}')" title="Delete this saved resume">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            Delete
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p style="font-size: 0.8rem; color: var(--ui-text-muted); margin-top: 8px;">
+                    Select any saved resume to immediately review or tailor it against a new job description.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- TAB 2: Paste LaTeX Code -->
+            <div id="panelLatex" class="rr-source-panel {% if not saved_resumes %}active{% endif %}">
+                <div class="rr-field">
+                    <label for="latexCode">Paste LaTeX Source Code (\documentclass...)</label>
+                    <textarea
+                        id="latexCode"
+                        name="latex_code"
+                        class="rr-latex-textarea"
+                        placeholder="\documentclass[a4paper,9.5pt]{article}&#10;\begin{document}&#10;\textbf{ATHUL ARIGA}...&#10;\end{document}"
+                    ></textarea>
+                </div>
+                <div class="rr-grid-2" style="margin-top: 10px;">
+                    <div class="rr-field">
+                        <label for="resumeTitleLatex">Resume Title (Optional)</label>
+                        <input id="resumeTitleLatex" type="text" name="resume_title_latex" placeholder="e.g. Athul - Python Developer (LaTeX)">
+                    </div>
+                    <div class="rr-field" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                        <label class="rr-save-check">
+                            <input type="checkbox" name="save_resume_latex" id="saveResumeLatex" checked>
+                            Save this resume to my account for next time
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Attach File (.pdf or .tex) -->
+            <div id="panelFile" class="rr-source-panel">
+                <div class="rr-field rr-file-field">
+                    <label for="file">Resume File (.pdf or .tex)</label>
+                    <input
+                        type="file"
+                        name="file"
+                        id="file"
+                        accept=".pdf,.tex,application/pdf,text/plain"
+                    >
+                    <p>Single or multi-page PDF (.pdf) or raw LaTeX document (.tex) supported.</p>
+                </div>
+                <div class="rr-grid-2" style="margin-top: 10px;">
+                    <div class="rr-field">
+                        <label for="resumeTitleFile">Resume Title (Optional)</label>
+                        <input id="resumeTitleFile" type="text" name="resume_title_file" placeholder="e.g. Master PDF Resume">
+                    </div>
+                    <div class="rr-field" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                        <label class="rr-save-check">
+                            <input type="checkbox" name="save_resume_file" id="saveResumeFile" checked>
+                            Save this resume to my account for next time
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Role & Seniority -->
             <div class="rr-grid-2">
                 <div class="rr-field">
                     <label for="target_role">Target role</label>
@@ -72,6 +330,7 @@
                 </div>
             </div>
 
+            <!-- Region & Company Tier -->
             <div class="rr-grid-2 rr-grid-compact">
                 <div class="rr-field">
                     <label for="region">Region mode</label>
@@ -92,6 +351,7 @@
                 </div>
             </div>
 
+            <!-- Job Link or Job Description -->
             <div class="rr-field">
                 <label for="job_link">Job link (optional)</label>
                 <input type="url" id="job_link" name="job_link" placeholder="https://linkedin.com/jobs/view/12345">
@@ -103,13 +363,13 @@
                 <textarea
                     id="job_description"
                     name="job_description"
-                    rows="8"
+                    rows="7"
                     placeholder="Paste the full job description to improve alignment, benchmark quality, and keyword suggestions."
                 ></textarea>
             </div>
 
             <div class="rr-actions">
-                <button type="submit" class="rr-submit">Run Advanced Review</button>
+                <button type="submit" class="rr-submit" id="submitReviewBtn">Run Role Review &rarr;</button>
             </div>
         </form>
     </div>
@@ -118,19 +378,154 @@
 <div id="globalLoader" class="app-loader" hidden>
     <div class="app-loader-card">
         <span class="app-loader-spinner" aria-hidden="true"></span>
-        <span class="app-loader-text">Generating resume review...</span>
+        <span class="app-loader-text">Analyzing resume against job requirements...</span>
     </div>
 </div>
 
 <script>
-(function() {
-    const form = document.getElementById("resumeReviewForm");
-    const loader = document.getElementById("globalLoader");
-    if (!form || !loader) return;
+// Switch input tabs (saved, latex, file)
+function switchResumeSource(source) {
+  document.getElementById('sourceTypeInput').value = source;
 
-    form.addEventListener("submit", function() {
-        loader.hidden = false;
+  // Toggle buttons
+  const btnSaved = document.getElementById('btnTabSaved');
+  const btnLatex = document.getElementById('btnTabLatex');
+  const btnFile = document.getElementById('btnTabFile');
+  if (btnSaved) btnSaved.classList.remove('active');
+  if (btnLatex) btnLatex.classList.remove('active');
+  if (btnFile) btnFile.classList.remove('active');
+
+  // Toggle panels
+  const panelSaved = document.getElementById('panelSaved');
+  const panelLatex = document.getElementById('panelLatex');
+  const panelFile = document.getElementById('panelFile');
+  if (panelSaved) panelSaved.classList.remove('active');
+  if (panelLatex) panelLatex.classList.remove('active');
+  if (panelFile) panelFile.classList.remove('active');
+
+  if (source === 'saved' && panelSaved) {
+    if (btnSaved) btnSaved.classList.add('active');
+    panelSaved.classList.add('active');
+  } else if (source === 'latex') {
+    if (btnLatex) btnLatex.classList.add('active');
+    panelLatex.classList.add('active');
+  } else if (source === 'file') {
+    if (btnFile) btnFile.classList.add('active');
+    panelFile.classList.add('active');
+  }
+}
+
+// Select a saved resume card
+function selectSavedResume(id, targetRole) {
+  document.getElementById('savedResumeIdInput').value = id;
+  document.querySelectorAll('.rr-saved-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('savedCard' + id);
+  if (card) {
+    card.classList.add('selected');
+    const radio = card.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+  }
+  const roleInput = document.getElementById('target_role');
+  if (targetRole && roleInput && !roleInput.value.trim()) {
+    roleInput.value = targetRole;
+  }
+}
+
+// Delete a saved resume
+async function deleteSavedResume(e, id, title) {
+  e.stopPropagation();
+  if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+  try {
+    const res = await fetch(`/resume/saved/${id}/delete`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' }
     });
+    const card = document.getElementById('savedCard' + id);
+    if (card) {
+      card.style.opacity = '0.3';
+      card.remove();
+    }
+    // If no saved cards left, switch to latex or file tab
+    const remaining = document.querySelectorAll('.rr-saved-card');
+    if (remaining.length === 0) {
+      const btnSaved = document.getElementById('btnTabSaved');
+      if (btnSaved) btnSaved.remove();
+      const panelSaved = document.getElementById('panelSaved');
+      if (panelSaved) panelSaved.remove();
+      switchResumeSource('latex');
+    } else {
+      // Select the first remaining card
+      const firstId = remaining[0].id.replace('savedCard', '');
+      selectSavedResume(firstId, '');
+    }
+  } catch (err) {
+    alert('Failed to delete saved resume. Please try again.');
+  }
+}
+
+// Form submission handler
+(function() {
+  const form = document.getElementById("resumeReviewForm");
+  const loader = document.getElementById("globalLoader");
+  if (!form || !loader) return;
+
+  form.addEventListener("submit", function(e) {
+    const source = document.getElementById('sourceTypeInput').value;
+    
+    // Copy active resume title and save checkbox into main submission fields
+    let title = "";
+    let save = "";
+    if (source === 'latex') {
+      const code = document.getElementById('latexCode').value.trim();
+      if (!code) {
+        alert('Please paste your LaTeX code before running the review.');
+        e.preventDefault();
+        return;
+      }
+      title = document.getElementById('resumeTitleLatex').value;
+      save = document.getElementById('saveResumeLatex').checked ? '1' : '';
+    } else if (source === 'file') {
+      const fileInput = document.getElementById('file');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please attach a PDF or .tex file.');
+        e.preventDefault();
+        return;
+      }
+      title = document.getElementById('resumeTitleFile').value;
+      save = document.getElementById('saveResumeFile').checked ? '1' : '';
+    } else if (source === 'saved') {
+      const savedId = document.getElementById('savedResumeIdInput').value;
+      if (!savedId || savedId === '0') {
+        alert('Please select a saved resume.');
+        e.preventDefault();
+        return;
+      }
+    }
+
+    // Append title & save inputs
+    let hTitle = document.getElementById('hiddenTitleInput');
+    if (!hTitle) {
+      hTitle = document.createElement('input');
+      hTitle.type = 'hidden';
+      hTitle.name = 'resume_title';
+      hTitle.id = 'hiddenTitleInput';
+      form.appendChild(hTitle);
+    }
+    hTitle.value = title;
+
+    let hSave = document.getElementById('hiddenSaveInput');
+    if (!hSave) {
+      hSave = document.createElement('input');
+      hSave.type = 'hidden';
+      hSave.name = 'save_resume';
+      hSave.id = 'hiddenSaveInput';
+      form.appendChild(hSave);
+    }
+    hSave.value = save;
+
+    loader.hidden = false;
+  });
 })();
 </script>
 {% endblock %}

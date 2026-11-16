@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
 from core import *
@@ -14,14 +15,20 @@ async def upload(
     seniority: str = Form(""),
     region: str = Form("US"),
     company_tier: str = Form("General"),
-    file: UploadFile = File(...),
+    source_type: str = Form("file"),
+    saved_resume_id: int = Form(0),
+    latex_code: str = Form(""),
+    save_resume: str = Form(""),
+    resume_title: str = Form(""),
+    file: Optional[UploadFile] = File(None),
 ):
     with open("/tmp/upload_debug.txt", "w") as f:
         f.write(f"company_tier: {company_tier}\n")
     start = time.time()
     quota = resume_quota_state(request)
+    user_email = (request.session.get("user_email") or "").strip().lower()
+
     if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
-        user_email = (request.session.get("user_email") or "").strip().lower()
         return templates.TemplateResponse(
             request=request,
             name="upload.html",
@@ -31,22 +38,68 @@ async def upload(
                 "resume_quota": quota,
                 "quota_error": "Free plan daily limit reached. Upgrade to Premium for unlimited resume reviews.",
                 "memory": get_user_memory(user_email),
+                "saved_resumes": get_user_saved_resumes(user_email) if user_email else [],
             },
         )
     try:
-        filename = (file.filename or "").lower()
-        if not filename.endswith(".pdf"):
-            raise ValueError("Only PDF resumes are currently supported.")
-        content_type = (file.content_type or "").lower()
-        if content_type and content_type not in ("application/pdf", "application/x-pdf", "binary/octet-stream"):
-            raise ValueError("Invalid file type. Please upload a PDF.")
+        raw_latex = ""
+        text = ""
 
-        content = await file.read()
-        if len(content or b"") > MAX_UPLOAD_BYTES:
-            raise ValueError(f"File too large. Max allowed size is {MAX_UPLOAD_BYTES // 1_000_000}MB.")
-        text = extract_text(file.filename, content)
+        # 1. Source: Selected Saved Resume
+        if source_type == "saved" or (saved_resume_id > 0 and not (file and file.filename) and not latex_code.strip()):
+            if not user_email:
+                raise ValueError("Please log in to access your saved resumes.")
+            saved = get_saved_resume_by_id(saved_resume_id, user_email)
+            if not saved:
+                raise ValueError("Selected saved resume was not found.")
+            if saved.get("resume_type") == "latex":
+                raw_latex = saved.get("raw_content", "")
+                text = extract_text_from_latex(raw_latex)
+            else:
+                text = saved.get("raw_content", "")
+            if not target_role.strip() and saved.get("target_role"):
+                target_role = saved.get("target_role")
+
+        # 2. Source: Pasted LaTeX Code
+        elif source_type == "latex" or (latex_code.strip() and not (file and file.filename)):
+            raw_latex = latex_code.strip()
+            if not raw_latex:
+                raise ValueError("Pasted LaTeX code cannot be empty.")
+            text = extract_text_from_latex(raw_latex)
+            if len(text.strip()) < 30:
+                raise ValueError("Could not extract enough readable text from the pasted LaTeX code.")
+            if save_resume in ("1", "on", "true") and user_email:
+                t = resume_title.strip() or target_role.strip() or "LaTeX Resume"
+                save_user_resume(user_email, t, "latex", raw_latex, target_role)
+
+        # 3. Source: Uploaded File (PDF or .tex)
+        else:
+            if not file or not file.filename:
+                raise ValueError("Please select a file to upload, paste your LaTeX code, or select a saved resume.")
+            filename = (file.filename or "").lower()
+            content = await file.read()
+            if len(content or b"") > MAX_UPLOAD_BYTES:
+                raise ValueError(f"File too large. Max allowed size is {MAX_UPLOAD_BYTES // 1_000_000}MB.")
+
+            if filename.endswith(".tex"):
+                raw_latex = content.decode("utf-8", errors="ignore")
+                text = extract_text_from_latex(raw_latex)
+                if save_resume in ("1", "on", "true") and user_email:
+                    t = resume_title.strip() or file.filename or target_role.strip() or "LaTeX Resume"
+                    save_user_resume(user_email, t, "latex", raw_latex, target_role)
+            elif filename.endswith(".pdf"):
+                content_type = (file.content_type or "").lower()
+                if content_type and content_type not in ("application/pdf", "application/x-pdf", "binary/octet-stream"):
+                    raise ValueError("Invalid file type. Please upload a PDF.")
+                text = extract_text(file.filename, content)
+                if save_resume in ("1", "on", "true") and user_email:
+                    t = resume_title.strip() or file.filename or target_role.strip() or "PDF Resume"
+                    save_user_resume(user_email, t, "pdf_text", text, target_role)
+            else:
+                raise ValueError("Only PDF (.pdf) and LaTeX (.tex) resumes are supported.")
+
         if not text.strip():
-            raise ValueError("Could not extract text from the uploaded file.")
+            raise ValueError("Could not extract readable text from your resume. Please check the content.")
         
         # Determine job description: Scrape link if provided, otherwise fallback to manual entry
         final_jd = job_description
@@ -85,6 +138,8 @@ async def upload(
             company_tier=company_tier,
         )
         report["resume_text"] = text
+        if raw_latex:
+            report["latex_code"] = raw_latex
         report["jd_text"] = final_jd
         report["company_tier"] = company_tier
 
@@ -517,5 +572,29 @@ async def remove_fit_endpoint(request: Request, report_id: int, index: int):
         update_resume_report_json(report_id, user_email, report)
         
     return RedirectResponse(f"/resume/{report_id}", status_code=303)
+
+
+@router.post("/resume/saved/{resume_id}/delete")
+async def delete_saved_resume_endpoint(request: Request, resume_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+    delete_user_saved_resume(resume_id, user_email)
+    accept = request.headers.get("accept", "")
+    if "application/json" in accept:
+        return JSONResponse({"status": "success", "message": "Saved resume deleted successfully."})
+    return RedirectResponse("/resume", status_code=303)
+
+
+@router.get("/resume/saved/{resume_id}")
+async def get_saved_resume_endpoint(request: Request, resume_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return JSONResponse({"status": "error", "message": "Not authenticated"}, status_code=401)
+    saved = get_saved_resume_by_id(resume_id, user_email)
+    if not saved:
+        return JSONResponse({"status": "error", "message": "Saved resume not found"}, status_code=404)
+    return JSONResponse({"status": "success", "resume": saved})
+
 
 # INTERVIEW PAGE

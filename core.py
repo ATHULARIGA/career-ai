@@ -1204,11 +1204,153 @@ def init_user_tables() -> None:
         )
         """,
     )
+    db.execute(
+        cur,
+        f"""
+        CREATE TABLE IF NOT EXISTS saved_resumes(
+            id {id_col},
+            user_email TEXT NOT NULL,
+            title TEXT NOT NULL,
+            resume_type TEXT NOT NULL,
+            raw_content TEXT NOT NULL,
+            target_role TEXT,
+            created_ts INTEGER NOT NULL,
+            updated_ts INTEGER NOT NULL
+        )
+        """,
+    )
     conn.commit()
     conn.close()
 
 
 init_user_tables()
+
+
+def extract_text_from_latex(code: str) -> str:
+    """Extracts human-readable text from LaTeX code for ATS keyword parsing and scoring."""
+    if not code:
+        return ""
+    lines = []
+    for line in code.splitlines():
+        trimmed = line.strip()
+        if trimmed.startswith('%'):
+            continue
+        idx = line.find('%')
+        if idx != -1 and (idx == 0 or line[idx - 1] != '\\'):
+            line = line[:idx]
+        lines.append(line)
+    text = '\n'.join(lines)
+    # Extract href text: \href{url}{text} -> text
+    text = re.sub(r'\\href\{[^{}]*\}\{([^{}]*)\}', r'\1', text)
+    # Strip common command tags with arguments
+    for _ in range(3):
+        text = re.sub(r'\\[a-zA-Z]+\*?\{([^{}]*)\}', r'\1', text)
+    # Strip standalone commands
+    text = re.sub(r'\\[a-zA-Z]+', ' ', text)
+    # Strip brackets and symbols
+    text = text.replace('{', ' ').replace('}', ' ').replace('&', ' ').replace('\\', ' ')
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    return text.strip()
+
+
+def save_user_resume(user_email: str, title: str, resume_type: str, raw_content: str, target_role: str = "") -> int:
+    email = (user_email or "").strip().lower()
+    if not email or not raw_content.strip():
+        return 0
+    t = (title or target_role or "My Resume").strip()[:80]
+    now = int(time.time())
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        """
+        INSERT INTO saved_resumes (user_email, title, resume_type, raw_content, target_role, created_ts, updated_ts)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (email, t, resume_type, raw_content, target_role.strip(), now, now)
+    )
+    last_id = getattr(cur, "lastrowid", 0)
+    conn.commit()
+    conn.close()
+    return last_id
+
+
+def get_user_saved_resumes(user_email: str) -> list:
+    email = (user_email or "").strip().lower()
+    if not email:
+        return []
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        """
+        SELECT id, title, resume_type, raw_content, target_role, created_ts
+        FROM saved_resumes
+        WHERE user_email = ?
+        ORDER BY created_ts DESC
+        """,
+        (email,)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    res = []
+    for r in rows:
+        res.append({
+            "id": r[0],
+            "title": r[1],
+            "resume_type": r[2],
+            "raw_content": r[3],
+            "target_role": r[4] or "",
+            "created_ts": r[5]
+        })
+    return res
+
+
+def get_saved_resume_by_id(resume_id: int, user_email: str) -> dict:
+    email = (user_email or "").strip().lower()
+    if not email:
+        return None
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        """
+        SELECT id, title, resume_type, raw_content, target_role, created_ts
+        FROM saved_resumes
+        WHERE id = ? AND user_email = ?
+        """,
+        (int(resume_id), email)
+    )
+    r = cur.fetchone()
+    conn.close()
+    if not r:
+        return None
+    return {
+        "id": r[0],
+        "title": r[1],
+        "resume_type": r[2],
+        "raw_content": r[3],
+        "target_role": r[4] or "",
+        "created_ts": r[5]
+    }
+
+
+def delete_user_saved_resume(resume_id: int, user_email: str) -> bool:
+    email = (user_email or "").strip().lower()
+    if not email:
+        return False
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        "DELETE FROM saved_resumes WHERE id = ? AND user_email = ?",
+        (int(resume_id), email)
+    )
+    deleted = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
 
 
 def is_admin_session(request: Request) -> bool:

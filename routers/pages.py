@@ -274,6 +274,7 @@ def resume(request: Request):
     log_event("page_view", "resume_page", metadata={"path": "/resume"})
     user_email = (request.session.get("user_email") or "").strip().lower()
     memory = get_user_memory(user_email)
+    saved_resumes = get_user_saved_resumes(user_email) if user_email else []
     return templates.TemplateResponse(
         request=request,
         name="upload.html",
@@ -284,6 +285,7 @@ def resume(request: Request):
             "quota_error": (request.query_params.get("quota_error") or "").strip(),
             "general_error": (request.query_params.get("error") or "").strip(),
             "memory": memory,
+            "saved_resumes": saved_resumes,
         },
     )
 
