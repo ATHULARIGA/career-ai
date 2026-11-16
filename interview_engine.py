@@ -46,7 +46,13 @@ Your behavioral rules:
 
 DEFAULT_PERSONA = PERSONA_SYSTEM_PROMPTS["Neutral"]
 
-INTERVIEW_MODELS = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct", "google/gemma-2-9b-it"]
+INTERVIEW_MODELS = [
+    "meta-llama/llama-3.1-8b-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-3.2-3b-instruct",
+    "deepseek/deepseek-chat",
+    "openai/gpt-4o-mini",
+]
 
 # ---------------------------------------------------------------------------
 # Conversational interview engine
@@ -249,13 +255,14 @@ Rules:
 - Return JSON only in this exact format:
 {{"questions":["..."]}}
 """
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct", "google/gemma-2-9b-it"]
+    models = INTERVIEW_MODELS
     for model in models:
         try:
             response = client.chat.completions.create(
                 model=model,
                 temperature=0.3,
                 messages=[{"role": "user", "content": prompt}],
+                max_tokens=600,
             )
             parsed = _parse_json(response.choices[0].message.content)
             questions = parsed.get("questions", [])
@@ -289,13 +296,14 @@ Create one high-value follow-up interview question based on:
 Return JSON only:
 {{"follow_up":"..."}}
 """
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct", "google/gemma-2-9b-it"]
+    models = INTERVIEW_MODELS
     for model in models:
         try:
             response = client.chat.completions.create(
                 model=model,
                 temperature=0.2,
                 messages=[{"role": "user", "content": prompt}],
+                max_tokens=400,
             )
             parsed = _parse_json(response.choices[0].message.content)
             follow_up = str(parsed.get("follow_up", "")).strip()
@@ -321,13 +329,14 @@ Draft these hints using their resume data if available, or general best practice
 Return JSON only:
 {{"hints": ["Hint 1", "Hint 2", "Hint 3"]}}
 """
-    models = ["openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct", "google/gemma-2-9b-it"]
+    models = INTERVIEW_MODELS
     for model in models:
         try:
             response = client.chat.completions.create(
                 model=model,
                 temperature=0.4,
                 messages=[{"role": "user", "content": prompt}],
+                max_tokens=400,
             )
             parsed = _parse_json(response.choices[0].message.content)
             hints = parsed.get("hints", [])

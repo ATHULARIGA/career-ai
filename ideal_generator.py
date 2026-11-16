@@ -27,9 +27,11 @@ Question:
 {question}
 """
     models = [
-        "openai/gpt-4o-mini",
         "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
+        "meta-llama/llama-3.3-70b-instruct",
+        "meta-llama/llama-3.2-3b-instruct",
+        "deepseek/deepseek-chat",
+        "openai/gpt-4o-mini",
     ]
 
     last_error = None
@@ -40,6 +42,7 @@ Question:
                 temperature=0,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
+                max_tokens=600,
             )
             parsed = _parse_json(response.choices[0].message.content)
             answer = str(parsed.get("answer", "")).strip()

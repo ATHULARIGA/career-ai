@@ -257,12 +257,17 @@ Return exactly this JSON structure:
 </resume>"""
 
 
+DEFAULT_AI_MODELS = [
+    "meta-llama/llama-3.1-8b-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-3.2-3b-instruct",
+    "deepseek/deepseek-chat",
+    "openai/gpt-4o-mini",
+]
+
+
 def call_ai_with_fallback(system: str, user: str) -> dict[str, Any]:
-    models = [
-        "openai/gpt-4o-mini",
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-    ]
+    models = DEFAULT_AI_MODELS
     last_error = None
 
     for model in models:
@@ -274,6 +279,7 @@ def call_ai_with_fallback(system: str, user: str) -> dict[str, Any]:
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
+                max_tokens=1800,
             )
             parsed = parse_json_object(response.choices[0].message.content)
             validate_parsed(parsed)
@@ -476,11 +482,7 @@ def score_resume(
 
 def clean_scraped_jd(scraped_text: str) -> str:
     """Uses lightweight AI to distill full innerText into pure requirements without forcing JSON parse bounds."""
-    models = [
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-        "openai/gpt-4o-mini",
-    ]
+    models = DEFAULT_AI_MODELS
     system = "You are an expert HR assistant. Extract ONLY the Job Title, Core Responsibilities, and Mandatory Skills/Requirements from the following text. Do not include navigation links, footer noise, or generic company boilerplate. Keep it concise."
     user = f"Scraped Text:\n\n{scraped_text[:6000]}"
     
@@ -493,6 +495,7 @@ def clean_scraped_jd(scraped_text: str) -> str:
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
+                max_tokens=600,
             )
             content = response.choices[0].message.content
             if content and len(content.strip()) > 50:
@@ -504,11 +507,7 @@ def clean_scraped_jd(scraped_text: str) -> str:
 
 def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
     """Writes a tailored cover letter using EXACTLY the skills and facts in the candidate's Resume."""
-    models = [
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-        "openai/gpt-4o-mini",
-    ]
+    models = DEFAULT_AI_MODELS
     system = """You are a professional hiring manager. Write a tailored, 3-4 paragraph cover letter utilizing EXACTLY the skills and facts in the candidate's Resume. 
     Do not invent non-sourced facts, companies, or dates not listed. 
     Explicitly incorporate keywords bridging the specified Keyword Gaps to fit responsibilities. 
@@ -548,11 +547,7 @@ def generate_cover_letter(resume_text: str, jd_text: str, report: dict) -> str:
 
 def generate_resume_rewrite(resume_text: str, report: dict) -> str:
     """Rewrites the resume into clean Markdown with strictly zero placeholders and zero hallucinations."""
-    models = [
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-        "openai/gpt-4o-mini",
-    ]
+    models = DEFAULT_AI_MODELS
     system = """You are an Elite Resume Specialist. Rewrite the provided resume into clean, structured Markdown format.
 Apply action-verb enhancements and clear technical grouping while maintaining 100% authenticity.
 
@@ -595,11 +590,7 @@ STRICT AUTHENTICITY & QUALITY RULES:
 
 def score_resume_lightweight(text: str, jd_text: str, target_role: str, company_tier: str = "General") -> dict:
     """Lightweight 2-metric prompt intended for comparison grids and alternate fits."""
-    models = [
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-        "openai/gpt-4o-mini",
-    ]
+    models = DEFAULT_AI_MODELS
     system = """You are an Elite Recruiter. Evaluate the Resume against the Job Target.
 Return JSON ONLY with EXACTLY this structure:
 {
@@ -823,11 +814,7 @@ def generate_tailored_latex_resume(resume_text: str, report: dict, jd_text: str 
       (a4paper, 9.5pt, geometry, helvet, \\resumeSubListStart).
     - Strictly forbids dummy placeholders like [X%], X%, [Metric] or fake companies.
     """
-    models = [
-        "meta-llama/llama-3.1-8b-instruct",
-        "google/gemma-2-9b-it",
-        "openai/gpt-4o-mini",
-    ]
+    models = DEFAULT_AI_MODELS
     target_role = (report.get("target_role") or "Data Engineer & Python Developer").strip()
     company_tier = report.get("company_tier") or "General"
     keyword_gaps = report.get("keyword_gaps", [])
