@@ -25,12 +25,14 @@
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export JSON (Premium)</a>
                 <a href="/pricing?status=premium-required" class="btn-secondary">Export TXT (Premium)</a>
                 {% endif %}
-                {% if report.resume_text %}
-                    <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;" id="autoFixForm">
-                        <button type="submit" class="btn-primary" onclick="this.innerHTML='Generating...'; this.disabled=true; document.getElementById('autoFixForm').submit();">Optimize Resume</button>
-                    </form>
+                {% if report.latex_code or report.fixed_resume_md %}
+                <a href="/resume/{{ report.id or 0 }}/fix" class="btn-primary">Tailored LaTeX Resume</a>
+                {% elif report.resume_text %}
+                <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;" id="autoFixForm">
+                    <button type="submit" class="btn-primary" onclick="this.innerHTML='Generating LaTeX...'; this.disabled=true; document.getElementById('autoFixForm').submit();">Tailor LaTeX Resume</button>
+                </form>
                 {% else %}
-                    <button type="button" class="btn-primary" onclick="openFixModal()">Optimize Resume</button>
+                <button type="button" class="btn-primary" onclick="openFixModal()">Tailor LaTeX Resume</button>
                 {% endif %}
                 <a href="/interview/new" class="btn-primary">Mock Interview</a>
             </div>

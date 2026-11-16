@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
 from core import *
 from scoring import clean_scraped_jd
 
@@ -268,7 +268,7 @@ async def view_cover_letter_endpoint(request: Request, report_id: int):
     })
 
 @router.post("/resume/{report_id}/fix", response_class=RedirectResponse)
-async def fix_resume_endpoint(request: Request, report_id: int):
+async def fix_resume_endpoint(request: Request, report_id: int, custom_jd: str = Form("")):
     user_email = (request.session.get("user_email") or "").strip().lower()
     if not user_email:
         return RedirectResponse("/login")
@@ -279,15 +279,22 @@ async def fix_resume_endpoint(request: Request, report_id: int):
         
     resume_text = report.get("resume_text", "")
     if not resume_text.strip():
-        report["fixed_resume_error"] = "Resume text unavailable for this historical report (pre-update). Please run a 'New Review' to use this feature."
+        report["fixed_resume_error"] = "Resume text unavailable for this historical report (pre-update). Please run a 'New Review' or re-upload your PDF below to use this feature."
         update_resume_report_json(report_id, user_email, report)
         return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
+
+    if custom_jd.strip():
+        report["jd_text"] = custom_jd.strip()
         
-    from scoring import generate_resume_rewrite
+    from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+    jd_text = report.get("jd_text", "")
+    tailored_result = generate_tailored_latex_resume(resume_text, report, jd_text)
     fixed_md = generate_resume_rewrite(resume_text, report)
     
+    report["latex_code"] = tailored_result.get("latex_code", "")
+    report["diff_changes"] = tailored_result.get("diff_changes", [])
+    report["changes_summary"] = tailored_result.get("changes_summary", "")
     report["fixed_resume_md"] = fixed_md
-    # Clear any old error
     report.pop("fixed_resume_error", None)
     update_resume_report_json(report_id, user_email, report)
     
@@ -327,8 +334,14 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
         report["resume_text"] = text
         report.pop("fixed_resume_error", None)
 
-        from scoring import generate_resume_rewrite
+        from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+        jd_text = report.get("jd_text", "")
+        tailored_result = generate_tailored_latex_resume(text, report, jd_text)
         fixed_md = generate_resume_rewrite(text, report)
+
+        report["latex_code"] = tailored_result.get("latex_code", "")
+        report["diff_changes"] = tailored_result.get("diff_changes", [])
+        report["changes_summary"] = tailored_result.get("changes_summary", "")
         report["fixed_resume_md"] = fixed_md
         update_resume_report_json(report_id, user_email, report)
 
@@ -346,19 +359,62 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
          return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
     fixed_md = report.get("fixed_resume_md", "")
+    latex_code = report.get("latex_code", "")
+    diff_changes = report.get("diff_changes", [])
+    changes_summary = report.get("changes_summary", "")
+    target_role = report.get("target_role", "")
+    jd_text = report.get("jd_text", "")
     error = report.get("fixed_resume_error", "")
     warning = ""
-    if not fixed_md and not error:
-        warning = "Resume optimization not generated yet. Click Fix My Resume from the dashboard to create one."
+    if not fixed_md and not latex_code and not error:
+        warning = "Resume optimization not generated yet. Click Generate Tailored LaTeX Resume to create your tailored ATS resume."
          
     return templates.TemplateResponse(request=request, name="resume_fix.html", context={
          "request": request,
-         "fixed_md": fixed_md,
          "report_id": report_id,
+         "fixed_md": fixed_md,
+         "latex_code": latex_code,
+         "diff_changes": diff_changes,
+         "changes_summary": changes_summary,
+         "target_role": target_role,
+         "jd_text": jd_text,
          "warning": warning,
          "error": error,
          "user_plan": current_user_plan(request)
     })
+
+@router.post("/resume/{report_id}/save-latex")
+async def save_latex_endpoint(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return JSONResponse({"status": "error", "message": "Not authenticated"}, status_code=401)
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report:
+        return JSONResponse({"status": "error", "message": "Report not found"}, status_code=404)
+    form = await request.form()
+    latex_code = str(form.get("latex_code", ""))
+    if not latex_code.strip():
+        return JSONResponse({"status": "error", "message": "LaTeX code cannot be empty"}, status_code=400)
+    report["latex_code"] = latex_code
+    update_resume_report_json(report_id, user_email, report)
+    return JSONResponse({"status": "success", "message": "LaTeX changes saved successfully"})
+
+@router.get("/resume/{report_id}/download-latex")
+async def download_latex_endpoint(request: Request, report_id: int):
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if not user_email:
+        return RedirectResponse("/login")
+    report = get_resume_report_by_id_for_user(report_id, user_email)
+    if not report or not report.get("latex_code"):
+        return RedirectResponse(f"/resume/{report_id}/fix")
+    latex_code = report.get("latex_code", "")
+    target_role = (report.get("target_role") or "resume").lower().replace(" ", "_")
+    filename = f"{target_role}_tailored.tex"
+    return Response(
+        content=latex_code,
+        media_type="application/x-tex",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 @router.get("/resume/{report_id}", response_class=HTMLResponse)
 async def view_dashboard_by_id(request: Request, report_id: int):

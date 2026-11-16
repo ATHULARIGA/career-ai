@@ -1,125 +1,833 @@
 {% extends "layout.html" %}
+{% block title %}Tailored LaTeX Resume & Overleaf Integration | ResuMate{% endblock %}
+{% block meta_desc %}Surgically tailored, ATS-optimized LaTeX resume matching your target Job Description. Open directly in Overleaf or download .tex.{% endblock %}
+
 {% block content %}
 <style>
-    .rf-container { margin-top: 30px; max-width: 900px; margin-left: auto; margin-right: auto; }
-    .rf-banner { background: #fffbeb; border: 1px solid #f59e0b; color: #b45309; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-    .rf-error { background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500; }
-    .rf-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; }
-    .rf-text { 
-        white-space: pre-wrap; 
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        line-height: 1.6; 
-        color: #1e293b;
-        font-size: 0.95rem; 
-        background: #f8fafc;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        min-height: 500px;
-        outline: none;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .rf-text:focus { border-color: #374151; box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
-    .rf-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
-    .rf-btn { padding: 10px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #111827; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .btn-primary:hover { background: #000000; transform: translateY(-1px); }
-    .btn-secondary { background: white; border: 1px solid #e2e8f0; color: #475569; }
-    .btn-secondary:hover { background: #f8fafc; }
-    .rf-empty { text-align: center; padding: 60px 20px; color: #64748b; }
-    .rf-tip { font-size: 0.85rem; color: #64748b; text-align: center; margin-top: 8px; }
+  .rf-wrap {
+    max-width: 1040px;
+    margin: 32px auto 60px;
+    padding: 0 16px;
+  }
+  .rf-header {
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .rf-eyebrow {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ui-primary, #3b82f6);
+    margin: 0 0 6px;
+  }
+  .rf-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--ui-text);
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+  .rf-subtitle {
+    font-size: 0.95rem;
+    color: var(--ui-text-muted);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+  .rf-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .rf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: var(--ui-surface-subtle, #141d2e);
+    border: 1px solid var(--ui-border, #1e293b);
+    color: var(--ui-text);
+  }
+  .rf-chip-active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #10b981;
+  }
+
+  /* Notice banners */
+  .rf-banner {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f59e0b;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rf-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+
+  /* Segmented control navigation */
+  .rf-tabs-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--ui-border, #1e293b);
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .rf-nav {
+    display: inline-flex;
+    background: var(--ui-surface-subtle, #141d2e);
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--ui-border, #1e293b);
+  }
+  .rf-nav-btn {
+    border: none;
+    background: transparent;
+    color: var(--ui-text-muted);
+    font-weight: 600;
+    font-size: 0.86rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rf-nav-btn.active {
+    background: var(--ui-surface, #0f172a);
+    color: var(--ui-text, #ffffff);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .rf-badge-count {
+    background: var(--ui-primary, #3b82f6);
+    color: #ffffff;
+    font-size: 0.72rem;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  /* Action Buttons */
+  .rf-actions-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .rf-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.86rem;
+    border: 1px solid var(--ui-border, #1e293b);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .rf-btn-primary {
+    background: var(--ui-primary, #3b82f6);
+    color: #ffffff;
+    border-color: var(--ui-primary, #3b82f6);
+  }
+  .rf-btn-primary:hover {
+    filter: brightness(1.1);
+  }
+  .rf-btn-overleaf {
+    background: #0f8043;
+    color: #ffffff;
+    border-color: #0f8043;
+  }
+  .rf-btn-overleaf:hover {
+    background: #0d6e39;
+  }
+  .rf-btn-secondary {
+    background: var(--ui-surface, #0f172a);
+    color: var(--ui-text);
+  }
+  .rf-btn-secondary:hover {
+    background: var(--ui-surface-subtle, #141d2e);
+  }
+
+  /* Tab content panels */
+  .rf-tab-panel {
+    display: none;
+  }
+  .rf-tab-panel.active {
+    display: block;
+  }
+
+  /* 1. Diff view styles */
+  .rf-diff-summary {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .rf-diff-summary p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ui-text);
+    line-height: 1.5;
+  }
+  .rf-diff-card {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .rf-diff-card:hover {
+    border-color: var(--ui-border-strong, #334155);
+  }
+  .rf-diff-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .rf-diff-section {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ui-primary, #3b82f6);
+  }
+  .rf-diff-reason-badge {
+    font-size: 0.76rem;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  .rf-diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 768px) {
+    .rf-diff-grid { grid-template-columns: 1fr; }
+  }
+  .rf-diff-box {
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .rf-diff-orig {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+  }
+  .rf-diff-tailored {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #6ee7b7;
+  }
+  .rf-diff-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rf-diff-orig .rf-diff-label { color: #ef4444; }
+  .rf-diff-tailored .rf-diff-label { color: #10b981; }
+  .rf-diff-reason-text {
+    font-size: 0.84rem;
+    color: var(--ui-text-muted);
+    border-top: 1px solid var(--ui-border, #1e293b);
+    padding-top: 10px;
+    margin: 0;
+  }
+
+  /* 2. LaTeX Editor styles */
+  .rf-editor-wrap {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .rf-editor-toolbar {
+    background: var(--ui-surface-subtle, #141d2e);
+    border-bottom: 1px solid var(--ui-border, #1e293b);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .rf-editor-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ui-text-muted);
+  }
+  .rf-editor-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .rf-textarea {
+    width: 100%;
+    min-height: 520px;
+    background: var(--ui-bg, #090d16);
+    color: #e2e8f0;
+    font-family: 'IBM Plex Mono', Consolas, Menlo, monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 20px;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+  .rf-textarea:focus {
+    box-shadow: inset 0 0 0 1px var(--ui-primary, #3b82f6);
+  }
+
+  /* 3. Paper Preview styles */
+  .rf-preview-paper {
+    background: #ffffff;
+    color: #111827;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    padding: 48px;
+    max-width: 820px;
+    margin: 0 auto;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  @media (max-width: 640px) {
+    .rf-preview-paper { padding: 24px; }
+  }
+  .rf-paper-head {
+    text-align: center;
+    border-bottom: 1.5px solid #111827;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .rf-paper-name {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    color: #000000;
+  }
+  .rf-paper-contact {
+    font-size: 0.85rem;
+    color: #4b5563;
+    margin: 0;
+  }
+  .rf-paper-section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #d1d5db;
+    padding-bottom: 3px;
+    margin: 20px 0 10px;
+    color: #111827;
+  }
+  .rf-paper-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .rf-paper-bold { font-weight: 700; font-size: 0.95rem; color: #111827; }
+  .rf-paper-sub { font-size: 0.88rem; font-style: italic; color: #4b5563; }
+  .rf-paper-ul {
+    margin: 6px 0 14px 20px;
+    padding: 0;
+    font-size: 0.88rem;
+    color: #1f2937;
+    line-height: 1.55;
+  }
+  .rf-paper-ul li { margin-bottom: 4px; }
+
+  /* Re-tailor JD Drawer */
+  .rf-jd-panel {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 24px;
+  }
+  .rf-jd-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 100%;
+    color: var(--ui-text);
+    padding: 0;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .rf-jd-form {
+    margin-top: 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .rf-jd-textarea {
+    width: 100%;
+    background: var(--ui-bg, #090d16);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 8px;
+    color: var(--ui-text);
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  /* Empty state */
+  .rf-empty-card {
+    background: var(--ui-surface, #0f172a);
+    border: 1px solid var(--ui-border, #1e293b);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  /* Toast notification */
+  .rf-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #10b981;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+    display: none;
+    z-index: 1000;
+  }
 </style>
 
-<section class="rr-page">
-    <div class="rr-container rf-container">
-        <div class="rr-header">
-            <p class="rr-eyebrow">Optimized Rewrite</p>
-            <h1>Fixed Resume Structure</h1>
-            <p>Ready-to-copy Markdown applying action-verb suggestions and target anchors.</p>
-        </div>
-
-        {% if error %}
-        <div class="rf-error">
-            {{ error }}
-        </div>
-        {% endif %}
-
-        {% if warning %}
-        <div class="rf-banner">
-            {{ warning }}
-        </div>
-        {% endif %}
-
-        <div class="rf-card">
-            {% if fixed_md %}
-                <p style="font-size: 0.82rem; color: var(--ui-text-muted); margin-bottom: 12px; font-weight: 500;">Tip: This text is directly editable before copying or downloading.</p>
-                <div class="rf-text" id="resumeText" contenteditable="true">{{ fixed_md }}</div>
-            {% else %}
-                <div class="rf-empty">
-                    <svg style="margin: 0 auto 16px; color: var(--ui-text-muted);" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    {% if "historical report" in (error or "") or "pre-update" in (error or "") %}
-                        <div style="text-align:center; padding: 32px 20px;">
-                            <svg style="margin: 0 auto 16px; color: var(--ui-text-muted);" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p style="font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--ui-text);">Re-upload your resume PDF</p>
-                            <p style="font-size: 0.88rem; color: var(--ui-text-muted); margin-bottom: 20px;">Upload your PDF once and we'll apply suggestions directly without needing a new audit.</p>
-                            <form action="/resume/{{ report_id }}/fix-upload" method="POST" enctype="multipart/form-data" style="display:inline-flex; flex-direction:column; align-items:center; gap:12px;">
-                                <label style="display:flex; align-items:center; gap:10px; background:var(--ui-bg); border:1.5px dashed var(--ui-border-strong); border-radius:10px; padding:14px 24px; cursor:pointer; font-size:0.92rem; font-weight:600; color:var(--ui-text);">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                    <span id="fileLabel">Choose your PDF resume</span>
-                                    <input type="file" name="file" accept=".pdf" required style="display:none;" onchange="document.getElementById('fileLabel').textContent=this.files[0]?this.files[0].name:'Choose your PDF resume'">
-                                </label>
-                                <button type="submit" class="rf-btn btn-primary">Optimize Resume</button>
-                            </form>
-                        </div>
-                    {% else %}
-                        <p style="font-size: 1.1rem; font-weight: 500; color: var(--ui-text);">No Rewrite Generated Yet</p>
-                        <p style="font-size: 0.9rem; margin-top: 4px; color: var(--ui-text-muted);">Click the button below to generate full coverage.</p>
-                    {% endif %}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="rf-actions">
-            {% if fixed_md %}
-                <button onclick="copyResume()" class="rf-btn btn-primary" id="copyBtn">Copy to Clipboard</button>
-                <form action="/resume/{{ report_id }}/fix" method="POST" style="display:inline;">
-                    <button type="submit" class="rf-btn btn-secondary">Regenerate</button>
-                </form>
-            {% else %}
-                {% if "historical report" in (error or "") %}
-                    <a href="/resume" class="rf-btn btn-primary">Start New Review</a>
-                {% else %}
-                    <form action="/resume/{{ report_id }}/fix" method="POST" style="display:inline;">
-                        <button type="submit" class="rf-btn btn-primary">Generate Optimized Resume</button>
-                    </form>
-                {% endif %}
-            {% endif %}
-            <a href="/resume" class="rf-btn btn-secondary">Back to Dashboard</a>
-        </div>
-        <p class="rf-tip">We only use data provided in your original resume file (No Hallucinations).</p>
-
+<div class="rf-wrap">
+  <!-- Header -->
+  <header class="rf-header">
+    <p class="rf-eyebrow">ATS & Overleaf Engine</p>
+    <h1 class="rf-title">Tailored LaTeX Resume</h1>
+    <p class="rf-subtitle">
+      Surgically tailored for <strong>{{ target_role or "Target Role" }}</strong>. 
+      Only necessary minimal changes have been made to weave in JD keywords and elevate action verbs, keeping 100% of your authentic career history intact.
+    </p>
+    <div class="rf-chips">
+      <span class="rf-chip rf-chip-active">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Jake's ATS Template
+      </span>
+      <span class="rf-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+        Minimal Diffs Only
+      </span>
+      <span class="rf-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Overleaf Ready
+      </span>
     </div>
-</section>
+  </header>
+
+  {% if error %}
+  <div class="rf-error">{{ error }}</div>
+  {% endif %}
+
+  {% if warning %}
+  <div class="rf-banner">{{ warning }}</div>
+  {% endif %}
+
+  {% if latex_code %}
+  <!-- Tab navigation & Action Bar -->
+  <div class="rf-tabs-bar">
+    <nav class="rf-nav">
+      <button type="button" class="rf-nav-btn active" onclick="switchRfTab('diff', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+        Changes Made
+        {% if diff_changes %}
+        <span class="rf-badge-count">{{ diff_changes|length }}</span>
+        {% endif %}
+      </button>
+      <button type="button" class="rf-nav-btn" onclick="switchRfTab('preview', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Resume Preview
+      </button>
+      <button type="button" class="rf-nav-btn" onclick="switchRfTab('editor', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        LaTeX Code & Editor
+      </button>
+    </nav>
+
+    <div class="rf-actions-bar">
+      <!-- Direct POST to Overleaf -->
+      <form id="overleafForm" action="https://www.overleaf.com/docs" method="POST" target="_blank" style="display:inline;">
+        <input type="hidden" name="snip" id="overleafSnipInput" value="">
+        <button type="button" onclick="submitToOverleaf()" class="rf-btn rf-btn-overleaf">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Open in Overleaf
+        </button>
+      </form>
+
+      <button type="button" onclick="downloadTexFile()" class="rf-btn rf-btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download .tex
+      </button>
+
+      <a href="/resume/{{ report_id }}" class="rf-btn rf-btn-secondary">Back to Audit</a>
+    </div>
+  </div>
+
+  <!-- TAB 1: Changes Made (Diff View) -->
+  <div id="tab-diff" class="rf-tab-panel active">
+    <div class="rf-diff-summary">
+      <div>
+        <p><strong>JD Alignment Summary:</strong> {{ changes_summary or "Preserved authentic employment history while surgically adapting targeted bullet points for requirements." }}</p>
+      </div>
+      <span class="rf-chip rf-chip-active">
+        {{ diff_changes|length if diff_changes else "0" }} Minimal Adjustments
+      </span>
+    </div>
+
+    {% if diff_changes %}
+      {% for change in diff_changes %}
+      <article class="rf-diff-card">
+        <div class="rf-diff-head">
+          <span class="rf-diff-section">{{ change.section or "Experience" }}</span>
+          <span class="rf-diff-reason-badge">Surgical Alignment</span>
+        </div>
+        <div class="rf-diff-grid">
+          <div class="rf-diff-box rf-diff-orig">
+            <div class="rf-diff-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Original Bullet
+            </div>
+            <div>{{ change.original }}</div>
+          </div>
+          <div class="rf-diff-box rf-diff-tailored">
+            <div class="rf-diff-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Tailored (Google XYZ Format)
+            </div>
+            <div>{{ change.tailored }}</div>
+          </div>
+        </div>
+        {% if change.reason %}
+        <p class="rf-diff-reason-text">
+          <strong style="color: var(--ui-text);">Why this changed:</strong> {{ change.reason }}
+        </p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="rf-empty-card">
+        <p style="font-weight: 600; color: var(--ui-text); margin: 0 0 6px;">Zero unnecessary alterations</p>
+        <p style="color: var(--ui-text-muted); font-size: 0.9rem; margin: 0;">Your original bullet points already matched strong ATS metrics.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- TAB 2: Resume Preview -->
+  <div id="tab-preview" class="rf-tab-panel">
+    <div class="rf-preview-paper">
+      <div class="rf-paper-head">
+        <h2 class="rf-paper-name" id="previewName">Candidate Name</h2>
+        <p class="rf-paper-contact" id="previewContact">email@example.com &bull; linkedin.com/in/profile &bull; github.com/profile</p>
+      </div>
+
+      <div class="rf-paper-section-title">Professional Summary</div>
+      <p style="font-size: 0.88rem; margin: 0 0 12px; line-height: 1.55;" id="previewSummary">
+        Targeted {{ target_role or "Software Engineer" }} with proven production experience across distributed systems, asynchronous APIs, and cloud services.
+      </p>
+
+      <div class="rf-paper-section-title">Experience & Tailored Impact</div>
+      <div id="previewExperience">
+        {% if diff_changes %}
+          {% for change in diff_changes %}
+          <div style="margin-bottom: 12px;">
+            <div class="rf-paper-row">
+              <span class="rf-paper-bold">{{ change.section or "Professional Experience" }}</span>
+              <span class="rf-paper-sub">Verified History</span>
+            </div>
+            <ul class="rf-paper-ul">
+              <li>{{ change.tailored }}</li>
+            </ul>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="margin-bottom: 12px;">
+            <div class="rf-paper-row">
+              <span class="rf-paper-bold">{{ target_role or "Senior Engineer" }}</span>
+              <span class="rf-paper-sub">2022 &ndash; Present</span>
+            </div>
+            <ul class="rf-paper-ul">
+              <li>Engineered high-throughput production services with asynchronous message queues and database pooling.</li>
+              <li>Collaborated with cross-functional product and infrastructure teams to achieve 99.9% uptime.</li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="rf-paper-section-title">Technical Skills</div>
+      <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;" id="previewSkills">
+        <strong>Languages:</strong> Python, TypeScript, JavaScript, SQL &bull; 
+        <strong>Frameworks & Tools:</strong> FastAPI, React, Docker, PostgreSQL, Git, AWS
+      </p>
+    </div>
+  </div>
+
+  <!-- TAB 3: LaTeX Code & Editor -->
+  <div id="tab-editor" class="rf-tab-panel">
+    <div class="rf-editor-wrap">
+      <div class="rf-editor-toolbar">
+        <div class="rf-editor-title">
+          <span>resume.tex &bull; Jake's ATS Template</span>
+        </div>
+        <div class="rf-editor-actions">
+          <button type="button" onclick="copyLatexCode()" class="rf-btn rf-btn-secondary" id="copyLatexBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Code
+          </button>
+          <button type="button" onclick="saveLatexChanges()" class="rf-btn rf-btn-primary" id="saveLatexBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Save Changes
+          </button>
+        </div>
+      </div>
+      <textarea id="latexEditor" class="rf-textarea" spellcheck="false">{{ latex_code }}</textarea>
+    </div>
+    <p style="font-size: 0.82rem; color: var(--ui-text-muted); margin-top: 8px;">
+      Directly edit the LaTeX code above. Click <strong>Save Changes</strong> to store your edits, or click <strong>Open in Overleaf</strong> to compile and edit live in Overleaf.
+    </p>
+  </div>
+
+  <!-- Re-tailor with Updated JD Drawer -->
+  <div class="rf-jd-panel">
+    <button type="button" class="rf-jd-toggle" onclick="toggleJdDrawer()">
+      <span>Re-tailor with a Different Job Description</span>
+      <svg id="jdDrawerArrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+    <div id="jdDrawerContent" style="display: none;">
+      <form action="/resume/{{ report_id }}/fix" method="POST" class="rf-jd-form">
+        <label for="custom_jd" style="font-size: 0.85rem; font-weight: 600; color: var(--ui-text-muted);">
+          Paste Job Description (JD):
+        </label>
+        <textarea id="custom_jd" name="custom_jd" rows="5" class="rf-jd-textarea" placeholder="Paste the job description or role requirements here...">{{ jd_text }}</textarea>
+        <div>
+          <button type="submit" class="rf-btn rf-btn-primary">
+            Surgically Re-tailor Resume &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Empty State / Generate Button -->
+  <div class="rf-empty-card">
+    <svg style="margin: 0 auto 16px; color: var(--ui-text-muted);" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    
+    {% if "historical report" in (error or "") or "pre-update" in (error or "") %}
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--ui-text); margin: 0 0 8px;">Re-upload PDF to Generate LaTeX</h2>
+      <p style="font-size: 0.9rem; color: var(--ui-text-muted); margin: 0 0 20px;">Upload your PDF once and we will generate your tailored ATS LaTeX code and Overleaf link.</p>
+      <form action="/resume/{{ report_id }}/fix-upload" method="POST" enctype="multipart/form-data" style="display:inline-flex; flex-direction:column; align-items:center; gap:12px;">
+        <label style="display:flex; align-items:center; gap:10px; background:var(--ui-bg); border:1.5px dashed var(--ui-border); border-radius:10px; padding:14px 24px; cursor:pointer; font-size:0.92rem; font-weight:600; color:var(--ui-text);">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          <span id="fileLabel">Choose your PDF resume</span>
+          <input type="file" name="file" accept=".pdf" required style="display:none;" onchange="document.getElementById('fileLabel').textContent=this.files[0]?this.files[0].name:'Choose your PDF resume'">
+        </label>
+        <button type="submit" class="rf-btn rf-btn-primary">Generate Tailored LaTeX Resume</button>
+      </form>
+    {% else %}
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--ui-text); margin: 0 0 8px;">Generate Tailored LaTeX Resume</h2>
+      <p style="font-size: 0.9rem; color: var(--ui-text-muted); max-width: 520px; margin: 0 auto 20px; line-height: 1.5;">
+        Transform your resume into Jake's ATS single-column LaTeX format. The AI will make only minimal, necessary adjustments to match <strong>{{ target_role or "your target role" }}</strong>.
+      </p>
+      <form action="/resume/{{ report_id }}/fix" method="POST" style="display:inline-block; max-width: 580px; width: 100%; text-align: left;">
+        <label for="custom_jd_init" style="font-size: 0.82rem; font-weight: 600; color: var(--ui-text-muted); margin-bottom: 6px; display: block;">
+          Target Job Description (Optional - extracts missing keywords and elevates relevant bullets):
+        </label>
+        <textarea id="custom_jd_init" name="custom_jd" rows="4" class="rf-jd-textarea" style="margin-bottom: 16px;" placeholder="Paste job description text here...">{{ jd_text }}</textarea>
+        <div style="text-align: center;">
+          <button type="submit" class="rf-btn rf-btn-primary" style="padding: 12px 24px; font-size: 0.95rem;">
+            Generate Tailored LaTeX Resume &rarr;
+          </button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Toast Container -->
+<div id="rfToast" class="rf-toast">Changes saved successfully.</div>
 
 <script>
-function copyResume() {
-    // innerText handles carriage returns properly for copies
-    const text = document.getElementById("resumeText").innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById("copyBtn");
-        const orig = btn.innerText;
-        btn.innerText = "Copied!";
-        btn.style.background = "#10b981"; // success green
-        btn.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
-        setTimeout(() => {
-            btn.innerText = orig;
-            btn.style.background = "#111827";
-            btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-        }, 2000);
-    }).catch(err => {
-        alert("Failed to copy text. Please select and copy manually.");
-    });
+// Tab switcher
+function switchRfTab(tabName, btn) {
+  document.querySelectorAll('.rf-tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.rf-nav-btn').forEach(b => b.classList.remove('active'));
+  
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
+
+// Submit live edited LaTeX to Overleaf Direct POST API
+function submitToOverleaf() {
+  const editor = document.getElementById("latexEditor");
+  const code = editor ? editor.value : "";
+  if (!code.trim()) {
+    showToast("LaTeX code is empty.");
+    return;
+  }
+  document.getElementById("overleafSnipInput").value = code;
+  document.getElementById("overleafForm").submit();
+}
+
+// Download .tex file directly from editor contents
+function downloadTexFile() {
+  const editor = document.getElementById("latexEditor");
+  const code = editor ? editor.value : "";
+  if (!code.trim()) {
+    showToast("LaTeX code is empty.");
+    return;
+  }
+  const blob = new Blob([code], { type: 'application/x-tex' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "{{ (target_role or 'resume').lower().replace(' ', '_') }}_tailored.tex";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Downloaded tailored_resume.tex");
+}
+
+// Copy LaTeX code to clipboard
+function copyLatexCode() {
+  const editor = document.getElementById("latexEditor");
+  const code = editor ? editor.value : "";
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById("copyLatexBtn");
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
+    showToast("LaTeX source copied to clipboard!");
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }).catch(() => {
+    showToast("Failed to copy. Please select and copy manually.");
+  });
+}
+
+// Save LaTeX code changes via AJAX
+async function saveLatexChanges() {
+  const editor = document.getElementById("latexEditor");
+  const code = editor ? editor.value : "";
+  const btn = document.getElementById("saveLatexBtn");
+  const origText = btn.innerHTML;
+  btn.innerHTML = "Saving...";
+  btn.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append("latex_code", code);
+
+    const res = await fetch("/resume/{{ report_id }}/save-latex", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      showToast("Changes saved successfully!");
+    } else {
+      showToast(data.message || "Failed to save changes.");
+    }
+  } catch (err) {
+    showToast("Network error saving changes.");
+  } finally {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  }
+}
+
+// Toggle JD drawer
+function toggleJdDrawer() {
+  const content = document.getElementById("jdDrawerContent");
+  const arrow = document.getElementById("jdDrawerArrow");
+  if (content.style.display === "none") {
+    content.style.display = "block";
+    arrow.style.transform = "rotate(180deg)";
+  } else {
+    content.style.display = "none";
+    arrow.style.transform = "rotate(0deg)";
+  }
+}
+
+// Toast helper
+function showToast(msg) {
+  const toast = document.getElementById("rfToast");
+  toast.textContent = msg;
+  toast.style.display = "block";
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 3000);
+}
+
+// Extract candidate name from LaTeX code for the preview paper
+document.addEventListener("DOMContentLoaded", () => {
+  const editor = document.getElementById("latexEditor");
+  if (editor) {
+    const code = editor.value;
+    const nameMatch = code.match(/\\textbf\{\\Huge\s*\\scshape\s*([^}]+)\}/);
+    if (nameMatch && nameMatch[1]) {
+      const nameEl = document.getElementById("previewName");
+      if (nameEl) nameEl.textContent = nameMatch[1].trim();
+    }
+  }
+});
 </script>
 {% endblock %}
