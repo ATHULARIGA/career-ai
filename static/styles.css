@@ -4404,3 +4404,104 @@ canvas {
 .theme-dark .tool-text-area { 
     background: #0f172a; border-color: #334155; color: #f8fafc; 
 }
+
+/* ==========================================================================
+   UNIFIED PREMIUM DESIGN SYSTEM STANDARDS (DARK & LIGHT)
+   ========================================================================== */
+
+/* Standard App Footer */
+.app-footer {
+  padding: 24px 20px;
+  border-top: 1px solid var(--ui-border, #e2e8f0);
+  background: var(--ui-bg, #f8fafc);
+  color: var(--ui-text-muted, #64748b);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.app-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.app-footer-links a {
+  color: var(--ui-text-muted, #64748b);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.app-footer-links a:hover {
+  color: var(--ui-text, #0f172a);
+}
+
+.app-footer-dot {
+  color: var(--ui-border-strong, #cbd5e1);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.theme-dark .app-footer,
+html.theme-dark .app-footer {
+  background: #090d16 !important;
+  border-top-color: #1e293b !important;
+}
+
+.theme-dark .app-footer-links a,
+html.theme-dark .app-footer-links a {
+  color: #94a3b8 !important;
+}
+
+.theme-dark .app-footer-links a:hover,
+html.theme-dark .app-footer-links a:hover {
+  color: #f8fafc !important;
+}
+
+.theme-dark .app-footer-dot,
+html.theme-dark .app-footer-dot {
+  color: #334155 !important;
+}
+
+/* Global Button & Form Polish across all modules */
+.btn-primary,
+.rr-submit {
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary {
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.theme-dark .btn-secondary,
+html.theme-dark .btn-secondary {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.theme-dark .btn-secondary:hover,
+html.theme-dark .btn-secondary:hover {
+  background: #141d2e !important;
+  border-color: #334155 !important;
+}
+
+/* Form Input Focus Consistency */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}

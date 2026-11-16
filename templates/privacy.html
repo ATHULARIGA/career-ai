@@ -1,14 +1,45 @@
 {% extends "layout.html" %}
+{% block title %}Privacy Policy | ResuMate{% endblock %}
+{% block meta_desc %}Learn how ResuMate collects, processes, and protects your career profile, resumes, and interview responses.{% endblock %}
 {% block content %}
-<section class="al-page">
-  <div class="al-card" style="max-width:780px;">
-    <p class="al-eyebrow">Privacy</p>
-    <h1>Privacy Policy</h1>
-    <p>We collect account data, resumes, interview responses, coding submissions, and mentorship booking details to deliver product features.</p>
-    <p>Data is used for analytics, quality improvement, and personalized outputs. We do not sell personal data.</p>
-    <p>You can request deletion of your account data by contacting support or using the in-app account deletion flow when enabled.</p>
-    <p>By using this service, you agree to secure handling practices but acknowledge no system is risk-free.</p>
-    <p style="color:#6b7280;">Last updated: March 12, 2026</p>
+<section class="rr-page">
+  <div class="rr-container" style="max-width: 820px;">
+    <div class="rr-header">
+      <p class="rr-eyebrow">Legal & Trust</p>
+      <h1>Privacy Policy</h1>
+      <p>How we securely process, protect, and handle your career profile and resume data.</p>
+      <div class="rr-chip-row">
+        <span class="rr-chip">Zero Data Selling</span>
+        <span class="rr-chip">Encrypted Vault</span>
+        <span class="rr-chip">Full Data Control</span>
+      </div>
+    </div>
+
+    <div class="rr-form" style="padding: 32px; line-height: 1.7; font-size: 0.95rem; color: var(--ui-text);">
+      <h3 style="margin: 0 0 10px; font-size: 1.1rem; color: var(--ui-text);">1. Information We Collect</h3>
+      <p style="margin: 0 0 16px; color: var(--ui-text-muted);">
+        We collect account credentials (email, name), uploaded resume documents and pasted LaTeX markup, target job descriptions, mock interview conversational transcripts, coding submissions, and mentorship booking appointments to deliver our core AI analysis features.
+      </p>
+
+      <h3 style="margin: 0 0 10px; font-size: 1.1rem; color: var(--ui-text);">2. How We Use Your Data</h3>
+      <p style="margin: 0 0 16px; color: var(--ui-text-muted);">
+        Your career data is processed strictly to perform ATS scoring, generate tailored LaTeX resumes, compute keyword match ratios, deliver interview feedback, and schedule 1:1 sessions. We never sell, rent, or monetize your personal information to third-party data brokers.
+      </p>
+
+      <h3 style="margin: 0 0 10px; font-size: 1.1rem; color: var(--ui-text);">3. Storage & Security</h3>
+      <p style="margin: 0 0 16px; color: var(--ui-text-muted);">
+        All sensitive passwords are cryptographically salted and hashed using industry-standard PBKDF2-SHA256. Database records and uploaded documents are stored in secure environments with role-based access restrictions.
+      </p>
+
+      <h3 style="margin: 0 0 10px; font-size: 1.1rem; color: var(--ui-text);">4. Data Retention & Deletion</h3>
+      <p style="margin: 0 0 16px; color: var(--ui-text-muted);">
+        You maintain full ownership of your data. You may delete any saved LaTeX resume from your vault at any time, or request full account deletion through our support team.
+      </p>
+
+      <div style="border-top: 1px solid var(--ui-border); padding-top: 16px; margin-top: 24px; font-size: 0.84rem; color: var(--ui-text-muted);">
+        Effective Date: March 2026 · ResuMate Engineering & Security
+      </div>
+    </div>
   </div>
 </section>
 {% endblock %}
