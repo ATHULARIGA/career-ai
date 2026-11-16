@@ -275,6 +275,34 @@ def resume(request: Request):
     user_email = (request.session.get("user_email") or "").strip().lower()
     memory = get_user_memory(user_email)
     saved_resumes = get_user_saved_resumes(user_email) if user_email else []
+
+    # If user doesn't have custom saved resumes yet, provide Athul's authentic sample LaTeX resume
+    # so the resume selection tab is populated and immediately usable
+    if not saved_resumes:
+        conn = db.get_conn()
+        cur = conn.cursor()
+        db.execute(
+            cur,
+            """
+            SELECT id, title, resume_type, raw_content, target_role, created_ts
+            FROM saved_resumes
+            WHERE user_email = 'athulariga12@gmail.com'
+            ORDER BY id ASC LIMIT 1
+            """
+        )
+        sample = cur.fetchone()
+        conn.close()
+        if sample:
+            saved_resumes = [{
+                "id": sample[0],
+                "title": sample[1],
+                "resume_type": sample[2],
+                "raw_content": sample[3],
+                "target_role": sample[4] or "Data Engineer & Python Developer",
+                "created_ts": sample[5],
+                "is_sample": True
+            }]
+
     return templates.TemplateResponse(
         request=request,
         name="upload.html",

@@ -212,12 +212,10 @@
             <div class="rr-field">
                 <label style="margin-bottom: 8px; display: block; font-size: 0.9rem; font-weight: 700;">Resume Input Method</label>
                 <div class="rr-source-tabs">
-                    {% if saved_resumes %}
-                    <button type="button" class="rr-source-btn active" id="btnTabSaved" onclick="switchResumeSource('saved')">
+                    <button type="button" class="rr-source-btn {% if saved_resumes %}active{% endif %}" id="btnTabSaved" onclick="switchResumeSource('saved')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        Saved Resumes ({{ saved_resumes|length }})
+                        Saved Resumes (<span id="savedCountBadge">{{ saved_resumes|length }}</span>)
                     </button>
-                    {% endif %}
                     <button type="button" class="rr-source-btn {% if not saved_resumes %}active{% endif %}" id="btnTabLatex" onclick="switchResumeSource('latex')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
                         Paste LaTeX Code
@@ -230,9 +228,8 @@
             </div>
 
             <!-- TAB 1: Saved Resumes -->
-            {% if saved_resumes %}
-            <div id="panelSaved" class="rr-source-panel active">
-                <div class="rr-saved-list">
+            <div id="panelSaved" class="rr-source-panel {% if saved_resumes %}active{% endif %}">
+                <div class="rr-saved-list" id="savedResumesList" {% if not saved_resumes %}style="display:none;"{% endif %}>
                     {% for r in saved_resumes %}
                     <div class="rr-saved-card {% if loop.first %}selected{% endif %}" id="savedCard{{ r.id }}" onclick="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
                         <div class="rr-saved-info">
@@ -241,29 +238,59 @@
                                 <p class="rr-saved-title">{{ r.title }}</p>
                                 <div class="rr-saved-meta">
                                     <span class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{ r.resume_type }}</span>
+                                    {% if r.is_sample %}
+                                    <span class="rr-pill" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">Sample</span>
+                                    {% endif %}
                                     {% if r.target_role %}
                                     <span>&bull; {{ r.target_role }}</span>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
+                        {% if not r.is_sample %}
                         <button type="button" class="rr-del-btn" onclick="deleteSavedResume(event, {{ r.id }}, '{{ r.title }}')" title="Delete this saved resume">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
                         </button>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
-                <p style="font-size: 0.8rem; color: var(--ui-text-muted); margin-top: 8px;">
+                <div id="savedEmptyState" style="background: var(--ui-surface-subtle, #141d2e); border: 1px dashed var(--ui-border, #1e293b); border-radius: 10px; padding: 28px 20px; text-align: center; {% if saved_resumes %}display:none;{% endif %}">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--ui-surface, #0f172a); border: 1px solid var(--ui-border, #1e293b); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--ui-primary, #3b82f6);">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    </div>
+                    <h4 style="margin: 0 0 6px; font-size: 0.95rem; font-weight: 700; color: var(--ui-text, #f8fafc);">No Saved Resumes Yet</h4>
+                    <p style="font-size: 0.84rem; color: var(--ui-text-muted, #94a3b8); margin: 0 auto 16px; max-width: 420px; line-height: 1.5;">
+                        Paste your LaTeX code or upload a resume file and check "Save this resume to my account" to store it here for instant 1-click selection in future audits.
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-primary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="loadSampleResumeTemplate()">
+                            Load Athul's Sample Resume
+                        </button>
+                        <button type="button" class="btn-secondary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="switchResumeSource('latex')">
+                            Paste Custom LaTeX
+                        </button>
+                        <button type="button" class="btn-secondary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="switchResumeSource('file')">
+                            Attach Resume File
+                        </button>
+                    </div>
+                </div>
+                <p id="savedHelpText" style="font-size: 0.8rem; color: var(--ui-text-muted, #94a3b8); margin-top: 10px; {% if not saved_resumes %}display:none;{% endif %}">
                     Select any saved resume to immediately review or tailor it against a new job description.
                 </p>
             </div>
-            {% endif %}
 
             <!-- TAB 2: Paste LaTeX Code -->
             <div id="panelLatex" class="rr-source-panel {% if not saved_resumes %}active{% endif %}">
                 <div class="rr-field">
-                    <label for="latexCode">Paste LaTeX Source Code (\documentclass...)</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label for="latexCode" style="margin: 0; font-weight: 700;">Paste LaTeX Source Code (\documentclass...)</label>
+                        <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" onclick="loadSampleResumeTemplate()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Load Athul's Template
+                        </button>
+                    </div>
                     <textarea
                         id="latexCode"
                         name="latex_code"
@@ -431,6 +458,186 @@ function selectSavedResume(id, targetRole) {
   }
 }
 
+// Sample authentic LaTeX resume template
+{% raw %}
+const ATHUL_SAMPLE_LATEX = `\documentclass[a4paper,9.5pt]{article}
+
+% -------------------------
+% Layout
+% -------------------------
+\\usepackage[top=0.30in, bottom=0.30in, left=0.45in, right=0.45in]{geometry}
+
+% -------------------------
+% Packages
+% -------------------------
+\\usepackage{enumitem, titlesec, hyperref, fontawesome5}
+\\usepackage{helvet}
+\\renewcommand{\\familydefault}{\\sfdefault}
+
+\\hypersetup{colorlinks=true, linkcolor=black, urlcolor=black}
+
+% -------------------------
+% Spacing
+% -------------------------
+\\renewcommand{\\baselinestretch}{1.08}
+\\setlength{\\parskip}{0pt}
+\\setlength{\\parsep}{0pt}
+
+\\titlespacing*{\\section}{0pt}{7pt}{1pt}
+
+\\titleformat{\\section}{\\normalsize\\bfseries\\uppercase}{}{0em}{}[\\titlerule]
+
+% Custom compact list
+\\newcommand{\\resumeItemListStart}{\\begin{itemize}[leftmargin=1.2em, itemsep=0pt, topsep=1pt, parsep=0pt, partopsep=0pt]}
+\\newcommand{\\resumeItemListEnd}{\\end{itemize}}
+\\newcommand{\\resumeItem}[1]{\\item\\small{#1}}
+
+% Sub-list
+\\newcommand{\\resumeSubListStart}{\\begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt, label={--}]}
+\\newcommand{\\resumeSubListEnd}{\\end{itemize}}
+
+\\begin{document}
+\\pagestyle{empty}
+
+% -------------------------
+% Header
+% -------------------------
+\\begin{center}
+    {\\LARGE \\textbf{ATHUL ANANTH ARIGA}}\\\\[3pt]
+    \\small
+    \\href{mailto:athulariga12@gmail.com}{athulariga12@gmail.com}
+    \\hspace{4pt}\\textbullet\\hspace{4pt}
+    8310438364
+    \\hspace{4pt}\\textbullet\\hspace{4pt}
+    \\href{https://www.linkedin.com/in/athul-ariga-b4277a191}{LinkedIn}
+    \\hspace{4pt}\\textbullet\\hspace{4pt}
+    \\href{https://github.com/ATHULARIGA}{GitHub}
+\\end{center}
+
+\\vspace{-4pt}
+
+% -------------------------
+% Professional Summary
+% -------------------------
+\\section*{Professional Summary}
+\\vspace{1pt}
+\\small Data Engineer \\& Python Developer with 3 years of experience independently architecting and owning production-grade data systems in the insurance domain. Built and scaled a Python reporting platform serving 20+ clients team-wide, with a proven track record of reducing manual operations by up to 85\\% through end-to-end ownership of ETL pipelines, automation frameworks, and workflow orchestration.
+
+\\vspace{1.5pt}
+
+% -------------------------
+% Technical Skills
+% -------------------------
+\\section*{Technical Skills}
+\\small
+\\begin{tabular}{@{} l l}
+  \\textbf{Languages:}      & Python, SQL, Java, JavaScript \\\\[1pt]
+  \\textbf{Backend \\& APIs:}& Flask, FastAPI, Django, REST APIs, Async Job Processing \\\\[1pt]
+  \\textbf{Data \\& ETL:}    & SSIS, ActiveBatch, Pandas, NumPy, Scikit-learn ,Apache Airflow, NLP Inference \\\\[1pt]
+  \\textbf{Databases:}      & MS SQL Server, MySQL \\\\[1pt]
+  \\textbf{Tools:}          & Power BI, Git, Replit \\\\
+\\end{tabular}
+
+\\vspace{1.5pt}
+
+% -------------------------
+% Work Experience
+% -------------------------
+\\section*{Work Experience}
+\\vspace{1 pt}
+\\noindent\\textbf{Software Developer} \\textemdash{} Illumifin India \\hfill \\textbf{Jan 2024 – Present}
+
+\\vspace{2pt}
+\\noindent\\textit{Configuration-Driven Python Reporting Engine}
+\\resumeSubListStart
+    \\item Sole architect and end-to-end owner of a \\textbf{Python}-based reporting platform that became the de facto standard for all new report generation across the team, replacing legacy \\textbf{SSRS} infrastructure entirely.
+    \\item Built an automated execution framework integrating \\textbf{ActiveBatch} orchestration with runtime parameter injection (date ranges, client configs), and a robust \\textbf{SQLAlchemy + pyodbc} layer with timestamp boundary handling to ensure accurate and complete data retrieval.
+    \\item Developed a \\textbf{Pandas}-based data processing engine to transform and combine multiple \\textbf{SQL} datasets, with dynamic row-offset stacking to render multi-source data into unified \\textbf{Excel} worksheets without overlap.
+    \\item Engineered intelligent output generation using \\textbf{XlsxWriter} with keyword-driven financial formatting; delivered multi-format outputs (\\textbf{XLSX, CSV, TXT, PDF}) across client-specific directory structures.
+    \\item Scaled the platform to serve \\textbf{20+ insurance clients} across daily, weekly, monthly, and yearly reporting cycles, processing MS SQL datasets spanning multiple insurance lines — all without code changes per client or cycle. \\item Designed the platform to be self-serve via \\textbf{JSON configuration}, eliminating engineering involvement for routine report onboarding and enabling non-engineers to create new reports independently.
+\\resumeSubListEnd
+
+\\vspace{2pt}
+\\noindent\\textit{OCR-Based Document Indexing \\& Sentiment Analysis Pipeline}
+\\resumeSubListStart
+    \\item Built a batch processing pipeline to extract and index scanned insurance documents using \\textbf{OCR} and Python-based text processing, reducing manual effort by \\textbf{85\\%}.
+    \\item Integrated \\textbf{Case360 APIs} and implemented keyword extraction and sentiment analysis to automate document workflows, reducing turnaround time by \\textbf{50\\%}.
+\\resumeSubListEnd
+
+\\vspace{1.7pt}
+\\noindent\\textit{Additional Contributions}
+\\resumeSubListStart
+    \\item Worked with workflow orchestration concepts using \\textbf{ActiveBatch} and \\textbf{Apache Airflow}, standardizing job scheduling, dependency handling, and Dev-to-Prod deployment workflows.
+    \\item Implemented automated data quality checks and alerting systems, eliminating undetected report failures and manual monitoring.
+    \\item Designed and optimized \\textbf{SSIS} ETL pipelines and \\textbf{SQL} queries for large datasets, improving data reliability and processing efficiency.
+\\resumeSubListEnd
+
+\\vspace{1.5pt}
+
+% -------------------------
+% Projects
+% -------------------------
+\\section*{Projects}
+\\vspace{1pt}
+\\noindent\\textbf{ResuMate – AI-Powered Career Platform} \\hfill \\href{https://career-ai-psi-dun.vercel.app/}{Live} \\textbullet{} \\href{https://github.com/ATHULARIGA/career-ai}{GitHub}
+\\resumeSubListStart
+    \\item Built and deployed a full-stack AI-powered career platform enabling resume analysis, interview evaluation, and job preparation workflows.
+    \\item Engineered an automated response evaluation system using \\textbf{TF-IDF} and cosine similarity (scikit-learn), achieving sub-second grading latency.
+    \\item Designed a structured analysis pipeline extracting speech metrics (WPM, filler density) and evaluating responses against the \\textbf{STAR} framework.
+    \\item Integrated LLM-based auditing (\\textbf{GPT-4o, Llama-3}) to compute ATS-style resume scores and identify keyword gaps.
+    \\item Deployed on Render with asynchronous job processing, idempotent execution, and stateful tracking for scalable evaluation workflows.
+\\resumeSubListEnd
+
+\\vspace{1.5pt}
+
+\\noindent\\textbf{Elavo – Sewage Overflow Detection System} \\hfill \\textit{Pitched at MSME Karnataka Pitch Fest}
+\\resumeSubListStart
+    \\item Designed and built an \\textbf{IoT-based} real-time sewage overflow detection system using \\textbf{Python}, \\textbf{FastAPI}, and sensor integration.
+    \\item Reduced incident response time by \\textbf{30\\%} through automated threshold-based alerting and a live monitoring dashboard.
+    \\item Piloted across campus infrastructure; selected and pitched at \\textbf{MSME Karnataka Government Pitch Fest} among state-level startups.
+\\resumeSubListEnd
+
+\\vspace{1pt}
+
+% -------------------------
+% Education
+% -------------------------
+\\section*{Education}
+\\vspace{1pt}
+\\noindent\\textbf{B.E. in Computer Science \\& Engineering} – Sahyadri College of Engineering and Management, VTU \\hfill \\textbf{2019 – 2023}
+
+\\vspace{0.5pt}
+
+% -------------------------
+% Achievements
+% -------------------------
+\\section*{Certifications \\& Achievements}
+\\vspace{1pt}
+\\resumeSubListStart
+    \\item Pitched \\textbf{Elavo} at MSME Karnataka Government Pitch Fest — selected among state-level startups
+    \\item \\textbf{2nd place} – Bot Race competition, Sahyadri College Tech Fest
+    
+\\resumeSubListEnd
+
+\\end{document}`;
+{% endraw %}
+
+function loadSampleResumeTemplate() {
+  switchResumeSource('latex');
+  const codeArea = document.getElementById('latexCode');
+  if (codeArea) {
+    codeArea.value = ATHUL_SAMPLE_LATEX;
+  }
+  const titleInput = document.getElementById('resumeTitleLatex');
+  if (titleInput && !titleInput.value.trim()) {
+    titleInput.value = 'Athul Ariga - Data Engineer & Python Developer (LaTeX)';
+  }
+  const roleInput = document.getElementById('target_role');
+  if (roleInput && !roleInput.value.trim()) {
+    roleInput.value = 'Data Engineer & Python Developer';
+  }
+}
+
 // Delete a saved resume
 async function deleteSavedResume(e, id, title) {
   e.stopPropagation();
@@ -446,16 +653,19 @@ async function deleteSavedResume(e, id, title) {
       card.style.opacity = '0.3';
       card.remove();
     }
-    // If no saved cards left, switch to latex or file tab
     const remaining = document.querySelectorAll('.rr-saved-card');
+    const badge = document.getElementById('savedCountBadge');
+    if (badge) badge.textContent = remaining.length;
+
     if (remaining.length === 0) {
-      const btnSaved = document.getElementById('btnTabSaved');
-      if (btnSaved) btnSaved.remove();
-      const panelSaved = document.getElementById('panelSaved');
-      if (panelSaved) panelSaved.remove();
-      switchResumeSource('latex');
+      const emptyState = document.getElementById('savedEmptyState');
+      const list = document.getElementById('savedResumesList');
+      const help = document.getElementById('savedHelpText');
+      if (emptyState) emptyState.style.display = 'block';
+      if (list) list.style.display = 'none';
+      if (help) help.style.display = 'none';
+      document.getElementById('savedResumeIdInput').value = '0';
     } else {
-      // Select the first remaining card
       const firstId = remaining[0].id.replace('savedCard', '');
       selectSavedResume(firstId, '');
     }
