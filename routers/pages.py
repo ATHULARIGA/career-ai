@@ -9,7 +9,7 @@ def healthz():
     return {"status": "ok", "ts": int(time.time())}
 
 
-@router.get("/robots.txt", response_class=PlainTextResponse)
+@router.api_route("/robots.txt", methods=["GET", "HEAD"], response_class=PlainTextResponse)
 def robots_txt():
     content = """User-agent: *
 Allow: /
@@ -30,7 +30,7 @@ Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
     return content
 
 
-@router.get("/sitemap.xml")
+@router.api_route("/sitemap.xml", methods=["GET", "HEAD"])
 def sitemap_xml():
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -163,7 +163,7 @@ def terms(request: Request):
 
 
 # LANDING PAGE
-@router.get("/", response_class=HTMLResponse)
+@router.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def home(request: Request):
     log_event("page_view", "landing", metadata={"path": "/"})
     auth_notice = request.query_params.get("auth") == "required"
