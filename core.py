@@ -1431,6 +1431,11 @@ def extract_text_from_latex(code: str) -> str:
     """Extracts human-readable text from LaTeX code for ATS keyword parsing and scoring."""
     if not code:
         return ""
+    # Strip preamble if standard LaTeX document
+    if r"\begin{document}" in code:
+        code = code.split(r"\begin{document}", 1)[1]
+    if r"\end{document}" in code:
+        code = code.split(r"\end{document}", 1)[0]
     lines = []
     for line in code.splitlines():
         trimmed = line.strip()
@@ -1444,7 +1449,7 @@ def extract_text_from_latex(code: str) -> str:
     # Extract href text: \href{url}{text} -> text
     text = re.sub(r'\\href\{[^{}]*\}\{([^{}]*)\}', r'\1', text)
     # Strip common command tags with arguments
-    for _ in range(3):
+    for _ in range(4):
         text = re.sub(r'\\[a-zA-Z]+\*?\{([^{}]*)\}', r'\1', text)
     # Strip standalone commands
     text = re.sub(r'\\[a-zA-Z]+', ' ', text)

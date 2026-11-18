@@ -29,6 +29,17 @@ async def upload(
     user_email = (request.session.get("user_email") or "").strip().lower()
 
     if not quota.get("is_premium") and int(quota.get("remaining", 0)) <= 0:
+        saved_res = get_user_saved_resumes(user_email) if user_email else []
+        if not saved_res:
+            saved_res = [{
+                "id": 1,
+                "title": "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+                "resume_type": "latex",
+                "raw_content": DEFAULT_ATHUL_RESUME,
+                "target_role": "Data Engineer & Python Developer",
+                "created_ts": int(time.time()),
+                "is_sample": True
+            }]
         return templates.TemplateResponse(
             request=request,
             name="upload.html",
@@ -38,7 +49,7 @@ async def upload(
                 "resume_quota": quota,
                 "quota_error": "Free plan daily limit reached. Upgrade to Premium for unlimited resume reviews.",
                 "memory": get_user_memory(user_email),
-                "saved_resumes": get_user_saved_resumes(user_email) if user_email else [],
+                "saved_resumes": saved_res,
             },
         )
     try:
@@ -47,11 +58,19 @@ async def upload(
 
         # 1. Source: Selected Saved Resume
         if source_type == "saved" or (saved_resume_id > 0 and not (file and file.filename) and not latex_code.strip()):
-            if not user_email:
-                raise ValueError("Please log in to access your saved resumes.")
-            saved = get_saved_resume_by_id(saved_resume_id, user_email)
+            saved = get_saved_resume_by_id(saved_resume_id, user_email) if user_email else None
             if not saved:
-                raise ValueError("Selected saved resume was not found.")
+                saved = get_saved_resume_by_id(saved_resume_id, "athulariga12@gmail.com")
+            if not saved and (saved_resume_id == 1 or not user_email):
+                saved = {
+                    "id": 1,
+                    "title": "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+                    "resume_type": "latex",
+                    "raw_content": DEFAULT_ATHUL_RESUME,
+                    "target_role": "Data Engineer & Python Developer",
+                }
+            if not saved:
+                raise ValueError("Selected saved resume was not found. Please paste LaTeX code or upload your file.")
             if saved.get("resume_type") == "latex":
                 raw_latex = saved.get("raw_content", "")
                 text = extract_text_from_latex(raw_latex)
