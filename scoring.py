@@ -382,18 +382,18 @@ def compute_weighted_overall(scores: dict[str, float]) -> float:
 
 def extract_links_from_text(text: str) -> list[str]:
     pattern = re.compile(
-        r"(https?://[^\s)>\]]+|www\.[^\s)>\]]+|github\.com/[^\s)>\]]+|linkedin\.com/[^\s)>\]]+)"
+        r"(https?://[^\s)>\]\}]+|www\.[^\s)>\]\}]+|github\.com/[^\s)>\]\}]+|linkedin\.com/[^\s)>\]\}]+)"
     )
     matches = pattern.findall(text or "")
     unique: list[str] = []
     seen: set[str] = set()
     for match in matches:
-        candidate = match.strip(".,;:)]}")
+        candidate = match.strip(".,;:)]}>'\"{}")
         if candidate.lower().startswith("www."):
             candidate = f"https://{candidate}"
         if candidate.lower().startswith(("github.com/", "linkedin.com/")):
             candidate = f"https://{candidate}"
-        if candidate not in seen:
+        if candidate not in seen and len(candidate) > 10:
             seen.add(candidate)
             unique.append(candidate)
     return unique[:10]

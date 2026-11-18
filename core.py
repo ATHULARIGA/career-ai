@@ -1446,8 +1446,15 @@ def extract_text_from_latex(code: str) -> str:
             line = line[:idx]
         lines.append(line)
     text = '\n'.join(lines)
-    # Extract href text: \href{url}{text} -> text
-    text = re.sub(r'\\href\{[^{}]*\}\{([^{}]*)\}', r'\1', text)
+    # Extract href text: \href{url}{text} -> text (url)
+    def _replace_href(m):
+        url = m.group(1).strip()
+        label = m.group(2).strip()
+        if url.startswith("mailto:"):
+            return label
+        return f"{label} ({url})"
+
+    text = re.sub(r'\\href\{([^{}]*)\}\{([^{}]*)\}', _replace_href, text)
     # Strip common command tags with arguments
     for _ in range(4):
         text = re.sub(r'\\[a-zA-Z]+\*?\{([^{}]*)\}', r'\1', text)
