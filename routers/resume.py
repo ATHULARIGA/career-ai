@@ -442,6 +442,30 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
     target_role = report.get("target_role", "")
     jd_text = report.get("jd_text", "")
     error = report.get("fixed_resume_error", "")
+
+    # Automatically generate tailored resume if missing or if only legacy 1-change fallback exists
+    if (not diff_changes or len(diff_changes) <= 1) and report.get("resume_text"):
+        try:
+            from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+            resume_text = report.get("resume_text", "")
+            if not report.get("original_latex") and report.get("latex_code"):
+                report["original_latex"] = report.get("latex_code")
+            tailored_result = generate_tailored_latex_resume(resume_text, report, jd_text)
+            fixed_md = generate_resume_rewrite(resume_text, report)
+
+            report["latex_code"] = tailored_result.get("latex_code", "")
+            report["diff_changes"] = tailored_result.get("diff_changes", [])
+            report["changes_summary"] = tailored_result.get("changes_summary", "")
+            report["fixed_resume_md"] = fixed_md
+            update_resume_report_json(report_id, user_email, report)
+
+            latex_code = report["latex_code"]
+            diff_changes = report["diff_changes"]
+            changes_summary = report["changes_summary"]
+            fixed_md = report["fixed_resume_md"]
+        except Exception as gen_err:
+            logger.warning("Auto tailoring in view_fixed_resume failed: %s", gen_err)
+
     warning = ""
     if not fixed_md and not latex_code and not error:
         warning = "Resume optimization not generated yet. Click Generate Tailored LaTeX Resume to create your tailored ATS resume."
