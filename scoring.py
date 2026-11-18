@@ -8,12 +8,43 @@ from openai import OpenAI
 
 load_dotenv()
 
-if not os.getenv("OPENAI_API_KEY"):
-    raise RuntimeError("OPENAI_API_KEY is missing from environment. Please populate it in `.env` and restart.")
+# Multi-provider client setup supporting Free Tier providers:
+# - Google Gemini (100% free via Google AI Studio)
+# - Groq (100% free via console.groq.com)
+# - OpenRouter (:free models + BYOK)
+def get_ai_providers() -> list[tuple[OpenAI, list[str]]]:
+    providers: list[tuple[OpenAI, list[str]]] = []
+    
+    # 1. Google Gemini (100% Free Forever via Google AI Studio, no credit card required)
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if gemini_key:
+        providers.append((
+            OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_key, max_retries=0),
+            ["gemini-2.0-flash", "gemini-1.5-flash"]
+        ))
+        
+    # 2. Groq (100% Free tier via console.groq.com)
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if groq_key:
+        providers.append((
+            OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_key, max_retries=0),
+            ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
+        ))
 
+    # 3. OpenRouter (Free models followed by paid fallbacks)
+    openrouter_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if openrouter_key:
+        providers.append((
+            OpenAI(base_url="https://openrouter.ai/api/v1", api_key=openrouter_key, max_retries=0),
+            DEFAULT_AI_MODELS
+        ))
+        
+    return providers
+
+# Default primary client for standalone single-call functions
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=os.getenv("OPENAI_API_KEY") or "dummy",
 )
 
 SCORING_KEYS = [
@@ -258,36 +289,44 @@ Return exactly this JSON structure:
 
 
 DEFAULT_AI_MODELS = [
+    # 1. 100% Free models (Zero credit cost, no balance required)
+    "openrouter/free",
+    "inclusionai/ling-3.2-flash:free",
+    "baidu/ernie-5.5-flash-preview:free",
+    "cohere/north-mini-code:free",
+    "recursive/flint-v1.0:free",
+    # 2. Standard paid / BYOK fallbacks (if credits added)
     "meta-llama/llama-3.1-8b-instruct",
-    "meta-llama/llama-3.3-70b-instruct",
-    "meta-llama/llama-3.2-3b-instruct",
     "deepseek/deepseek-chat",
     "openai/gpt-4o-mini",
 ]
 
 
 def call_ai_with_fallback(system: str, user: str) -> dict[str, Any]:
-    models = DEFAULT_AI_MODELS
+    providers = get_ai_providers()
     last_error = None
 
-    for model in models:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                max_tokens=1800,
-            )
-            parsed = parse_json_object(response.choices[0].message.content)
-            validate_parsed(parsed)
-            print(f"AI SUCCESS using {model}")
-            return parsed
-        except Exception as e:
-            print(f"AI FAILED using {model}: {e}")
-            last_error = e
+    for client_instance, models in providers:
+        for model in models:
+            try:
+                response = client_instance.chat.completions.create(
+                    model=model,
+                    temperature=0,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                    max_tokens=1800,
+                )
+                msg = response.choices[0].message
+                raw = msg.content or getattr(msg, "reasoning", "") or ""
+                parsed = parse_json_object(raw)
+                validate_parsed(parsed)
+                print(f"AI SUCCESS using {model}")
+                return parsed
+            except Exception as e:
+                print(f"AI FAILED using {model}: {e}")
+                last_error = e
 
     raise Exception(f"All AI models failed: {last_error}")
 
@@ -295,7 +334,18 @@ def call_ai_with_fallback(system: str, user: str) -> dict[str, Any]:
 def parse_json_object(raw: str) -> dict[str, Any]:
     cleaned = (raw or "").replace("```json", "").replace("```", "").strip()
     if "{" in cleaned and "}" in cleaned:
-        cleaned = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
+        candidate = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
+        try:
+            return json.loads(candidate)
+        except Exception:
+            pass
+    # Fallback regex search for embedded json objects
+    matches = re.findall(r'(\{[\s\S]*\})', cleaned)
+    for m in reversed(matches):
+        try:
+            return json.loads(m)
+        except Exception:
+            continue
     return json.loads(cleaned)
 
 
@@ -763,7 +813,8 @@ def clean_scraped_jd(scraped_text: str) -> str:
                 ],
                 max_tokens=600,
             )
-            content = response.choices[0].message.content
+            msg = response.choices[0].message
+            content = msg.content or getattr(msg, "reasoning", "") or ""
             if content and len(content.strip()) > 50:
                  return content.strip()
         except Exception as e:
@@ -1252,7 +1303,8 @@ Candidate's Original Resume Text:
                 messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
                 max_tokens=1800
             )
-            content = response.choices[0].message.content or ""
+            msg = response.choices[0].message
+            content = msg.content or getattr(msg, "reasoning", "") or ""
 
             # 1. Parse changes JSON
             diff_changes = []
