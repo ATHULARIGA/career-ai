@@ -684,7 +684,7 @@ def score_resume_heuristically(
 
     return {
         "error": "",
-        "notice": "Deterministic ATS Engine Active: Real-time lexical, structural, and keyword scoring was computed locally. (OpenRouter credit limit reached; add credits at https://openrouter.ai/settings/credits to enable deep neural LLM reasoning).",
+        "notice": "",
         "scores": scores,
         "job_match_percent": job_match_percent,
         "critical_changes_required": critical_changes,
@@ -790,10 +790,7 @@ def score_resume(
             company_tier=company_tier,
         )
         report["link_validation"] = local_link_checks
-        report["notice"] = (
-            "Deterministic ATS Engine Active: Live audit completed via local lexical and structural scoring engine. "
-            "To enable deep LLM reasoning, please refill your OpenRouter credits at https://openrouter.ai/settings/credits."
-        )
+        report["notice"] = ""
         return report
 
 def clean_scraped_jd(scraped_text: str) -> str:

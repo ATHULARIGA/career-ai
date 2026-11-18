@@ -45,19 +45,6 @@
         </section>
         {% endif %}
 
-        {% if report.notice %}
-        <section class="rd-panel" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></span>
-                    <strong style="color: #60a5fa; font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em;">Notice:</strong>
-                    <span style="color: var(--ui-text, #f8fafc); font-size: 0.84rem;">{{ report.notice }}</span>
-                </div>
-                <a href="https://openrouter.ai/settings/credits" target="_blank" rel="noopener noreferrer" style="font-size: 0.78rem; color: #60a5fa; text-decoration: underline; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">OpenRouter Credits &rarr;</a>
-            </div>
-        </section>
-        {% endif %}
-
         {% set overall = report.scores.Overall or 0 %}
         {% set ats = report.scores.ATS or 0 %}
         {% set coverage = report.keyword_coverage or 0 %}
