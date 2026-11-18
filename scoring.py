@@ -20,7 +20,7 @@ def get_ai_providers() -> list[tuple[OpenAI, list[str]]]:
     if gemini_key:
         providers.append((
             OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_key, max_retries=0),
-            ["gemini-2.0-flash", "gemini-1.5-flash"]
+            ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.7-flash"]
         ))
         
     # 2. Groq (100% Free tier via console.groq.com)
