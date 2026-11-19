@@ -92,7 +92,7 @@ suggestions.{% endblock %}
     }
 
     .rr-saved-title {
-        font-size: 0.92rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: var(--ui-text);
         margin: 0 0 3px;
@@ -300,13 +300,13 @@ suggestions.{% endblock %}
                     endif %}>
                     {% for r in saved_resumes %}
                     <div class="rr-saved-card {% if loop.first %}selected{% endif %}" id="savedCard{{ r.id }}">
-                        <label class="rr-saved-info" for="savedRadio{{ r.id }}" style="cursor: pointer; margin: 0;">
+                        <label class="rr-saved-info" for="savedRadio{{ r.id }}" style="cursor: pointer; margin: 0; width: 100%;">
                             <input type="radio" name="savedRadio" id="savedRadio{{ r.id }}" value="{{ r.id }}"
                                 class="rr-saved-radio" {% if loop.first %}checked{% endif %}
                                 onchange="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
-                            <div>
+                            <span style="display: block; flex: 1;">
                                 <p class="rr-saved-title">{{ r.title }}</p>
-                                <div class="rr-saved-meta">
+                                <span class="rr-saved-meta">
                                     <span
                                         class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{
                                         r.resume_type }}</span>
@@ -317,8 +317,8 @@ suggestions.{% endblock %}
                                     {% if r.target_role %}
                                     <span>&bull; {{ r.target_role }}</span>
                                     {% endif %}
-                                </div>
-                            </div>
+                                </span>
+                            </span>
                         </label>
                         {% if not r.is_sample %}
                         <button type="button" class="rr-del-btn"
@@ -336,6 +336,18 @@ suggestions.{% endblock %}
                         {% endif %}
                     </div>
                     {% endfor %}
+                    <div class="rr-saved-card" id="savedCardNone">
+                        <label class="rr-saved-info" for="savedRadioNone" style="cursor: pointer; margin: 0; width: 100%;">
+                            <input type="radio" name="savedRadio" id="savedRadioNone" value="none"
+                                class="rr-saved-radio" onchange="clearSavedResumeSelection()">
+                            <span style="display: block; flex: 1;">
+                                <p class="rr-saved-title">None (Start with a blank form)</p>
+                                <span class="rr-saved-meta">
+                                    <span>Upload custom PDF or paste fresh LaTeX source</span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
                 <div id="savedEmptyState"
                     style="background: var(--ui-surface-subtle, #141d2e); border: 1px dashed var(--ui-border, #1e293b); border-radius: 10px; padding: 28px 20px; text-align: center; {% if saved_resumes %}display:none;{% endif %}">
@@ -371,7 +383,7 @@ suggestions.{% endblock %}
                     </div>
                 </div>
                 <p id="savedHelpText"
-                    style="font-size: 0.88rem; color: var(--ui-text-muted, #cbd5e1); margin-top: 10px; {% if not saved_resumes %}display:none;{% endif %}">
+                    style="font-size: 1rem; color: var(--ui-text-muted, #cbd5e1); margin-top: 10px; {% if not saved_resumes %}display:none;{% endif %}">
                     Select any saved resume to immediately review or tailor it against a new job description.
                 </p>
             </div>
@@ -552,6 +564,19 @@ suggestions.{% endblock %}
         const roleInput = document.getElementById('target_role');
         if (targetRole && roleInput && !roleInput.value.trim()) {
             roleInput.value = targetRole;
+        }
+    }
+
+    // Clear saved resume selection (None option)
+    function clearSavedResumeSelection() {
+        const input = document.getElementById('savedResumeIdInput');
+        if (input) input.value = '';
+        document.querySelectorAll('.rr-saved-card').forEach(c => c.classList.remove('selected'));
+        const noneCard = document.getElementById('savedCardNone');
+        if (noneCard) {
+            noneCard.classList.add('selected');
+            const radio = noneCard.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
         }
     }
 
