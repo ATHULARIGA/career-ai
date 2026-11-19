@@ -22,7 +22,7 @@ suggestions.{% endblock %}
     .rr-source-btn {
         border: none;
         background: transparent;
-        color: var(--ui-text-muted, #cbd5e1);
+        color: var(--ui-text-muted);
         font-weight: 600;
         font-size: 0.86rem;
         padding: 8px 16px;
@@ -35,9 +35,9 @@ suggestions.{% endblock %}
     }
 
     .rr-source-btn.active {
-        background: var(--ui-surface, #0f172a);
-        color: var(--ui-text, #ffffff);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        background: var(--ui-surface);
+        color: var(--ui-text);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     }
 
     .rr-source-panel {
@@ -56,8 +56,8 @@ suggestions.{% endblock %}
     }
 
     .rr-saved-card {
-        background: var(--ui-surface, #0f172a);
-        border: 1px solid var(--ui-border, #1e293b);
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
         border-radius: 10px;
         padding: 14px 16px;
         display: flex;
@@ -68,8 +68,8 @@ suggestions.{% endblock %}
     }
 
     .rr-saved-card:hover {
-        border-color: var(--ui-border-strong, #334155);
-        background: var(--ui-surface-subtle, #141d2e);
+        border-color: var(--ui-border-strong);
+        background: var(--ui-surface-subtle);
     }
 
     .rr-saved-card.selected {
@@ -94,13 +94,13 @@ suggestions.{% endblock %}
     .rr-saved-title {
         font-size: 0.92rem;
         font-weight: 700;
-        color: var(--ui-text, #f1f5f9);
+        color: var(--ui-text);
         margin: 0 0 3px;
     }
 
     .rr-saved-meta {
         font-size: 0.8rem;
-        color: var(--ui-text-muted, #cbd5e1);
+        color: var(--ui-text-muted);
         display: flex;
         gap: 8px;
         align-items: center;
@@ -116,21 +116,33 @@ suggestions.{% endblock %}
     }
 
     .rr-pill-latex {
-        background: rgba(59, 130, 246, 0.2);
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .theme-dark .rr-pill-latex {
+        background: rgba(59, 130, 246, 0.25);
         color: #93c5fd;
-        border: 1px solid rgba(59, 130, 246, 0.4);
+        border-color: rgba(59, 130, 246, 0.4);
     }
 
     .rr-pill-pdf {
-        background: rgba(16, 185, 129, 0.2);
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .theme-dark .rr-pill-pdf {
+        background: rgba(16, 185, 129, 0.25);
         color: #6ee7b7;
-        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-color: rgba(16, 185, 129, 0.4);
     }
 
     .rr-del-btn {
         background: transparent;
         border: 1px solid transparent;
-        color: var(--ui-text-muted, #cbd5e1);
+        color: var(--ui-text-muted);
         padding: 6px 10px;
         border-radius: 6px;
         cursor: pointer;
@@ -460,7 +472,8 @@ suggestions.{% endblock %}
             <div class="rr-field">
                 <label for="job_link">Job link (optional)</label>
                 <input type="url" id="job_link" name="job_link" placeholder="https://linkedin.com/jobs/view/12345">
-                <p style="font-size: 0.85rem; color: var(--ui-text-muted, #334155); margin-top:4px;">We'll scrape this URL automatically.</p>
+                <p style="font-size: 0.85rem; color: var(--ui-text-muted, #334155); margin-top:4px;">We'll scrape this
+                    URL automatically.</p>
             </div>
 
             <div class="rr-field" style="margin-top:14px;">

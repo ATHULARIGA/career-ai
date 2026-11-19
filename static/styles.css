@@ -1409,6 +1409,7 @@ html.theme-dark .stats-bar {
 :root {
   --ui-bg: #f8fafc;
   --ui-surface: #ffffff;
+  --ui-surface-subtle: #f1f5f9;
   --ui-border: #e2e8f0;
   --ui-border-strong: #cbd5e1;
   --ui-text: #0f172a;
