@@ -14,9 +14,9 @@ def get_sqlite_path() -> str:
     custom_path = (os.getenv("SQLITE_PATH") or "").strip()
     if custom_path:
         return custom_path
+    base_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bookings.db")
     if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
         tmp_path = "/tmp/bookings.db"
-        base_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bookings.db")
         if not os.path.exists(tmp_path):
             if os.path.exists(base_db):
                 try:
@@ -24,7 +24,9 @@ def get_sqlite_path() -> str:
                 except Exception:
                     pass
         return tmp_path
-    return "bookings.db"
+    if os.path.exists(base_db):
+        return base_db
+    return "db/bookings.db"
 
 
 SQLITE_PATH = get_sqlite_path()

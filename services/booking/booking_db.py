@@ -1,4 +1,4 @@
-import db_backend as db
+import db.backend as db
 
 
 def init_booking_tables() -> None:

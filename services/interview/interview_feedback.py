@@ -1,7 +1,7 @@
 import re
 from typing import Any
 
-from grader import grade_answer
+from services.coding.grader import grade_answer
 
 FILLERS = {
     "um", "uh", "like", "you know", "actually", "basically", "literally",

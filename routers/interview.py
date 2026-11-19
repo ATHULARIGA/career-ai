@@ -3,13 +3,13 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Plai
 import uuid
 import json
 from core import *
-from ideal_generator import generate_ideal_answer
-from interview_engine import (
+from services.interview.ideal_generator import generate_ideal_answer
+from services.interview.interview_engine import (
     generate_interviewer_response,
     generate_opener,
     score_candidate_questions,
 )
-from interview_feedback import analyze_answer, hiring_decision
+from services.interview.interview_feedback import analyze_answer, hiring_decision
 
 router = APIRouter()
 
@@ -64,7 +64,7 @@ def new_interview(request: Request):
         request.session.pop(key, None)
     return RedirectResponse(url="/interview", status_code=303)
 
-import db_backend as db
+import db.backend as db
 
 
 @router.post("/interview/start", response_class=JSONResponse)
@@ -816,13 +816,13 @@ async def create_mindmap(request: Request, role: str = Form(...)):
         print(f"Error generating mindmap: {e}")
         log_event("roadmap_failed", "career_roadmap", role=role, metadata={"error": str(e)})
         log_model_health("career_roadmap", "openai/gpt-4o-mini", success=False, latency_ms=(time.time() - start) * 1000.0, fallback_used=True, error_message=str(e))
-        from mindmap_generator import get_curated_fallback
+        from services.roadmap.mindmap_generator import get_curated_fallback
         fallback_data = get_curated_fallback(role)
         return JSONResponse(content=fallback_data, status_code=200)
 
 @router.post("/skill-info")
 async def skill_info(request: Request, skill: str = Form(...)):
-    from mindmap_generator import get_skill_info
+    from services.roadmap.mindmap_generator import get_skill_info
     try:
         info = get_skill_info(skill)
         return JSONResponse(content=info, status_code=200)

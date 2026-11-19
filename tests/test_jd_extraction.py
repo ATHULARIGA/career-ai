@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 # Standard setup
 from main import app
 from core import scrape_job_link
-from scoring import clean_scraped_jd
+from services.resume.scoring import clean_scraped_jd
 
 def test_scrape_unsupported():
     print("Testing unsupported domains...")

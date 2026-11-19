@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
 from core import *
-from scoring import clean_scraped_jd
+from services.resume.scoring import clean_scraped_jd
 
 router = APIRouter()
 
@@ -304,7 +304,7 @@ async def generate_cover_letter_endpoint(request: Request, report_id: int):
     resume_text = report.get("resume_text", "")
     jd_text = report.get("jd_text", "")
     
-    from scoring import generate_cover_letter
+    from services.resume.scoring import generate_cover_letter
     cover_letter = generate_cover_letter(resume_text, jd_text, report)
     
     report["cover_letter_text"] = cover_letter
@@ -357,7 +357,7 @@ async def fix_resume_endpoint(request: Request, report_id: int, custom_jd: str =
     if custom_jd.strip():
         report["jd_text"] = custom_jd.strip()
         
-    from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+    from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
     jd_text = report.get("jd_text", "")
     if not report.get("original_latex") and report.get("latex_code"):
         report["original_latex"] = report.get("latex_code")
@@ -407,7 +407,7 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
         report["resume_text"] = text
         report.pop("fixed_resume_error", None)
 
-        from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+        from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
         jd_text = report.get("jd_text", "")
         tailored_result = generate_tailored_latex_resume(text, report, jd_text)
         fixed_md = generate_resume_rewrite(text, report)
@@ -442,7 +442,7 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
     # Automatically generate tailored resume if missing or if only legacy 1-change fallback exists
     if (not diff_changes or len(diff_changes) <= 1) and report.get("resume_text"):
         try:
-            from scoring import generate_tailored_latex_resume, generate_resume_rewrite
+            from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
             resume_text = report.get("resume_text", "")
             if not report.get("original_latex") and report.get("latex_code"):
                 report["original_latex"] = report.get("latex_code")
@@ -640,7 +640,7 @@ async def test_fit_endpoint(
         update_resume_report_json(report_id, user_email, report)
         return RedirectResponse(f"/resume/{report_id}#tab-multirole", status_code=303)
 
-    from scoring import score_resume_lightweight
+    from services.resume.scoring import score_resume_lightweight
     result = score_resume_lightweight(resume_text, jd_text, target_role, company_tier)
     
     fit_entry = {

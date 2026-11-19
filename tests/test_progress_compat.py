@@ -1,15 +1,37 @@
+import os
 import sqlite3
 from pathlib import Path
+import pytest
 
 from fastapi.testclient import TestClient
 
-import db_backend as db
-import coding_platform
+import db.backend as db
+from services.coding import coding_platform
+import core
 import main
 
 
+@pytest.fixture(autouse=True)
+def restore_env_and_db():
+    orig_env = os.environ.get("SQLITE_PATH")
+    orig_url = db.DATABASE_URL
+    orig_fallback = db._USE_SQLITE_FALLBACK
+    orig_sqlite_path = db.SQLITE_PATH
+    yield
+    if orig_env is not None:
+        os.environ["SQLITE_PATH"] = orig_env
+    else:
+        os.environ.pop("SQLITE_PATH", None)
+    db.DATABASE_URL = orig_url
+    db._USE_SQLITE_FALLBACK = orig_fallback
+    db.SQLITE_PATH = orig_sqlite_path
+    coding_platform.reset_submission_ts_cache()
+
+
 def _set_temp_sqlite(tmp_path: Path) -> Path:
+    import os
     db_path = tmp_path / "compat.db"
+    os.environ["SQLITE_PATH"] = str(db_path)
     db.DATABASE_URL = ""
     db.SQLITE_PATH = str(db_path)
     db._USE_SQLITE_FALLBACK = True
@@ -83,12 +105,12 @@ def test_user_progress_summary_with_created_ts(tmp_path):
     conn.commit()
     conn.close()
 
-    original_time = main.time.time
-    main.time.time = lambda: now
+    original_time = core.time.time
+    core.time.time = lambda: now
     try:
-        out = main.user_progress_summary("u@example.com")
+        out = core.user_progress_summary("u@example.com")
     finally:
-        main.time.time = original_time
+        core.time.time = original_time
     assert out["coding_submissions_7d"] == 1
     assert out["coding_accept_rate_7d"] == 100.0
 
@@ -107,12 +129,12 @@ def test_user_progress_summary_with_legacy_ts(tmp_path):
     conn.close()
     coding_platform.reset_submission_ts_cache()
 
-    original_time = main.time.time
-    main.time.time = lambda: now
+    original_time = core.time.time
+    core.time.time = lambda: now
     try:
-        out = main.user_progress_summary("u@example.com")
+        out = core.user_progress_summary("u@example.com")
     finally:
-        main.time.time = original_time
+        core.time.time = original_time
     assert out["coding_submissions_7d"] == 1
     assert out["coding_accept_rate_7d"] == 100.0
 
@@ -132,12 +154,12 @@ def test_user_progress_summary_prefers_created_ts_when_both(tmp_path):
     conn.close()
     coding_platform.reset_submission_ts_cache()
 
-    original_time = main.time.time
-    main.time.time = lambda: now
+    original_time = core.time.time
+    core.time.time = lambda: now
     try:
-        out = main.user_progress_summary("u@example.com")
+        out = core.user_progress_summary("u@example.com")
     finally:
-        main.time.time = original_time
+        core.time.time = original_time
     assert out["coding_submissions_7d"] == 0
 
 
@@ -145,7 +167,7 @@ def test_user_progress_summary_with_missing_timestamp_cols(tmp_path):
     db_path = _set_temp_sqlite(tmp_path)
     _create_base_tables(db_path, "note TEXT")
     coding_platform.reset_submission_ts_cache()
-    out = main.user_progress_summary("u@example.com")
+    out = core.user_progress_summary("u@example.com")
     assert out["coding_submissions_7d"] == 0
     assert out["coding_accept_rate_7d"] == 0.0
 
@@ -153,14 +175,14 @@ def test_user_progress_summary_with_missing_timestamp_cols(tmp_path):
 def test_account_route_renders_when_coding_timestamp_missing(tmp_path):
     db_path = _set_temp_sqlite(tmp_path)
     _create_base_tables(db_path, "note TEXT")
-    main.init_user_tables()
-    main._ensure_auth_tables()
+    core.init_user_tables()
+    core._ensure_auth_tables()
     conn = sqlite3.connect(str(db_path))
     cur = conn.cursor()
     cur.execute("DELETE FROM users WHERE email=?", ("u@example.com",))
     cur.execute(
         "INSERT INTO users(full_name,email,password_hash,role,plan,password_updated_ts,created_ts) VALUES(?,?,?,?,?,?,?)",
-        ("User", "u@example.com", main.hash_password("Passw0rdA"), "user", "free", 2_000_000_000, 2_000_000_000),
+        ("User", "u@example.com", core.hash_password("Passw0rdA"), "user", "free", 2_000_000_000, 2_000_000_000),
     )
     conn.commit()
     conn.close()

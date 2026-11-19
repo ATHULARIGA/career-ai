@@ -18,5 +18,5 @@ def test_public_pages():
 
 def test_protected_redirect_when_logged_out():
     client = TestClient(main.app)
-    resp = client.get('/resume', follow_redirects=False)
+    resp = client.get('/account', follow_redirects=False)
     assert resp.status_code in (302, 303, 307)

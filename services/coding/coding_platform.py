@@ -10,7 +10,7 @@ import io
 import hashlib
 import re
 from typing import Any, Dict, List, Tuple
-import db_backend as db
+import db.backend as db
 
 DB_PATH = "bookings.db"
 _SUBMISSION_TS_COL_CACHE: str = ""

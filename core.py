@@ -1,19 +1,19 @@
 from fastapi import FastAPI, Request, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from resume_parser import extract_text
-from scoring import score_resume
-from interview_engine import generate_questions, generate_follow_up, generate_lifeline_hints
+from services.resume.resume_parser import extract_text
+from services.resume.scoring import score_resume
+from services.interview.interview_engine import generate_questions, generate_follow_up, generate_lifeline_hints
 import time
 import re
-from booking_db import save_booking, get_bookings, get_booking, assign_mentor_email
-from email_sender import send_mail
+from services.booking.booking_db import save_booking, get_bookings, get_booking, assign_mentor_email
+from services.booking.email_sender import send_mail
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from mindmap_generator import generate_mindmap
+from services.roadmap.mindmap_generator import generate_mindmap
 from fastapi.responses import JSONResponse, PlainTextResponse
 from dotenv import load_dotenv
 import os
@@ -25,11 +25,11 @@ import logging
 import uuid
 from collections import defaultdict, deque
 from typing import Any, Dict
-from interview_feedback import analyze_answer, hiring_decision
+from services.interview.interview_feedback import analyze_answer, hiring_decision
 from fastapi.responses import RedirectResponse
-import db_backend as db
+import db.backend as db
 from urllib.parse import urlencode, urlparse
-from coding_platform import (
+from services.coding.coding_platform import (
     DEFAULT_PROBLEMS,
     SUPPORTED_LANGUAGES,
     get_all_problems,
@@ -74,7 +74,7 @@ from coding_platform import (
     delete_custom_problem,
     parse_test_lines,
 )
-from admin_analytics import (
+from services.analytics.admin_analytics import (
     init_admin_tables,
     log_event,
     log_model_health,

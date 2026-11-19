@@ -122,7 +122,7 @@ def html_sitemap(request: Request):
 
 @router.get("/roadmap", response_class=HTMLResponse)
 def roadmap_index(request: Request):
-    from roadmap_tracks import get_all_tracks
+    from services.roadmap.roadmap_tracks import get_all_tracks
     tracks = get_all_tracks()
     return templates.TemplateResponse(
         request=request,
@@ -133,7 +133,7 @@ def roadmap_index(request: Request):
 
 @router.get("/roadmap/{slug}", response_class=HTMLResponse)
 def roadmap_detail(request: Request, slug: str):
-    from roadmap_tracks import get_track_by_slug
+    from services.roadmap.roadmap_tracks import get_track_by_slug
     track = get_track_by_slug(slug)
     if not track:
         return RedirectResponse("/roadmap", status_code=303)
