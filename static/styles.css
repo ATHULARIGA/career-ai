@@ -385,7 +385,7 @@ body {
 .float-card p {
     margin: 0;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: #334155;
 }
 
 .progress {
@@ -405,8 +405,13 @@ body {
 
 .score {
     font-weight: 700;
-    color: #10b981;
+    color: #065f46;
     font-size: 0.875rem;
+}
+
+.float-highlight {
+    color: #065f46;
+    font-weight: 600;
 }
 
 .icon {
@@ -658,6 +663,15 @@ html.theme-dark .stat-item h3 {
 
 .theme-dark .float-card h4 {
   color: #f3f4f6 !important;
+}
+
+.theme-dark .float-card p {
+  color: #cbd5e1 !important;
+}
+
+.theme-dark .score,
+.theme-dark .float-highlight {
+  color: #6ee7b7 !important;
 }
 
 .theme-dark .badge {
