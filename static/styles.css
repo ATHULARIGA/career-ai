@@ -44,6 +44,7 @@ body {
   font-weight: 700;
   font-size: 1.25rem;
   color: #0f172a;
+  text-decoration: none;
 }
 
 .logo-box {
@@ -344,7 +345,7 @@ body {
 }
 
 .blue { background:#e0e7ff; color: #000000; }
-.green { background:#dcfce7; color: #166534; }
+.green { background:#dcfce7; color: #14532d; }
 .purple { background:#f3f4f6; color: #111827; }
 
 /* FLOATING CARDS */
@@ -4433,8 +4434,8 @@ canvas {
   padding: 24px 20px;
   border-top: 1px solid var(--ui-border, #e2e8f0);
   background: var(--ui-bg, #f8fafc);
-  color: var(--ui-text-muted, #64748b);
-  font-size: 0.85rem;
+  color: #334155;
+  font-size: 0.95rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -4450,19 +4451,20 @@ canvas {
 }
 
 .app-footer-links a {
-  color: var(--ui-text-muted, #64748b);
-  text-decoration: none;
-  font-weight: 500;
+  color: #1e293b;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
   transition: color 0.15s ease;
 }
 
 .app-footer-links a:hover {
-  color: var(--ui-text, #0f172a);
+  color: #0f172a;
 }
 
 .app-footer-dot {
-  color: var(--ui-border-strong, #cbd5e1);
-  font-size: 0.75rem;
+  color: #475569;
+  font-size: 0.85rem;
   user-select: none;
 }
 
@@ -4470,21 +4472,24 @@ canvas {
 html.theme-dark .app-footer {
   background: #090d16 !important;
   border-top-color: #1e293b !important;
+  color: #cbd5e1 !important;
 }
 
 .theme-dark .app-footer-links a,
 html.theme-dark .app-footer-links a {
-  color: #94a3b8 !important;
+  color: #cbd5e1 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
 }
 
 .theme-dark .app-footer-links a:hover,
 html.theme-dark .app-footer-links a:hover {
-  color: #f8fafc !important;
+  color: #ffffff !important;
 }
 
 .theme-dark .app-footer-dot,
 html.theme-dark .app-footer-dot {
-  color: #334155 !important;
+  color: #64748b !important;
 }
 
 /* Global Button & Form Polish across all modules */

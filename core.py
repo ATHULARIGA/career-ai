@@ -1914,6 +1914,7 @@ PUBLIC_PATHS = {
     "/readyz",
     "/robots.txt",
     "/sitemap.xml",
+    "/sitemap",
     "/llms.txt",
     "/openapi.json",
     "/google0159a71a230a2359.html",

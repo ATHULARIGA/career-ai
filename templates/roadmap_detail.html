@@ -5,7 +5,7 @@
 {% block og_title %}{{ track.seo_title }}{% endblock %}
 {% block og_desc %}{{ track.meta_desc }}{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 
 <!-- Schema.org Structured Data for Google Rich Snippets (Course & FAQ) -->
 <script type="application/ld+json">
@@ -246,7 +246,9 @@
   margin: 0;
 }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="rr-page">
   <div class="rr-container">
 

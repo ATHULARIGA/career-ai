@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block content %}
+
+{% block extra_head %}
 <style>
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      BASE LAYOUT & GLASSMORPHISM
@@ -187,10 +188,10 @@
     padding: 13px;
     border-radius: 11px;
     border: none;
-    background: #10b981; /* Green Notion/Linear style for Signup */
+    background: #047857; /* High contrast emerald for AAA compliance */
     color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.01em;
     transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
@@ -198,14 +199,14 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
     margin-top: 8px;
   }
 
   .af-submit-btn:hover {
     transform: translateY(-1px);
-    background: #059669;
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.22);
+    background: #065f46;
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.35);
   }
 
   .af-submit-btn:active {
@@ -217,7 +218,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     border-radius: 10px;
     padding: 12px 14px;
     margin-bottom: 20px;
@@ -225,50 +226,62 @@
   }
 
   .af-alert-error {
-    color: #b91c1c;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.15);
+    color: #991b1b;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
   }
 
   /* Terms */
   .af-terms {
-    font-size: 0.75rem;
-    color: #64748b;
+    font-size: 0.95rem;
+    color: #334155;
     text-align: center;
     margin-top: 14px;
     line-height: 1.5;
   }
 
+  .theme-dark .af-terms {
+    color: #cbd5e1;
+  }
+
   .af-terms a {
-    color: #10b981;
-    text-decoration: none;
+    color: #065f46;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+  }
+
+  .theme-dark .af-terms a {
+    color: #34d399;
   }
 
   .af-terms a:hover {
-    text-decoration: underline;
+    color: #047857;
   }
 
   .af-foot {
     text-align: center;
-    font-size: 0.82rem;
-    color: #64748b;
+    font-size: 0.95rem;
+    color: #334155;
     margin-top: 18px;
-    border-top: 1px solid rgba(0,0,0,0.04);
+    border-top: 1px solid rgba(0,0,0,0.06);
     padding-top: 16px;
   }
 
   .theme-dark .af-foot {
-    border-color: rgba(255,255,255,0.04);
+    color: #cbd5e1;
+    border-color: rgba(255,255,255,0.08);
   }
 
   .af-foot a {
-    color: #10b981;
+    color: #065f46;
     font-weight: 600;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .af-foot a:hover {
-    text-decoration: underline;
+    color: #047857;
   }
 
   @media (max-width: 480px) {
@@ -278,7 +291,9 @@
     }
   }
 </style>
+{% endblock %}
 
+{% block content %}
 <canvas id="auth-canvas"></canvas>
 
 <div class="auth-root">

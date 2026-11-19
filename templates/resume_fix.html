@@ -2,7 +2,7 @@
 {% block title %}Tailored LaTeX Resume & Overleaf Integration | ResuMate{% endblock %}
 {% block meta_desc %}Surgically tailored, ATS-optimized LaTeX resume matching your target Job Description. Open directly in Overleaf or download .tex.{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <style>
   .rf-wrap {
     max-width: 1040px;
@@ -447,7 +447,9 @@
     z-index: 1000;
   }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="rf-wrap">
   <!-- Header -->
   <header class="rf-header">

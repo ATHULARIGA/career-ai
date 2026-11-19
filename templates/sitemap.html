@@ -1,0 +1,196 @@
+{% extends "layout.html" %}
+
+{% block title %}HTML Site Map - All Pages & Tools | ResuMate{% endblock %}
+{% block meta_desc %}Comprehensive site map of all tools, guides, and pages available on ResuMate.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sm-container {
+    max-width: 900px;
+    margin: 40px auto 80px;
+    padding: 0 20px;
+  }
+  .sm-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .sm-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--ui-text, #0f172a);
+    margin: 0 0 10px;
+  }
+  .sm-header p {
+    font-size: 1.05rem;
+    color: var(--ui-text-muted, #334155);
+    margin: 0;
+  }
+  .sm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+  .sm-section {
+    background: var(--ui-surface, #ffffff);
+    border: 1px solid var(--ui-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .theme-dark .sm-section {
+    background: #111827;
+    border-color: #1f2937;
+  }
+  .sm-section h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ui-text, #0f172a);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ui-border, #e2e8f0);
+  }
+  .theme-dark .sm-section h2 {
+    color: #f8fafc;
+    border-bottom-color: #1f2937;
+  }
+  .sm-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sm-list li a {
+    font-size: 0.95rem;
+    color: #1d4ed8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+  }
+  .theme-dark .sm-list li a {
+    color: #93c5fd;
+  }
+  .sm-list li a:hover {
+    color: #0f172a;
+  }
+  .theme-dark .sm-list li a:hover {
+    color: #ffffff;
+  }
+  .sm-list li p {
+    font-size: 0.85rem;
+    color: #334155;
+    margin: 2px 0 0;
+    line-height: 1.4;
+  }
+  .theme-dark .sm-list li p {
+    color: #cbd5e1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sm-container">
+  <div class="sm-header">
+    <h1>HTML Site Map</h1>
+    <p>Direct navigation links to all tools, interview simulators, roadmaps, and career resources.</p>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm-section">
+      <h2>Core AI Tools</h2>
+      <ul class="sm-list">
+        <li>
+          <a href="/">Home</a>
+          <p>ResuMate AI Career Intelligence Platform overview and features.</p>
+        </li>
+        <li>
+          <a href="/resume">Resume Review & ATS Scanner</a>
+          <p>Audit resumes for ATS compatibility, keyword gaps, and Google X-Y-Z formula.</p>
+        </li>
+        <li>
+          <a href="/interview/new">AI Mock Interview Simulator</a>
+          <p>Realistic technical, behavioral, and system design voice/chat practice.</p>
+        </li>
+        <li>
+          <a href="/coding/problems">Coding Practice & Challenges</a>
+          <p>Interactive algorithm problems with in-browser multi-language runner.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sm-section">
+      <h2>Career Roadmaps</h2>
+      <ul class="sm-list">
+        <li>
+          <a href="/roadmap">All Developer Roadmaps (2026)</a>
+          <p>Step-by-step guides, milestone trees, and benchmark salary tiers.</p>
+        </li>
+        <li>
+          <a href="/roadmap/python-developer">Python Developer Roadmap</a>
+          <p>FastAPI, Django, async processing, SQL, and data engineering pathways.</p>
+        </li>
+        <li>
+          <a href="/roadmap/react-frontend-engineer">React Frontend Engineer Roadmap</a>
+          <p>Next.js, TypeScript, state management, and modern UI architectures.</p>
+        </li>
+        <li>
+          <a href="/roadmap/data-scientist-ai-engineer">Data Scientist & AI Engineer Roadmap</a>
+          <p>PyTorch, LLMs, embeddings, RAG, and vector database foundations.</p>
+        </li>
+        <li>
+          <a href="/roadmap/devops-cloud-architect">DevOps & Cloud Architect Roadmap</a>
+          <p>Kubernetes, Docker, Terraform, CI/CD, and AWS architecture.</p>
+        </li>
+        <li>
+          <a href="/career-map">Interactive Career Map Canvas</a>
+          <p>Obsidian-style visual node mapping for specialized tech positions.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sm-section">
+      <h2>Coaching & Mentorship</h2>
+      <ul class="sm-list">
+        <li>
+          <a href="/book-call">Book 1-on-1 Mentorship</a>
+          <p>Schedule high-impact career coaching, resume feedback, and mock interviews.</p>
+        </li>
+        <li>
+          <a href="/pricing">Pricing & Upgrades</a>
+          <p>Transparent free and premium tiers for unlimited audits and reviews.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sm-section">
+      <h2>Account & Legal</h2>
+      <ul class="sm-list">
+        <li>
+          <a href="/login">Sign In</a>
+          <p>Access your saved resumes, audit history, and interview logs.</p>
+        </li>
+        <li>
+          <a href="/signup">Create Account</a>
+          <p>Register for free access to ResuMate career tools.</p>
+        </li>
+        <li>
+          <a href="/privacy">Privacy Policy</a>
+          <p>How your resume data, telemetry, and personal information is secured.</p>
+        </li>
+        <li>
+          <a href="/terms">Terms of Service</a>
+          <p>Usage rights, service warranties, and platform guidelines.</p>
+        </li>
+        <li>
+          <a href="/healthz">System Health</a>
+          <p>Live platform uptime, database status, and operational latency.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

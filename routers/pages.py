@@ -21,6 +21,7 @@ Allow: /roadmap
 Allow: /roadmap/
 Allow: /book-call
 Allow: /pricing
+Allow: /sitemap
 Disallow: /admin
 Disallow: /account
 Disallow: /api/
@@ -104,8 +105,18 @@ def sitemap_xml():
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://career-ai-psi-dun.vercel.app/sitemap</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
 </urlset>"""
     return Response(content=xml, media_type="application/xml")
+
+
+@router.api_route("/sitemap", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def html_sitemap(request: Request):
+    return templates.TemplateResponse("sitemap.html", {"request": request})
 
 
 @router.get("/roadmap", response_class=HTMLResponse)

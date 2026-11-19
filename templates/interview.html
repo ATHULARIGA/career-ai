@@ -3,8 +3,7 @@
 {% block meta_desc %}Simulate technical, behavioral, and system design mock interviews with an adaptive conversational AI interviewer.{% endblock %}
 {% block og_title %}AI Mock Interview Practice & Behavioral Simulator | ResuMate{% endblock %}
 {% block og_desc %}Practice realistic back-and-forth mock interview rounds with real-time feedback and scoring.{% endblock %}
-{% block content %}
-
+{% block extra_head %}
 <style>
 /* ── Theme Variables & Wrapper ────────────────────────── */
 .iv-wrap {
@@ -336,8 +335,9 @@
 }
 .app-loader.hidden { display: none !important; }
 </style>
+{% endblock %}
 
-
+{% block content %}
 <section class="rr-page" id="ivPageWrap">
   <div class="rr-container">
     <div class="rr-header" id="ivHeader">

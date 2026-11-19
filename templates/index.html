@@ -1,82 +1,6 @@
 {% extends "layout.html" %}
-{% block content %}
 
-<!-- HERO SECTION WITH MOVING COMPONENTS -->
-<div class="hero">
-    <!-- Moving Ambient Orbs -->
-    <div class="hero-orb orb-a"></div>
-    <div class="hero-orb orb-b"></div>
-    <div class="hero-orb orb-c"></div>
-
-    <div class="badge">Career Intelligence Platform</div>
-
-    {% if auth_notice %}
-    <div style="margin: 0 auto 20px; max-width: 520px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 10px 14px; font-weight: 500; font-size: 0.9rem;">
-        Please sign in or create an account to access this page.
-    </div>
-    {% endif %}
-
-    <h1>
-        Land your dream job <br>
-        <span>with AI precision.</span>
-    </h1>
-
-    <p>
-        The all-in-one AI career suite to optimize your resume for ATS, <br>
-        ace realistic mock interviews, and master tailored career roadmaps.
-    </p>
-
-    <div class="buttons">
-        <a href="/resume" class="btn-primary">Start for Free →</a>
-        <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
-    </div>
-
-    <!-- Moving Floating Resume Card -->
-    <div class="float-card resume-card">
-        <div class="icon green" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">92%</div>
-        <div>
-            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Resume Score</div>
-            <p>ATS Match: 92%</p>
-            <div class="progress">
-                <div class="bar"></div>
-            </div>
-            <span class="score">9.2 / 10</span>
-        </div>
-    </div>
-
-    <!-- Moving Floating Mock Interview Card -->
-    <div class="float-card interview-card">
-        <div class="icon purple" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">AI</div>
-        <div>
-            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Mock Interview</div>
-            <p>Feedback Ready</p>
-            <div style="margin-top: 6px; font-size: 0.76rem; color: #10b981; font-weight: 600;">
-                Strong Technical Depth
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MOVING CONTINUOUS SKILL TICKER -->
-<div class="skill-ticker" aria-hidden="true">
-    <div class="skill-track">
-        <span>Resume Optimization</span>
-        <span>ATS Keyword Alignment</span>
-        <span>AI Mock Interviews</span>
-        <span>Career Roadmapping</span>
-        <span>Coding Practice</span>
-        <span>System Design Prep</span>
-        <span>Behavioral Feedback</span>
-        <span>Skill Gap Analysis</span>
-        <span>Resume Optimization</span>
-        <span>ATS Keyword Alignment</span>
-        <span>AI Mock Interviews</span>
-        <span>Career Roadmapping</span>
-        <span>Coding Practice</span>
-        <span>System Design Prep</span>
-    </div>
-</div>
-
+{% block extra_head %}
 <style>
   /* Simplified Content Section */
   .content-container {
@@ -104,13 +28,13 @@
   }
 
   .section-heading p {
-    color: #64748b;
+    color: #334155;
     font-size: 1.05rem;
     margin: 0;
   }
 
   .theme-dark .section-heading p {
-    color: #94a3b8;
+    color: #cbd5e1;
   }
 
   /* 4 Core Pillars Grid */
@@ -183,27 +107,29 @@
   }
 
   .clean-card p {
-    font-size: 0.92rem;
-    color: #64748b;
+    font-size: 1rem;
+    color: #334155;
     line-height: 1.55;
     margin: 0 0 20px;
   }
 
   .theme-dark .clean-card p {
-    color: #94a3b8;
+    color: #cbd5e1;
   }
 
   .card-action {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #4f46e5;
+    color: #1d4ed8;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .theme-dark .card-action {
-    color: #818cf8;
+    color: #93c5fd;
   }
 
   /* 3-Step Process Row */
@@ -227,15 +153,15 @@
 
   .step-tag {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: #4f46e5;
+    color: #4338ca;
     margin-bottom: 8px;
     letter-spacing: 0.05em;
   }
 
   .theme-dark .step-tag {
-    color: #818cf8;
+    color: #a5b4fc;
   }
 
   .process-step h3,
@@ -252,14 +178,14 @@
   }
 
   .process-step p {
-    font-size: 0.9rem;
-    color: #64748b;
+    font-size: 1rem;
+    color: #334155;
     margin: 0;
     line-height: 1.5;
   }
 
   .theme-dark .process-step p {
-    color: #94a3b8;
+    color: #cbd5e1;
   }
 
   /* Sleek Modern Banner */
@@ -288,7 +214,7 @@
   }
 
   .clean-banner p {
-    color: #94a3b8;
+    color: #cbd5e1;
     font-size: 1rem;
     max-width: 520px;
     margin: 0 auto 28px;
@@ -304,7 +230,7 @@
     border-radius: 9px;
     font-weight: 700;
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 1rem;
     transition: transform 0.15s, background 0.15s;
   }
 
@@ -319,6 +245,85 @@
     }
   }
 </style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION WITH MOVING COMPONENTS -->
+<div class="hero">
+    <!-- Moving Ambient Orbs -->
+    <div class="hero-orb orb-a"></div>
+    <div class="hero-orb orb-b"></div>
+    <div class="hero-orb orb-c"></div>
+
+    <div class="badge">Career Intelligence Platform</div>
+
+    {% if auth_notice %}
+    <div style="margin: 0 auto 20px; max-width: 520px; background: rgba(245, 158, 11, 0.1); color: #92400e; border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 12px 16px; font-weight: 600; font-size: 1rem;">
+        Please sign in or create an account to access this page.
+    </div>
+    {% endif %}
+
+    <h1>
+        Land your dream job <br>
+        <span>with AI precision.</span>
+    </h1>
+
+    <p>
+        The all-in-one AI career suite to optimize your resume for ATS, <br>
+        ace realistic mock interviews, and master tailored career roadmaps.
+    </p>
+
+    <div class="buttons">
+        <a href="/resume" class="btn-primary">Start for Free →</a>
+        <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
+    </div>
+
+    <!-- Moving Floating Resume Card -->
+    <div class="float-card resume-card">
+        <div class="icon green" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">92%</div>
+        <div>
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Resume Score</div>
+            <p>ATS Match: 92%</p>
+            <div class="progress">
+                <div class="bar"></div>
+            </div>
+            <span class="score">9.2 / 10</span>
+        </div>
+    </div>
+
+    <!-- Moving Floating Mock Interview Card -->
+    <div class="float-card interview-card">
+        <div class="icon purple" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">AI</div>
+        <div>
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Mock Interview</div>
+            <p>Feedback Ready</p>
+            <div style="margin-top: 6px; font-size: 0.76rem; color: #10b981; font-weight: 600;">
+                Strong Technical Depth
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MOVING CONTINUOUS SKILL TICKER -->
+<div class="skill-ticker" aria-hidden="true">
+    <div class="skill-track">
+        <span>Resume Optimization</span>
+        <span>ATS Keyword Alignment</span>
+        <span>AI Mock Interviews</span>
+        <span>Career Roadmapping</span>
+        <span>Coding Practice</span>
+        <span>System Design Prep</span>
+        <span>Behavioral Feedback</span>
+        <span>Skill Gap Analysis</span>
+        <span>Resume Optimization</span>
+        <span>ATS Keyword Alignment</span>
+        <span>AI Mock Interviews</span>
+        <span>Career Roadmapping</span>
+        <span>Coding Practice</span>
+        <span>System Design Prep</span>
+    </div>
+</div>
 
 <!-- CORE CAPABILITIES (REVEAL ON SCROLL) -->
 <div class="content-container">

@@ -56,16 +56,17 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
   </noscript>
-  <link rel="stylesheet" href="/static/styles.css?v=7">
+  <link rel="stylesheet" href="/static/styles.css?v=8">
+  {% block extra_head %}{% endblock %}
 </head>
 
 <body>
 
   <nav class="navbar">
-    <div class="logo" onclick="location.href='/'">
+    <a class="logo" href="/" aria-label="ResuMate Homepage">
       <div class="logo-box">R</div>
       <span>ResuMate</span>
-    </div>
+    </a>
 
     <div class="nav-links">
       <a href="/resume">Resume Review</a>
@@ -103,6 +104,8 @@
       <a href="/privacy">Privacy Policy</a>
       <span class="app-footer-dot">•</span>
       <a href="/terms">Terms of Service</a>
+      <span class="app-footer-dot">•</span>
+      <a href="/sitemap">Site Map</a>
       <span class="app-footer-dot">•</span>
       <a href="/healthz">System Health</a>
     </div>

@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block content %}
+
+{% block extra_head %}
 <style>
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      BASE LAYOUT & GLASSMORPHISM
@@ -245,25 +246,31 @@
 
   .af-foot {
     text-align: center;
-    font-size: 0.82rem;
-    color: #64748b;
+    font-size: 0.95rem;
+    color: #334155;
     margin-top: 24px;
-    border-top: 1px solid rgba(0,0,0,0.04);
+    border-top: 1px solid rgba(0,0,0,0.06);
     padding-top: 18px;
   }
 
   .theme-dark .af-foot {
-    border-color: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+    color: #cbd5e1;
   }
 
   .af-foot a {
-    color: #111827;
+    color: #1e293b;
     font-weight: 600;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .theme-dark .af-foot a {
+    color: #cbd5e1;
   }
 
   .af-foot a:hover {
-    text-decoration: underline;
+    color: #0f172a;
   }
 
   /* Optional Back icon link */
@@ -271,17 +278,22 @@
     position: absolute;
     top: 30px;
     left: 40px;
-    font-size: 0.82rem;
-    color: #64748b;
-    text-decoration: none;
+    font-size: 0.95rem;
+    color: #334155;
+    text-decoration: underline;
+    text-underline-offset: 3px;
     z-index: 10;
     display: flex;
     align-items: center;
     gap: 6px;
-    color: inherit;
   }
+
+  .theme-dark .back-to-site {
+    color: #cbd5e1;
+  }
+
   .back-to-site:hover {
-    color: #111827;
+    color: #0f172a;
   }
 
   @media (max-width: 480px) {
@@ -291,7 +303,9 @@
     }
   }
 </style>
+{% endblock %}
 
+{% block content %}
 <!-- Animated particle canvas fully visible in background layer -->
 <canvas id="auth-canvas"></canvas>
 
