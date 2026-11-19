@@ -160,6 +160,17 @@ suggestions.{% endblock %}
         border-color: rgba(239, 68, 68, 0.2);
     }
 
+    .rr-upgrade-link {
+        color: #1e3a8a;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        font-weight: 700;
+    }
+
+    .theme-dark .rr-upgrade-link {
+        color: #93c5fd;
+    }
+
     /* Textarea editor for LaTeX */
     .rr-latex-textarea {
         width: 100%;
@@ -215,8 +226,7 @@ suggestions.{% endblock %}
                 Free plan: {{ (resume_quota.limit if resume_quota else 3) }} reviews/day.
                 Remaining today: <strong style="color: var(--ui-text);">{{ (resume_quota.remaining if resume_quota else
                     0) }}</strong>.
-                <a href="/pricing"
-                    style="color: #1d4ed8; text-decoration: underline; text-underline-offset: 2px; font-weight: 700;">Upgrade</a>
+                <a href="/pricing" class="rr-upgrade-link">Upgrade</a>
             </p>
             {% else %}
             <p class="rr-subtle" style="margin-top:8px; color: #047857; font-weight: 700;">

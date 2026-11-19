@@ -5,6 +5,21 @@
 {% block og_title %}Software Engineering Career Roadmaps 2026 | ResuMate{% endblock %}
 {% block og_desc %}Explore community-standard 2026 career roadmaps for Python, React, Data Science, and DevOps.{% endblock %}
 
+{% block extra_head %}
+<style>
+  .roadmap-explore-link {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .theme-dark .roadmap-explore-link {
+    color: #93c5fd;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="rr-page">
   <div class="rr-container">
@@ -73,7 +88,7 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--ui-border); padding-top: 16px;">
-          <a href="/roadmap/{{ track.slug }}" style="font-size: 1rem; font-weight: 700; color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px;">
+          <a href="/roadmap/{{ track.slug }}" class="roadmap-explore-link">
             Explore Roadmap →
           </a>
           <a href="/resume?target_role={{ track.role_name | urlencode }}" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 12px; text-decoration: none;">
