@@ -92,6 +92,7 @@ suggestions.{% endblock %}
     }
 
     .rr-saved-title {
+        display: block;
         font-size: 1.05rem;
         font-weight: 700;
         color: var(--ui-text);
@@ -305,7 +306,7 @@ suggestions.{% endblock %}
                                 class="rr-saved-radio" {% if loop.first %}checked{% endif %}
                                 onchange="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
                             <span style="display: block; flex: 1;">
-                                <p class="rr-saved-title">{{ r.title }}</p>
+                                <strong class="rr-saved-title">{{ r.title }}</strong>
                                 <span class="rr-saved-meta">
                                     <span
                                         class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{
@@ -341,7 +342,7 @@ suggestions.{% endblock %}
                             <input type="radio" name="savedRadio" id="savedRadioNone" value="none"
                                 class="rr-saved-radio" onchange="clearSavedResumeSelection()">
                             <span style="display: block; flex: 1;">
-                                <p class="rr-saved-title">None (Start with a blank form)</p>
+                                <strong class="rr-saved-title">None (Start with a blank form)</strong>
                                 <span class="rr-saved-meta">
                                     <span>Upload custom PDF or paste fresh LaTeX source</span>
                                 </span>
