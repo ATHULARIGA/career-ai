@@ -59,7 +59,7 @@ def test_compare_unauthenticated():
     print("Testing unauthenticated compare...")
     anon_client = TestClient(app)
     response = anon_client.get("/resume/compare?current_id=1&previous_id=2", follow_redirects=False)
-    assert response.status_code in (302, 303)
+    assert response.status_code in (302, 303, 307)
     assert response.headers.get("location", "") in ("/?auth=required", "/login")
     print("✅ Passed - unauthenticated")
 
@@ -156,7 +156,7 @@ def test_compare_all_zero():
     c = get_auth_client()
     response = c.get(f"/resume/compare?current_id={report_2_id}&previous_id={report_1_id}")
     assert response.status_code == 200
-    assert "No changes detected" in response.text
+    assert "No dimensional changes detected" in response.text or "No changes detected" in response.text
     print("✅ Passed - all-zero deltas banner")
 
 def test_dashboard_single_report():

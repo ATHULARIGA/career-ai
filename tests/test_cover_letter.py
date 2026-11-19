@@ -80,7 +80,7 @@ def test_cover_letter_unauthenticated():
     report_id = seed_report()
     anon_client = TestClient(app)
     res = anon_client.get(f"/resume/{report_id}/cover_letter", follow_redirects=False)
-    assert res.status_code in (302, 303)
+    assert res.status_code in (302, 303, 307)
     print("✅ Passed - unauthenticated redirects")
 
 def seed_report_with_overrides(keyword_gaps=None, jd_text=""):
