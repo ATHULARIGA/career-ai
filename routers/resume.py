@@ -22,8 +22,6 @@ async def upload(
     resume_title: str = Form(""),
     file: Optional[UploadFile] = File(None),
 ):
-    with open("/tmp/upload_debug.txt", "w") as f:
-        f.write(f"company_tier: {company_tier}\n")
     start = time.time()
     quota = resume_quota_state(request)
     user_email = (request.session.get("user_email") or "").strip().lower()
@@ -202,8 +200,6 @@ async def upload(
                 version_history = get_recent_resume_runs_for_user(user_email, limit=10)
                 if version_history:
                     report["id"] = max(v["id"] for v in version_history)
-                    with open("/tmp/id_debug.txt", "w") as f:
-                        f.write(f"Assigned ID: {report['id']}\nVersion History: {[v['id'] for v in version_history]}\n")
             except Exception as persist_error:
                 logger.warning("resume_report_persist_failed user=%s err=%s", user_email, str(persist_error))
                 version_history.append(run_entry)

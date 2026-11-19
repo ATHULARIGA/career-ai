@@ -1023,8 +1023,11 @@ def _parse_problem_admin_payload(
 
 session_secret = os.getenv("SESSION_SECRET_KEY") or os.getenv("SESSION_SECRET")
 if not session_secret:
-    # Fallback keeps local dev running; set SESSION_SECRET_KEY in production.
-    session_secret = "dev-only-change-this-secret"
+    if APP_ENV == "production" or os.getenv("VERCEL"):
+        session_secret = secrets.token_urlsafe(32)
+        logging.getLogger(__name__).warning("SESSION_SECRET_KEY not configured in production; generated ephemeral key.")
+    else:
+        session_secret = "dev-only-change-this-secret"
 
 
 app = FastAPI()
@@ -1755,10 +1758,17 @@ def user_progress_summary(user_email: str, conn=None) -> dict:
         )
         resume_row = cur.fetchone() or (0, 0)
         coding_ts_col = submission_ts_column(conn)
-        if coding_ts_col:
+        if coding_ts_col == "created_ts":
             db.execute(
                 cur,
-                f"SELECT COUNT(*), COALESCE(AVG(CASE WHEN status='Accepted' THEN 100.0 ELSE 0 END),0) FROM coding_submissions WHERE user_email=? AND {coding_ts_col}>=?",
+                "SELECT COUNT(*), COALESCE(AVG(CASE WHEN status='Accepted' THEN 100.0 ELSE 0 END),0) FROM coding_submissions WHERE user_email=? AND created_ts>=?",
+                (email, seven_days_ago),
+            )
+            coding_row = cur.fetchone() or (0, 0)
+        elif coding_ts_col == "ts":
+            db.execute(
+                cur,
+                "SELECT COUNT(*), COALESCE(AVG(CASE WHEN status='Accepted' THEN 100.0 ELSE 0 END),0) FROM coding_submissions WHERE user_email=? AND ts>=?",
                 (email, seven_days_ago),
             )
             coding_row = cur.fetchone() or (0, 0)
@@ -1770,10 +1780,17 @@ def user_progress_summary(user_email: str, conn=None) -> dict:
             (email, thirty_days_ago),
         )
         resume_days_rows = cur.fetchall() or []
-        if coding_ts_col:
+        if coding_ts_col == "created_ts":
             db.execute(
                 cur,
-                f"SELECT {coding_ts_col} FROM coding_submissions WHERE user_email=? AND {coding_ts_col}>=?",
+                "SELECT created_ts FROM coding_submissions WHERE user_email=? AND created_ts>=?",
+                (email, thirty_days_ago),
+            )
+            coding_days_rows = cur.fetchall() or []
+        elif coding_ts_col == "ts":
+            db.execute(
+                cur,
+                "SELECT ts FROM coding_submissions WHERE user_email=? AND ts>=?",
                 (email, thirty_days_ago),
             )
             coding_days_rows = cur.fetchall() or []

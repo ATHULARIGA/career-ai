@@ -693,21 +693,6 @@ def evaluate(request: Request,
         latency_ms=(time.time() - start) * 1000.0,
     )
 
-    with open("/tmp/evaluate_debug.log", "a") as f:
-        f.write(f"--- DEBUG EVALUATE ---\n")
-        f.write(f"current: {current}\n")
-        f.write(f"max_rounds: {max_rounds}\n")
-        f.write(f"questions_len: {len(questions)}\n")
-        f.write(f"finished: {finished}\n")
-        f.write(f"questions: {questions}\n")
-        try:
-            payload_ser = json.dumps(dict(request.session))
-            f.write(f"SESSION SIZE: {len(payload_ser)} bytes\n")
-            f.write(f"SESSION: {payload_ser}\n")
-        except Exception as e:
-            f.write(f"SESSION DUMP ERR: {e}\n")
-        f.write(f"----------------------\n")
-
     return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(
         request,
         questions=questions,
