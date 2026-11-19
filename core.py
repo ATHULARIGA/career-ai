@@ -1067,7 +1067,7 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         path = request.url.path or "/"
         if path.startswith("/static"):
             response = await call_next(request)
-            response.headers["Cache-Control"] = "public, max-age=86400"
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
             return response
 
         req_id = request.headers.get("x-request-id") or str(uuid.uuid4())
