@@ -116,7 +116,7 @@ def sitemap_xml():
 
 @router.api_route("/sitemap", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def html_sitemap(request: Request):
-    return templates.TemplateResponse("sitemap.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="sitemap.html", context={"request": request})
 
 
 @router.get("/roadmap", response_class=HTMLResponse)
