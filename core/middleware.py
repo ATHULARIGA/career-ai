@@ -99,11 +99,11 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         if path == "/":
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://d3js.org; "
+                "script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://d3js.org https://www.clarity.ms https://*.clarity.ms; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
-                "img-src 'self' data: https: blob:; "
-                "connect-src 'self' https:; "
+                "img-src 'self' data: https: blob: https://*.clarity.ms; "
+                "connect-src 'self' https: https://*.clarity.ms; "
                 "worker-src 'self' blob:; "
                 "object-src 'none'; "
                 "frame-ancestors 'none'; "
@@ -113,11 +113,11 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://d3js.org; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://d3js.org https://www.clarity.ms https://*.clarity.ms; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
-                "img-src 'self' data: https: blob:; "
-                "connect-src 'self' https:; "
+                "img-src 'self' data: https: blob: https://*.clarity.ms; "
+                "connect-src 'self' https: https://*.clarity.ms; "
                 "worker-src 'self' blob:; "
                 "object-src 'none'; "
                 "frame-ancestors 'none'; "
