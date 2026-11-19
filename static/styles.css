@@ -589,7 +589,7 @@ html.theme-dark,
   --ui-border: #1e293b !important;
   --ui-border-strong: #334155 !important;
   --ui-text: #f8fafc !important;
-  --ui-text-muted: #94a3b8 !important;
+  --ui-text-muted: #cbd5e1 !important;
   --ui-accent: #f8fafc !important;
   --ui-accent-soft: #141d2e !important;
   --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
@@ -1412,7 +1412,7 @@ html.theme-dark .stats-bar {
   --ui-border: #e2e8f0;
   --ui-border-strong: #cbd5e1;
   --ui-text: #0f172a;
-  --ui-text-muted: #64748b;
+  --ui-text-muted: #334155;
   --ui-accent: #0f172a;
   --ui-accent-soft: #f1f5f9;
   --ui-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.03);
@@ -1426,7 +1426,7 @@ html.theme-dark,
   --ui-border: #1e293b;
   --ui-border-strong: #334155;
   --ui-text: #f8fafc;
-  --ui-text-muted: #94a3b8;
+  --ui-text-muted: #cbd5e1;
   --ui-accent: #f8fafc;
   --ui-accent-soft: #141d2e;
   --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -1591,18 +1591,18 @@ html.theme-dark body,
 
 .rr-chip {
   border: 1px solid var(--ui-border);
-  background: #fff;
+  background: #ffffff;
   border-radius: 999px;
   padding: 7px 14px;
-  font-size: 0.8rem;
-  color: #374151;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .theme-dark .rr-chip {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #e2e8f0 !important;
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
 }
 
 .rr-form {

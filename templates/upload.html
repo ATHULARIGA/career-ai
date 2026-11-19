@@ -6,164 +6,183 @@
 
 {% block extra_head %}
 <style>
-  .rr-source-tabs {
-    display: inline-flex;
-    background: var(--ui-surface-subtle, #141d2e);
-    padding: 3px;
-    border-radius: 10px;
-    border: 1px solid var(--ui-border, #1e293b);
-    margin-bottom: 20px;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-  .rr-source-btn {
-    border: none;
-    background: transparent;
-    color: var(--ui-text-muted, #94a3b8);
-    font-weight: 600;
-    font-size: 0.86rem;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .rr-source-btn.active {
-    background: var(--ui-surface, #0f172a);
-    color: var(--ui-text, #ffffff);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-  }
-  .rr-source-panel {
-    display: none;
-    margin-bottom: 20px;
-  }
-  .rr-source-panel.active {
-    display: block;
-  }
+    .rr-source-tabs {
+        display: inline-flex;
+        background: var(--ui-surface-subtle, #141d2e);
+        padding: 3px;
+        border-radius: 10px;
+        border: 1px solid var(--ui-border, #1e293b);
+        margin-bottom: 20px;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
 
-  /* Saved Resumes List */
-  .rr-saved-list {
-    display: grid;
-    gap: 10px;
-  }
-  .rr-saved-card {
-    background: var(--ui-surface, #0f172a);
-    border: 1px solid var(--ui-border, #1e293b);
-    border-radius: 10px;
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .rr-saved-card:hover {
-    border-color: var(--ui-border-strong, #334155);
-    background: var(--ui-surface-subtle, #141d2e);
-  }
-  .rr-saved-card.selected {
-    border-color: var(--ui-primary, #3b82f6);
-    background: rgba(59, 130, 246, 0.05);
-    box-shadow: 0 0 0 1px var(--ui-primary, #3b82f6);
-  }
-  .rr-saved-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .rr-saved-radio {
-    accent-color: var(--ui-primary, #3b82f6);
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-  .rr-saved-title {
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: var(--ui-text, #f1f5f9);
-    margin: 0 0 3px;
-  }
-  .rr-saved-meta {
-    font-size: 0.78rem;
-    color: var(--ui-text-muted, #94a3b8);
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .rr-pill {
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .rr-pill-latex {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-  }
-  .rr-pill-pdf {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-  }
-  .rr-del-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: #94a3b8;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 600;
-    transition: all 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .rr-del-btn:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.2);
-  }
+    .rr-source-btn {
+        border: none;
+        background: transparent;
+        color: var(--ui-text-muted, #94a3b8);
+        font-weight: 600;
+        font-size: 0.86rem;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-  /* Textarea editor for LaTeX */
-  .rr-latex-textarea {
-    width: 100%;
-    min-height: 220px;
-    background: var(--ui-bg, #090d16);
-    border: 1px solid var(--ui-border, #1e293b);
-    border-radius: 10px;
-    color: #e2e8f0;
-    font-family: 'IBM Plex Mono', Consolas, Menlo, monospace;
-    font-size: 0.88rem;
-    line-height: 1.5;
-    padding: 14px;
-    box-sizing: border-box;
-    resize: vertical;
-  }
-  .rr-latex-textarea:focus {
-    border-color: var(--ui-primary, #3b82f6);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-  .rr-save-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: var(--ui-text, #f1f5f9);
-    margin-top: 10px;
-    cursor: pointer;
-  }
-  .rr-save-check input {
-    accent-color: var(--ui-primary, #3b82f6);
-    width: 15px;
-    height: 15px;
-  }
+    .rr-source-btn.active {
+        background: var(--ui-surface, #0f172a);
+        color: var(--ui-text, #ffffff);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .rr-source-panel {
+        display: none;
+        margin-bottom: 20px;
+    }
+
+    .rr-source-panel.active {
+        display: block;
+    }
+
+    /* Saved Resumes List */
+    .rr-saved-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .rr-saved-card {
+        background: var(--ui-surface, #0f172a);
+        border: 1px solid var(--ui-border, #1e293b);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .rr-saved-card:hover {
+        border-color: var(--ui-border-strong, #334155);
+        background: var(--ui-surface-subtle, #141d2e);
+    }
+
+    .rr-saved-card.selected {
+        border-color: var(--ui-primary, #3b82f6);
+        background: rgba(59, 130, 246, 0.05);
+        box-shadow: 0 0 0 1px var(--ui-primary, #3b82f6);
+    }
+
+    .rr-saved-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .rr-saved-radio {
+        accent-color: var(--ui-primary, #3b82f6);
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .rr-saved-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--ui-text, #f1f5f9);
+        margin: 0 0 3px;
+    }
+
+    .rr-saved-meta {
+        font-size: 0.78rem;
+        color: var(--ui-text-muted, #94a3b8);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .rr-pill {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .rr-pill-latex {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .rr-pill-pdf {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .rr-del-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: #94a3b8;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .rr-del-btn:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Textarea editor for LaTeX */
+    .rr-latex-textarea {
+        width: 100%;
+        min-height: 220px;
+        background: var(--ui-bg, #090d16);
+        border: 1px solid var(--ui-border, #1e293b);
+        border-radius: 10px;
+        color: #e2e8f0;
+        font-family: 'IBM Plex Mono', Consolas, Menlo, monospace;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        padding: 14px;
+        box-sizing: border-box;
+        resize: vertical;
+    }
+
+    .rr-latex-textarea:focus {
+        border-color: var(--ui-primary, #3b82f6);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .rr-save-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--ui-text, #f1f5f9);
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    .rr-save-check input {
+        accent-color: var(--ui-primary, #3b82f6);
+        width: 15px;
+        height: 15px;
+    }
 </style>
 {% endblock %}
 
@@ -180,8 +199,10 @@
             {% if (user_plan or "free") != "premium" %}
             <p class="rr-subtle" style="margin-top:8px; color: var(--ui-text-muted);">
                 Free plan: {{ (resume_quota.limit if resume_quota else 3) }} reviews/day.
-                Remaining today: <strong style="color: var(--ui-text);">{{ (resume_quota.remaining if resume_quota else 0) }}</strong>.
-                <a href="/pricing" style="color: #1d4ed8; text-decoration: underline; text-underline-offset: 2px; font-weight: 700;">Upgrade</a>
+                Remaining today: <strong style="color: var(--ui-text);">{{ (resume_quota.remaining if resume_quota else
+                    0) }}</strong>.
+                <a href="/pricing"
+                    style="color: #1d4ed8; text-decoration: underline; text-underline-offset: 2px; font-weight: 700;">Upgrade</a>
             </p>
             {% else %}
             <p class="rr-subtle" style="margin-top:8px; color: #047857; font-weight: 700;">
@@ -196,7 +217,8 @@
         </div>
 
         {% if quota_error %}
-        <p class="al-error" style="margin-bottom:10px;">{{ quota_error }} <a href="/pricing" style="text-decoration: underline;">Upgrade</a></p>
+        <p class="al-error" style="margin-bottom:10px;">{{ quota_error }} <a href="/pricing"
+                style="text-decoration: underline;">Upgrade</a></p>
         {% endif %}
 
         {% if general_error %}
@@ -207,23 +229,42 @@
 
         <form id="resumeReviewForm" action="/upload" method="post" enctype="multipart/form-data" class="rr-form">
             <!-- Hidden inputs tracking resume source -->
-            <input type="hidden" name="source_type" id="sourceTypeInput" value="{% if saved_resumes %}saved{% else %}latex{% endif %}">
-            <input type="hidden" name="saved_resume_id" id="savedResumeIdInput" value="{% if saved_resumes %}{{ saved_resumes[0].id }}{% else %}0{% endif %}">
+            <input type="hidden" name="source_type" id="sourceTypeInput"
+                value="{% if saved_resumes %}saved{% else %}latex{% endif %}">
+            <input type="hidden" name="saved_resume_id" id="savedResumeIdInput"
+                value="{% if saved_resumes %}{{ saved_resumes[0].id }}{% else %}0{% endif %}">
 
             <!-- Resume Source Navigation Tabs -->
             <div class="rr-field">
-                <label style="margin-bottom: 8px; display: block; font-size: 0.95rem; font-weight: 700;">Resume Input Method</label>
+                <label style="margin-bottom: 8px; display: block; font-size: 0.95rem; font-weight: 700;">Resume Input
+                    Method</label>
                 <div class="rr-source-tabs">
-                    <button type="button" class="rr-source-btn {% if saved_resumes %}active{% endif %}" id="btnTabSaved" onclick="switchResumeSource('saved')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <button type="button" class="rr-source-btn {% if saved_resumes %}active{% endif %}" id="btnTabSaved"
+                        onclick="switchResumeSource('saved')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
                         Saved Resumes (<span id="savedCountBadge">{{ saved_resumes|length }}</span>)
                     </button>
-                    <button type="button" class="rr-source-btn {% if not saved_resumes %}active{% endif %}" id="btnTabLatex" onclick="switchResumeSource('latex')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    <button type="button" class="rr-source-btn {% if not saved_resumes %}active{% endif %}"
+                        id="btnTabLatex" onclick="switchResumeSource('latex')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
                         Paste LaTeX Code
                     </button>
                     <button type="button" class="rr-source-btn" id="btnTabFile" onclick="switchResumeSource('file')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
                         Attach Resume File (.pdf, .tex)
                     </button>
                 </div>
@@ -231,26 +272,30 @@
 
             <!-- TAB 1: Saved Resumes -->
             <div id="panelSaved" class="rr-source-panel {% if saved_resumes %}active{% endif %}">
-                <div class="rr-saved-list" id="savedResumesList" {% if not saved_resumes %}style="display:none;"{% endif %}>
+                <div class="rr-saved-list" id="savedResumesList" {% if not saved_resumes %}style="display:none;" {%
+                    endif %}>
                     {% for r in saved_resumes %}
-                    <div class="rr-saved-card {% if loop.first %}selected{% endif %}" id="savedCard{{ r.id }}" onclick="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')" role="button" tabindex="0" aria-label="Select saved resume {{ r.title }}" onkeydown="if(event.key==='Enter'||event.key===' '){selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}');event.preventDefault();}">
-                        <div class="rr-saved-info">
-                            <input type="radio" name="savedRadio" id="savedRadio{{ r.id }}" value="{{ r.id }}" class="rr-saved-radio" aria-label="Select saved resume {{ r.title }}" {% if loop.first %}checked{% endif %}>
+                    <div class="rr-saved-card {% if loop.first %}selected{% endif %}" id="savedCard{{ r.id }}" onclick="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
+                        <label class="rr-saved-info" for="savedRadio{{ r.id }}" style="cursor: pointer; margin: 0;">
+                            <input type="radio" name="savedRadio" id="savedRadio{{ r.id }}" value="{{ r.id }}" class="rr-saved-radio" {% if loop.first %}checked{% endif %} onchange="selectSavedResume({{ r.id }}, '{{ r.target_role or '' }}')">
                             <div>
                                 <p class="rr-saved-title">{{ r.title }}</p>
                                 <div class="rr-saved-meta">
-                                    <span class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{ r.resume_type }}</span>
+                                    <span
+                                        class="rr-pill {% if r.resume_type == 'latex' %}rr-pill-latex{% else %}rr-pill-pdf{% endif %}">{{
+                                        r.resume_type }}</span>
                                     {% if r.is_sample %}
-                                    <span class="rr-pill" style="background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 700;">Sample</span>
+                                    <span class="rr-pill"
+                                        style="background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 700;">Sample</span>
                                     {% endif %}
                                     {% if r.target_role %}
                                     <span>&bull; {{ r.target_role }}</span>
                                     {% endif %}
                                 </div>
                             </div>
-                        </div>
+                        </label>
                         {% if not r.is_sample %}
-                        <button type="button" class="rr-del-btn" onclick="deleteSavedResume(event, {{ r.id }}, '{{ r.title }}')" title="Delete this saved resume">
+                        <button type="button" class="rr-del-btn" onclick="deleteSavedResume(event, {{ r.id }}, '{{ r.title }}')" title="Delete this saved resume" aria-label="Delete saved resume {{ r.title }}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
                         </button>
@@ -258,27 +303,34 @@
                     </div>
                     {% endfor %}
                 </div>
-                <div id="savedEmptyState" style="background: var(--ui-surface-subtle, #141d2e); border: 1px dashed var(--ui-border, #1e293b); border-radius: 10px; padding: 28px 20px; text-align: center; {% if saved_resumes %}display:none;{% endif %}">
-                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--ui-surface, #0f172a); border: 1px solid var(--ui-border, #1e293b); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--ui-primary, #3b82f6);">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <div id="savedEmptyState"
+                    style="background: var(--ui-surface-subtle, #141d2e); border: 1px dashed var(--ui-border, #1e293b); border-radius: 10px; padding: 28px 20px; text-align: center; {% if saved_resumes %}display:none;{% endif %}">
+                    <div
+                        style="width: 44px; height: 44px; border-radius: 50%; background: var(--ui-surface, #0f172a); border: 1px solid var(--ui-border, #1e293b); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--ui-primary, #3b82f6);">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
                     </div>
-                    <h4 style="margin: 0 0 6px; font-size: 0.95rem; font-weight: 700; color: var(--ui-text, #f8fafc);">No Saved Resumes Yet</h4>
-                    <p style="font-size: 0.84rem; color: var(--ui-text-muted, #94a3b8); margin: 0 auto 16px; max-width: 420px; line-height: 1.5;">
+                    <h4 style="margin: 0 0 6px; font-size: 1rem; font-weight: 700; color: var(--ui-text, #f8fafc);">No Saved Resumes Yet</h4>
+                    <p style="font-size: 0.9rem; color: var(--ui-text-muted, #cbd5e1); margin: 0 auto 16px; max-width: 420px; line-height: 1.5;">
                         Paste your LaTeX code or upload a resume file and check "Save this resume to my account" to store it here for instant 1-click selection in future audits.
                     </p>
                     <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" class="btn-primary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="loadSampleResumeTemplate()">
+                        <button type="button" class="btn-primary" style="font-size: 0.88rem; padding: 8px 16px;" onclick="loadSampleResumeTemplate()">
                             Load Athul's Sample Resume
                         </button>
-                        <button type="button" class="btn-secondary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="switchResumeSource('latex')">
+                        <button type="button" class="btn-secondary" style="font-size: 0.88rem; padding: 8px 16px;" onclick="switchResumeSource('latex')">
                             Paste Custom LaTeX
                         </button>
-                        <button type="button" class="btn-secondary" style="font-size: 0.82rem; padding: 8px 16px;" onclick="switchResumeSource('file')">
+                        <button type="button" class="btn-secondary" style="font-size: 0.88rem; padding: 8px 16px;" onclick="switchResumeSource('file')">
                             Attach Resume File
                         </button>
                     </div>
                 </div>
-                <p id="savedHelpText" style="font-size: 0.8rem; color: var(--ui-text-muted, #94a3b8); margin-top: 10px; {% if not saved_resumes %}display:none;{% endif %}">
+                <p id="savedHelpText" style="font-size: 0.88rem; color: var(--ui-text-muted, #cbd5e1); margin-top: 10px; {% if not saved_resumes %}display:none;{% endif %}">
                     Select any saved resume to immediately review or tailor it against a new job description.
                 </p>
             </div>
@@ -288,22 +340,19 @@
                 <div class="rr-field">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label for="latexCode" style="margin: 0; font-weight: 700;">Paste LaTeX Source Code (\documentclass...)</label>
-                        <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" onclick="loadSampleResumeTemplate()">
+                        <button type="button" class="btn-secondary" style="font-size: 0.85rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" onclick="loadSampleResumeTemplate()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                             Load Athul's Template
                         </button>
                     </div>
-                    <textarea
-                        id="latexCode"
-                        name="latex_code"
-                        class="rr-latex-textarea"
-                        placeholder="\documentclass[a4paper,9.5pt]{article}&#10;\begin{document}&#10;\textbf{ATHUL ARIGA}...&#10;\end{document}"
-                    ></textarea>
+                    <textarea id="latexCode" name="latex_code" class="rr-latex-textarea"
+                        placeholder="\documentclass[a4paper,9.5pt]{article}&#10;\begin{document}&#10;\textbf{ATHUL ARIGA}...&#10;\end{document}"></textarea>
                 </div>
                 <div class="rr-grid-2" style="margin-top: 10px;">
                     <div class="rr-field">
                         <label for="resumeTitleLatex">Resume Title (Optional)</label>
-                        <input id="resumeTitleLatex" type="text" name="resume_title_latex" placeholder="e.g. Athul - Python Developer (LaTeX)">
+                        <input id="resumeTitleLatex" type="text" name="resume_title_latex"
+                            placeholder="e.g. Athul - Python Developer (LaTeX)">
                     </div>
                     <div class="rr-field" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
                         <label class="rr-save-check">
@@ -318,18 +367,14 @@
             <div id="panelFile" class="rr-source-panel">
                 <div class="rr-field rr-file-field">
                     <label for="file">Resume File (.pdf or .tex)</label>
-                    <input
-                        type="file"
-                        name="file"
-                        id="file"
-                        accept=".pdf,.tex,application/pdf,text/plain"
-                    >
+                    <input type="file" name="file" id="file" accept=".pdf,.tex,application/pdf,text/plain">
                     <p>Single or multi-page PDF (.pdf) or raw LaTeX document (.tex) supported.</p>
                 </div>
                 <div class="rr-grid-2" style="margin-top: 10px;">
                     <div class="rr-field">
                         <label for="resumeTitleFile">Resume Title (Optional)</label>
-                        <input id="resumeTitleFile" type="text" name="resume_title_file" placeholder="e.g. Master PDF Resume">
+                        <input id="resumeTitleFile" type="text" name="resume_title_file"
+                            placeholder="e.g. Master PDF Resume">
                     </div>
                     <div class="rr-field" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
                         <label class="rr-save-check">
