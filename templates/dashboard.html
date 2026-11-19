@@ -304,7 +304,7 @@
             <section class="rd-panel">
                 <h2>Recent Resume Runs</h2>
                 {% if resume_versions|length == 1 %}
-                <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                <p style="font-size: 0.85rem; color: var(--ui-text-muted, #334155); margin-top: 4px; display: flex; align-items: center; gap: 4px;">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Upload a second version to enable Side-by-Side comparison deltas.
                 </p>
@@ -410,7 +410,7 @@
                     </table>
                 </div>
                 {% else %}
-                <p style="text-align: center; color: #64748b; padding: 40px 20px;">No alternative roles tested yet. Use the form above to add your first comparison targets.</p>
+                <p style="text-align: center; color: var(--ui-text-muted, #334155); padding: 40px 20px;">No alternative roles tested yet. Use the form above to add your first comparison targets.</p>
                 {% endif %}
             </section>
         </div>
@@ -438,7 +438,7 @@
         fetch("/api/interview-progress").then(r => r.json()).then(data => {
             if (!data || data.length === 0) {
                 var c = document.getElementById('interviewProgressChart');
-                if(c) c.parentElement.innerHTML = "<p style='color:#64748b; margin-top:20px;'>Complete your first Mock Interview to see progress scoring trends here.</p>";
+                if(c) c.parentElement.innerHTML = "<p style='color:var(--ui-text-muted, #334155); margin-top:20px;'>Complete your first Mock Interview to see progress scoring trends here.</p>";
                 return;
             }
             const ctx = document.getElementById('interviewProgressChart');
