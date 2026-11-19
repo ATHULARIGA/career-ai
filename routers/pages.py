@@ -196,14 +196,33 @@ def ai_plugin_manifest():
 @router.api_route("/.well-known/ard.json", methods=["GET", "HEAD"])
 def ard_manifest():
     ard = {
-        "version": "1.0",
+        "specVersion": "0.91",
         "name": "ResuMate",
         "url": "https://career-ai-psi-dun.vercel.app",
         "description": "AI-powered career platform for ATS resume review, mock interviews, and career roadmaps.",
-        "endpoints": {
-            "llms": "https://career-ai-psi-dun.vercel.app/llms.txt",
-            "sitemap": "https://career-ai-psi-dun.vercel.app/sitemap.xml"
-        }
+        "entries": [
+            {
+                "identifier": "urn:air:career-ai-psi-dun.vercel.app:agent:resumate",
+                "displayName": "ResuMate AI Career Platform",
+                "type": "application/json",
+                "version": "1.0.0",
+                "url": "https://career-ai-psi-dun.vercel.app/.well-known/agent.json"
+            },
+            {
+                "identifier": "urn:air:career-ai-psi-dun.vercel.app:docs:llms",
+                "displayName": "ResuMate LLM Documentation",
+                "type": "text/markdown",
+                "version": "1.0.0",
+                "url": "https://career-ai-psi-dun.vercel.app/llms.txt"
+            },
+            {
+                "identifier": "urn:air:career-ai-psi-dun.vercel.app:api:openapi",
+                "displayName": "ResuMate OpenAPI Specification",
+                "type": "application/json",
+                "version": "1.0.0",
+                "url": "https://career-ai-psi-dun.vercel.app/openapi.json"
+            }
+        ]
     }
     return JSONResponse(ard)
 
