@@ -27,6 +27,10 @@
   <meta name="google-site-verification" content="{{ google_site_verification }}">
   {% endif %}
 
+  <!-- AI Agent & ARD Discovery -->
+  <link rel="agent-manifest" href="/.well-known/agent.json">
+  <link rel="ai-plugin" href="/.well-known/ai-plugin.json">
+
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
@@ -44,12 +48,15 @@
     }
   }
   </script>
+  <link rel="preload" as="image" href="/static/hero-bg.webp" type="image/webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=6">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  </noscript>
+  <link rel="stylesheet" href="/static/styles.css?v=7">
 </head>
 
 <body>
@@ -86,8 +93,10 @@
     </div>
   </nav>
 
-  {% block content %}
-  {% endblock %}
+  <main id="main-content">
+    {% block content %}
+    {% endblock %}
+  </main>
 
   <footer class="app-footer">
     <div class="app-footer-links">

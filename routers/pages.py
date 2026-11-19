@@ -137,6 +137,66 @@ def google_file_verification():
     return Response(content="google-site-verification: google0159a71a230a2359.html", media_type="text/html")
 
 
+@router.api_route("/llms.txt", methods=["GET", "HEAD"], response_class=PlainTextResponse)
+def llms_txt():
+    content = """# ResuMate
+
+> AI-powered career platform providing ATS resume audits, realistic mock interviews, personalized career roadmaps, and coding practice.
+
+ResuMate helps software engineers and job seekers prepare for technical hiring, optimize resumes for ATS parsing, and practice interactive mock interviews with quantitative feedback.
+
+## Core Services
+- [Resume Review](https://career-ai-psi-dun.vercel.app/resume): Instant ATS resume audit, keyword coverage scoring, and Google XYZ formatted bullet rewrites.
+- [Mock Interviews](https://career-ai-psi-dun.vercel.app/interview/new): Realistic behavioral and technical interview simulator with STAR-framework feedback.
+- [Career Roadmaps](https://career-ai-psi-dun.vercel.app/roadmap): Role-specific skill roadmaps covering Python Developer, React Frontend, Data Science, and DevOps.
+- [Coding Practice](https://career-ai-psi-dun.vercel.app/coding/problems): Algorithmic challenges with automated execution and heuristic code reviews.
+- [Mentorship](https://career-ai-psi-dun.vercel.app/book-call): 1-on-1 career strategy calls with industry mentors.
+
+## Documentation
+- [System Health](https://career-ai-psi-dun.vercel.app/healthz): Real-time API and platform status.
+- [Privacy Policy](https://career-ai-psi-dun.vercel.app/privacy): User privacy and data protection guidelines.
+- [Terms of Service](https://career-ai-psi-dun.vercel.app/terms): Terms governing platform usage.
+- [Sitemap](https://career-ai-psi-dun.vercel.app/sitemap.xml): Machine-readable index of all public routes.
+"""
+    return Response(content=content, media_type="text/plain; charset=utf-8")
+
+
+@router.api_route("/.well-known/agent.json", methods=["GET", "HEAD"])
+@router.api_route("/.well-known/ai-plugin.json", methods=["GET", "HEAD"])
+def ai_plugin_manifest():
+    manifest = {
+        "schema_version": "v1",
+        "name_for_model": "resumate_career_ai",
+        "name_for_human": "ResuMate AI Career Platform",
+        "description_for_model": "AI career platform to audit resumes for ATS compliance, simulate technical/behavioral mock interviews, and build career roadmaps.",
+        "description_for_human": "Optimize resumes for ATS, practice realistic mock interviews, and master tailored career roadmaps.",
+        "auth": {"type": "none"},
+        "api": {
+            "type": "openapi",
+            "url": "https://career-ai-psi-dun.vercel.app/openapi.json"
+        },
+        "logo_url": "https://career-ai-psi-dun.vercel.app/static/hero-bg.webp",
+        "contact_email": "athulariga12@gmail.com",
+        "legal_info_url": "https://career-ai-psi-dun.vercel.app/terms"
+    }
+    return JSONResponse(manifest)
+
+
+@router.api_route("/.well-known/ard.json", methods=["GET", "HEAD"])
+def ard_manifest():
+    ard = {
+        "version": "1.0",
+        "name": "ResuMate",
+        "url": "https://career-ai-psi-dun.vercel.app",
+        "description": "AI-powered career platform for ATS resume review, mock interviews, and career roadmaps.",
+        "endpoints": {
+            "llms": "https://career-ai-psi-dun.vercel.app/llms.txt",
+            "sitemap": "https://career-ai-psi-dun.vercel.app/sitemap.xml"
+        }
+    }
+    return JSONResponse(ard)
+
+
 @router.get("/readyz")
 def readyz():
     try:

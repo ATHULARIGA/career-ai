@@ -112,7 +112,7 @@ body {
     transform: translateX(-50%);
     width: 100vw;
     height: 100%;
-    background: url('/static/hero-bg.png') no-repeat center center;
+    background: url('/static/hero-bg.webp') no-repeat center center;
     background-size: cover;
     opacity: 0.4;
     z-index: -1;

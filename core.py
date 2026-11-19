@@ -1112,7 +1112,15 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+class CachedStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+app.mount("/static", CachedStaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 app.add_middleware(RequestGuardMiddleware)
 app.add_middleware(AuthGateMiddleware)
 app.add_middleware(
@@ -1906,12 +1914,14 @@ PUBLIC_PATHS = {
     "/readyz",
     "/robots.txt",
     "/sitemap.xml",
+    "/llms.txt",
+    "/openapi.json",
     "/google0159a71a230a2359.html",
     "/resume",
     "/upload",
     "/interview",
     "/coding",
 }
-PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume")
+PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/.well-known")
 
 
