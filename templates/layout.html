@@ -128,40 +128,7 @@
     </div>
   </footer>
 
-  <script>
-    (function () {
-      const root = document.documentElement;
-      const key = "resumate-theme";
-      const saved = localStorage.getItem(key);
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initialTheme = saved || (prefersDark ? "dark" : "light");
-
-      function applyTheme(theme) {
-        const isDark = (theme === "dark");
-        if (isDark) {
-          root.classList.add("theme-dark");
-        } else {
-          root.classList.remove("theme-dark");
-        }
-        const btn = document.getElementById("themeToggle");
-        if (btn) {
-          btn.textContent = isDark ? "Light" : "Dark";
-        }
-      }
-
-      applyTheme(initialTheme);
-
-      window.addEventListener("DOMContentLoaded", function () {
-        const btn = document.getElementById("themeToggle");
-        if (!btn) return;
-        btn.addEventListener("click", function () {
-          const next = root.classList.contains("theme-dark") ? "light" : "dark";
-          localStorage.setItem(key, next);
-          applyTheme(next);
-        });
-      });
-    })();
-  </script>
+  <script src="/static/app.js?v=1" defer></script>
 </body>
 
 </html>
