@@ -75,7 +75,7 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
   </noscript>
-  <link rel="stylesheet" href="/static/styles.min.css?v=20">
+  <link rel="stylesheet" href="/static/styles.min.css?v=22">
   <script defer src="/static/clarity.js"></script>
   {% block extra_head %}{% endblock %}
 </head>
@@ -97,6 +97,9 @@
       {% if request.session.get("admin") or request.session.get("user_role") == "admin" %}
       <a href="/admin">Admin</a>
       {% endif %}
+      <button id="themeToggle" class="theme-toggle" type="button">
+        Dark
+      </button>
       {% if request.session.get("user_id") %}
       <span class="nav-user">Hi, {{ request.session.get("user_name", "User") }}</span>
       {% if not request.session.get("admin") and request.session.get("user_role") != "admin" %}
@@ -105,12 +108,8 @@
       {% endif %}
       <a href="/logout">Logout</a>
       {% else %}
-      <a href="/login">Login</a>
-      <a href="/signup">Sign up</a>
+      <a href="/login" class="nav-pill-btn">Log in / Sign up</a>
       {% endif %}
-      <button id="themeToggle" class="theme-toggle" type="button">
-        Dark
-      </button>
     </div>
   </nav>
 

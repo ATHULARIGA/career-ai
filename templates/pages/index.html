@@ -5,70 +5,80 @@
 
 {% block content %}
 
-<!-- HERO SECTION WITH ENGINEERING GRID & MOVING COMPONENTS -->
+<!-- HERO SECTION WITH TWO-COLUMN ENGINEERING GRID -->
 <div class="hero">
     <!-- Moving Ambient Orbs -->
     <div class="hero-orb orb-a"></div>
     <div class="hero-orb orb-b"></div>
     <div class="hero-orb orb-c"></div>
 
-    <div class="badge">• CAREER INTELLIGENCE PLATFORM</div>
+    <div class="hero-inner">
+        <!-- Left Column: Copy & Actions -->
+        <div class="hero-content">
+            <div class="badge">• CAREER INTELLIGENCE PLATFORM</div>
 
-    {% if auth_notice %}
-    <div class="auth-notice-banner">
-        Please sign in or create an account to access this page.
-    </div>
-    {% endif %}
-
-    <h1>
-        Land your dream job <br>
-        <span>with AI precision.</span>
-    </h1>
-
-    <p>
-        The all-in-one AI career suite to optimize your resume for ATS, <br>
-        ace realistic mock interviews, and master tailored career roadmaps.
-    </p>
-
-    <div class="buttons">
-        <a href="/resume" class="btn-primary">Start for Free →</a>
-        <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
-    </div>
-
-    <!-- Moving Floating Resume Card with Circular Gauge -->
-    <div class="float-card resume-card">
-        <div class="float-card-top">
-            <span class="float-card-title">Resume Score</span>
-            <span class="check-icon-green" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="#10b981"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            </span>
-        </div>
-        <div class="float-card-body">
-            <div class="score-ring-wrap">
-                <svg width="44" height="44" viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                    <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                    <text x="18" y="20.35" class="percentage">92%</text>
-                </svg>
+            {% if auth_notice %}
+            <div class="auth-notice-banner">
+                Please sign in or create an account to access this page.
             </div>
-            <div class="score-details">
-                <span class="ats-label">ATS Match: 92%</span>
-                <div class="progress">
-                    <div class="bar"></div>
+            {% endif %}
+
+            <h1>
+                Land your dream job <br>
+                <span>with AI precision.</span>
+            </h1>
+
+            <p>
+                The all-in-one AI career suite to optimize your resume for ATS, <br>
+                ace realistic mock interviews, and master tailored career roadmaps.
+            </p>
+
+            <div class="buttons">
+                <a href="/resume" class="btn-primary">Start for Free →</a>
+                <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
+            </div>
+        </div>
+
+        <!-- Right Column: Dedicated Visual Frame -->
+        <div class="hero-visual" aria-hidden="true">
+            <div class="hero-visual-frame">
+                <!-- Floating Resume Card with Circular Gauge -->
+                <div class="float-card resume-card">
+                    <div class="float-card-top">
+                        <span class="float-card-title">Resume Score</span>
+                        <span class="check-icon-green">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="#10b981"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        </span>
+                    </div>
+                    <div class="float-card-body">
+                        <div class="score-ring-wrap">
+                            <svg width="44" height="44" viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <text x="18" y="20.35" class="percentage">92%</text>
+                            </svg>
+                        </div>
+                        <div class="score-details">
+                            <span class="ats-label">ATS Match: 92%</span>
+                            <div class="progress">
+                                <div class="bar"></div>
+                            </div>
+                            <span class="score">9.2 / 10</span>
+                        </div>
+                    </div>
                 </div>
-                <span class="score">9.2 / 10</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- Moving Floating Mock Interview Card -->
-    <div class="float-card interview-card">
-        <div class="float-card-body">
-            <div class="icon-sq-ai">AI</div>
-            <div>
-                <div class="float-card-title">Mock Interview</div>
-                <div class="status-ready"><span class="dot-green"></span> Feedback Ready</div>
-                <div class="tag-success">Strong Technical Depth</div>
+                <!-- Floating Mock Interview Card -->
+                <div class="float-card interview-card">
+                    <div class="float-card-body">
+                        <div class="icon-sq-ai">AI</div>
+                        <div>
+                            <div class="float-card-title">Mock Interview</div>
+                            <div class="status-ready"><span class="dot-green"></span> Feedback Ready</div>
+                            <div class="tag-success">Strong Technical Depth</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -97,61 +107,73 @@
 </div>
 
 <!-- CORE CAPABILITIES (BENTO GRID LAYOUT) -->
+<!-- CORE CAPABILITIES (5-CARD GRID MATCHING MOCKUP) -->
 <div class="content-container">
-    <div class="section-heading reveal-on-scroll">
-        <h2>Everything you need to land your next role</h2>
-        <p>AI precision tools designed for each step of your application journey.</p>
+    <div class="capabilities-heading-wrap reveal-on-scroll">
+        <div class="eyebrow-purple">A MORE PREPARED YOU</div>
+        <h2>Everything you need to land your next role.</h2>
+        <p>Practical, personal tools for every stage of your application journey.</p>
     </div>
 
-    <div class="bento-grid reveal-on-scroll">
-        <!-- Tall Left Column: Resume Review -->
-        <a href="/resume" class="bento-card-tall">
+    <!-- Row 1: 3 Cards -->
+    <div class="capabilities-grid-3 reveal-on-scroll">
+        <a href="/resume" class="clean-card">
             <div>
                 <div class="card-icon-box icon-indigo">
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <h3>Resume Review & ATS Scoring</h3>
-                <p>Instant ATS scan, keyword matching, and recruiter-focused bullet rewrites tailored to your target job descriptions.</p>
+                <h3>Resume Review</h3>
+                <p>Get precise ATS feedback, keyword matches, and recruiter-focused rewrites.</p>
             </div>
             <span class="card-action">Audit your resume →</span>
         </a>
 
-        <!-- Right Column Top: Featured Dark Mock Interviews Card -->
-        <a href="/interview/new" class="bento-card-featured">
+        <a href="/interview/new" class="clean-card">
             <div>
-                <div class="card-icon-box">
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <div class="card-icon-box icon-emerald">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                 </div>
-                <h3>AI Mock Interviews</h3>
-                <p>Simulate realistic behavioral & technical interview rounds with instantaneous AI evaluation, actionable feedback, and depth rubrics.</p>
+                <h3>Mock Interviews</h3>
+                <p>Rehearse realistic behavioral and technical interviews with useful feedback.</p>
             </div>
-            <span class="card-action">Start practice round →</span>
+            <span class="card-action">Start a practice round →</span>
         </a>
 
-        <!-- Right Column Bottom: 2 Small Cards -->
-        <div class="bento-subgrid">
-            <a href="/career-map" class="bento-card-small">
-                <div>
-                    <div class="card-icon-box icon-purple">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                    </div>
-                    <h3>Career Roadmap</h3>
-                    <p>Interactive Obsidian-style canvas mapping your target milestones & skills.</p>
+        <a href="/career-map" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-purple">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 </div>
-                <span class="card-action">Build roadmap →</span>
-            </a>
+                <h3>Career Roadmaps</h3>
+                <p>Map the skills and milestones that move you toward your target role.</p>
+            </div>
+            <span class="card-action">Build your roadmap →</span>
+        </a>
+    </div>
 
-            <a href="/coding/problems" class="bento-card-small">
-                <div>
-                    <div class="card-icon-box icon-blue">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                    </div>
-                    <h3>Coding Practice</h3>
-                    <p>Hands-on coding challenges with multi-language in-browser execution.</p>
+    <!-- Row 2: 2 Cards -->
+    <div class="capabilities-grid-2 reveal-on-scroll">
+        <a href="/coding/problems" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-blue">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                 </div>
-                <span class="card-action">Solve challenges →</span>
-            </a>
-        </div>
+                <h3>Coding Practice</h3>
+                <p>Build confidence with hands-on challenges across interview-ready languages.</p>
+            </div>
+            <span class="card-action">Solve a challenge →</span>
+        </a>
+
+        <a href="/book-call" class="clean-card">
+            <div>
+                <div class="card-icon-box icon-amber">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
+                <h3>Mentorship</h3>
+                <p>Get thoughtful guidance to make your next career move with more clarity.</p>
+            </div>
+            <span class="card-action">Find your direction →</span>
+        </a>
     </div>
 
     <!-- FEATURE DEEP-DIVE & KEYWORD ALIGNMENT (REVEAL ON SCROLL) -->
@@ -217,10 +239,10 @@
 
                 <div class="timeline-step">
                     <div class="timeline-node" aria-hidden="true"></div>
-                    <div class="timeline-card accent-dark">
-                        <div class="step-tag">STEP 03</div>
-                        <h3>Ace the Offer</h3>
-                        <p>Track your milestone progress and interview with data-backed confidence.</p>
+                    <div class="timeline-card">
+                        <div class="step-tag-purple">STEP 03</div>
+                        <h3>Make your move</h3>
+                        <p>Track your milestones and approach every application with greater confidence.</p>
                     </div>
                 </div>
             </div>
@@ -286,11 +308,12 @@
         </div>
     </div>
 
-    <!-- CLEAN CTA BANNER (DOT MATRIX TEXTURED) -->
+    <!-- CLEAN CTA BANNER (MATCHING MOCKUP) -->
     <div class="clean-banner reveal-on-scroll">
-        <h2>Ready to accelerate your career?</h2>
-        <p>Join candidates using ResuMate to prepare faster, interview better, and land top roles.</p>
-        <a href="/signup" class="clean-banner-btn">Get Started for Free →</a>
+        <div class="banner-eyebrow">YOUR NEXT CHAPTER STARTS HERE</div>
+        <h2>Ready to move your career forward?</h2>
+        <p>Join candidates preparing with purpose: stronger applications, better practice, and clearer next steps.</p>
+        <a href="/signup" class="clean-banner-btn">Get started for free →</a>
     </div>
 </div>
 
