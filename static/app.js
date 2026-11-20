@@ -31,6 +31,32 @@
       });
     }
 
+    const mobileToggle = document.getElementById("mobileMenuToggle");
+    const navLinks = document.getElementById("navLinks");
+    if (mobileToggle && navLinks) {
+      mobileToggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const isOpen = navLinks.classList.toggle("mobile-open");
+        mobileToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+
+      navLinks.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          navLinks.classList.remove("mobile-open");
+          mobileToggle.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      document.addEventListener("click", function (e) {
+        if (!navLinks.contains(e.target) && !mobileToggle.contains(e.target)) {
+          if (navLinks.classList.contains("mobile-open")) {
+            navLinks.classList.remove("mobile-open");
+            mobileToggle.setAttribute("aria-expanded", "false");
+          }
+        }
+      });
+    }
+
     const items = document.querySelectorAll(".reveal-on-scroll");
     if (items.length > 0) {
       if (!("IntersectionObserver" in window)) {
