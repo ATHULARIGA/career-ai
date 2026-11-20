@@ -784,7 +784,13 @@ Prep Checklist:
 @router.post("/mindmap")
 async def create_mindmap(request: Request, role: str = Form(...)):
     start = time.time()
-    if not is_premium_user(request):
+    clean_role = (role or "").strip()
+
+    # Pre-curated tracks cost 0 AI tokens and are free to explore without limit
+    curated_keywords = ["python", "react", "frontend", "data scientist", "data science", "devops", "cloud architect"]
+    is_curated = any(k in clean_role.lower() for k in curated_keywords)
+
+    if not is_premium_user(request) and not is_curated:
         day_key = time.strftime("%Y-%m-%d")
         used_day = request.session.get("roadmap_day")
         used_count = int(request.session.get("roadmap_count", 0) or 0)
@@ -793,7 +799,7 @@ async def create_mindmap(request: Request, role: str = Form(...)):
             used_count = 0
         if used_count >= 1:
             return JSONResponse(
-                content={"error": "Free plan allows 1 roadmap/day. Upgrade for unlimited roadmaps.", "premium_required": True},
+                content={"error": "Free plan allows 1 custom AI roadmap/day. Upgrade for unlimited roadmaps.", "premium_required": True},
                 status_code=403,
             )
         request.session["roadmap_day"] = used_day

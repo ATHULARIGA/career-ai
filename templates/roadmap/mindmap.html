@@ -219,14 +219,103 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  pointer-events: none;
-  opacity: 0.5;
+  padding: 24px;
+  z-index: 2;
 }
-.welcome-msg p {
-  font-size: 0.95rem;
+.welcome-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.theme-dark .welcome-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+.welcome-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+.theme-dark .welcome-title {
+  color: #f8fafc;
+}
+.welcome-subtitle {
+  font-size: 0.92rem;
   font-weight: 500;
+  color: #64748b;
+  margin: 0 0 20px;
+  max-width: 440px;
+  line-height: 1.5;
+}
+.theme-dark .welcome-subtitle {
+  color: #94a3b8;
+}
+.welcome-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 600px;
+}
+.welcome-pill-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.theme-dark .welcome-pill-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+.welcome-pill-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+.theme-dark .welcome-pill-btn:hover {
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+.rr-mindmap-search-row {
+  grid-template-columns: 1fr auto;
+  align-items: flex-end;
+  gap: 14px;
+}
+.rr-submit-gen {
+  white-space: nowrap;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.panel-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--ui-text-muted);
-  margin-top: 10px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.is-hidden {
+  display: none;
 }
 
 /* Status text */
@@ -281,31 +370,30 @@ input:-webkit-autofill:focus {
 
     <!-- Search / Generation Card matching standard ResuMate forms -->
     <div class="rr-form">
-      <div class="rr-grid-2" style="grid-template-columns: 1fr auto; align-items: flex-end; gap: 14px;">
+      <div class="rr-grid-2 rr-mindmap-search-row">
         <div class="rr-field">
           <label for="role-query">Target Role or Specialization</label>
           <input
             type="text"
             id="role-query"
             name="role"
-            placeholder="e.g. Python Developer, Full Stack Developer, Data Scientist..."
-            value="{{ (memory.target_role if memory else '') or 'Python Developer' }}"
+            placeholder="e.g. Full Stack Developer, Data Scientist, Cloud Architect..."
+            value="{{ memory.target_role if memory else '' }}"
             onkeydown="if(event.key==='Enter') startGeneration()"
           >
         </div>
         <button
           type="button"
-          class="rr-submit"
+          class="rr-submit rr-submit-gen"
           id="gen-trigger"
           onclick="startGeneration()"
-          style="white-space: nowrap; height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"
         >
           <span>Generate Roadmap</span>
           <span aria-hidden="true">→</span>
         </button>
       </div>
 
-      <div id="gen-status-container" style="display: none;">
+      <div id="gen-status-container" class="is-hidden">
         <span class="rm-status-badge success" id="gen-status"></span>
       </div>
     </div>
@@ -313,10 +401,19 @@ input:-webkit-autofill:focus {
     <!-- Interactive Canvas Viewport -->
     <div class="rm-viewport-wrap" id="viewport">
       <div class="welcome-msg" id="welcome">
-        <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-        </svg>
-        <p>Enter a role above and click Generate Roadmap to build your skill tree.</p>
+        <div class="welcome-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <div class="welcome-title">Interactive Skill Graph Canvas</div>
+        <div class="welcome-subtitle">Type any target role above and click Generate Roadmap, or pick a track below:</div>
+        <div class="welcome-pills">
+          <button type="button" class="welcome-pill-btn" onclick="selectRole('Python Developer')">Python Developer</button>
+          <button type="button" class="welcome-pill-btn" onclick="selectRole('React Frontend Engineer')">React Frontend Engineer</button>
+          <button type="button" class="welcome-pill-btn" onclick="selectRole('Data Scientist')">Data Scientist</button>
+          <button type="button" class="welcome-pill-btn" onclick="selectRole('DevOps Engineer')">DevOps Engineer</button>
+        </div>
       </div>
 
       <svg id="rm-svg"></svg>
@@ -325,7 +422,7 @@ input:-webkit-autofill:focus {
       <div class="skill-panel" id="skill-panel">
         <button
           onclick="document.getElementById('skill-panel').style.display='none'"
-          style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--ui-text-muted);font-size:1.1rem;line-height:1;"
+          class="panel-close-btn"
           aria-label="Close"
         >&times;</button>
         <div class="skill-panel-label">Learning Track</div>
@@ -357,15 +454,25 @@ input:-webkit-autofill:focus {
   const width = viewport.clientWidth || 1120;
   const height = 660;
 
+  window.selectRole = function(role) {
+    const input = document.getElementById('role-query');
+    if (input) {
+      input.value = role;
+      startGeneration();
+    }
+  };
+
   function init() {
     svg = d3.select("#rm-svg");
     g = svg.append("g");
     zoom = d3.zoom().scaleExtent([0.2, 3]).on("zoom", (e) => g.attr("transform", e.transform));
     svg.call(zoom);
 
-    // Auto-generate if prefilled
-    const initialRole = document.getElementById('role-query').value.trim();
-    if (initialRole) {
+    // Auto-generate ONLY if an explicit query parameter was provided in the URL (e.g. /career-map?role=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    if (roleParam) {
+      document.getElementById('role-query').value = roleParam;
       setTimeout(() => startGeneration(), 200);
     }
   }
