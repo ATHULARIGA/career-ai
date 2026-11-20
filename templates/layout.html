@@ -5,21 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>{% block title %}ResuMate | AI Career Coach & Smart ATS Resume Optimizer{% endblock %}</title>
-  <meta name="description" content="{% block meta_desc %}AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.{% endblock %}">
-  <meta name="keywords" content="AI Career Coach, Resume Analyzer, ATS Optimizer, Mock Interview Simulator, Career Roadmap, Coding Interview Practice">
+  <title>{% block title %}ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}AI-powered career suite for ATS resume optimization, realistic mock interviews, system design prep, coding practice, and personalized career roadmaps.{% endblock %}">
+  <meta name="keywords" content="AI Career Coach, Resume Analyzer, ATS Optimizer, Mock Interview Simulator, Career Roadmap, Coding Interview Practice, System Design Prep">
   <link rel="canonical" href="{% block canonical %}https://career-ai-psi-dun.vercel.app{{ request.url.path }}{% endblock %}">
   
   <meta property="og:type" content="website">
-  <meta property="og:title" content="{% block og_title %}ResuMate | AI Career Coach & Smart ATS Resume Optimizer{% endblock %}">
-  <meta property="og:description" content="{% block og_desc %}AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap{% endblock %}">
+  <meta property="og:description" content="{% block og_desc %}AI-powered career suite for ATS resume optimization, realistic mock interviews, system design prep, coding practice, and personalized career roadmaps.{% endblock %}">
   <meta property="og:url" content="https://career-ai-psi-dun.vercel.app{{ request.url.path }}">
   <meta property="og:site_name" content="ResuMate">
   <meta property="og:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
   
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ResuMate | AI Career Coach & Smart ATS Resume Optimizer">
-  <meta name="twitter:description" content="Audit resumes for ATS compliance, practice realistic mock interviews, and build personalized skill roadmaps.">
+  <meta name="twitter:title" content="ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap">
+  <meta name="twitter:description" content="AI-powered career suite for ATS resume optimization, realistic mock interviews, system design prep, coding practice, and personalized career roadmaps.">
   <meta name="twitter:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
 
   <meta name="google-site-verification" content="google0159a71a230a2359">
@@ -52,7 +52,7 @@
         "operatingSystem": "All",
         "applicationCategory": "BusinessApplication",
         "url": "https://career-ai-psi-dun.vercel.app/",
-        "description": "AI-powered career suite to audit resumes for ATS, practice realistic mock interviews, and build personalized skill roadmaps.",
+        "description": "AI-powered career suite for ATS resume optimization, realistic mock interviews, system design prep, coding practice, and personalized career roadmaps.",
         "publisher": {
           "@id": "https://career-ai-psi-dun.vercel.app/#organization"
         },
@@ -66,6 +66,8 @@
   }
   </script>
   <link rel="preload" as="image" href="/static/hero-bg.webp" type="image/webp" fetchpriority="high">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -73,7 +75,7 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
   </noscript>
-  <link rel="stylesheet" href="/static/styles.min.css?v=18">
+  <link rel="stylesheet" href="/static/styles.min.css?v=20">
   <script defer src="/static/clarity.js"></script>
   {% block extra_head %}{% endblock %}
 </head>
@@ -118,14 +120,20 @@
   </main>
 
   <footer class="app-footer">
-    <div class="app-footer-links">
-      <a href="/privacy">Privacy Policy</a>
-      <span class="app-footer-dot">•</span>
-      <a href="/terms">Terms of Service</a>
-      <span class="app-footer-dot">•</span>
-      <a href="/sitemap">Site Map</a>
-      <span class="app-footer-dot">•</span>
-      <a href="/healthz">System Health</a>
+    <div class="app-footer-inner">
+      <a class="footer-logo" href="/">
+        <div class="logo-box" aria-hidden="true">R</div>
+        <span>ResuMate</span>
+      </a>
+      <div class="app-footer-links">
+        <a href="/privacy">Privacy Policy</a>
+        <span class="app-footer-dot">•</span>
+        <a href="/terms">Terms of Service</a>
+        <span class="app-footer-dot">•</span>
+        <a href="/sitemap">Site Map</a>
+        <span class="app-footer-dot">•</span>
+        <a href="/healthz">System Health</a>
+      </div>
     </div>
   </footer>
 

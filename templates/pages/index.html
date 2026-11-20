@@ -1,265 +1,21 @@
 {% extends "layout.html" %}
 
-{% block extra_head %}
-<style>
-  /* Simplified Content Section */
-  .content-container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 70px 24px 90px;
-  }
-
-  .section-heading {
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto 48px;
-  }
-
-  .section-heading h2 {
-    font-size: 2.1rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #0f172a;
-    margin: 0 0 10px;
-  }
-
-  .theme-dark .section-heading h2 {
-    color: #f8fafc;
-  }
-
-  .section-heading p {
-    color: #334155;
-    font-size: 1.05rem;
-    margin: 0;
-  }
-
-  .theme-dark .section-heading p {
-    color: #cbd5e1;
-  }
-
-  /* 4 Core Pillars Grid */
-  .clean-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 22px;
-  }
-
-  .clean-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 28px 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
-  }
-
-  .theme-dark .clean-card {
-    background: #111827;
-    border-color: #1f2937;
-  }
-
-  .clean-card:hover {
-    transform: translateY(-4px);
-    border-color: #cbd5e1;
-    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.06);
-  }
-
-  .theme-dark .clean-card:hover {
-    border-color: #374151;
-    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.35);
-  }
-
-  .card-icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-  }
-
-  .icon-indigo { background: #eef2ff; color: #4f46e5; }
-  .icon-emerald { background: #ecfdf5; color: #059669; }
-  .icon-purple { background: #f3e8ff; color: #7c3aed; }
-  .icon-blue { background: #eff6ff; color: #2563eb; }
-
-  .theme-dark .icon-indigo { background: rgba(79, 70, 229, 0.15); color: #818cf8; }
-  .theme-dark .icon-emerald { background: rgba(5, 150, 105, 0.15); color: #34d399; }
-  .theme-dark .icon-purple { background: rgba(124, 58, 237, 0.15); color: #c084fc; }
-  .theme-dark .icon-blue { background: rgba(37, 99, 235, 0.15); color: #60a5fa; }
-
-  .clean-card h3 {
-    font-size: 1.18rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 8px;
-    letter-spacing: -0.01em;
-  }
-
-  .theme-dark .clean-card h3 {
-    color: #f8fafc;
-  }
-
-  .clean-card p {
-    font-size: 1rem;
-    color: #334155;
-    line-height: 1.55;
-    margin: 0 0 20px;
-  }
-
-  .theme-dark .clean-card p {
-    color: #cbd5e1;
-  }
-
-  .card-action {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1e3a8a;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .theme-dark .card-action {
-    color: #93c5fd;
-  }
-
-  /* 3-Step Process Row */
-  .process-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-  }
-
-  .process-step {
-    padding: 24px 22px;
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-  }
-
-  .theme-dark .process-step {
-    background: #111827;
-    border-color: #1f2937;
-  }
-
-  .step-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #4338ca;
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
-  }
-
-  .theme-dark .step-tag {
-    color: #a5b4fc;
-  }
-
-  .process-step h3,
-  .process-step h4 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 6px;
-  }
-
-  .theme-dark .process-step h3,
-  .theme-dark .process-step h4 {
-    color: #f8fafc;
-  }
-
-  .process-step p {
-    font-size: 1rem;
-    color: #334155;
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  .theme-dark .process-step p {
-    color: #cbd5e1;
-  }
-
-  /* Sleek Modern Banner */
-  .clean-banner {
-    background: #0f172a;
-    border-radius: 20px;
-    padding: 48px 32px;
-    text-align: center;
-    color: #ffffff;
-    margin-top: 60px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .theme-dark .clean-banner {
-    background: #111827;
-    border: 1px solid #1f2937;
-  }
-
-  .clean-banner h2,
-  .clean-banner h3 {
-    font-size: 1.85rem;
-    font-weight: 800;
-    margin: 0 0 10px;
-    letter-spacing: -0.02em;
-  }
-
-  .clean-banner p {
-    color: #cbd5e1;
-    font-size: 1rem;
-    max-width: 520px;
-    margin: 0 auto 28px;
-    line-height: 1.55;
-  }
-
-  .clean-banner-btn {
-    display: inline-flex;
-    align-items: center;
-    background: #ffffff;
-    color: #0f172a;
-    padding: 12px 24px;
-    border-radius: 9px;
-    font-weight: 700;
-    text-decoration: none;
-    font-size: 1rem;
-    transition: transform 0.15s, background 0.15s;
-  }
-
-  .clean-banner-btn:hover {
-    transform: translateY(-1px);
-    background: #f1f5f9;
-  }
-
-  @media (max-width: 1024px) {
-    .float-card {
-      display: none;
-    }
-  }
-</style>
-{% endblock %}
+{% block title %}ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap{% endblock %}
+{% block meta_desc %}Optimize your resume with ATS keyword alignment, practice realistic AI mock interviews, build your career roadmap, and master system design prep and coding practice with ResuMate.{% endblock %}
 
 {% block content %}
 
-<!-- HERO SECTION WITH MOVING COMPONENTS -->
+<!-- HERO SECTION WITH ENGINEERING GRID & MOVING COMPONENTS -->
 <div class="hero">
     <!-- Moving Ambient Orbs -->
     <div class="hero-orb orb-a"></div>
     <div class="hero-orb orb-b"></div>
     <div class="hero-orb orb-c"></div>
 
-    <div class="badge">Career Intelligence Platform</div>
+    <div class="badge">• CAREER INTELLIGENCE PLATFORM</div>
 
     {% if auth_notice %}
-    <div style="margin: 0 auto 20px; max-width: 520px; background: rgba(245, 158, 11, 0.1); color: #92400e; border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 12px 16px; font-weight: 600; font-size: 1rem;">
+    <div class="auth-notice-banner">
         Please sign in or create an account to access this page.
     </div>
     {% endif %}
@@ -279,132 +35,258 @@
         <a href="/career-map" class="btn-secondary">Explore Career Roadmap</a>
     </div>
 
-    <!-- Moving Floating Resume Card -->
+    <!-- Moving Floating Resume Card with Circular Gauge -->
     <div class="float-card resume-card">
-        <div class="icon green" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">92%</div>
-        <div>
-            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Resume Score</div>
-            <p>ATS Match: 92%</p>
-            <div class="progress">
-                <div class="bar"></div>
+        <div class="float-card-top">
+            <span class="float-card-title">Resume Score</span>
+            <span class="check-icon-green" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="#10b981"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            </span>
+        </div>
+        <div class="float-card-body">
+            <div class="score-ring-wrap">
+                <svg width="44" height="44" viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <text x="18" y="20.35" class="percentage">92%</text>
+                </svg>
             </div>
-            <span class="score">9.2 / 10</span>
+            <div class="score-details">
+                <span class="ats-label">ATS Match: 92%</span>
+                <div class="progress">
+                    <div class="bar"></div>
+                </div>
+                <span class="score">9.2 / 10</span>
+            </div>
         </div>
     </div>
 
     <!-- Moving Floating Mock Interview Card -->
     <div class="float-card interview-card">
-        <div class="icon purple" style="font-size: 0.75rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace;">AI</div>
-        <div>
-            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #0f172a;">Mock Interview</div>
-            <p>Feedback Ready</p>
-            <div class="float-highlight" style="margin-top: 6px; font-size: 0.76rem;">
-                Strong Technical Depth
+        <div class="float-card-body">
+            <div class="icon-sq-ai">AI</div>
+            <div>
+                <div class="float-card-title">Mock Interview</div>
+                <div class="status-ready"><span class="dot-green"></span> Feedback Ready</div>
+                <div class="tag-success">Strong Technical Depth</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MOVING CONTINUOUS SKILL TICKER -->
+<!-- MOVING CONTINUOUS SKILL TICKER WITH TECH SEPARATORS -->
 <div class="skill-ticker" aria-hidden="true">
     <div class="skill-track">
-        <span>Resume Optimization</span>
-        <span>ATS Keyword Alignment</span>
-        <span>AI Mock Interviews</span>
-        <span>Career Roadmapping</span>
-        <span>Coding Practice</span>
-        <span>System Design Prep</span>
-        <span>Behavioral Feedback</span>
-        <span>Skill Gap Analysis</span>
-        <span>Resume Optimization</span>
-        <span>ATS Keyword Alignment</span>
-        <span>AI Mock Interviews</span>
-        <span>Career Roadmapping</span>
-        <span>Coding Practice</span>
-        <span>System Design Prep</span>
+        <span>CODING PRACTICE</span><span class="ticker-plus">+</span>
+        <span>SYSTEM DESIGN PREP</span><span class="ticker-plus">+</span>
+        <span>BEHAVIORAL FEEDBACK</span><span class="ticker-plus">+</span>
+        <span>SKILL GAP ANALYSIS</span><span class="ticker-plus">+</span>
+        <span>RESUME OPTIMIZATION</span><span class="ticker-plus">+</span>
+        <span>ATS KEYWORD ALIGNMENT</span><span class="ticker-plus">+</span>
+        <span>AI MOCK INTERVIEWS</span><span class="ticker-plus">+</span>
+        <span>CAREER ROADMAPPING</span><span class="ticker-plus">+</span>
+        <span>CODING PRACTICE</span><span class="ticker-plus">+</span>
+        <span>SYSTEM DESIGN PREP</span><span class="ticker-plus">+</span>
+        <span>BEHAVIORAL FEEDBACK</span><span class="ticker-plus">+</span>
+        <span>SKILL GAP ANALYSIS</span><span class="ticker-plus">+</span>
+        <span>RESUME OPTIMIZATION</span><span class="ticker-plus">+</span>
+        <span>ATS KEYWORD ALIGNMENT</span><span class="ticker-plus">+</span>
+        <span>AI MOCK INTERVIEWS</span><span class="ticker-plus">+</span>
+        <span>CAREER ROADMAPPING</span>
     </div>
 </div>
 
-<!-- CORE CAPABILITIES (REVEAL ON SCROLL) -->
+<!-- CORE CAPABILITIES (BENTO GRID LAYOUT) -->
 <div class="content-container">
     <div class="section-heading reveal-on-scroll">
         <h2>Everything you need to land your next role</h2>
         <p>AI precision tools designed for each step of your application journey.</p>
     </div>
 
-    <div class="clean-grid reveal-on-scroll">
-        <a href="/resume" class="clean-card">
+    <div class="bento-grid reveal-on-scroll">
+        <!-- Tall Left Column: Resume Review -->
+        <a href="/resume" class="bento-card-tall">
             <div>
                 <div class="card-icon-box icon-indigo">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <h3>Resume Review</h3>
-                <p>Instant ATS scan, keyword matching, and recruiter-focused bullet rewrites.</p>
+                <h3>Resume Review & ATS Scoring</h3>
+                <p>Instant ATS scan, keyword matching, and recruiter-focused bullet rewrites tailored to your target job descriptions.</p>
             </div>
             <span class="card-action">Audit your resume →</span>
         </a>
 
-        <a href="/interview/new" class="clean-card">
+        <!-- Right Column Top: Featured Dark Mock Interviews Card -->
+        <a href="/interview/new" class="bento-card-featured">
             <div>
-                <div class="card-icon-box icon-emerald">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <div class="card-icon-box">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                 </div>
-                <h3>Mock Interviews</h3>
-                <p>Simulate realistic behavioral & technical interview rounds with instant feedback.</p>
+                <h3>AI Mock Interviews</h3>
+                <p>Simulate realistic behavioral & technical interview rounds with instantaneous AI evaluation, actionable feedback, and depth rubrics.</p>
             </div>
             <span class="card-action">Start practice round →</span>
         </a>
 
-        <a href="/career-map" class="clean-card">
-            <div>
-                <div class="card-icon-box icon-purple">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        <!-- Right Column Bottom: 2 Small Cards -->
+        <div class="bento-subgrid">
+            <a href="/career-map" class="bento-card-small">
+                <div>
+                    <div class="card-icon-box icon-purple">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    </div>
+                    <h3>Career Roadmap</h3>
+                    <p>Interactive Obsidian-style canvas mapping your target milestones & skills.</p>
                 </div>
-                <h3>Career Roadmap</h3>
-                <p>Interactive Obsidian-style canvas mapping your target milestones & skills.</p>
-            </div>
-            <span class="card-action">Build roadmap →</span>
-        </a>
+                <span class="card-action">Build roadmap →</span>
+            </a>
 
-        <a href="/coding/problems" class="clean-card">
-            <div>
+            <a href="/coding/problems" class="bento-card-small">
+                <div>
+                    <div class="card-icon-box icon-blue">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                    <h3>Coding Practice</h3>
+                    <p>Hands-on coding challenges with multi-language in-browser execution.</p>
+                </div>
+                <span class="card-action">Solve challenges →</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- FEATURE DEEP-DIVE & KEYWORD ALIGNMENT (REVEAL ON SCROLL) -->
+    <div class="feature-deep-dive reveal-on-scroll">
+        <div class="section-heading section-heading-bottom">
+            <h2>Engineered for every stage of your career journey</h2>
+            <p>Bridge skill gaps with AI mock interviews, ATS keyword alignment, and system design prep.</p>
+        </div>
+
+        <div class="feature-grid-3">
+            <div class="feature-card-detailed">
+                <div class="card-icon-box icon-indigo">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <h3>ATS Keyword Alignment</h3>
+                <p>Ensure your resume passes corporate Applicant Tracking Systems with precision keyword matching, formatting compliance, and impact-driven bullet point rewrites tailored to job descriptions.</p>
+            </div>
+
+            <div class="feature-card-detailed">
+                <div class="card-icon-box icon-emerald">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <h3>AI Mock Interviews</h3>
+                <p>Practice realistic behavioral and technical interview questions with instantaneous AI evaluation, actionable answer critiques, and detailed scoring across clarity, competence, and depth.</p>
+            </div>
+
+            <div class="feature-card-detailed">
                 <div class="card-icon-box icon-blue">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                 </div>
-                <h3>Coding Practice</h3>
-                <p>Hands-on coding challenges with multi-language in-browser execution.</p>
-            </div>
-            <span class="card-action">Solve challenges →</span>
-        </a>
-    </div>
-
-    <!-- HOW IT WORKS (REVEAL ON SCROLL) -->
-    <div style="margin-top: 70px;" class="reveal-on-scroll">
-        <div class="section-heading" style="margin-bottom: 34px;">
-            <h2>How it works</h2>
-            <p>A proven, structured approach to interview preparation.</p>
-        </div>
-
-        <div class="process-row">
-            <div class="process-step">
-                <div class="step-tag">STEP 01</div>
-                <h3>Set Target Role</h3>
-                <p>Upload your current resume or choose the exact role you're targeting.</p>
-            </div>
-            <div class="process-step">
-                <div class="step-tag">STEP 02</div>
-                <h3>Analyze & Practice</h3>
-                <p>Fix ATS gaps, simulate live interviews, and sharpen your technical skills.</p>
-            </div>
-            <div class="process-step">
-                <div class="step-tag">STEP 03</div>
-                <h3>Ace the Offer</h3>
-                <p>Track your milestone progress and interview with data-backed confidence.</p>
+                <h3>System Design Prep & Coding Practice</h3>
+                <p>Tackle algorithmic challenges and scalable architecture patterns with built-in sandbox execution across Python, JavaScript, Java, and C++ to ace high-bar engineering interviews.</p>
             </div>
         </div>
     </div>
 
-    <!-- CLEAN CTA BANNER (REVEAL ON SCROLL) -->
+    <!-- HOW IT WORKS: SPLIT-SCREEN CONNECTED TIMELINE (REVEAL ON SCROLL) -->
+    <div class="section-spacer-top reveal-on-scroll">
+        <div class="how-it-works-split">
+            <div class="how-heading-col">
+                <h2>How it works</h2>
+                <p>A proven, structured approach to interview preparation and offer mastery.</p>
+            </div>
+
+            <div class="timeline-track">
+                <div class="timeline-step">
+                    <div class="timeline-node" aria-hidden="true"></div>
+                    <div class="timeline-card">
+                        <div class="step-tag">STEP 01</div>
+                        <h3>Set Target Role & Audit Gaps</h3>
+                        <p>Upload your resume to instantly calculate your ATS compatibility score, detect missing industry keywords, and receive recruiter-grade bullet enhancements.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-node" aria-hidden="true"></div>
+                    <div class="timeline-card">
+                        <div class="step-tag">STEP 02</div>
+                        <h3>Analyze & Practice</h3>
+                        <p>Simulate challenging technical rounds and behavioral STAR interviews. Sharpen algorithmic problem-solving with in-browser multi-language execution.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-node" aria-hidden="true"></div>
+                    <div class="timeline-card accent-dark">
+                        <div class="step-tag">STEP 03</div>
+                        <h3>Ace the Offer</h3>
+                        <p>Track your milestone progress and interview with data-backed confidence.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FREQUENTLY ASKED QUESTIONS (REVEAL ON SCROLL) -->
+    <div class="faq-section reveal-on-scroll">
+        <div class="section-heading section-heading-bottom">
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about preparing with ResuMate.</p>
+        </div>
+
+        <div class="faq-list">
+            <details class="faq-item">
+                <summary class="faq-question">How does ResuMate improve ATS keyword alignment for my resume?</summary>
+                <div class="faq-answer">
+                    ResuMate parses your resume using industry-standard ATS extraction models, comparing your skills, experience bullets, and terminology against actual target job postings. It highlights missing critical keywords, flags parsing blockers like tables or unsupported fonts, and provides quantified scores and one-click bullet point enhancements.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">What kind of AI mock interviews can I practice?</summary>
+                <div class="faq-answer">
+                    You can simulate realistic technical interview rounds, behavioral STAR-method scenarios, system design interviews, and role-specific domain assessments. Each session provides real-time follow-up questions and delivers an objective performance rubric evaluating technical accuracy, communication structure, and confidence.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">How do the personalized career roadmaps work?</summary>
+                <div class="faq-answer">
+                    Our dynamic career roadmapping tool maps your existing technical background against your target milestone role (such as Senior Backend Engineer, Staff AI Specialist, or Engineering Manager). It produces an interactive graph outlining must-have competencies, recommended study materials, and actionable interview milestones.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">What languages are supported in the hands-on coding practice?</summary>
+                <div class="faq-answer">
+                    The interactive coding environment supports major software engineering languages including Python, JavaScript, TypeScript, Java, and C++. You can run test cases directly in your browser, analyze edge cases, and inspect algorithmic time and space complexity with automated feedback.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">Can I use ResuMate for both software engineering and non-engineering tech roles?</summary>
+                <div class="faq-answer">
+                    Yes. While our coding practice and system design prep modules cater directly to software developers and engineering managers, our ATS resume optimization, AI mock interviews, and career roadmap generation support diverse tech positions including Product Management, Data Engineering, AI/ML Engineering, DevOps, and UX Architecture.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">How frequently should I update my ATS resume review?</summary>
+                <div class="faq-answer">
+                    We recommend auditing your resume whenever you customize your application for a new role or company tier. Comparing your resume directly against specific job postings ensures maximum ATS keyword alignment and recruiter relevance.
+                </div>
+            </details>
+
+            <details class="faq-item">
+                <summary class="faq-question">Is my resume data and interview practice confidential?</summary>
+                <div class="faq-answer">
+                    Yes. All uploaded resumes, transcripts, and practice sessions are encrypted in transit and at rest. We never sell your personal data or use your confidential interview recordings to train public foundation models without your explicit consent.
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- CLEAN CTA BANNER (DOT MATRIX TEXTURED) -->
     <div class="clean-banner reveal-on-scroll">
         <h2>Ready to accelerate your career?</h2>
         <p>Join candidates using ResuMate to prepare faster, interview better, and land top roles.</p>
