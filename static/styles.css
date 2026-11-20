@@ -4765,7 +4765,7 @@ textarea:focus {
   left: -20px;
   right: auto;
   bottom: auto;
-  width: 250px;
+  width: 275px;
   animation: floatSlow 6s ease-in-out infinite;
 }
 
@@ -4850,6 +4850,7 @@ textarea:focus {
   font-size: 0.8rem;
   font-weight: 600;
   color: #64748b;
+  white-space: nowrap;
 }
 
 .theme-dark .ats-label {
@@ -5696,9 +5697,9 @@ textarea:focus {
 }
 
 .theme-dark .skill-pill {
-  background: #111827;
-  border-color: #1f2937;
-  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
   box-shadow: none;
 }
 
@@ -5709,7 +5710,8 @@ textarea:focus {
 }
 
 .theme-dark .skill-pill:hover {
-  border-color: #374151;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
   color: #f8fafc;
 }
 
