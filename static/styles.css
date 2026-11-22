@@ -5326,8 +5326,8 @@ textarea:focus {
 }
 
 .feature-card-detailed p {
-  font-size: 0.95rem;
-  color: #475569;
+  font-size: 1.05rem;
+  color: #334155;
   line-height: 1.6;
   margin: 0;
 }
