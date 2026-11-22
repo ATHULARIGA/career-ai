@@ -16,16 +16,7 @@ from core.middleware import (
     AuthGateMiddleware,
     CachedStaticFiles,
 )
-from core.database import (
-    init_user_tables,
-    _ensure_auth_tables,
-    init_resume_tables,
-    _ensure_interview_tables,
-    seed_default_sample_resume,
-)
-from services.coding.coding_platform import init_coding_tables
-from services.analytics.admin_analytics import init_admin_tables
-from services.booking.booking_db import init_booking_tables
+from db.schema import init_all_schemas
 
 app = FastAPI()
 
@@ -45,18 +36,7 @@ if ENABLE_HTTPS_REDIRECT:
 
 # Initialize application tables and seed default state
 def init_all_tables() -> None:
-    try:
-        init_admin_tables()
-        init_coding_tables()
-        init_user_tables()
-        _ensure_auth_tables()
-        init_resume_tables()
-        _ensure_interview_tables()
-        init_booking_tables()
-        seed_default_sample_resume()
-    except Exception as exc:
-        from core.config import logger
-        logger.warning("Database schema check deferred or skipped: %s", exc)
+    init_all_schemas()
 
 
 # On serverless environments (e.g. Vercel), schemas are pre-initialized;
