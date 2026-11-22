@@ -7,7 +7,24 @@ router = APIRouter()
 
 @router.get("/healthz")
 def healthz():
-    return {"status": "ok", "ts": int(time.time())}
+    import db.backend as db
+
+    payload = {
+        "status": "ok",
+        "ts": int(time.time()),
+        "is_postgres": db.is_postgres(),
+    }
+    try:
+        conn = db.get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        row = cur.fetchone()
+        payload["db_connected"] = bool(row and row[0] == 1)
+        conn.close()
+    except Exception as exc:
+        payload["db_connected"] = False
+        payload["db_error"] = f"{type(exc).__name__}: {str(exc)}"
+    return payload
 
 
 @router.api_route("/robots.txt", methods=["GET", "HEAD"], response_class=PlainTextResponse)

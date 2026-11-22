@@ -43,10 +43,21 @@ if ENABLE_HTTPS_REDIRECT:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # Initialize application tables and seed default state
-init_admin_tables()
-init_coding_tables()
-init_user_tables()
-_ensure_auth_tables()
-init_resume_tables()
-_ensure_interview_tables()
-seed_default_sample_resume()
+def init_all_tables() -> None:
+    try:
+        init_admin_tables()
+        init_coding_tables()
+        init_user_tables()
+        _ensure_auth_tables()
+        init_resume_tables()
+        _ensure_interview_tables()
+        seed_default_sample_resume()
+    except Exception as exc:
+        from core.config import logger
+        logger.warning("Database schema check deferred or skipped: %s", exc)
+
+
+# On serverless environments (e.g. Vercel), schemas are pre-initialized;
+# skip serial DDL checks on cold starts to prevent timeout.
+if not (os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME")):
+    init_all_tables()
