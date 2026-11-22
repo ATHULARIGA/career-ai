@@ -4849,7 +4849,7 @@ textarea:focus {
 .ats-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
+  color: #334155;
   white-space: nowrap;
 }
 
@@ -4879,7 +4879,7 @@ textarea:focus {
 
 .status-ready {
   font-size: 0.78rem;
-  color: #64748b;
+  color: #334155;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4992,7 +4992,7 @@ textarea:focus {
 }
 
 .eyebrow-purple {
-  color: #6366f1;
+  color: #4338ca;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
   font-size: 0.82rem;
@@ -5137,7 +5137,7 @@ textarea:focus {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #94a3b8;
+  color: #e2e8f0;
   text-transform: uppercase;
   margin-bottom: 14px;
 }
@@ -5784,7 +5784,7 @@ textarea:focus {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #6366f1;
+  color: #4338ca;
   letter-spacing: 0.05em;
   min-width: 80px;
   padding-top: 3px;
@@ -5837,7 +5837,7 @@ textarea:focus {
 /* Footer Copyright & Responsive Layout */
 .app-footer-copy {
   font-size: 0.88rem;
-  color: #64748b;
+  color: #334155;
   font-weight: 500;
 }
 
