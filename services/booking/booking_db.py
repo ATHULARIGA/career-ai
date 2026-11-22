@@ -73,6 +73,3 @@ def assign_mentor_email(booking_id, mentor_email):
     )
     conn.commit()
     conn.close()
-
-
-init_booking_tables()

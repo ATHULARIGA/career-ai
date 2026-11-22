@@ -25,6 +25,7 @@ from core.database import (
 )
 from services.coding.coding_platform import init_coding_tables
 from services.analytics.admin_analytics import init_admin_tables
+from services.booking.booking_db import init_booking_tables
 
 app = FastAPI()
 
@@ -51,6 +52,7 @@ def init_all_tables() -> None:
         _ensure_auth_tables()
         init_resume_tables()
         _ensure_interview_tables()
+        init_booking_tables()
         seed_default_sample_resume()
     except Exception as exc:
         from core.config import logger
