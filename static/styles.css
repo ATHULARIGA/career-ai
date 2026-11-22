@@ -5857,3 +5857,57 @@ textarea:focus {
     flex-wrap: wrap;
   }
 }
+
+/* Legal & Compliance Document Styles */
+.rr-container-legal {
+  max-width: 820px;
+}
+
+.legal-doc-card {
+  padding: 36px;
+  line-height: 1.75;
+  background: var(--ui-surface, #ffffff);
+  border: 1px solid var(--ui-border, #e2e8f0);
+  border-radius: 16px;
+}
+
+.theme-dark .legal-doc-card {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+.legal-section-heading {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ui-text, #0f172a);
+}
+
+.theme-dark .legal-section-heading {
+  color: #f8fafc;
+}
+
+.legal-section-text {
+  margin: 0 0 20px;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: #334155;
+}
+
+.theme-dark .legal-section-text {
+  color: #cbd5e1;
+}
+
+.legal-effective-meta {
+  border-top: 1px solid var(--ui-border, #e2e8f0);
+  padding-top: 18px;
+  margin-top: 28px;
+  font-size: 1.0rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.theme-dark .legal-effective-meta {
+  border-top-color: #1f2937;
+  color: #94a3b8;
+}
