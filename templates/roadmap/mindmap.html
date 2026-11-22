@@ -34,8 +34,6 @@
 /* D3 Elements */
 .node rect {
   stroke-width: 1.5px;
-  rx: 8;
-  ry: 8;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -196,7 +194,7 @@
   bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.68rem;
+  font-size: 1.0rem;
   font-family: "IBM Plex Mono", monospace;
   font-weight: 600;
   color: var(--ui-text-muted);
@@ -247,7 +245,7 @@
   color: #f8fafc;
 }
 .welcome-subtitle {
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 500;
   color: #64748b;
   margin: 0 0 20px;
@@ -589,6 +587,8 @@ input:-webkit-autofill:focus {
         }));
 
     node.append("rect")
+      .attr("rx", 8)
+      .attr("ry", 8)
       .attr("height", d => d.depth === 0 ? 42 : (d.depth === 1 ? 34 : 28))
       .attr("y", d => d.depth === 0 ? -21 : (d.depth === 1 ? -17 : -14));
 

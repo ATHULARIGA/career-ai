@@ -122,7 +122,6 @@
 
 /* Node styles */
 .node rect {
-  rx: 8; ry: 8;
   cursor: pointer;
 }
 .node text {
@@ -459,6 +458,8 @@
       .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); if (d.depth !== 0) { d.fx = null; d.fy = null; } }));
 
   node.append("rect")
+    .attr("rx", 8)
+    .attr("ry", 8)
     .attr("height", d => d.depth === 0 ? 40 : (d.depth === 1 ? 32 : 26))
     .attr("y", d => d.depth === 0 ? -20 : (d.depth === 1 ? -16 : -13));
 
