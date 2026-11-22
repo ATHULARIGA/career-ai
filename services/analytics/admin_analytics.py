@@ -998,42 +998,46 @@ def record_visitor_traffic(
     t.start()
 
 
+_visitor_analytics_cache: Dict[str, Any] = {}
+
+
 def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[str, Any]:
     """
     Aggregates visitor traffic, unique visitor IPs, top countries/cities, and granular access log.
     """
+    now = _now()
+    cache_key = f"{search_ip}:{limit}"
+    if not db.is_testing() and cache_key in _visitor_analytics_cache and (now - _visitor_analytics_cache[cache_key]["ts"] < 10):
+        return _visitor_analytics_cache[cache_key]["data"]
+
     conn = _conn()
     cur = conn.cursor()
-    now = _now()
     day_ago = now - 86400
     week_ago = now - 7 * 86400
     month_ago = now - 30 * 86400
 
-    # 1. Total hits and unique IPs overall
-    db.execute(cur, "SELECT COUNT(*), COUNT(DISTINCT ip) FROM visitor_traffic")
-    row = cur.fetchone()
+    # 1. Consolidated count metrics in a single round-trip query
+    db.execute(
+        cur,
+        """
+        SELECT
+            COUNT(*),
+            COUNT(DISTINCT ip),
+            COUNT(DISTINCT CASE WHEN ts >= ? THEN ip ELSE NULL END),
+            COUNT(DISTINCT CASE WHEN ts >= ? THEN ip ELSE NULL END),
+            COUNT(DISTINCT CASE WHEN ts >= ? THEN ip ELSE NULL END),
+            COUNT(DISTINCT CASE WHEN country NOT IN ('Unknown', '') THEN country ELSE NULL END)
+        FROM visitor_traffic
+        """,
+        (day_ago, week_ago, month_ago),
+    )
+    row = cur.fetchone() or (0, 0, 0, 0, 0, 0)
     total_hits = int(row[0] or 0)
     unique_ips_total = int(row[1] or 0)
-
-    # 2. Unique IPs today
-    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (day_ago,))
-    row = cur.fetchone()
-    unique_ips_today = int(row[0] or 0)
-
-    # 3. Unique IPs past 7 days
-    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (week_ago,))
-    row = cur.fetchone()
-    unique_ips_week = int(row[0] or 0)
-
-    # 4. Unique IPs past 30 days
-    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (month_ago,))
-    row = cur.fetchone()
-    unique_ips_month = int(row[0] or 0)
-
-    # 5. Unique countries count
-    db.execute(cur, "SELECT COUNT(DISTINCT country) FROM visitor_traffic WHERE country NOT IN ('Unknown', '')")
-    row = cur.fetchone()
-    unique_countries = int(row[0] or 0)
+    unique_ips_today = int(row[2] or 0)
+    unique_ips_week = int(row[3] or 0)
+    unique_ips_month = int(row[4] or 0)
+    unique_countries = int(row[5] or 0)
 
     # 6. Top Countries
     db.execute(
@@ -1119,7 +1123,7 @@ def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[
 
     conn.close()
 
-    return {
+    result = {
         "kpis": {
             "total_hits": total_hits,
             "unique_ips_total": unique_ips_total,
@@ -1134,6 +1138,8 @@ def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[
         "recent_visitors": recent_visitors,
         "search_query": search_ip,
     }
+    _visitor_analytics_cache[cache_key] = {"ts": now, "data": result}
+    return result
 
 
 def export_visitor_traffic_csv(limit: int = 1000) -> str:

@@ -1,4 +1,7 @@
+import time
 import db.backend as db
+
+_bookings_cache = {"ts": 0.0, "data": []}
 
 
 def init_booking_tables() -> None:
@@ -43,14 +46,20 @@ def save_booking(name, email, topic, datetime, link, outcome="", context_notes="
     )
     conn.commit()
     conn.close()
+    _bookings_cache["ts"] = 0.0
 
 
 def get_bookings():
+    now = time.time()
+    if not db.is_testing() and _bookings_cache["data"] and (now - _bookings_cache["ts"] < 30.0):
+        return _bookings_cache["data"]
     conn = db.get_conn()
     cur = conn.cursor()
     db.execute(cur, "SELECT * FROM bookings")
     rows = cur.fetchall()
     conn.close()
+    _bookings_cache["ts"] = now
+    _bookings_cache["data"] = rows
     return rows
 
 
@@ -73,3 +82,4 @@ def assign_mentor_email(booking_id, mentor_email):
     )
     conn.commit()
     conn.close()
+    _bookings_cache["ts"] = 0.0

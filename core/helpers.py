@@ -554,13 +554,23 @@ def coding_context_payload(request: Request, problem_id: str, **extra):
     return payload
 
 
-def admin_context_payload(request: Request):
+def admin_context_payload(request: Request, minimal: bool = False, include_coding_problems: bool = False):
     data = get_bookings()
-    payload = dashboard_payload(data)
-    coding_stats = get_submission_stats_extended(limit=100)
-    custom_problems = get_custom_problems()
-    for p in custom_problems:
-        p["coverage"] = coverage_report(p)
+    if minimal:
+        payload = {
+            "kpis": {"total_bookings": len(data)},
+            "user_stats": {"admins": 1},
+        }
+    else:
+        payload = dashboard_payload(data)
+
+    coding_stats = {}
+    custom_problems = []
+    if include_coding_problems:
+        coding_stats = get_submission_stats_extended(limit=100)
+        custom_problems = get_custom_problems()
+        for p in custom_problems:
+            p["coverage"] = coverage_report(p)
     return {
         "request": request,
         "data": data,

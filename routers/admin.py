@@ -160,7 +160,7 @@ def admin_users_page(request: Request, q: str = "", role: str = "", msg: str = "
         return RedirectResponse("/admin-login")
 
     users_list = get_admin_users_list(search=q, role_filter=role)
-    payload = admin_context_payload(request)
+    payload = admin_context_payload(request, minimal=True)
 
     current_email = (request.session.get("user_email") or "").strip().lower()
     current_user_id = request.session.get("user_id")
@@ -215,7 +215,7 @@ def admin_reports_page(request: Request, period: str = "daily"):
         period = "daily"
 
     report_data = get_periodic_report(period)
-    payload = admin_context_payload(request)
+    payload = admin_context_payload(request, minimal=True)
 
     return templates.TemplateResponse(
         request=request,
@@ -264,7 +264,7 @@ def admin_traffic_page(request: Request, q: str = ""):
         return RedirectResponse("/admin-login")
 
     traffic_data = get_visitor_traffic_analytics(search_ip=q)
-    payload = admin_context_payload(request)
+    payload = admin_context_payload(request, minimal=True)
 
     return templates.TemplateResponse(
         request=request,
