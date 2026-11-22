@@ -1,10 +1,48 @@
 import os
+import queue
 import shutil
 import sqlite3
 import sys
 from typing import List
 
 _USE_SQLITE_FALLBACK = False
+_pg_pool: queue.LifoQueue = queue.LifoQueue(maxsize=15)
+
+
+class PooledPostgresConnection:
+    """Wraps a psycopg connection to return it to the pool on close()
+    instead of terminating the underlying TCP/SSL socket.
+    """
+
+    def __init__(self, raw_conn):
+        self._raw_conn = raw_conn
+        self._returned = False
+
+    def close(self):
+        if self._returned:
+            return
+        self._returned = True
+        try:
+            if not self._raw_conn.closed:
+                # Rollback uncommitted transactions to maintain clean session state
+                self._raw_conn.rollback()
+                _pg_pool.put_nowait(self._raw_conn)
+                return
+        except Exception:
+            pass
+        try:
+            self._raw_conn.close()
+        except Exception:
+            pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def __getattr__(self, name):
+        return getattr(self._raw_conn, name)
 
 
 def get_database_url() -> str:
@@ -67,16 +105,32 @@ def get_conn():
 
     import psycopg  # type: ignore
 
+    # Attempt to reuse an active pooled connection
+    while not _pg_pool.empty():
+        try:
+            raw = _pg_pool.get_nowait()
+            if not raw.closed:
+                status = getattr(getattr(raw, "pgconn", None), "status", None)
+                if status == psycopg.pq.ConnStatus.OK:
+                    return PooledPostgresConnection(raw)
+            try:
+                raw.close()
+            except Exception:
+                pass
+        except queue.Empty:
+            break
+
     connect_timeout = int((os.getenv("PG_CONNECT_TIMEOUT") or "5").strip() or "5")
 
     # Disable prepared statements to avoid PgBouncer/Supabase
     # transaction-pool errors like:
     # DuplicatePreparedStatement: prepared statement "_pg3_0" already exists
-    return psycopg.connect(
+    raw = psycopg.connect(
         get_database_url(),
         prepare_threshold=None,
         connect_timeout=max(2, connect_timeout),
     )
+    return PooledPostgresConnection(raw)
 
 
 def adapt_query(query: str) -> str:

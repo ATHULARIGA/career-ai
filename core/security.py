@@ -179,7 +179,7 @@ def current_user_plan(request: Request) -> str:
     if is_admin_session(request):
         return "premium"
     cached = (request.session.get("user_plan") or "").strip().lower()
-    if cached in ("free", "premium"):
+    if cached in ("free", "pro", "premium", "enterprise"):
         return cached
     plan = user_plan_for_email(request.session.get("user_email", ""))
     request.session["user_plan"] = plan

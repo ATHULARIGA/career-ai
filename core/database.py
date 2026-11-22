@@ -464,7 +464,13 @@ def update_resume_report_json(report_id: int, user_email: str, updated_json: dic
         conn.close()
 
 
+_cached_sample_resume_id = None
+
+
 def seed_default_sample_resume() -> int:
+    global _cached_sample_resume_id
+    if _cached_sample_resume_id:
+        return _cached_sample_resume_id
     try:
         conn = db.get_conn()
         cur = conn.cursor()
@@ -491,8 +497,10 @@ def seed_default_sample_resume() -> int:
             sample_id = getattr(cur, "lastrowid", 1)
             conn.commit()
             conn.close()
+            _cached_sample_resume_id = sample_id
             return sample_id
         conn.close()
+        _cached_sample_resume_id = row[0]
         return row[0]
     except Exception as e:
         logger.warning("seed_default_sample_resume_failed err=%s", str(e))
