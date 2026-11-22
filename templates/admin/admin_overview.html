@@ -249,91 +249,37 @@
 
 </div>
 
-<!-- 4. Mentor Operations & AI Telemetry -->
-<div class="adm-grid-2col">
+<!-- 4. Mentor Operations -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Mentorship Operations</h2>
+      <p>Capacity utilization, rating, and candidate distribution.</p>
+    </div>
+    <a href="/admin/bookings" class="adm-link-primary">Manage Bookings →</a>
+  </div>
 
-  <!-- Mentor Operations -->
-  <section class="adm-card adm-card-mb0">
-    <div class="adm-card-head">
-      <div>
-        <h2>Mentorship Operations</h2>
-        <p>Capacity utilization, rating, and candidate distribution.</p>
-      </div>
-      <a href="/admin/bookings" class="adm-link-primary">Manage Bookings →</a>
+  <div class="adm-ops-grid">
+    <div class="adm-metric-tile">
+      <span class="adm-metric-tile-label">CALENDAR LOAD</span>
+      <strong class="adm-metric-tile-val">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
     </div>
 
-    <div class="adm-ops-grid">
-      <div class="adm-metric-tile">
-        <span class="adm-metric-tile-label">CALENDAR LOAD</span>
-        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
-      </div>
-
-      <div class="adm-metric-tile">
-        <span class="adm-metric-tile-label">MENTOR RATING</span>
-        <strong class="adm-metric-tile-val-green">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
-      </div>
-
-      <div class="adm-metric-tile">
-        <span class="adm-metric-tile-label">NO-SHOW RATE</span>
-        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
-      </div>
-
-      <div class="adm-metric-tile">
-        <span class="adm-metric-tile-label">RESCHEDULES</span>
-        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
-      </div>
-    </div>
-  </section>
-
-  <!-- AI Inference Telemetry -->
-  <section class="adm-card adm-card-mb0">
-    <div class="adm-card-head">
-      <div>
-        <h2>Inference Health & Latency</h2>
-        <p>Performance telemetry across LLM providers and endpoints.</p>
-      </div>
-      <div class="adm-badges-row">
-        <span class="badge-ok">Success {{ admin.model_health.success_rate }}%</span>
-        <span class="badge-neutral">Avg {{ admin.model_health.avg_latency_ms }}ms</span>
-      </div>
+    <div class="adm-metric-tile">
+      <span class="adm-metric-tile-label">MENTOR RATING</span>
+      <strong class="adm-metric-tile-val-green">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
     </div>
 
-    <div class="adm-table-container">
-      <table class="adm-table">
-        <thead>
-          <tr>
-            <th>Feature</th>
-            <th>Model</th>
-            <th>Status</th>
-            <th>Latency</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in admin.model_health.recent[:4] %}
-          <tr>
-            <td><strong class="adm-table-feature">{{ r[0]|replace('_', ' ') }}</strong></td>
-            <td class="adm-table-model">{{ r[1] }}</td>
-            <td>
-              {% if r[2] == 1 %}
-              <span class="badge-ok">Success</span>
-              {% else %}
-              <span class="badge-fail">Fallback</span>
-              {% endif %}
-            </td>
-            <td class="adm-table-latency">{{ "%.0f"|format(r[3]) }} ms</td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="4" class="adm-table-empty">
-              No model telemetry logged yet.
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="adm-metric-tile">
+      <span class="adm-metric-tile-label">NO-SHOW RATE</span>
+      <strong class="adm-metric-tile-val">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
     </div>
-  </section>
 
-</div>
+    <div class="adm-metric-tile">
+      <span class="adm-metric-tile-label">RESCHEDULES</span>
+      <strong class="adm-metric-tile-val">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
+    </div>
+  </div>
+</section>
 
 {% endblock %}
