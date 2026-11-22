@@ -205,6 +205,59 @@ def admin_update_user_role(
     return RedirectResponse(f"/admin/users?{param}={urllib.parse.quote(msg)}", status_code=303)
 
 
+@router.get("/admin/reports", response_class=HTMLResponse)
+def admin_reports_page(request: Request, period: str = "daily"):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    period = (period or "daily").lower().strip()
+    if period not in ("daily", "monthly", "yearly"):
+        period = "daily"
+
+    report_data = get_periodic_report(period)
+    payload = admin_context_payload(request)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_reports.html",
+        context={
+            **payload,
+            "report": report_data,
+            "selected_period": period,
+            "active_admin_page": "reports",
+        },
+    )
+
+
+@router.get("/admin/reports/export")
+def admin_reports_export(request: Request, period: str = "daily", format: str = "csv"):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    period = (period or "daily").lower().strip()
+    if period not in ("daily", "monthly", "yearly"):
+        period = "daily"
+
+    fmt = (format or "csv").lower().strip()
+    actor = request.session.get("user_email") or request.session.get("admin_user") or "admin"
+    log_audit(actor, "admin_report_exported", f"period={period},format={fmt}")
+
+    if fmt == "json":
+        content = export_periodic_report_json(period)
+        return PlainTextResponse(
+            content=content,
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=admin_report_{period}.json"},
+        )
+    else:
+        content = export_periodic_report_csv(period)
+        return PlainTextResponse(
+            content=content,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=admin_report_{period}.csv"},
+        )
+
+
 @router.post("/admin-login")
 def admin_login(
     request: Request,

@@ -726,3 +726,182 @@ def get_setting(key: str, default: str = "") -> str:
     if not rows:
         return default
     return str(rows[0][0] or default)
+
+
+def get_periodic_report(period: str = "daily") -> Dict[str, Any]:
+    """Generates time-aggregated metrics partitioned by daily, monthly, or yearly intervals."""
+    period = (period or "daily").lower().strip()
+    if period not in ("daily", "monthly", "yearly"):
+        period = "daily"
+
+    now_dt = datetime.utcnow()
+    intervals = []
+    interval_map = {}
+
+    if period == "daily":
+        # 14-day rolling window
+        for i in range(13, -1, -1):
+            day_dt = now_dt - timedelta(days=i)
+            key = day_dt.strftime("%Y-%m-%d")
+            label = day_dt.strftime("%b %d")
+            intervals.append(key)
+            interval_map[key] = {
+                "key": key,
+                "label": label,
+                "signups": 0,
+                "resumes": 0,
+                "interviews": 0,
+                "bookings": 0,
+                "coding": 0,
+                "events": 0,
+                "bar_pct": 5,
+                "bar_class": "h-pct-5",
+            }
+        min_ts = int((now_dt - timedelta(days=14)).timestamp())
+        fmt_key = "%Y-%m-%d"
+
+    elif period == "monthly":
+        # 12-month rolling window
+        year = now_dt.year
+        month = now_dt.month
+        for i in range(11, -1, -1):
+            m = month - i
+            y = year
+            while m <= 0:
+                m += 12
+                y -= 1
+            key = f"{y:04d}-{m:02d}"
+            label = datetime(y, m, 1).strftime("%b %Y")
+            intervals.append(key)
+            interval_map[key] = {
+                "key": key,
+                "label": label,
+                "signups": 0,
+                "resumes": 0,
+                "interviews": 0,
+                "bookings": 0,
+                "coding": 0,
+                "events": 0,
+                "bar_pct": 5,
+                "bar_class": "h-pct-5",
+            }
+        earliest_month = intervals[0]
+        ey, em = map(int, earliest_month.split("-"))
+        min_ts = int(datetime(ey, em, 1).timestamp())
+        fmt_key = "%Y-%m"
+
+    else:
+        # Yearly window (last 5 calendar years)
+        current_year = now_dt.year
+        for y in range(current_year - 4, current_year + 1):
+            key = str(y)
+            intervals.append(key)
+            interval_map[key] = {
+                "key": key,
+                "label": str(y),
+                "signups": 0,
+                "resumes": 0,
+                "interviews": 0,
+                "bookings": 0,
+                "coding": 0,
+                "events": 0,
+                "bar_pct": 5,
+                "bar_class": "h-pct-5",
+            }
+        min_ts = int(datetime(current_year - 4, 1, 1).timestamp())
+        fmt_key = "%Y"
+
+    conn = _conn()
+    cur = conn.cursor()
+    try:
+        # 1. user_events aggregation
+        db.execute(cur, "SELECT ts, event_type FROM user_events WHERE ts >= ?", (min_ts,))
+        for ts, ev_type in cur.fetchall():
+            k = datetime.utcfromtimestamp(int(ts or 0)).strftime(fmt_key)
+            if k in interval_map:
+                interval_map[k]["events"] += 1
+                if ev_type == "resume_review_completed":
+                    interval_map[k]["resumes"] += 1
+                elif ev_type in ("interview_started", "interview_completed"):
+                    interval_map[k]["interviews"] += 1
+                elif ev_type == "mentor_booking_created":
+                    interval_map[k]["bookings"] += 1
+
+        # 2. users (signups)
+        db.execute(cur, "SELECT created_ts FROM users WHERE created_ts >= ?", (min_ts,))
+        for (u_ts,) in cur.fetchall():
+            k = datetime.utcfromtimestamp(int(u_ts or 0)).strftime(fmt_key)
+            if k in interval_map:
+                interval_map[k]["signups"] += 1
+
+        # 3. coding_submissions
+        try:
+            db.execute(cur, "SELECT ts FROM coding_submissions WHERE ts >= ?", (min_ts,))
+            for (c_ts,) in cur.fetchall():
+                k = datetime.utcfromtimestamp(int(c_ts or 0)).strftime(fmt_key)
+                if k in interval_map:
+                    interval_map[k]["coding"] += 1
+        except Exception:
+            pass
+    finally:
+        conn.close()
+
+    series = [interval_map[k] for k in intervals]
+    max_events = max(1, max([s["events"] + s["signups"] + s["coding"] for s in series]))
+    for s in series:
+        activity_sum = s["events"] + s["signups"] + s["coding"]
+        pct = min(100, max(5, int((activity_sum / max_events) * 100)))
+        s["bar_pct"] = pct
+        pct_cls = min(100, max(5, round(pct / 5) * 5))
+        s["bar_class"] = f"h-pct-{pct_cls}"
+
+    totals = {
+        "signups": sum(s["signups"] for s in series),
+        "resumes": sum(s["resumes"] for s in series),
+        "interviews": sum(s["interviews"] for s in series),
+        "bookings": sum(s["bookings"] for s in series),
+        "coding": sum(s["coding"] for s in series),
+        "events": sum(s["events"] for s in series),
+    }
+
+    return {
+        "period": period,
+        "title": f"{period.capitalize()} Performance Report",
+        "intervals": series,
+        "totals": totals,
+    }
+
+
+def export_periodic_report_csv(period: str = "daily") -> str:
+    """Exports structured periodic report as formatted CSV."""
+    report = get_periodic_report(period)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Period Interval", "New Signups", "Resume Audits", "Mock Interviews", "Mentorship Bookings", "Coding Practice", "Total Platform Events"])
+    for row in report["intervals"]:
+        writer.writerow([
+            row["label"],
+            row["signups"],
+            row["resumes"],
+            row["interviews"],
+            row["bookings"],
+            row["coding"],
+            row["events"],
+        ])
+    writer.writerow([])
+    writer.writerow([
+        "TOTAL",
+        report["totals"]["signups"],
+        report["totals"]["resumes"],
+        report["totals"]["interviews"],
+        report["totals"]["bookings"],
+        report["totals"]["coding"],
+        report["totals"]["events"],
+    ])
+    return out.getvalue()
+
+
+def export_periodic_report_json(period: str = "daily") -> str:
+    """Exports structured periodic report as formatted JSON."""
+    report = get_periodic_report(period)
+    return json.dumps(report, indent=2)

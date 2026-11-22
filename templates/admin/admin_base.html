@@ -1054,6 +1054,100 @@ html.theme-dark .adm-bar-track,
 .h-pct-90 { height: 90%; }
 .h-pct-95 { height: 95%; }
 .h-pct-100 { height: 100%; }
+
+/* Reports Navigation & Layout */
+.adm-period-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adm-period-pill {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--adm-border);
+  background: var(--adm-surface);
+  color: var(--adm-text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+html.theme-dark .adm-period-pill,
+.theme-dark .adm-period-pill {
+  background: #111a2c !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+.adm-period-pill:hover {
+  color: var(--adm-text);
+  border-color: var(--adm-primary);
+}
+
+.adm-period-pill.active {
+  background: var(--adm-primary);
+  color: var(--adm-primary-text);
+  border-color: var(--adm-primary);
+}
+
+html.theme-dark .adm-period-pill.active,
+.theme-dark .adm-period-pill.active {
+  background: var(--adm-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--adm-primary) !important;
+}
+
+.adm-report-grid-14 {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 6px;
+  align-items: flex-end;
+  min-height: 140px;
+  padding-top: 16px;
+}
+
+.adm-report-grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 8px;
+  align-items: flex-end;
+  min-height: 140px;
+  padding-top: 16px;
+}
+
+.adm-report-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  align-items: flex-end;
+  min-height: 140px;
+  padding-top: 16px;
+}
+
+.adm-table-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.adm-table-th-num {
+  text-align: right !important;
+}
+
+.adm-table-total-row {
+  font-weight: 700;
+  background: var(--adm-surface-subtle);
+  border-top: 2px solid var(--adm-border);
+}
+
+html.theme-dark .adm-table-total-row,
+.theme-dark .adm-table-total-row {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+}
 </style>
 
 <section class="adm-page">
@@ -1083,6 +1177,9 @@ html.theme-dark .adm-bar-track,
     <nav class="adm-nav-wrap">
       <a href="/admin" class="adm-nav-item {% if active_admin_page == 'overview' %}active{% endif %}">
         <span>Overview</span>
+      </a>
+      <a href="/admin/reports" class="adm-nav-item {% if active_admin_page == 'reports' %}active{% endif %}">
+        <span>Executive Reports</span>
       </a>
       <a href="/admin/premium" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
         <span>Premium Queue</span>

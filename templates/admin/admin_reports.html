@@ -1,0 +1,168 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+
+<!-- Header & Controls -->
+<section class="adm-section">
+  <div class="adm-toolbar">
+    <div>
+      <h2 class="adm-section-title">{{ report.title }}</h2>
+      <p class="adm-section-desc">Time-aggregated platform velocity, user acquisition, and engagement trajectories.</p>
+    </div>
+
+    <div class="adm-actions">
+      <a class="adm-btn" href="/admin/reports/export?period={{ selected_period }}&format=csv">
+        <span>Export {{ selected_period|capitalize }} CSV</span>
+      </a>
+      <a class="adm-btn" href="/admin/reports/export?period={{ selected_period }}&format=json">
+        <span>Export {{ selected_period|capitalize }} JSON</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Period Filter Selector -->
+  <div class="adm-toolbar">
+    <div class="adm-period-selector">
+      <a href="/admin/reports?period=daily" class="adm-period-pill {% if selected_period == 'daily' %}active{% endif %}">
+        <span>Daily Report (14 Days)</span>
+      </a>
+      <a href="/admin/reports?period=monthly" class="adm-period-pill {% if selected_period == 'monthly' %}active{% endif %}">
+        <span>Monthly Report (12 Months)</span>
+      </a>
+      <a href="/admin/reports?period=yearly" class="adm-period-pill {% if selected_period == 'yearly' %}active{% endif %}">
+        <span>Yearly Report (5 Years)</span>
+      </a>
+    </div>
+    <span class="badge-neutral">Period: {{ selected_period|upper }}</span>
+  </div>
+
+  <!-- Period Summary KPI Cards -->
+  <div class="adm-kpi-row">
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">NEW SIGNUPS</p>
+      <h3 class="adm-kpi-val">{{ report.totals.signups }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">RESUME AUDITS</p>
+      <h3 class="adm-kpi-val">{{ report.totals.resumes }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">PRACTICE INTERVIEWS</p>
+      <h3 class="adm-kpi-val">{{ report.totals.interviews }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">MENTORSHIP SESSIONS</p>
+      <h3 class="adm-kpi-val">{{ report.totals.bookings }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">CODING SUBMISSIONS</p>
+      <h3 class="adm-kpi-val">{{ report.totals.coding }}</h3>
+    </article>
+
+    <article class="adm-kpi-card adm-kpi-featured">
+      <p class="adm-kpi-label adm-primary-text">TOTAL EVENTS</p>
+      <h3 class="adm-kpi-val adm-primary-text">{{ report.totals.events }}</h3>
+    </article>
+  </div>
+</section>
+
+<!-- Visual Activity Progression Bar Chart -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Activity Volume Timeline</h2>
+      <p>Progression of user actions across {{ selected_period }} reporting intervals.</p>
+    </div>
+    <span class="badge-ok">Aggregated</span>
+  </div>
+
+  {% if selected_period == 'daily' %}
+  <div class="adm-report-grid-14">
+  {% elif selected_period == 'monthly' %}
+  <div class="adm-report-grid-12">
+  {% else %}
+  <div class="adm-report-grid-5">
+  {% endif %}
+    {% for s in report.intervals %}
+    <div class="adm-trend-col">
+      <span class="adm-trend-val">{{ s.events + s.signups + s.coding }}</span>
+      <div class="adm-trend-bar-track">
+        <div class="adm-trend-bar-fill {{ s.bar_class }}"></div>
+      </div>
+      <span class="adm-trend-date">{{ s.label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Granular Breakdown Data Table -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Granular Metrics Table</h2>
+      <p>Detailed breakdown per {{ selected_period }} interval.</p>
+    </div>
+  </div>
+
+  <div class="adm-table-container">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Time Interval</th>
+          <th class="adm-table-th-num">New Signups</th>
+          <th class="adm-table-th-num">Resume Audits</th>
+          <th class="adm-table-th-num">Mock Interviews</th>
+          <th class="adm-table-th-num">Mentorship Calls</th>
+          <th class="adm-table-th-num">Coding Exercises</th>
+          <th class="adm-table-th-num">Platform Events</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in report.intervals %}
+        <tr>
+          <td>
+            <strong class="adm-table-feature">{{ s.label }}</strong>
+            <span class="adm-step-desc">{{ s.key }}</span>
+          </td>
+          <td class="adm-table-num">{{ s.signups }}</td>
+          <td class="adm-table-num">{{ s.resumes }}</td>
+          <td class="adm-table-num">{{ s.interviews }}</td>
+          <td class="adm-table-num">{{ s.bookings }}</td>
+          <td class="adm-table-num">{{ s.coding }}</td>
+          <td class="adm-table-num">
+            <strong>{{ s.events }}</strong>
+          </td>
+        </tr>
+        {% endfor %}
+        <tr class="adm-table-total-row">
+          <td>
+            <strong class="adm-table-feature">TOTAL ({{ selected_period|upper }})</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.signups }}</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.resumes }}</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.interviews }}</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.bookings }}</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.coding }}</strong>
+          </td>
+          <td class="adm-table-num">
+            <strong>{{ report.totals.events }}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}
