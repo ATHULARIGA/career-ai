@@ -1,13 +1,27 @@
 import os
 import shutil
 import sqlite3
+import sys
 from typing import List
 
-DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip().strip("'\"")
-if "ukptyrqwaziribbcrnmt" in DATABASE_URL:
-    DATABASE_URL = ""
-
 _USE_SQLITE_FALLBACK = False
+
+
+def get_database_url() -> str:
+    return (os.getenv("DATABASE_URL") or "").strip().strip("'\"")
+
+
+DATABASE_URL = get_database_url()
+
+
+def is_testing() -> bool:
+    return bool(
+        "pytest" in sys.modules
+        or any("pytest" in arg for arg in sys.argv)
+        or os.getenv("PYTEST_CURRENT_TEST")
+        or os.getenv("TESTING", "").lower() in ("1", "true", "yes")
+        or os.getenv("SQLITE_PATH")
+    )
 
 
 def get_sqlite_path() -> str:
@@ -33,30 +47,36 @@ SQLITE_PATH = get_sqlite_path()
 
 
 def is_postgres() -> bool:
-    return (not _USE_SQLITE_FALLBACK) and (
-        DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")
+    if is_testing():
+        return False
+    db_url = get_database_url()
+    return bool(
+        db_url and (db_url.startswith("postgresql://") or db_url.startswith("postgres://"))
     )
 
 
 def get_conn():
-    global _USE_SQLITE_FALLBACK
-    if DATABASE_URL and not _USE_SQLITE_FALLBACK:
-        try:
-            import psycopg  # type: ignore
-            connect_timeout = int((os.getenv("PG_CONNECT_TIMEOUT") or "4").strip() or "4")
+    if is_testing():
+        return sqlite3.connect(get_sqlite_path(), check_same_thread=False)
 
-            # Disable prepared statements to avoid PgBouncer/Supabase
-            # transaction-pool errors like:
-            # DuplicatePreparedStatement: prepared statement "_pg3_0" already exists
-            return psycopg.connect(
-                DATABASE_URL,
-                prepare_threshold=None,
-                connect_timeout=max(2, connect_timeout),
-            )
-        except Exception:
-            # Keep the app usable if hosted Postgres has a transient outage.
-            _USE_SQLITE_FALLBACK = True
-    return sqlite3.connect(get_sqlite_path(), check_same_thread=False)
+    if not is_postgres():
+        raise RuntimeError(
+            "PostgreSQL is required for runtime, but DATABASE_URL is not set or invalid. "
+            "Please check your PostgreSQL configuration."
+        )
+
+    import psycopg  # type: ignore
+
+    connect_timeout = int((os.getenv("PG_CONNECT_TIMEOUT") or "5").strip() or "5")
+
+    # Disable prepared statements to avoid PgBouncer/Supabase
+    # transaction-pool errors like:
+    # DuplicatePreparedStatement: prepared statement "_pg3_0" already exists
+    return psycopg.connect(
+        get_database_url(),
+        prepare_threshold=None,
+        connect_timeout=max(2, connect_timeout),
+    )
 
 
 def adapt_query(query: str) -> str:
