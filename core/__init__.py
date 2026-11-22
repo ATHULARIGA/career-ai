@@ -28,6 +28,10 @@ from services.analytics.admin_analytics import (
     get_periodic_report,
     export_periodic_report_csv,
     export_periodic_report_json,
+    record_visitor_traffic,
+    get_visitor_traffic_analytics,
+    export_visitor_traffic_csv,
+    export_visitor_traffic_json,
 )
 from services.coding.coding_platform import (
     DEFAULT_PROBLEMS,

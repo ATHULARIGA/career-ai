@@ -258,6 +258,51 @@ def admin_reports_export(request: Request, period: str = "daily", format: str = 
         )
 
 
+@router.get("/admin/traffic", response_class=HTMLResponse)
+def admin_traffic_page(request: Request, q: str = ""):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    traffic_data = get_visitor_traffic_analytics(search_ip=q)
+    payload = admin_context_payload(request)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_traffic.html",
+        context={
+            **payload,
+            "traffic": traffic_data,
+            "search_query": q,
+            "active_admin_page": "traffic",
+        },
+    )
+
+
+@router.get("/admin/traffic/export")
+def admin_traffic_export(request: Request, format: str = "csv"):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    fmt = (format or "csv").lower().strip()
+    actor = request.session.get("user_email") or request.session.get("admin_user") or "admin"
+    log_audit(actor, "admin_traffic_exported", f"format={fmt}")
+
+    if fmt == "json":
+        content = export_visitor_traffic_json()
+        return PlainTextResponse(
+            content=content,
+            media_type="application/json",
+            headers={"Content-Disposition": "attachment; filename=visitor_traffic.json"},
+        )
+    else:
+        content = export_visitor_traffic_csv()
+        return PlainTextResponse(
+            content=content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=visitor_traffic.csv"},
+        )
+
+
 @router.post("/admin-login")
 def admin_login(
     request: Request,

@@ -30,7 +30,9 @@ def _repair_identity_sequence(conn, table: str) -> None:
         return
     allowed_tables = {
         "admin_events", "admin_model_health", "admin_feedback", "admin_audits",
-        "admin_experiments", "admin_ab_tests", "admin_safety_events", "admin_mentor_metrics"
+        "admin_experiments", "admin_ab_tests", "admin_safety_events", "admin_mentor_metrics",
+        "user_events", "model_health", "feedback_queue", "audit_logs",
+        "experiments", "ab_tests", "safety_events", "mentor_ops", "visitor_traffic"
     }
     if table not in allowed_tables:
         return
@@ -162,6 +164,27 @@ def init_admin_tables() -> None:
         )
         """
     )
+    db.execute(
+        cur,
+        f"""
+        CREATE TABLE IF NOT EXISTS visitor_traffic(
+            id {id_col},
+            ts INTEGER,
+            ip TEXT,
+            country TEXT,
+            region TEXT,
+            city TEXT,
+            path TEXT,
+            method TEXT,
+            status_code INTEGER,
+            user_agent TEXT,
+            user_id TEXT
+        )
+        """,
+    )
+    db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_visitor_traffic_ts ON visitor_traffic(ts)")
+    db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_visitor_traffic_ip ON visitor_traffic(ip)")
+    db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_visitor_traffic_country ON visitor_traffic(country)")
     for t in (
         "user_events",
         "model_health",
@@ -171,6 +194,7 @@ def init_admin_tables() -> None:
         "ab_tests",
         "safety_events",
         "mentor_ops",
+        "visitor_traffic",
     ):
         _repair_identity_sequence(conn, t)
     conn.commit()
@@ -905,3 +929,277 @@ def export_periodic_report_json(period: str = "daily") -> str:
     """Exports structured periodic report as formatted JSON."""
     report = get_periodic_report(period)
     return json.dumps(report, indent=2)
+
+
+def _async_record_traffic(
+    ip: str,
+    country: str,
+    region: str,
+    city: str,
+    path: str,
+    method: str,
+    status_code: int,
+    user_agent: str,
+    user_id: str,
+) -> None:
+    try:
+        conn = _conn()
+        try:
+            cur = conn.cursor()
+            db.execute(
+                cur,
+                """
+                INSERT INTO visitor_traffic(ts, ip, country, region, city, path, method, status_code, user_agent, user_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    _now(),
+                    (ip or "unknown")[:64],
+                    (country or "Unknown")[:64],
+                    (region or "Unknown")[:64],
+                    (city or "Unknown")[:128],
+                    (path or "/")[:255],
+                    (method or "GET")[:10],
+                    int(status_code or 200),
+                    (user_agent or "")[:255],
+                    (user_id or "anonymous")[:64],
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+
+def record_visitor_traffic(
+    ip: str,
+    country: str = "Unknown",
+    region: str = "Unknown",
+    city: str = "Unknown",
+    path: str = "/",
+    method: str = "GET",
+    status_code: int = 200,
+    user_agent: str = "",
+    user_id: str = "anonymous",
+) -> None:
+    """
+    Log client request traffic asynchronously with real IP and geographic metadata.
+    """
+    if db.is_testing():
+        _async_record_traffic(ip, country, region, city, path, method, status_code, user_agent, user_id)
+        return
+
+    t = threading.Thread(
+        target=_async_record_traffic,
+        args=(ip, country, region, city, path, method, status_code, user_agent, user_id),
+        daemon=True,
+    )
+    t.start()
+
+
+def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[str, Any]:
+    """
+    Aggregates visitor traffic, unique visitor IPs, top countries/cities, and granular access log.
+    """
+    conn = _conn()
+    cur = conn.cursor()
+    now = _now()
+    day_ago = now - 86400
+    week_ago = now - 7 * 86400
+    month_ago = now - 30 * 86400
+
+    # 1. Total hits and unique IPs overall
+    db.execute(cur, "SELECT COUNT(*), COUNT(DISTINCT ip) FROM visitor_traffic")
+    row = cur.fetchone()
+    total_hits = int(row[0] or 0)
+    unique_ips_total = int(row[1] or 0)
+
+    # 2. Unique IPs today
+    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (day_ago,))
+    row = cur.fetchone()
+    unique_ips_today = int(row[0] or 0)
+
+    # 3. Unique IPs past 7 days
+    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (week_ago,))
+    row = cur.fetchone()
+    unique_ips_week = int(row[0] or 0)
+
+    # 4. Unique IPs past 30 days
+    db.execute(cur, "SELECT COUNT(DISTINCT ip) FROM visitor_traffic WHERE ts >= ?", (month_ago,))
+    row = cur.fetchone()
+    unique_ips_month = int(row[0] or 0)
+
+    # 5. Unique countries count
+    db.execute(cur, "SELECT COUNT(DISTINCT country) FROM visitor_traffic WHERE country NOT IN ('Unknown', '')")
+    row = cur.fetchone()
+    unique_countries = int(row[0] or 0)
+
+    # 6. Top Countries
+    db.execute(
+        cur,
+        """
+        SELECT country, COUNT(DISTINCT ip) as unique_ips, COUNT(*) as hits
+        FROM visitor_traffic
+        WHERE country NOT IN ('Unknown', '')
+        GROUP BY country
+        ORDER BY unique_ips DESC, hits DESC
+        LIMIT 10
+        """,
+    )
+    top_countries = [
+        {"country": r[0], "unique_ips": int(r[1]), "hits": int(r[2])}
+        for r in cur.fetchall()
+    ]
+
+    # 7. Top Cities
+    db.execute(
+        cur,
+        """
+        SELECT city, country, COUNT(DISTINCT ip) as unique_ips, COUNT(*) as hits
+        FROM visitor_traffic
+        WHERE city NOT IN ('Unknown', '')
+        GROUP BY city, country
+        ORDER BY unique_ips DESC, hits DESC
+        LIMIT 10
+        """,
+    )
+    top_cities = [
+        {"city": r[0], "country": r[1], "unique_ips": int(r[2]), "hits": int(r[3])}
+        for r in cur.fetchall()
+    ]
+
+    # 8. Top Visited Pages
+    db.execute(
+        cur,
+        """
+        SELECT path, COUNT(DISTINCT ip) as unique_ips, COUNT(*) as hits
+        FROM visitor_traffic
+        GROUP BY path
+        ORDER BY hits DESC, unique_ips DESC
+        LIMIT 10
+        """,
+    )
+    top_paths = [
+        {"path": r[0], "unique_ips": int(r[1]), "hits": int(r[2])}
+        for r in cur.fetchall()
+    ]
+
+    # 9. Recent Visitor Access Log
+    query = """
+        SELECT ts, ip, country, region, city, path, method, status_code, user_agent, user_id
+        FROM visitor_traffic
+    """
+    params = []
+    if (search_ip or "").strip():
+        query += " WHERE ip LIKE ? OR country LIKE ? OR city LIKE ? OR path LIKE ?"
+        like_p = f"%{search_ip.strip()}%"
+        params.extend([like_p, like_p, like_p, like_p])
+    query += " ORDER BY ts DESC LIMIT ?"
+    params.append(limit)
+
+    db.execute(cur, query, tuple(params))
+    recent_visitors = []
+    for r in cur.fetchall():
+        import datetime
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        recent_visitors.append({
+            "ts": int(r[0]),
+            "ts_str": dt_str,
+            "ip": r[1],
+            "country": r[2] or "Unknown",
+            "region": r[3] or "Unknown",
+            "city": r[4] or "Unknown",
+            "path": r[5] or "/",
+            "method": r[6] or "GET",
+            "status_code": int(r[7] or 200),
+            "user_agent": r[8] or "",
+            "user_id": r[9] or "anonymous",
+        })
+
+    conn.close()
+
+    return {
+        "kpis": {
+            "total_hits": total_hits,
+            "unique_ips_total": unique_ips_total,
+            "unique_ips_today": unique_ips_today,
+            "unique_ips_week": unique_ips_week,
+            "unique_ips_month": unique_ips_month,
+            "unique_countries": unique_countries,
+        },
+        "top_countries": top_countries,
+        "top_cities": top_cities,
+        "top_paths": top_paths,
+        "recent_visitors": recent_visitors,
+        "search_query": search_ip,
+    }
+
+
+def export_visitor_traffic_csv(limit: int = 1000) -> str:
+    """Exports raw visitor traffic access log to CSV format."""
+    conn = _conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        """
+        SELECT ts, ip, country, region, city, path, method, status_code, user_agent, user_id
+        FROM visitor_traffic
+        ORDER BY ts DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    import csv
+    import io
+    import datetime
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Timestamp_UTC", "IP", "Country", "Region", "City", "Path", "Method", "Status_Code", "User_Agent", "User_ID"])
+    for r in rows:
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        writer.writerow([dt_str, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]])
+    return out.getvalue()
+
+
+def export_visitor_traffic_json(limit: int = 1000) -> str:
+    """Exports raw visitor traffic access log to JSON format."""
+    conn = _conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        """
+        SELECT ts, ip, country, region, city, path, method, status_code, user_agent, user_id
+        FROM visitor_traffic
+        ORDER BY ts DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    import datetime
+    import json
+
+    records = []
+    for r in rows:
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        records.append({
+            "timestamp": dt_str,
+            "ts": int(r[0]),
+            "ip": r[1],
+            "country": r[2],
+            "region": r[3],
+            "city": r[4],
+            "path": r[5],
+            "method": r[6],
+            "status_code": int(r[7]),
+            "user_agent": r[8],
+            "user_id": r[9],
+        })
+    return json.dumps(records, indent=2)

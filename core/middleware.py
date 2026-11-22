@@ -6,7 +6,8 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import APP_ENV, REQUESTS_PER_MINUTE, logger
-from core.security import is_admin_session, _same_origin
+from core.security import is_admin_session, _same_origin, get_client_ip, get_client_geo
+from services.analytics.admin_analytics import record_visitor_traffic
 
 PUBLIC_PATHS = {
     "/",
@@ -63,11 +64,7 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
 
         req_id = request.headers.get("x-request-id") or str(uuid.uuid4())
         request.state.request_id = req_id
-        ip = ""
-        try:
-            ip = request.client.host if request.client else "unknown"
-        except Exception:
-            ip = "unknown"
+        ip = get_client_ip(request)
 
         # Global abuse throttle.
         now = time.time()
@@ -96,6 +93,29 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(self), camera=()"
+
+        # Asynchronously record visitor traffic with real IP and geographic metadata
+        if not (path.startswith("/healthz") or path.startswith("/readyz") or path in ("/favicon.ico", "/robots.txt", "/sitemap.xml")):
+            try:
+                geo = get_client_geo(request)
+                ua = request.headers.get("user-agent", "")
+                user_id = "anonymous"
+                if "session" in request.scope:
+                    session = request.session
+                    user_id = str(session.get("user_id") or session.get("user_email") or session.get("admin_user") or "anonymous")
+                record_visitor_traffic(
+                    ip=ip,
+                    country=geo.get("country", "Unknown"),
+                    region=geo.get("region", "Unknown"),
+                    city=geo.get("city", "Unknown"),
+                    path=path,
+                    method=request.method,
+                    status_code=response.status_code,
+                    user_agent=ua,
+                    user_id=user_id,
+                )
+            except Exception:
+                pass
         if path == "/":
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "

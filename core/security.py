@@ -60,12 +60,52 @@ def verify_password(stored: str, password: str) -> bool:
     return hmac.compare_digest(value, legacy)
 
 
-def _auth_key(request: Request, action: str, identity: str = "") -> str:
-    ip = ""
+def get_client_ip(request: Request) -> str:
+    """
+    Extract the real client IP address, handling proxy headers from Vercel / Cloudflare / Nginx.
+    """
+    if not request:
+        return "127.0.0.1"
+    headers = getattr(request, "headers", None) or {}
+    forwarded = headers.get("x-forwarded-for")
+    if forwarded:
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if parts:
+            return parts[0]
+    real_ip = headers.get("x-real-ip")
+    if real_ip and real_ip.strip():
+        return real_ip.strip()
     try:
-        ip = request.client.host if request.client else ""
+        client = getattr(request, "client", None)
+        if client and getattr(client, "host", None):
+            return client.host
     except Exception:
-        ip = ""
+        pass
+    return "127.0.0.1"
+
+
+def get_client_geo(request: Request) -> dict:
+    """
+    Extract geographic location headers populated automatically by Vercel edge routers.
+    """
+    if not request:
+        return {"country": "Unknown", "region": "Unknown", "city": "Unknown"}
+    headers = getattr(request, "headers", None) or {}
+    country = (headers.get("x-vercel-ip-country") or "").strip() or "Unknown"
+    region = (headers.get("x-vercel-ip-country-region") or "").strip() or "Unknown"
+    city = (headers.get("x-vercel-ip-city") or "").strip() or "Unknown"
+    if city and "%" in city:
+        import urllib.parse
+        city = urllib.parse.unquote(city)
+    return {
+        "country": country,
+        "region": region,
+        "city": city,
+    }
+
+
+def _auth_key(request: Request, action: str, identity: str = "") -> str:
+    ip = get_client_ip(request)
     return f"{action}:{(identity or '').strip().lower()}:{ip}"
 
 

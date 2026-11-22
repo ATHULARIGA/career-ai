@@ -1,0 +1,248 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+
+<!-- Header & Controls -->
+<section class="adm-section">
+  <div class="adm-toolbar">
+    <div>
+      <h2 class="adm-section-title">Visitor Traffic &amp; Unique IPs</h2>
+      <p class="adm-section-desc">Granular monitoring of unique visitor IP addresses, geolocation routing, and platform access logs.</p>
+    </div>
+
+    <div class="adm-actions">
+      <a class="adm-btn" href="/admin/traffic/export?format=csv">
+        <span>Export Traffic CSV</span>
+      </a>
+      <a class="adm-btn" href="/admin/traffic/export?format=json">
+        <span>Export Traffic JSON</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Unique IP KPI Cards -->
+  <div class="adm-kpi-row">
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">UNIQUE IPS TODAY</p>
+      <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_today }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">UNIQUE IPS (7 DAYS)</p>
+      <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_week }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">UNIQUE IPS (30 DAYS)</p>
+      <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_month }}</h3>
+    </article>
+
+    <article class="adm-kpi-card adm-kpi-featured">
+      <p class="adm-kpi-label adm-primary-text">TOTAL UNIQUE VISITORS</p>
+      <h3 class="adm-kpi-val adm-primary-text">{{ traffic.kpis.unique_ips_total }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">TOTAL PAGE HITS</p>
+      <h3 class="adm-kpi-val">{{ traffic.kpis.total_hits }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">DISTINCT COUNTRIES</p>
+      <h3 class="adm-kpi-val">{{ traffic.kpis.unique_countries }}</h3>
+    </article>
+  </div>
+</section>
+
+<!-- Geographic Breakdown & Top Paths Grid -->
+<div class="adm-grid-2col">
+  <!-- Top Countries Card -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>Top Visitor Countries</h2>
+        <p>Highest volume origins resolved via edge network IP routing.</p>
+      </div>
+      <span class="badge-neutral">Geographic</span>
+    </div>
+
+    {% if traffic.top_countries %}
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Country Code</th>
+            <th>Unique Visitors (IPs)</th>
+            <th>Total Requests</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in traffic.top_countries %}
+          <tr>
+            <td>
+              <span class="adm-role-badge adm-role-general">{{ c.country }}</span>
+            </td>
+            <td>
+              <strong>{{ c.unique_ips }}</strong>
+            </td>
+            <td>
+              <span>{{ c.hits }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="adm-empty">
+      <p>No geographic visitor traffic recorded yet.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Top Visited Routes Card -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>Top Visited Routes</h2>
+        <p>Most frequently accessed platform endpoints and landing pages.</p>
+      </div>
+      <span class="badge-ok">Routing</span>
+    </div>
+
+    {% if traffic.top_paths %}
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Unique Visitors</th>
+            <th>Total Hits</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in traffic.top_paths %}
+          <tr>
+            <td>
+              <code class="adm-meta-code">{{ p.path }}</code>
+            </td>
+            <td>
+              <strong>{{ p.unique_ips }}</strong>
+            </td>
+            <td>
+              <span>{{ p.hits }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="adm-empty">
+      <p>No endpoint access recorded yet.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<!-- Granular Visitor Access Log -->
+<section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Granular Visitor Access Log</h2>
+      <p>Real-time audit log of incoming HTTP requests with resolved public IP and client metadata.</p>
+    </div>
+    <span class="badge-neutral">Live Feed</span>
+  </div>
+
+  <!-- Search Filter Toolbar -->
+  <div class="adm-toolbar">
+    <form method="GET" action="/admin/traffic" class="adm-search-form">
+      <input
+        type="text"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="Filter by IP address, country, city, or path..."
+        class="adm-input"
+      />
+      <button type="submit" class="adm-btn">
+        <span>Filter Log</span>
+      </button>
+      {% if search_query %}
+      <a href="/admin/traffic" class="adm-btn">
+        <span>Clear Filter</span>
+      </a>
+      {% endif %}
+    </form>
+    <span class="badge-neutral">Showing {{ traffic.recent_visitors|length }} Records</span>
+  </div>
+
+  {% if traffic.recent_visitors %}
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Timestamp (UTC)</th>
+          <th>Client IP</th>
+          <th>Location</th>
+          <th>Method / Path</th>
+          <th>Status</th>
+          <th>User Agent / Client</th>
+          <th>Identity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in traffic.recent_visitors %}
+        <tr>
+          <td>
+            <span class="adm-date-cell">{{ v.ts_str }}</span>
+          </td>
+          <td>
+            <code class="adm-meta-code">{{ v.ip }}</code>
+          </td>
+          <td>
+            {% if v.city != 'Unknown' and v.country != 'Unknown' %}
+            <span>{{ v.city }}, {{ v.country }}</span>
+            {% elif v.country != 'Unknown' %}
+            <span>{{ v.country }}</span>
+            {% else %}
+            <span class="adm-text-dim">Unknown</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="adm-method-badge">{{ v.method }}</span>
+            <code class="adm-meta-code">{{ v.path }}</code>
+          </td>
+          <td>
+            {% if v.status_code >= 200 and v.status_code < 300 %}
+            <span class="badge-ok">{{ v.status_code }}</span>
+            {% elif v.status_code >= 300 and v.status_code < 400 %}
+            <span class="badge-neutral">{{ v.status_code }}</span>
+            {% elif v.status_code >= 400 and v.status_code < 500 %}
+            <span class="badge-warn">{{ v.status_code }}</span>
+            {% else %}
+            <span class="badge-err">{{ v.status_code }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="adm-ua-cell" title="{{ v.user_agent }}">{{ v.user_agent[:45] }}{% if v.user_agent|length > 45 %}...{% endif %}</span>
+          </td>
+          <td>
+            {% if v.user_id != 'anonymous' %}
+            <span class="adm-role-badge adm-role-admin">{{ v.user_id }}</span>
+            {% else %}
+            <span class="adm-text-dim">anonymous</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="adm-empty">
+    <p>No visitor traffic records found matching query.</p>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

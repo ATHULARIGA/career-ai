@@ -1148,6 +1148,71 @@ html.theme-dark .adm-table-total-row,
   background: #141d2e !important;
   border-color: #1e293b !important;
 }
+
+/* Visitor Traffic Classes */
+.adm-meta-code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  background: var(--adm-surface-subtle);
+  border: 1px solid var(--adm-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--adm-text);
+}
+
+.adm-method-badge {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--adm-accent);
+  margin-right: 6px;
+}
+
+.adm-date-cell {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  color: var(--adm-text-muted);
+  white-space: nowrap;
+}
+
+.adm-ua-cell {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.74rem;
+  color: var(--adm-text-dim);
+  max-width: 200px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.badge-err {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
 </style>
 
 <section class="adm-page">
@@ -1180,6 +1245,9 @@ html.theme-dark .adm-table-total-row,
       </a>
       <a href="/admin/reports" class="adm-nav-item {% if active_admin_page == 'reports' %}active{% endif %}">
         <span>Executive Reports</span>
+      </a>
+      <a href="/admin/traffic" class="adm-nav-item {% if active_admin_page == 'traffic' %}active{% endif %}">
+        <span>Visitor Traffic</span>
       </a>
       <a href="/admin/premium" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
         <span>Premium Queue</span>
