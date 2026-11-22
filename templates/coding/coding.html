@@ -1,4 +1,137 @@
 {% extends "layout.html" %}
+
+{% block extra_head %}
+<style>
+/* ── Coding IDE Accessibility & WCAG AAA Contrast Overrides ── */
+.cp-eyebrow {
+  color: #4338ca !important;
+  font-size: 1.0rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 6px !important;
+}
+.theme-dark .cp-eyebrow {
+  color: #818cf8 !important;
+}
+
+.cp-block-label {
+  display: block;
+}
+
+.cp-header-description {
+  color: #334155 !important;
+  font-size: 1.05rem !important;
+  line-height: 1.6 !important;
+}
+.theme-dark .cp-header-description {
+  color: #cbd5e1 !important;
+}
+
+.cp-shortcuts {
+  color: #334155 !important;
+  font-size: 1.0rem !important;
+  font-weight: 500 !important;
+  margin-top: 10px;
+}
+.theme-dark .cp-shortcuts {
+  color: #cbd5e1 !important;
+}
+
+.cp-problem-select {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cp-problem-select select {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.0rem;
+  padding: 8px 10px;
+  border: 1.5px solid #64748b;
+  border-radius: 8px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+}
+.theme-dark .cp-problem-select select {
+  background: #0f172a;
+  border-color: #64748b;
+  color: #f8fafc;
+}
+
+.cp-switch-btn {
+  padding: 8px 14px;
+  font-size: 1.0rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cp-custom-input {
+  border: 1.5px solid #64748b !important;
+  font-size: 1.0rem !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+}
+.theme-dark .cp-custom-input {
+  border-color: #64748b !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.cp-problem-link {
+  color: #1e3a8a !important;
+  background-color: transparent !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+  font-weight: 600 !important;
+}
+.theme-dark .cp-problem-link {
+  color: #93c5fd !important;
+  background-color: transparent !important;
+}
+.cp-problem-link:hover {
+  color: #0f172a !important;
+}
+.theme-dark .cp-problem-link:hover {
+  color: #ffffff !important;
+}
+
+.cp-chip {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+.cp-hero-meta span {
+  font-size: 0.95rem !important;
+}
+
+.cp-result-meta span {
+  font-size: 1.0rem !important;
+}
+
+.cp-summary-kpis span {
+  font-size: 1.0rem !important;
+}
+
+.cp-file-tree li button {
+  font-size: 1.0rem !important;
+}
+
+.cp-panel-subtext,
+.cp-muted,
+.cp-advanced-hint {
+  font-size: 1.0rem !important;
+  color: #334155 !important;
+}
+.theme-dark .cp-panel-subtext,
+.theme-dark .cp-muted,
+.theme-dark .cp-advanced-hint {
+  color: #cbd5e1 !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="cp-page cp-ide-page">
   <div class="cp-container">
@@ -44,15 +177,16 @@
         </div>
 
         <div class="cp-explorer-block">
-          <p class="cp-eyebrow">Problem</p>
+          <label for="problem" class="cp-eyebrow cp-block-label">Problem</label>
           <form method="get" action="/coding" class="cp-problem-select">
-            <select id="problem" name="problem" onchange="this.form.submit()">
+            <select id="problem" name="problem" aria-label="Select Coding Problem">
               {% for p in problems %}
               <option value="{{ p.id }}" {% if p.id == selected_problem_id %}selected{% endif %}>
                 {{ p.title }} · {{ p.difficulty }}
               </option>
               {% endfor %}
             </select>
+            <button type="submit" class="btn-secondary cp-switch-btn">Switch</button>
           </form>
         </div>
 
@@ -75,7 +209,7 @@
         </div>
       </aside>
 
-      <main class="cp-ide-stage">
+      <div class="cp-ide-stage">
         <form id="editorForm" method="post" action="/coding/run" class="cp-ide-form">
           <input type="hidden" name="problem_id" value="{{ selected_problem_id }}">
           <input type="hidden" name="code" id="codeField" value="{{ code|e }}">
@@ -296,7 +430,7 @@
             {% endif %}
           </div>
         </section>
-      </main>
+      </div>
     </div>
 
     <details class="cp-advanced cp-panel-spaced">
@@ -324,7 +458,7 @@
           {% endif %}
           {% if recommended_problem and recommended_problem.id %}
           <p class="cp-note-line">
-            Recommended next: <a href="/coding?problem={{ recommended_problem.id }}">{{ recommended_problem.title }}</a>
+            Recommended next: <a href="/coding?problem={{ recommended_problem.id }}" class="cp-problem-link">{{ recommended_problem.title }}</a>
           </p>
           {% endif %}
           <div class="cp-grid-2 cp-plan-grid">
@@ -418,7 +552,7 @@
             {% if contest_snapshot and contest_snapshot.contest and contest_snapshot.contest.problems %}
             <div class="cp-result-meta">
               {% for p in contest_snapshot.contest.problems %}
-              <span><a href="/coding?problem={{ p.id }}">{{ p.title }}</a> · {{ p.difficulty }}</span>
+              <span><a href="/coding?problem={{ p.id }}" class="cp-problem-link">{{ p.title }}</a> · {{ p.difficulty }}</span>
               {% endfor %}
             </div>
             {% if contest_snapshot.user_rank %}
@@ -486,6 +620,17 @@ document.addEventListener("DOMContentLoaded", function () {
     fontSize: "13px",
   });
   editor.session.setUseWorker(false);
+
+  // Set accessible name and remove redundant role on Ace editor textarea
+  const fixAceAccessibility = () => {
+    const aceTextarea = editor.textInput ? editor.textInput.getElement() : document.querySelector(".ace_text-input");
+    if (aceTextarea) {
+      aceTextarea.setAttribute("aria-label", "Code editor input");
+      aceTextarea.removeAttribute("role");
+    }
+  };
+  fixAceAccessibility();
+  setTimeout(fixAceAccessibility, 250);
 
   function sourceFileForLanguage(lang) {
     if (lang === "python") return "main.py";
