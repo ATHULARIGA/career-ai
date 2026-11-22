@@ -13,6 +13,8 @@ PUBLIC_PATHS = {
     "/",
     "/login",
     "/signup",
+    "/admin-login",
+    "/admin-logout",
     "/forgot-password",
     "/reset-password",
     "/privacy",
