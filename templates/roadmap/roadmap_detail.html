@@ -52,10 +52,55 @@
 
 <style>
 /* ── Programmatic Roadmap Detail Styles ───────────────────────── */
+.rm-breadcrumb {
+  margin-bottom: 16px;
+  font-size: 1.0rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #475569;
+}
+.theme-dark .rm-breadcrumb {
+  color: #94a3b8;
+}
+.rm-breadcrumb a {
+  color: #1e3a8a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.theme-dark .rm-breadcrumb a {
+  color: #93c5fd;
+}
+.rm-breadcrumb-sep {
+  margin: 0 6px;
+  color: var(--ui-border);
+}
+.rm-breadcrumb-current {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
 .rm-detail-hero {
-  padding: 40px 0 32px;
+  padding: 36px 0 32px;
   border-bottom: 1px solid var(--ui-border);
   margin-bottom: 32px;
+}
+
+.rm-hero-title {
+  font-size: clamp(2.2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  color: var(--ui-text);
+}
+
+.rm-hero-desc {
+  font-size: 1.15rem;
+  color: #334155;
+  max-width: 820px;
+  line-height: 1.65;
+  margin: 0;
+}
+.theme-dark .rm-hero-desc {
+  color: #cbd5e1;
 }
 
 .rm-meta-bar {
@@ -70,19 +115,25 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  color: var(--ui-text-muted);
+  font-size: 1.0rem;
+  color: #475569;
+}
+.theme-dark .rm-meta-item {
+  color: #94a3b8;
 }
 .rm-meta-item strong {
   color: var(--ui-text);
-  font-weight: 600;
+  font-weight: 700;
+}
+.rm-meta-dot {
+  color: var(--ui-border);
 }
 
 .rm-cta-banner {
   background: var(--ui-surface);
   border: 1px solid var(--ui-border);
   border-radius: 14px;
-  padding: 20px 24px;
+  padding: 22px 26px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -94,6 +145,82 @@
 .theme-dark .rm-cta-banner {
   background: #111827;
   border-color: #1f2937;
+}
+
+.rm-cta-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--ui-text);
+}
+
+.rm-cta-desc {
+  font-size: 1.05rem;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+.theme-dark .rm-cta-desc {
+  color: #cbd5e1;
+}
+
+.rm-cta-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rm-cta-btn {
+  text-decoration: none;
+  padding: 10px 18px;
+  font-size: 1.0rem;
+  font-weight: 600;
+}
+
+.rm-overview-section {
+  margin-bottom: 36px;
+}
+
+.rm-section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--ui-text);
+}
+
+.rm-overview-text {
+  font-size: 1.05rem;
+  color: #334155;
+  line-height: 1.75;
+  max-width: 900px;
+  margin: 0;
+}
+.theme-dark .rm-overview-text {
+  color: #cbd5e1;
+}
+
+.rm-canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rm-canvas-hint {
+  font-size: 1.0rem;
+  color: #475569;
+  margin: 0;
+}
+.theme-dark .rm-canvas-hint {
+  color: #94a3b8;
+}
+
+.rm-canvas-btn {
+  text-decoration: none;
+  font-size: 1.0rem;
+  padding: 8px 16px;
 }
 
 .rm-canvas-container {
@@ -172,6 +299,31 @@
   flex-wrap: wrap;
 }
 
+.rm-phase-badge {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.rm-phase-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--ui-text);
+}
+
+.rm-phase-summary {
+  font-size: 1.05rem;
+  color: #334155;
+  margin: 0;
+  max-width: 800px;
+  line-height: 1.6;
+}
+.theme-dark .rm-phase-summary {
+  color: #cbd5e1;
+}
+
 .rm-skill-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -193,6 +345,27 @@
   border-color: #1f2937;
 }
 
+.rm-skill-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--ui-text);
+}
+
+.rm-skill-desc {
+  font-size: 1.0rem;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+.theme-dark .rm-skill-desc {
+  color: #cbd5e1;
+}
+
+.rm-tool-wrap {
+  margin-top: 6px;
+}
+
 .rm-tool-tag {
   display: inline-block;
   background: rgba(59, 130, 246, 0.1);
@@ -200,7 +373,7 @@
   border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 6px;
   padding: 2px 8px;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-family: "IBM Plex Mono", monospace;
   margin-right: 6px;
   margin-top: 6px;
@@ -210,15 +383,20 @@
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px dashed var(--ui-border);
-  font-size: 0.82rem;
-  color: #10b981;
-  line-height: 1.45;
+  font-size: 1.0rem;
+  color: #065f46;
+  line-height: 1.55;
 }
 .theme-dark .rm-interview-tip {
   border-color: #1f2937;
+  color: #34d399;
 }
 
 /* FAQ Accordion */
+.rm-faq-section {
+  margin-bottom: 50px;
+}
+
 .rm-faq-item {
   background: var(--ui-surface);
   border: 1px solid var(--ui-border);
@@ -232,17 +410,44 @@
 }
 
 .rm-faq-q {
-  font-size: 1.02rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--ui-text);
   margin: 0 0 8px;
 }
 
 .rm-faq-a {
-  font-size: 0.92rem;
-  color: var(--ui-text-muted);
-  line-height: 1.6;
+  font-size: 1.05rem;
+  color: #334155;
+  line-height: 1.65;
   margin: 0;
+}
+.theme-dark .rm-faq-a {
+  color: #cbd5e1;
+}
+
+/* Explore Roadmaps */
+.rm-explore-section {
+  border-top: 1px solid var(--ui-border);
+  padding-top: 36px;
+  margin-bottom: 40px;
+}
+
+.rm-explore-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rm-explore-chip {
+  text-decoration: none;
+  padding: 10px 18px;
+  font-size: 1.0rem;
+}
+
+.rm-explore-chip-highlight {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 </style>
 {% endblock %}
@@ -252,21 +457,21 @@
   <div class="rr-container">
 
     <!-- Breadcrumb -->
-    <nav style="margin-bottom: 14px; font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted);">
-      <a href="/" style="color: var(--ui-text-muted); text-decoration: none;">Home</a>
-      <span style="margin: 0 6px;">/</span>
-      <a href="/roadmap" style="color: var(--ui-text-muted); text-decoration: none;">Roadmaps</a>
-      <span style="margin: 0 6px;">/</span>
-      <span style="color: var(--ui-text);">{{ track.role_name }}</span>
+    <nav class="rm-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="rm-breadcrumb-sep">/</span>
+      <a href="/roadmap">Roadmaps</a>
+      <span class="rm-breadcrumb-sep">/</span>
+      <span class="rm-breadcrumb-current">{{ track.role_name }}</span>
     </nav>
 
     <!-- Hero Header -->
     <header class="rm-detail-hero">
       <p class="rr-eyebrow">CAREER ROADMAP 2026</p>
-      <h1 style="font-size: clamp(2.2rem, 3.5vw, 3rem); font-weight: 800; letter-spacing: -0.03em; margin: 0 0 12px;">
+      <h1 class="rm-hero-title">
         {{ track.h1_title }}
       </h1>
-      <p style="font-size: 1.12rem; color: var(--ui-text-muted); max-width: 820px; line-height: 1.6; margin: 0;">
+      <p class="rm-hero-desc">
         {{ track.tagline }}
       </p>
 
@@ -275,12 +480,12 @@
           <span>Avg. Salary:</span>
           <strong>{{ track.avg_salary }}</strong>
         </div>
-        <span style="color: var(--ui-border);">•</span>
+        <span class="rm-meta-dot">•</span>
         <div class="rm-meta-item">
           <span>Est. Learning Time:</span>
           <strong>{{ track.est_time }}</strong>
         </div>
-        <span style="color: var(--ui-border);">•</span>
+        <span class="rm-meta-dot">•</span>
         <div class="rm-meta-item">
           <span>Hiring Demand:</span>
           <strong>{{ track.demand_level }}</strong>
@@ -291,39 +496,39 @@
     <!-- Quick Conversion Action Banner -->
     <div class="rm-cta-banner">
       <div>
-        <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; color: var(--ui-text);">
+        <h2 class="rm-cta-title">
           Ready to verify your {{ track.role_name }} readiness?
         </h2>
-        <p style="font-size: 0.88rem; color: var(--ui-text-muted); margin: 0;">
+        <p class="rm-cta-desc">
           Run an instant ATS resume audit or test your knowledge in a realistic AI mock interview.
         </p>
       </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="/resume?target_role={{ track.role_name | urlencode }}" class="rr-submit" style="text-decoration: none; padding: 10px 18px; font-size: 0.88rem;">
+      <div class="rm-cta-actions">
+        <a href="/resume?target_role={{ track.role_name | urlencode }}" class="rr-submit rm-cta-btn">
           Audit Resume →
         </a>
-        <a href="/interview/new?role={{ track.role_name | urlencode }}&topic={{ track.role_name | urlencode }}" class="btn-secondary" style="text-decoration: none; padding: 10px 18px; font-size: 0.88rem;">
+        <a href="/interview/new?role={{ track.role_name | urlencode }}&topic={{ track.role_name | urlencode }}" class="btn-secondary rm-cta-btn">
           Mock Interview →
         </a>
       </div>
     </div>
 
     <!-- Overview Text (SEO Content) -->
-    <section style="margin-bottom: 32px;">
-      <h2 style="font-size: 1.35rem; font-weight: 700; margin: 0 0 10px;">Market Overview & Hiring Expectations</h2>
-      <p style="font-size: 1rem; color: var(--ui-text-muted); line-height: 1.7; max-width: 900px; margin: 0;">
+    <section class="rm-overview-section">
+      <h2 class="rm-section-title">Market Overview & Hiring Expectations</h2>
+      <p class="rm-overview-text">
         {{ track.overview }}
       </p>
     </section>
 
     <!-- Interactive Canvas Graph -->
     <section>
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+      <div class="rm-canvas-header">
         <div>
-          <h2 style="font-size: 1.35rem; font-weight: 700; margin: 0 0 4px;">Interactive Skill Graph</h2>
-          <p style="font-size: 0.86rem; color: var(--ui-text-muted); margin: 0;">Scroll to zoom, drag to pan, and click nodes to view milestones.</p>
+          <h2 class="rm-section-title">Interactive Skill Graph</h2>
+          <p class="rm-canvas-hint">Scroll to zoom, drag to pan, and click nodes to view milestones.</p>
         </div>
-        <a href="/career-map" class="btn-secondary" style="text-decoration: none; font-size: 0.8rem; padding: 6px 14px;">
+        <a href="/career-map" class="btn-secondary rm-canvas-btn">
           Custom Role Generator ↗
         </a>
       </div>
@@ -335,7 +540,7 @@
 
     <!-- Semantic Phase Breakdown for SEO Crawlers & Humans -->
     <section class="rm-phase-section">
-      <h2 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 20px;">
+      <h2 class="rm-section-title">
         Step-by-Step Curriculum & Competencies
       </h2>
 
@@ -343,13 +548,13 @@
       <article class="rm-phase-card">
         <div class="rm-phase-header">
           <div>
-            <span class="rr-chip" style="font-size: 0.75rem; padding: 4px 10px; margin-bottom: 8px; display: inline-block;">
+            <span class="rr-chip rm-phase-badge">
               {{ phase.badge }}
             </span>
-            <h3 style="font-size: 1.3rem; font-weight: 700; margin: 0 0 6px; color: var(--ui-text);">
+            <h3 class="rm-phase-title">
               {{ phase.title }}
             </h3>
-            <p style="font-size: 0.95rem; color: var(--ui-text-muted); margin: 0; max-width: 800px; line-height: 1.5;">
+            <p class="rm-phase-summary">
               {{ phase.summary }}
             </p>
           </div>
@@ -359,13 +564,13 @@
           {% for skill in phase.skills %}
           <div class="rm-skill-item">
             <div>
-              <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 6px; color: var(--ui-text);">
+              <h4 class="rm-skill-name">
                 {{ skill.name }}
               </h4>
-              <p style="font-size: 0.86rem; color: var(--ui-text-muted); line-height: 1.5; margin: 0 0 10px;">
+              <p class="rm-skill-desc">
                 {{ skill.desc }}
               </p>
-              <div style="margin-top: 6px;">
+              <div class="rm-tool-wrap">
                 {% for tool in skill.tools %}
                 <span class="rm-tool-tag">{{ tool }}</span>
                 {% endfor %}
@@ -385,9 +590,9 @@
     </section>
 
     <!-- Frequently Asked Questions (FAQ) -->
-    <section style="margin-bottom: 50px;">
-      <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 20px;">Frequently Asked Questions</h2>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+    <section class="rm-faq-section">
+      <h2 class="rm-section-title">Frequently Asked Questions</h2>
+      <div>
         {% for faq in track.faqs %}
         <div class="rm-faq-item">
           <h3 class="rm-faq-q">{{ faq.q }}</h3>
@@ -398,14 +603,14 @@
     </section>
 
     <!-- Explore Other Tracks -->
-    <section style="border-top: 1px solid var(--ui-border); padding-top: 36px;">
-      <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 16px;">Explore Other 2026 Roadmaps</h2>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-        <a href="/roadmap/python-developer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">Python Developer →</a>
-        <a href="/roadmap/react-frontend-engineer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">React & Frontend →</a>
-        <a href="/roadmap/data-scientist" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">Data Scientist →</a>
-        <a href="/roadmap/devops-engineer" class="rr-chip" style="text-decoration: none; padding: 8px 16px;">DevOps Engineer →</a>
-        <a href="/career-map" class="rr-chip" style="text-decoration: none; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">All Tracks & Custom Generator →</a>
+    <section class="rm-explore-section">
+      <h2 class="rm-section-title">Explore Other 2026 Roadmaps</h2>
+      <div class="rm-explore-chips">
+        <a href="/roadmap/python-developer" class="rr-chip rm-explore-chip">Python Developer →</a>
+        <a href="/roadmap/react-frontend-engineer" class="rr-chip rm-explore-chip">React & Frontend →</a>
+        <a href="/roadmap/data-scientist" class="rr-chip rm-explore-chip">Data Scientist →</a>
+        <a href="/roadmap/devops-engineer" class="rr-chip rm-explore-chip">DevOps Engineer →</a>
+        <a href="/career-map" class="rr-chip rm-explore-chip rm-explore-chip-highlight">All Tracks & Custom Generator →</a>
       </div>
     </section>
 
@@ -487,4 +692,3 @@
 </script>
 
 {% endblock %}
-
