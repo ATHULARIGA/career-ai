@@ -501,6 +501,559 @@ html.theme-dark .badge-neutral,
   border-color: #1e293b !important;
   color: #94a3b8 !important;
 }
+
+/* User Access & Search Toolbar */
+.adm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.adm-search-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+  max-width: 480px;
+}
+
+.adm-filter-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.adm-filter-pill {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--adm-border);
+  background: var(--adm-surface);
+  color: var(--adm-text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+html.theme-dark .adm-filter-pill,
+.theme-dark .adm-filter-pill {
+  background: #111a2c !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+.adm-filter-pill:hover {
+  color: var(--adm-text);
+  border-color: var(--adm-primary);
+}
+
+.adm-filter-pill.active {
+  background: var(--adm-primary);
+  color: var(--adm-primary-text);
+  border-color: var(--adm-primary);
+  font-weight: 600;
+}
+
+html.theme-dark .adm-filter-pill.active,
+.theme-dark .adm-filter-pill.active {
+  background: var(--adm-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--adm-primary) !important;
+}
+
+/* Role & Plan Badges */
+.badge-role-admin {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+html.theme-dark .badge-role-admin,
+.theme-dark .badge-role-admin {
+  background: rgba(129, 140, 248, 0.15) !important;
+  color: #a5b4fc !important;
+  border-color: rgba(129, 140, 248, 0.3) !important;
+}
+
+.badge-role-user {
+  background: var(--adm-surface-subtle);
+  color: var(--adm-text-muted);
+  border: 1px solid var(--adm-border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-role-mentor {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-plan-pro {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-plan-free {
+  background: var(--adm-surface-subtle);
+  color: var(--adm-text-dim);
+  border: 1px solid var(--adm-border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* Action Buttons */
+.adm-btn-xs {
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--adm-border);
+  background: var(--adm-surface);
+  color: var(--adm-text);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adm-btn-xs-primary {
+  background: var(--adm-primary);
+  color: var(--adm-primary-text);
+  border-color: var(--adm-primary);
+}
+
+.adm-btn-xs-primary:hover {
+  opacity: 0.9;
+}
+
+.adm-btn-xs-danger {
+  color: var(--adm-danger);
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.adm-btn-xs-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--adm-danger);
+}
+
+.adm-badge-self {
+  font-size: 0.72rem;
+  color: var(--adm-text-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-style: italic;
+  padding: 4px 8px;
+}
+
+/* Flash Alerts */
+.adm-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adm-alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+html.theme-dark .adm-alert-success,
+.theme-dark .adm-alert-success {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.adm-alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+html.theme-dark .adm-alert-error,
+.theme-dark .adm-alert-error {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* 7-Day Activity Trend Bar Chart */
+.adm-trend-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  align-items: flex-end;
+  min-height: 140px;
+  padding-top: 16px;
+}
+
+.adm-trend-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.adm-trend-val {
+  font-size: 0.72rem;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--adm-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-trend-bar-track {
+  width: 100%;
+  max-width: 36px;
+  height: 90px;
+  background: var(--adm-surface-subtle);
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  border: 1px solid var(--adm-border);
+}
+
+html.theme-dark .adm-trend-bar-track,
+.theme-dark .adm-trend-bar-track {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+}
+
+.adm-trend-bar-fill {
+  width: 100%;
+  background: var(--adm-accent);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.adm-trend-date {
+  font-size: 0.68rem;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--adm-text-dim);
+  text-transform: uppercase;
+}
+
+/* Analytics Distributions and Lists */
+.adm-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adm-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.adm-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.adm-stat-label {
+  font-weight: 500;
+  color: var(--adm-text);
+}
+
+.adm-stat-val {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--adm-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--adm-surface-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--adm-border-subtle);
+}
+
+html.theme-dark .adm-bar-track,
+.theme-dark .adm-bar-track {
+  background: #141d2e !important;
+  border-color: #1e293b !important;
+}
+
+.adm-bar-fill {
+  height: 100%;
+  background: var(--adm-accent);
+  border-radius: 999px;
+}
+
+/* Overview Layout Classes (Zero Inline Styles) */
+.adm-section {
+  margin-bottom: 24px;
+}
+
+.adm-section-head {
+  margin-bottom: 12px;
+}
+
+.adm-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--adm-text);
+}
+
+.adm-section-desc {
+  font-size: 0.8rem;
+  color: var(--adm-text-muted);
+  margin: 2px 0 0;
+}
+
+.adm-kpi-featured {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.adm-primary-text {
+  color: var(--adm-primary) !important;
+}
+
+.adm-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.adm-grid-3col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.adm-card-mb0 {
+  margin-bottom: 0 !important;
+}
+
+.adm-flex-col-10 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adm-step-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-step-title {
+  font-size: 0.88rem;
+  color: var(--adm-text);
+  display: block;
+}
+
+.adm-step-desc {
+  font-size: 0.76rem;
+  color: var(--adm-text-muted);
+}
+
+.adm-step-val {
+  font-size: 1.15rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-step-val-highlight {
+  color: var(--adm-primary);
+}
+
+.adm-link-primary {
+  font-size: 0.8rem;
+  color: var(--adm-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.adm-ops-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.adm-metric-tile-label {
+  font-size: 0.7rem;
+  color: var(--adm-text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.adm-metric-tile-val {
+  font-size: 1.25rem;
+  color: var(--adm-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-metric-tile-val-green {
+  font-size: 1.25rem;
+  color: #10b981;
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-cohort-head {
+  font-size: 0.72rem;
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--adm-text-dim);
+  margin: 0 0 8px;
+}
+
+.adm-cohort-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adm-cohort-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+}
+
+.adm-cohort-label {
+  font-weight: 500;
+  color: var(--adm-text);
+}
+
+.adm-badge-sm {
+  font-size: 0.72rem;
+}
+
+.adm-empty-note {
+  font-size: 0.8rem;
+  color: var(--adm-text-muted);
+  margin: 0;
+}
+
+.adm-badges-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.adm-table-feature {
+  text-transform: capitalize;
+  color: var(--adm-text);
+}
+
+.adm-table-model {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--adm-text-muted);
+}
+
+.adm-table-latency {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--adm-text);
+}
+
+.adm-table-empty {
+  text-align: center;
+  color: var(--adm-text-muted);
+  padding: 24px 0;
+}
+
+/* Percentage Utility Classes (Zero Inline Styles) */
+.w-pct-0 { width: 0%; }
+.w-pct-5 { width: 5%; }
+.w-pct-10 { width: 10%; }
+.w-pct-15 { width: 15%; }
+.w-pct-20 { width: 20%; }
+.w-pct-25 { width: 25%; }
+.w-pct-30 { width: 30%; }
+.w-pct-35 { width: 35%; }
+.w-pct-40 { width: 40%; }
+.w-pct-45 { width: 45%; }
+.w-pct-50 { width: 50%; }
+.w-pct-55 { width: 55%; }
+.w-pct-60 { width: 60%; }
+.w-pct-65 { width: 65%; }
+.w-pct-70 { width: 70%; }
+.w-pct-75 { width: 75%; }
+.w-pct-80 { width: 80%; }
+.w-pct-85 { width: 85%; }
+.w-pct-90 { width: 90%; }
+.w-pct-95 { width: 95%; }
+.w-pct-100 { width: 100%; }
+
+.h-pct-5 { height: 5%; }
+.h-pct-10 { height: 10%; }
+.h-pct-15 { height: 15%; }
+.h-pct-20 { height: 20%; }
+.h-pct-25 { height: 25%; }
+.h-pct-30 { height: 30%; }
+.h-pct-35 { height: 35%; }
+.h-pct-40 { height: 40%; }
+.h-pct-45 { height: 45%; }
+.h-pct-50 { height: 50%; }
+.h-pct-55 { height: 55%; }
+.h-pct-60 { height: 60%; }
+.h-pct-65 { height: 65%; }
+.h-pct-70 { height: 70%; }
+.h-pct-75 { height: 75%; }
+.h-pct-80 { height: 80%; }
+.h-pct-85 { height: 85%; }
+.h-pct-90 { height: 90%; }
+.h-pct-95 { height: 95%; }
+.h-pct-100 { height: 100%; }
 </style>
 
 <section class="adm-page">
@@ -543,6 +1096,12 @@ html.theme-dark .badge-neutral,
       </a>
       <a href="/admin/experiments" class="adm-nav-item {% if active_admin_page == 'experiments' %}active{% endif %}">
         <span>Model Telemetry</span>
+      </a>
+      <a href="/admin/users" class="adm-nav-item {% if active_admin_page == 'users' %}active{% endif %}">
+        <span>User Access</span>
+        {% if admin.user_stats and admin.user_stats.admins %}
+        <span class="adm-nav-badge">{{ admin.user_stats.admins }} Admin</span>
+        {% endif %}
       </a>
       <a href="/admin/safety" class="adm-nav-item {% if active_admin_page == 'safety' %}active{% endif %}">
         <span>Safety & Moderation</span>

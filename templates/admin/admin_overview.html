@@ -1,51 +1,142 @@
 {% extends "admin_base.html" %}
 {% block admin_content %}
 
-<!-- 1. Executive Platform Metrics (No Emojis) -->
-<section style="margin-bottom: 24px;">
-  <div style="margin-bottom: 12px;">
-    <h2 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--adm-text);">Platform Metrics</h2>
-    <p style="font-size: 0.8rem; color: var(--adm-text-muted); margin: 2px 0 0;">Aggregate user engagement and pipeline volume.</p>
+<!-- 1. Executive Platform Metrics -->
+<section class="adm-section">
+  <div class="adm-section-head">
+    <h2 class="adm-section-title">Platform Key Performance Indicators</h2>
+    <p class="adm-section-desc">Aggregate user volume, feature engagement, and operational velocity.</p>
   </div>
 
   <div class="adm-kpi-row">
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">UNIQUE USERS</p>
-      <h3 class="adm-kpi-val">{{ admin.kpis.unique_users }}</h3>
+      <p class="adm-kpi-label">TOTAL USERS</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.total_users }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">RESUME REVIEWS</p>
+      <p class="adm-kpi-label">RESUME AUDITS</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.resume_reviews }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">INTERVIEWS COMPLETED</p>
+      <p class="adm-kpi-label">MOCK INTERVIEWS</p>
       <h3 class="adm-kpi-val">{{ admin.kpis.interview_completed }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">ROADMAPS BUILT</p>
-      <h3 class="adm-kpi-val">{{ admin.kpis.roadmap_generated }}</h3>
+      <p class="adm-kpi-label">CODING SUBMISSIONS</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.coding_submissions }}</h3>
     </article>
 
     <article class="adm-kpi-card">
-      <p class="adm-kpi-label">MENTORSHIP SESSIONS</p>
-      <h3 class="adm-kpi-val">{{ admin.kpis.total_bookings }}</h3>
+      <p class="adm-kpi-label">ROADMAPS GENERATED</p>
+      <h3 class="adm-kpi-val">{{ admin.kpis.roadmap_generated }}</h3>
     </article>
 
-    <article class="adm-kpi-card" style="border-color: rgba(59, 130, 246, 0.4);">
-      <p class="adm-kpi-label" style="color: var(--adm-primary);">TODAY'S SESSIONS</p>
-      <h3 class="adm-kpi-val" style="color: var(--adm-primary);">{{ admin.kpis.today_bookings }}</h3>
+    <article class="adm-kpi-card adm-kpi-featured">
+      <p class="adm-kpi-label adm-primary-text">TOTAL BOOKINGS</p>
+      <h3 class="adm-kpi-val adm-primary-text">{{ admin.kpis.total_bookings }}</h3>
     </article>
   </div>
 </section>
 
-<!-- 2. Conversion Pipeline & Operations -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; margin-bottom: 20px;">
+<!-- 2. 7-Day Activity Trends & Feature Distribution -->
+<div class="adm-grid-2col">
 
-  <!-- User Journey Conversion Funnel -->
-  <section class="adm-card" style="margin-bottom: 0;">
+  <!-- 7-Day Activity Timeline -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>7-Day Platform Velocity</h2>
+        <p>Daily volume of candidate actions across the ecosystem.</p>
+      </div>
+      <span class="badge-neutral">Last 7 Days</span>
+    </div>
+
+    <div class="adm-trend-grid">
+      {% for d in admin.activity_trend %}
+      <div class="adm-trend-col">
+        <span class="adm-trend-val">{{ d.events }}</span>
+        <div class="adm-trend-bar-track">
+          <div class="adm-trend-bar-fill {{ d.bar_class }}"></div>
+        </div>
+        <span class="adm-trend-date">{{ d.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Feature Usage Share -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>Feature Engagement Share</h2>
+        <p>Distribution of candidate time across core platform tools.</p>
+      </div>
+      <span class="badge-ok">Operational</span>
+    </div>
+
+    <div class="adm-stat-list">
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Resume Review AI</span>
+          <span class="adm-stat-val">{{ admin.tool_share.resume }}%</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.tool_classes.resume }}"></div>
+        </div>
+      </div>
+
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">AI Mock Interviews</span>
+          <span class="adm-stat-val">{{ admin.tool_share.interview }}%</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.tool_classes.interview }}"></div>
+        </div>
+      </div>
+
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Career Roadmaps</span>
+          <span class="adm-stat-val">{{ admin.tool_share.roadmap }}%</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.tool_classes.roadmap }}"></div>
+        </div>
+      </div>
+
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Coding Sandbox</span>
+          <span class="adm-stat-val">{{ admin.tool_share.coding }}%</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.tool_classes.coding }}"></div>
+        </div>
+      </div>
+
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">1:1 Mentorship Sessions</span>
+          <span class="adm-stat-val">{{ admin.tool_share.mentorship }}%</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.tool_classes.mentorship }}"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- 3. Conversion Funnel & Account Tiers -->
+<div class="adm-grid-2col">
+
+  <!-- Candidate Journey Funnel -->
+  <section class="adm-card adm-card-mb0">
     <div class="adm-card-head">
       <div>
         <h2>Conversion Pipeline</h2>
@@ -54,154 +145,195 @@
       <span class="badge-ok">Active</span>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div class="adm-flex-col-10">
       <div class="adm-funnel-step">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="adm-step-left">
           <span class="adm-step-num">01</span>
           <div>
-            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Resume Audit Run</strong>
-            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Initial ATS diagnostic completed</span>
+            <strong class="adm-step-title">Resume Audit Run</strong>
+            <span class="adm-step-desc">Initial ATS diagnostic completed</span>
           </div>
         </div>
-        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.resume_reviews }}</strong>
+        <strong class="adm-step-val">{{ admin.conversion.resume_reviews }}</strong>
       </div>
 
       <div class="adm-funnel-step">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="adm-step-left">
           <span class="adm-step-num">02</span>
           <div>
-            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Mock Interview Started</strong>
-            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Conversational practice triggered</span>
+            <strong class="adm-step-title">Mock Interview Started</strong>
+            <span class="adm-step-desc">Conversational practice triggered ({{ admin.conv_rates.resume_to_interview }}% of reviews)</span>
           </div>
         </div>
-        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.interview_started }}</strong>
+        <strong class="adm-step-val">{{ admin.conversion.interview_started }}</strong>
       </div>
 
       <div class="adm-funnel-step">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="adm-step-left">
           <span class="adm-step-num">03</span>
           <div>
-            <strong style="font-size: 0.88rem; color: var(--adm-text); display: block;">Interview Completed</strong>
-            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Evaluation and rubric generated</span>
+            <strong class="adm-step-title">Interview Completed</strong>
+            <span class="adm-step-desc">Full evaluation generated ({{ admin.conv_rates.interview_complete_rate }}% completion)</span>
           </div>
         </div>
-        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;">{{ admin.conversion.interview_completed }}</strong>
+        <strong class="adm-step-val">{{ admin.conversion.interview_completed }}</strong>
       </div>
 
       <div class="adm-funnel-step highlight">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="adm-step-num" style="background: rgba(59, 130, 246, 0.2); color: var(--adm-primary); border-color: transparent;">04</span>
+        <div class="adm-step-left">
+          <span class="adm-step-num">04</span>
           <div>
-            <strong style="font-size: 0.88rem; color: var(--adm-primary); display: block;">1:1 Mentorship Session Booked</strong>
-            <span style="font-size: 0.76rem; color: var(--adm-text-muted);">Senior mentor call scheduled</span>
+            <strong class="adm-step-title adm-primary-text">1:1 Mentorship Session Booked</strong>
+            <span class="adm-step-desc">Senior mentor scheduled ({{ admin.conv_rates.interview_to_mentor }}% of interviews)</span>
           </div>
         </div>
-        <strong style="font-size: 1.15rem; font-family: 'IBM Plex Mono', monospace; color: var(--adm-primary); font-variant-numeric: tabular-nums;">{{ admin.conversion.mentor_bookings }}</strong>
+        <strong class="adm-step-val adm-step-val-highlight">{{ admin.conversion.mentor_bookings }}</strong>
       </div>
     </div>
   </section>
 
-  <!-- Mentor Operations & Role Cohorts -->
-  <section class="adm-card" style="margin-bottom: 0;">
+  <!-- User Account Tier Breakdown -->
+  <section class="adm-card adm-card-mb0">
     <div class="adm-card-head">
       <div>
-        <h2>Mentorship Operations</h2>
-        <p>Capacity utilization, rating, and candidate distribution.</p>
+        <h2>User Account Distribution</h2>
+        <p>Breakdown of registered accounts across tiers and administrative roles.</p>
       </div>
-      <a href="/admin/bookings" style="font-size: 0.8rem; color: var(--adm-primary); text-decoration: none; font-weight: 600;">Manage Bookings →</a>
+      <a href="/admin/users" class="adm-link-primary">Manage Users →</a>
     </div>
 
-    <!-- Ops Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
-      <div class="adm-metric-tile">
-        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">CALENDAR LOAD</span>
-        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
+    <div class="adm-stat-list">
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Free Tier Candidates</span>
+          <span class="adm-stat-val">{{ admin.user_stats.free }} ({{ admin.user_tier_share.free }}%)</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.user_tier_classes.free }}"></div>
+        </div>
       </div>
 
-      <div class="adm-metric-tile">
-        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">MENTOR RATING</span>
-        <strong style="font-size: 1.25rem; color: #10b981; font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Pro Subscribers</span>
+          <span class="adm-stat-val">{{ admin.user_stats.premium }} ({{ admin.user_tier_share.pro }}%)</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.user_tier_classes.pro }}"></div>
+        </div>
       </div>
 
-      <div class="adm-metric-tile">
-        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">NO-SHOW RATE</span>
-        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
-      </div>
-
-      <div class="adm-metric-tile">
-        <span style="font-size: 0.7rem; color: var(--adm-text-dim); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 4px;">RESCHEDULES</span>
-        <strong style="font-size: 1.25rem; color: var(--adm-text); font-variant-numeric: tabular-nums;">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
+      <div class="adm-stat-item">
+        <div class="adm-stat-head">
+          <span class="adm-stat-label">Console Administrators</span>
+          <span class="adm-stat-val">{{ admin.user_stats.admins }} accounts</span>
+        </div>
+        <div class="adm-bar-track">
+          <div class="adm-bar-fill {{ admin.user_tier_classes.admin }}"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Top Candidate Specializations -->
-    <h3 style="font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--adm-text-dim); margin: 0 0 8px;">
-      Candidate Specializations
-    </h3>
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-      {% for c in admin.cohorts[:4] %}
-      <div class="adm-sub-card" style="display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; font-size: 0.82rem;">
-        <span style="font-weight: 500; color: var(--adm-text);">{{ c[0] or "General Software" }}</span>
-        <span class="badge-neutral" style="font-size: 0.72rem;">{{ c[1] }} candidates</span>
+    <div class="adm-cohort-head">Top Candidate Specializations</div>
+    <div class="adm-cohort-list">
+      {% for c in admin.cohorts[:3] %}
+      <div class="adm-sub-card adm-cohort-item">
+        <span class="adm-cohort-label">{{ c[0] or "General Software" }}</span>
+        <span class="badge-neutral adm-badge-sm">{{ c[1] }} candidates</span>
       </div>
       {% else %}
-      <p style="font-size: 0.8rem; color: var(--adm-text-muted); margin: 0;">No candidate cohort data recorded yet.</p>
+      <p class="adm-empty-note">No candidate cohort data recorded yet.</p>
       {% endfor %}
     </div>
   </section>
 
 </div>
 
-<!-- 3. AI Inference Health & Model Telemetry -->
-<section class="adm-card">
-  <div class="adm-card-head">
-    <div>
-      <h2>Inference Health & Latency</h2>
-      <p>Performance telemetry across LLM providers and endpoints.</p>
-    </div>
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <span class="badge-ok">Success {{ admin.model_health.success_rate }}%</span>
-      <span class="badge-neutral">Latency {{ admin.model_health.avg_latency_ms }}ms</span>
-      <span class="badge-neutral">Fallback {{ admin.model_health.fallback_rate }}%</span>
-    </div>
-  </div>
+<!-- 4. Mentor Operations & AI Telemetry -->
+<div class="adm-grid-2col">
 
-  <div class="adm-table-container">
-    <table class="adm-table">
-      <thead>
-        <tr>
-          <th>Feature</th>
-          <th>Model Provider</th>
-          <th>Status</th>
-          <th>Latency</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in admin.model_health.recent[:8] %}
-        <tr>
-          <td><strong style="text-transform: capitalize; color: var(--adm-text);">{{ r[0]|replace('_', ' ') }}</strong></td>
-          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--adm-text-muted);">{{ r[1] }}</td>
-          <td>
-            {% if r[2] == 1 %}
-            <span class="badge-ok">Success</span>
-            {% else %}
-            <span class="badge-fail">Fallback</span>
-            {% endif %}
-          </td>
-          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--adm-text);">
-            {{ "%.0f"|format(r[3]) }} ms
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4" style="text-align: center; color: var(--adm-text-muted); padding: 24px 0;">
-            No model telemetry logged yet. Logs populate in real time as candidates run reviews and mock interviews.
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+  <!-- Mentor Operations -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>Mentorship Operations</h2>
+        <p>Capacity utilization, rating, and candidate distribution.</p>
+      </div>
+      <a href="/admin/bookings" class="adm-link-primary">Manage Bookings →</a>
+    </div>
+
+    <div class="adm-ops-grid">
+      <div class="adm-metric-tile">
+        <span class="adm-metric-tile-label">CALENDAR LOAD</span>
+        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.calendar_load_pct.value }}%</strong>
+      </div>
+
+      <div class="adm-metric-tile">
+        <span class="adm-metric-tile-label">MENTOR RATING</span>
+        <strong class="adm-metric-tile-val-green">{{ admin.mentor_ops.mentor_quality_score.value }}/10</strong>
+      </div>
+
+      <div class="adm-metric-tile">
+        <span class="adm-metric-tile-label">NO-SHOW RATE</span>
+        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.no_show_rate_pct.value }}%</strong>
+      </div>
+
+      <div class="adm-metric-tile">
+        <span class="adm-metric-tile-label">RESCHEDULES</span>
+        <strong class="adm-metric-tile-val">{{ admin.mentor_ops.reschedule_rate_pct.value }}%</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Inference Telemetry -->
+  <section class="adm-card adm-card-mb0">
+    <div class="adm-card-head">
+      <div>
+        <h2>Inference Health & Latency</h2>
+        <p>Performance telemetry across LLM providers and endpoints.</p>
+      </div>
+      <div class="adm-badges-row">
+        <span class="badge-ok">Success {{ admin.model_health.success_rate }}%</span>
+        <span class="badge-neutral">Avg {{ admin.model_health.avg_latency_ms }}ms</span>
+      </div>
+    </div>
+
+    <div class="adm-table-container">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Model</th>
+            <th>Status</th>
+            <th>Latency</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in admin.model_health.recent[:4] %}
+          <tr>
+            <td><strong class="adm-table-feature">{{ r[0]|replace('_', ' ') }}</strong></td>
+            <td class="adm-table-model">{{ r[1] }}</td>
+            <td>
+              {% if r[2] == 1 %}
+              <span class="badge-ok">Success</span>
+              {% else %}
+              <span class="badge-fail">Fallback</span>
+              {% endif %}
+            </td>
+            <td class="adm-table-latency">{{ "%.0f"|format(r[3]) }} ms</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="adm-table-empty">
+              No model telemetry logged yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
 
 {% endblock %}

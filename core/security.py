@@ -155,7 +155,9 @@ def _same_origin(request: Request) -> bool:
 
 
 def is_admin_session(request: Request) -> bool:
-    return request.session.get("admin") is True
+    if request.session.get("admin") is True:
+        return True
+    return request.session.get("user_role") == "admin"
 
 
 def user_plan_for_email(user_email: str) -> str:

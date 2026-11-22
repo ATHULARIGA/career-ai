@@ -154,62 +154,111 @@ async def admin_import_coding_problems(request: Request, file: UploadFile = File
     return RedirectResponse(f"/admin/coding?import={msg}", status_code=303)
 
 
+@router.get("/admin/users", response_class=HTMLResponse)
+def admin_users_page(request: Request, q: str = "", role: str = "", msg: str = "", error: str = ""):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    users_list = get_admin_users_list(search=q, role_filter=role)
+    payload = admin_context_payload(request)
+
+    current_email = (request.session.get("user_email") or "").strip().lower()
+    current_user_id = request.session.get("user_id")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_users.html",
+        context={
+            **payload,
+            "users": users_list,
+            "search_query": q,
+            "role_filter": role,
+            "current_email": current_email,
+            "current_user_id": current_user_id,
+            "active_admin_page": "users",
+            "flash_msg": msg,
+            "flash_error": error,
+        },
+    )
+
+
+@router.post("/admin/users/{user_id}/role")
+def admin_update_user_role(
+    user_id: int,
+    request: Request,
+    new_role: str = Form(...),
+):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login")
+
+    actor = request.session.get("user_email") or request.session.get("admin_user") or "admin"
+    current_id = request.session.get("user_id")
+
+    # Safeguard against self-demotion
+    if current_id and int(current_id) == int(user_id) and new_role != "admin":
+        import urllib.parse
+        return RedirectResponse("/admin/users?error=" + urllib.parse.quote("You cannot revoke your own admin access."), status_code=303)
+
+    ok, msg = update_user_role(user_id, new_role, actor)
+    import urllib.parse
+    param = "msg" if ok else "error"
+    return RedirectResponse(f"/admin/users?{param}={urllib.parse.quote(msg)}", status_code=303)
+
+
 @router.post("/admin-login")
-def admin_login(request: Request,
-                username: str = Form(...),
-                password: str = Form(...),
-                website: str = Form("")):
+def admin_login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    website: str = Form(""),
+):
     if (website or "").strip():
         return templates.TemplateResponse(
             request=request,
             name="admin_login.html",
-            context={
-                "request": request,
-                "error": "Request blocked."
-            }
+            context={"request": request, "error": "Request blocked."},
         )
     blocked, retry = is_rate_limited(request, "admin_login", identity=username, max_attempts=5, window_sec=300, block_sec=900)
     if blocked:
         return templates.TemplateResponse(
             request=request,
             name="admin_login.html",
-            context={
-                "request": request,
-                "error": f"Too many attempts. Try again in {retry}s."
-            }
+            context={"request": request, "error": f"Too many attempts. Try again in {retry}s."},
         )
+
+    # 1. Master admin credentials from environment
     admin_username, admin_password, admin_email = get_admin_settings()
-    if not admin_username or not admin_password or not admin_email:
-        log_audit("admin", "admin_login_blocked", "admin_env_not_configured")
-        return templates.TemplateResponse(
-            request=request,
-            name="admin_login.html",
-            context={
-                "request": request,
-                "error": "Admin access is not configured. Set ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_EMAIL."
-            }
-        )
-
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    if user_email != admin_email:
-        record_auth_failure(request, "admin_login", identity=username)
-        log_audit("admin", "admin_login_denied", f"user_email={user_email}")
-        return templates.TemplateResponse(
-            request=request,
-            name="admin_login.html",
-            context={
-                "request": request,
-                "error": "This account is not allowed for admin access."
-            }
-        )
-
-    if username == admin_username and password == admin_password:
+    if admin_username and admin_password and username == admin_username and password == admin_password:
         request.session["admin"] = True
         request.session["admin_user"] = admin_username
         request.session["user_role"] = "admin"
         request.session["user_plan"] = "premium"
         record_auth_success(request, "admin_login", identity=username)
-        log_audit("admin", "admin_login_success", "Admin authenticated.")
+        log_audit("admin", "admin_login_success", "Master admin authenticated.")
+        return RedirectResponse("/admin", status_code=303)
+
+    # 2. Database user with role='admin'
+    import db.backend as db
+    conn = db.get_conn()
+    cur = conn.cursor()
+    db.execute(
+        cur,
+        "SELECT id, full_name, email, password_hash, role, plan FROM users WHERE (LOWER(email)=? OR LOWER(full_name)=?) AND role='admin'",
+        (username.strip().lower(), username.strip().lower()),
+    )
+    admin_user = cur.fetchone()
+    conn.close()
+
+    if admin_user and verify_password(admin_user[3], password):
+        request.session["admin"] = True
+        request.session["admin_user"] = admin_user[2]
+        request.session["user_id"] = int(admin_user[0])
+        request.session["user_name"] = admin_user[1]
+        request.session["user_email"] = admin_user[2]
+        request.session["user_role"] = "admin"
+        request.session["user_plan"] = "premium"
+        record_auth_success(request, "admin_login", identity=username)
+        log_audit("admin", "admin_login_success", f"Admin user {admin_user[2]} authenticated.")
         return RedirectResponse("/admin", status_code=303)
 
     record_auth_failure(request, "admin_login", identity=username)
@@ -217,10 +266,7 @@ def admin_login(request: Request,
     return templates.TemplateResponse(
         request=request,
         name="admin_login.html",
-        context={
-            "request": request,
-            "error": "Invalid credentials"
-        }
+        context={"request": request, "error": "Invalid credentials or account does not have admin privileges."},
     )
 
 # ADMIN

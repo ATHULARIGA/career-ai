@@ -3,8 +3,8 @@ import io
 import json
 import db.backend as db
 import time
-from datetime import datetime
-from typing import Any, Dict, List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Tuple
 
 DB_PATH = "bookings.db"
 
@@ -376,12 +376,110 @@ def dashboard_payload(bookings: List[tuple]) -> Dict[str, Any]:
     roadmap_generated = _scalar("SELECT COUNT(*) FROM user_events WHERE event_type='roadmap_generated'")
     mentor_bookings = _scalar("SELECT COUNT(*) FROM user_events WHERE event_type='mentor_booking_created'")
 
+    total_registered_users = _scalar("SELECT COUNT(*) FROM users")
+    admin_users_count = _scalar("SELECT COUNT(*) FROM users WHERE role='admin'")
+    mentor_users_count = _scalar("SELECT COUNT(*) FROM users WHERE role='mentor'")
+    regular_users_count = _scalar("SELECT COUNT(*) FROM users WHERE role='user' OR role IS NULL")
+    premium_users_count = _scalar("SELECT COUNT(*) FROM users WHERE plan IN ('pro', 'premium', 'enterprise')")
+    coding_submissions_count = _scalar("SELECT COUNT(*) FROM coding_submissions")
+
     conversion = {
         "resume_reviews": resume_reviews,
         "interview_started": interview_started,
         "interview_completed": interview_completed,
         "mentor_bookings": mentor_bookings,
     }
+
+    # Conversion ratios
+    conv_rates = {
+        "resume_to_interview": round((interview_started / max(1, resume_reviews)) * 100, 1),
+        "interview_complete_rate": round((interview_completed / max(1, interview_started)) * 100, 1),
+        "interview_to_mentor": round((mentor_bookings / max(1, interview_completed)) * 100, 1),
+        "user_to_mentor": round((total_bookings / max(1, total_registered_users)) * 100, 1),
+    }
+    conv_classes = {
+        k: f"w-pct-{min(100, max(0, round(v / 5) * 5))}"
+        for k, v in conv_rates.items()
+    }
+
+    # Tool engagement distribution
+    total_actions = max(1, resume_reviews + interview_completed + roadmap_generated + coding_submissions_count + total_bookings)
+    tool_share = {
+        "resume": round((resume_reviews / total_actions) * 100, 1),
+        "interview": round((interview_completed / total_actions) * 100, 1),
+        "roadmap": round((roadmap_generated / total_actions) * 100, 1),
+        "coding": round((coding_submissions_count / total_actions) * 100, 1),
+        "mentorship": round((total_bookings / total_actions) * 100, 1),
+    }
+    tool_classes = {
+        k: f"w-pct-{min(100, max(0, round(v / 5) * 5))}"
+        for k, v in tool_share.items()
+    }
+
+    # User tier breakdown
+    free_users_count = max(0, total_registered_users - premium_users_count)
+    user_tier_share = {
+        "free": round((free_users_count / max(1, total_registered_users)) * 100, 1),
+        "pro": round((premium_users_count / max(1, total_registered_users)) * 100, 1),
+        "admin": round((admin_users_count / max(1, total_registered_users)) * 100, 1),
+    }
+    user_tier_classes = {
+        k: f"w-pct-{min(100, max(0, round(v / 5) * 5))}"
+        for k, v in user_tier_share.items()
+    }
+
+    # 7-day daily activity trends
+    now_ts = int(time.time())
+    seven_days_ago = now_ts - (7 * 86400)
+    day_series = []
+    day_map = {}
+    for i in range(6, -1, -1):
+        d_str = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+        d_label = (datetime.utcnow() - timedelta(days=i)).strftime("%b %d")
+        day_series.append(d_str)
+        day_map[d_str] = {
+            "date": d_str,
+            "label": d_label,
+            "events": 0,
+            "resumes": 0,
+            "interviews": 0,
+            "signups": 0,
+            "bar_pct": 8,
+            "bar_class": "h-pct-10",
+        }
+
+    try:
+        recent_events = _fetchall(
+            "SELECT ts, event_type FROM user_events WHERE ts >= ?",
+            (seven_days_ago,)
+        )
+        for ev_ts, ev_type in recent_events:
+            d_key = datetime.utcfromtimestamp(int(ev_ts or 0)).strftime("%Y-%m-%d")
+            if d_key in day_map:
+                day_map[d_key]["events"] += 1
+                if ev_type == "resume_review_completed":
+                    day_map[d_key]["resumes"] += 1
+                elif ev_type in ("interview_started", "interview_completed"):
+                    day_map[d_key]["interviews"] += 1
+
+        recent_users = _fetchall(
+            "SELECT created_ts FROM users WHERE created_ts >= ?",
+            (seven_days_ago,)
+        )
+        for (u_ts,) in recent_users:
+            d_key = datetime.utcfromtimestamp(int(u_ts or 0)).strftime("%Y-%m-%d")
+            if d_key in day_map:
+                day_map[d_key]["signups"] += 1
+
+        activity_trend = [day_map[d] for d in day_series]
+        max_day_events = max(1, max([d["events"] for d in activity_trend]))
+        for d in activity_trend:
+            pct = min(100, max(8, int((d["events"] / max_day_events) * 100)))
+            d["bar_pct"] = pct
+            pct_cls = min(100, max(10, round(pct / 5) * 5))
+            d["bar_class"] = f"h-pct-{pct_cls}"
+    except Exception:
+        activity_trend = [day_map[d] for d in day_series]
 
     model_rows = _fetchall(
         """
@@ -435,8 +533,27 @@ def dashboard_payload(bookings: List[tuple]) -> Dict[str, Any]:
             "resume_reviews": resume_reviews,
             "interview_completed": interview_completed,
             "roadmap_generated": roadmap_generated,
+            "total_users": total_registered_users,
+            "admin_users": admin_users_count,
+            "pro_users": premium_users_count,
+            "coding_submissions": coding_submissions_count,
+        },
+        "user_stats": {
+            "total": total_registered_users,
+            "admins": admin_users_count,
+            "mentors": mentor_users_count,
+            "regular": regular_users_count,
+            "premium": premium_users_count,
+            "free": max(0, total_registered_users - premium_users_count),
         },
         "conversion": conversion,
+        "conv_rates": conv_rates,
+        "conv_classes": conv_classes,
+        "tool_share": tool_share,
+        "tool_classes": tool_classes,
+        "user_tier_share": user_tier_share,
+        "user_tier_classes": user_tier_classes,
+        "activity_trend": activity_trend,
         "model_health": {
             "success_rate": success_rate,
             "avg_latency_ms": avg_latency,
@@ -452,6 +569,62 @@ def dashboard_payload(bookings: List[tuple]) -> Dict[str, Any]:
         "mentor_ops": mentor_default,
         "bookings": bookings,
     }
+
+
+def get_admin_users_list(search: str = "", role_filter: str = "", limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+    """Retrieves registered users for the admin user management interface."""
+    query = "SELECT id, full_name, email, role, plan, created_ts, premium_since, premium_expires_ts FROM users WHERE 1=1"
+    params = []
+    if search:
+        s = f"%{search.strip().lower()}%"
+        query += " AND (LOWER(email) LIKE ? OR LOWER(full_name) LIKE ?)"
+        params.extend([s, s])
+    if role_filter and role_filter in ("admin", "user", "mentor"):
+        query += " AND role = ?"
+        params.append(role_filter)
+    query += " ORDER BY id DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+
+    rows = _fetchall(query, tuple(params))
+    users = []
+    for r in rows:
+        created_dt = datetime.utcfromtimestamp(int(r[5] or 0)).strftime("%Y-%m-%d %H:%M") if r[5] else "N/A"
+        users.append({
+            "id": r[0],
+            "full_name": r[1] or "Unknown",
+            "email": r[2] or "",
+            "role": r[3] or "user",
+            "plan": r[4] or "free",
+            "created_ts": r[5] or 0,
+            "created_date": created_dt,
+            "premium_since": r[6] or 0,
+            "premium_expires_ts": r[7] or 0,
+        })
+    return users
+
+
+def update_user_role(user_id: int, new_role: str, actor: str) -> Tuple[bool, str]:
+    """Promotes or demotes a user's role and logs an audit trail event."""
+    if new_role not in ("admin", "user", "mentor"):
+        return False, "Invalid role specified."
+
+    conn = _conn()
+    cur = conn.cursor()
+    db.execute(cur, "SELECT id, email, role FROM users WHERE id = ?", (user_id,))
+    target = cur.fetchone()
+    if not target:
+        conn.close()
+        return False, "User not found."
+
+    old_role = target[2] or "user"
+    target_email = target[1]
+
+    db.execute(cur, "UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    conn.commit()
+    conn.close()
+
+    log_audit(actor, "user_role_change", f"user_id={user_id},email={target_email},old_role={old_role},new_role={new_role}")
+    return True, f"Successfully updated role of {target_email} from {old_role} to {new_role}."
 
 
 def export_all_json(bookings: List[tuple]) -> str:

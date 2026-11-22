@@ -1,0 +1,165 @@
+{% extends "admin_base.html" %}
+{% block admin_content %}
+
+<!-- User Access Metrics Overview -->
+<section class="adm-section">
+  <div class="adm-section-head">
+    <h2 class="adm-section-title">User Access & Role Management</h2>
+    <p class="adm-section-desc">Manage administrative permissions, view registered accounts, and delegate console privileges.</p>
+  </div>
+
+  <div class="adm-kpi-row">
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">TOTAL REGISTERED</p>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.total }}</h3>
+    </article>
+
+    <article class="adm-kpi-card adm-kpi-featured">
+      <p class="adm-kpi-label adm-primary-text">ADMINISTRATORS</p>
+      <h3 class="adm-kpi-val adm-primary-text">{{ admin.user_stats.admins }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">MENTORS</p>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.mentors }}</h3>
+    </article>
+
+    <article class="adm-kpi-card">
+      <p class="adm-kpi-label">PRO SUBSCRIBERS</p>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.premium }}</h3>
+    </article>
+  </div>
+</section>
+
+<!-- Feedback / Alerts -->
+{% if flash_msg %}
+<div class="adm-alert adm-alert-success">
+  <span>{{ flash_msg }}</span>
+</div>
+{% endif %}
+
+{% if flash_error %}
+<div class="adm-alert adm-alert-error">
+  <span>{{ flash_error }}</span>
+</div>
+{% endif %}
+
+<!-- User Search & Role Filter Toolbar -->
+<section class="adm-card">
+  <div class="adm-toolbar">
+    <form method="GET" action="/admin/users" class="adm-search-form">
+      <input
+        type="text"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="Search user by name or email address..."
+        class="adm-input"
+      />
+      {% if role_filter %}
+      <input type="hidden" name="role" value="{{ role_filter }}" />
+      {% endif %}
+      <button type="submit" class="adm-btn">
+        <span>Search</span>
+      </button>
+      {% if search_query %}
+      <a href="/admin/users{% if role_filter %}?role={{ role_filter }}{% endif %}" class="adm-btn">
+        <span>Clear</span>
+      </a>
+      {% endif %}
+    </form>
+
+    <div class="adm-filter-group">
+      <a href="/admin/users{% if search_query %}?q={{ search_query }}{% endif %}" class="adm-filter-pill {% if not role_filter %}active{% endif %}">
+        <span>All Accounts</span>
+      </a>
+      <a href="/admin/users?role=admin{% if search_query %}&q={{ search_query }}{% endif %}" class="adm-filter-pill {% if role_filter == 'admin' %}active{% endif %}">
+        <span>Admins Only</span>
+      </a>
+      <a href="/admin/users?role=mentor{% if search_query %}&q={{ search_query }}{% endif %}" class="adm-filter-pill {% if role_filter == 'mentor' %}active{% endif %}">
+        <span>Mentors</span>
+      </a>
+      <a href="/admin/users?role=user{% if search_query %}&q={{ search_query }}{% endif %}" class="adm-filter-pill {% if role_filter == 'user' %}active{% endif %}">
+        <span>Standard Users</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="adm-table-container">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Subscription</th>
+          <th>Joined</th>
+          <th>Administrative Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <strong class="adm-table-feature">{{ u.full_name }}</strong>
+            <span class="adm-step-desc">#{{ u.id }}</span>
+          </td>
+          <td class="adm-table-model">{{ u.email }}</td>
+          <td>
+            {% if u.role == 'admin' %}
+            <span class="badge-role-admin">Admin</span>
+            {% elif u.role == 'mentor' %}
+            <span class="badge-role-mentor">Mentor</span>
+            {% else %}
+            <span class="badge-role-user">User</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.plan in ('pro', 'premium', 'enterprise') %}
+            <span class="badge-plan-pro">{{ u.plan|upper }}</span>
+            {% else %}
+            <span class="badge-plan-free">FREE</span>
+            {% endif %}
+          </td>
+          <td class="adm-table-latency">{{ u.created_date }}</td>
+          <td>
+            {% if (current_user_id and u.id == current_user_id) or (current_email and u.email|lower == current_email|lower) %}
+            <span class="adm-badge-self">Active Session (You)</span>
+            {% elif u.role == 'admin' %}
+            <form method="POST" action="/admin/users/{{ u.id }}/role">
+              <input type="hidden" name="new_role" value="user" />
+              <button
+                type="submit"
+                class="adm-btn-xs adm-btn-xs-danger"
+                onclick="return confirm('Revoke administrator privileges for {{ u.email }}?')"
+              >
+                <span>Revoke Admin</span>
+              </button>
+            </form>
+            {% else %}
+            <form method="POST" action="/admin/users/{{ u.id }}/role">
+              <input type="hidden" name="new_role" value="admin" />
+              <button
+                type="submit"
+                class="adm-btn-xs adm-btn-xs-primary"
+                onclick="return confirm('Grant administrator privileges to {{ u.email }}? This user will have access to all admin operations.')"
+              >
+                <span>Make Admin</span>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="adm-table-empty">
+            No registered users found matching the selected filter criteria.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}
