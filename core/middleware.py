@@ -45,8 +45,9 @@ PUBLIC_PATHS = {
     "/resume/cover-letter/demo",
     "/resume/demo/cover-letter",
     "/resume/demo",
+    "/admin/demo",
 }
-PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/.well-known")
+PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/admin/demo", "/.well-known")
 
 _rate_hits = defaultdict(deque)
 

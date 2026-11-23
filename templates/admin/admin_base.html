@@ -28,35 +28,35 @@
 
     <!-- Clean Tab Navigation (No Emojis) -->
     <nav class="adm-nav-wrap">
-      <a href="/admin{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'overview' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo{% else %}/admin{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'overview' %}active{% endif %}">
         <span>Overview</span>
       </a>
-      <a href="/admin/reports{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'reports' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/reports{% else %}/admin/reports{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'reports' %}active{% endif %}">
         <span>Executive Reports</span>
       </a>
-      <a href="/admin/traffic{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'traffic' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/traffic{% else %}/admin/traffic{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'traffic' %}active{% endif %}">
         <span>Visitor Traffic</span>
       </a>
-      <a href="/admin/premium{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/premium{% else %}/admin/premium{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'premium' %}active{% endif %}">
         <span>Premium Queue</span>
       </a>
-      <a href="/admin/bookings{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'bookings' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/bookings{% else %}/admin/bookings{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'bookings' %}active{% endif %}">
         <span>Mentorship Bookings</span>
         <span class="adm-nav-badge">{{ admin.kpis.total_bookings }}</span>
       </a>
-      <a href="/admin/coding{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'coding' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/coding{% else %}/admin/coding{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'coding' %}active{% endif %}">
         <span>Question Bank</span>
       </a>
-      <a href="/admin/experiments{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'experiments' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/experiments{% else %}/admin/experiments{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'experiments' %}active{% endif %}">
         <span>Model Telemetry</span>
       </a>
-      <a href="/admin/users{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'users' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/users{% else %}/admin/users{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'users' %}active{% endif %}">
         <span>User Access</span>
         {% if admin.user_stats and admin.user_stats.admins %}
         <span class="adm-nav-badge">{{ admin.user_stats.admins }} Admin</span>
         {% endif %}
       </a>
-      <a href="/admin/safety{% if is_demo %}?demo=true{% endif %}" class="adm-nav-item {% if active_admin_page == 'safety' %}active{% endif %}">
+      <a href="{% if is_demo and request.scope.get('path', '').startswith('/admin/demo') %}/admin/demo/safety{% else %}/admin/safety{% if is_demo %}?demo=true{% endif %}{% endif %}" class="adm-nav-item {% if active_admin_page == 'safety' %}active{% endif %}">
         <span>Safety & Moderation</span>
       </a>
     </nav>

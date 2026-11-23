@@ -577,10 +577,11 @@ def admin_context_payload(request: Request, minimal: bool = False, include_codin
         for p in custom_problems:
             p["coverage"] = coverage_report(p)
 
+    path = request.scope.get("path", "")
     qs = request.scope.get("query_string", b"")
     if isinstance(qs, (bytes, bytearray)):
         qs = qs.decode("utf-8", "ignore")
-    is_demo = "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
+    is_demo = path.startswith("/admin/demo") or "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
 
     return {
         "request": request,

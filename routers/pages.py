@@ -47,8 +47,14 @@ Allow: /resume/compare/demo
 Allow: /resume/cover-letter/demo
 Allow: /resume/demo/cover-letter
 Allow: /resume/demo
-Disallow: /admin/
+Allow: /resume/demo/fix
+Allow: /resume/1/fix
+Allow: /admin/demo
+Allow: /admin/demo/
+Allow: /admin
+Allow: /admin/
 Disallow: /api/
+Disallow: /admin-delete/
 
 Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
 """
@@ -597,6 +603,9 @@ def career_map_page(request: Request):
 def is_admin_or_demo(request: Request) -> bool:
     if is_admin_session(request):
         return True
+    path = request.scope.get("path", "")
+    if path.startswith("/admin/demo"):
+        return True
     qs = request.scope.get("query_string", b"")
     if isinstance(qs, (bytes, bytearray)):
         qs = qs.decode("utf-8", "ignore")
@@ -977,10 +986,35 @@ if __name__ == "__main__":
 
 
 @router.get("/admin/demo", response_class=HTMLResponse)
-def admin_demo_redirect(request: Request):
-    return RedirectResponse("/admin?demo=true", status_code=307)
+def admin_demo_page(request: Request):
+    return admin(request)
 
 
-@router.get("/admin/demo/{subpage}", response_class=HTMLResponse)
-def admin_demo_subpage_redirect(subpage: str, request: Request):
-    return RedirectResponse(f"/admin/{subpage}?demo=true", status_code=307)
+@router.get("/admin/demo/overview", response_class=HTMLResponse)
+def admin_demo_overview(request: Request):
+    return admin(request)
+
+
+@router.get("/admin/demo/experiments", response_class=HTMLResponse)
+def admin_demo_experiments(request: Request):
+    return admin_experiments_page(request)
+
+
+@router.get("/admin/demo/coding", response_class=HTMLResponse)
+def admin_demo_coding(request: Request):
+    return admin_coding_page(request)
+
+
+@router.get("/admin/demo/safety", response_class=HTMLResponse)
+def admin_demo_safety(request: Request):
+    return admin_safety_page(request)
+
+
+@router.get("/admin/demo/bookings", response_class=HTMLResponse)
+def admin_demo_bookings(request: Request):
+    return admin_bookings_page(request)
+
+
+@router.get("/admin/demo/premium", response_class=HTMLResponse)
+def admin_demo_premium(request: Request):
+    return admin_premium_page(request)

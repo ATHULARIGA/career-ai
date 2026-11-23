@@ -8,6 +8,9 @@ router = APIRouter()
 def is_admin_or_demo(request: Request) -> bool:
     if is_admin_session(request):
         return True
+    path = request.scope.get("path", "")
+    if path.startswith("/admin/demo"):
+        return True
     qs = request.scope.get("query_string", b"")
     if isinstance(qs, (bytes, bytearray)):
         qs = qs.decode("utf-8", "ignore")
@@ -388,4 +391,17 @@ def admin_login(
         context={"request": request, "error": "Invalid credentials or account does not have admin privileges."},
     )
 
-# ADMIN
+
+@router.get("/admin/demo/users", response_class=HTMLResponse)
+def admin_demo_users_page(request: Request, q: str = "", role: str = "", msg: str = "", error: str = ""):
+    return admin_users_page(request, q=q, role=role, msg=msg, error=error)
+
+
+@router.get("/admin/demo/reports", response_class=HTMLResponse)
+def admin_demo_reports_page(request: Request, period: str = "daily"):
+    return admin_reports_page(request, period=period)
+
+
+@router.get("/admin/demo/traffic", response_class=HTMLResponse)
+def admin_demo_traffic_page(request: Request, q: str = ""):
+    return admin_traffic_page(request, q=q)
