@@ -39,29 +39,26 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
 .theme-dark .iv-field label { 
-  color: #94a3b8 !important;
-  font-weight: 600 !important;
-  font-size: 0.75rem !important;
+  color: #f1f5f9 !important;
+  font-weight: 700 !important;
+  font-size: 1.0rem !important;
 }
 .theme-dark .iv-start-btn { 
   background: #f8fafc !important; 
   color: #0b0f19 !important; 
   font-weight: 700 !important;
-  border: 1px solid #f8fafc !important;
+  border: 1.5px solid #f8fafc !important;
 }
 .theme-dark .iv-field select, 
 .theme-dark .iv-field input {
   background: #0b0f19 !important;
   color: #f8fafc !important;
-  border: 1px solid #1f2937 !important;
+  border: 1.5px solid #64748b !important;
 }
 .theme-dark .iv-field select:focus, 
 .theme-dark .iv-field input:focus {
-  border-color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
   box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2) !important;
-}
-  border-color: #ffffff !important;
-  box-shadow: 0 0 0 1px #ffffff !important;
 }
 /* ── Layout Pivot for Chat Session ────────────────────── */
 .rr-page.chat-session-active {
@@ -90,7 +87,7 @@
   border: 1px solid var(--ui-border);
   border-radius: 16px;
   padding: 24px 28px;
-  margin: 10px 0 24px;
+  margin: 0 0 24px;
   box-shadow: var(--ui-shadow);
 }
 .theme-dark .iv-setup {
@@ -99,34 +96,36 @@
 }
 .iv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .iv-field { display: flex; flex-direction: column; gap: 6px; }
-.iv-field label { font-size: 0.84rem; font-weight: 700; color: #374151; }
-.theme-dark .iv-field label { color: #94a3b8 !important; }
+.iv-field-full { grid-column: span 2; }
+.iv-actions { grid-column: span 2; text-align: right; margin-top: 12px; }
+.iv-field label { font-size: 1.0rem; font-weight: 700; color: #0f172a; }
+.theme-dark .iv-field label { color: #f1f5f9 !important; font-size: 1.0rem !important; }
 .iv-field select, .iv-field input {
   padding: 11px 14px; 
-  border: 1px solid var(--ui-border) !important;
+  border: 1.5px solid #64748b !important;
   border-radius: 10px;
-  font-size: 0.95rem; font-family: inherit; background: #ffffff; color: #0f172a;
+  font-size: 1.0rem; font-family: inherit; background: #ffffff; color: #0f172a;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .theme-dark .iv-field select,
 .theme-dark .iv-field input {
   background: #0b0f19 !important;
   color: #f8fafc !important;
-  border: 1px solid #1f2937 !important;
+  border: 1.5px solid #64748b !important;
 }
 .iv-field select:focus, .iv-field input:focus { 
   outline: none !important; 
-  border-color: #64748b !important; 
-  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15) !important; 
+  border-color: #0f172a !important; 
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.25) !important; 
 }
 
 .iv-start-btn {
   background: #0f172a !important;
   color: #ffffff !important;
-  border: 1px solid #0f172a !important;
+  border: 1.5px solid #0f172a !important;
   border-radius: 10px !important;
-  padding: 11px 24px !important;
-  font-size: 0.92rem !important;
+  padding: 11px 28px !important;
+  font-size: 1.0rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
   transition: all 0.15s !important;
@@ -145,14 +144,21 @@
 
 /* ── Chat Container & Status ───────────────────────────── */
 .iv-chat-wrap { display: none; flex-direction: column; flex: 1; min-height: 0; }
+.iv-chat-wrap.is-active { display: flex; }
 .iv-status-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; background: var(--iv-bg-subtle);
+  padding: 12px 18px; background: var(--iv-bg-subtle);
   border: 1px solid var(--iv-border); border-radius: 10px;
-  margin: 16px 0 12px; font-size: 0.85rem; color: #6b7280;
+  margin: 16px 0 12px; font-size: 1.0rem; color: #334155;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
-.iv-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 7px; animation: pulse 1.5s infinite; }
+.iv-phase-label {
+  font-size: 1.0rem; color: #334155; text-transform: capitalize; font-weight: 600;
+}
+.iv-status-actions {
+  display: flex; align-items: center; gap: 10px;
+}
+.iv-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #15803d; display: inline-block; margin-right: 7px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
 
 .iv-messages {
@@ -169,15 +175,15 @@
 .iv-bubble.candidate { align-self: flex-end; flex-direction: row-reverse; }
 
 .iv-avatar {
-  width: 32px; height: 32px; border-radius: 4px; display: flex; /* Sharp square-ish radius */
+  width: 32px; height: 32px; border-radius: 4px; display: flex;
   align-items: center; justify-content: center; font-weight: 800;
-  font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;
+  font-size: 1.0rem; flex-shrink: 0; margin-top: 2px;
 }
 .interviewer .iv-avatar { background: var(--iv-accent); color: var(--iv-surface); border: 1px solid var(--iv-border); }
-.candidate .iv-avatar { background: var(--iv-bg-subtle); color: #4b5563; border: 1px solid var(--iv-border); }
+.candidate .iv-avatar { background: var(--iv-bg-subtle); color: #1e293b; border: 1px solid var(--iv-border); }
 
 .iv-msg {
-  padding: 12px 18px; border-radius: 12px; font-size: 0.94rem; line-height: 1.62;
+  padding: 12px 18px; border-radius: 12px; font-size: 1.0rem; line-height: 1.62;
   white-space: pre-wrap; word-break: break-word; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .interviewer .iv-msg {
@@ -204,7 +210,7 @@
 }
 
 .iv-typing { padding: 12px 16px; border: 1px solid var(--iv-border); border-radius: 8px; background: var(--iv-surface); }
-.iv-typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; animation: bounce 1.2s infinite; margin: 0 2px; }
+.iv-typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #64748b; animation: bounce 1.2s infinite; margin: 0 2px; }
 @keyframes bounce { 0%,80%,100%{ transform:translateY(0); } 40%{ transform:translateY(-5px); } }
 
 /* ── Input Bar ─────────────────────────────────────────── */
@@ -214,8 +220,8 @@
 }
 .iv-input-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .iv-input-bar textarea {
-  width: 100%; resize: none; border: 1px solid var(--iv-border); border-radius: 8px;
-  padding: 11px 14px; font-size: 0.92rem; font-family: inherit;
+  width: 100%; resize: none; border: 1.5px solid #64748b; border-radius: 8px;
+  padding: 11px 14px; font-size: 1.0rem; font-family: inherit;
   min-height: 44px; max-height: 160px; overflow-y: auto;
   background: var(--iv-surface); color: var(--text, #111827);
   line-height: 1.5;
@@ -223,7 +229,7 @@
 .iv-input-bar textarea:focus { outline: none; border-color: var(--iv-accent); }
 
 .iv-icon-btn {
-  width: 42px; height: 42px; border-radius: 6px; border: 1px solid var(--iv-border);
+  width: 42px; height: 42px; border-radius: 6px; border: 1.5px solid #64748b;
   background: var(--iv-surface); cursor: pointer; display: flex;
   align-items: center; justify-content: center; flex-shrink: 0;
   transition: background 0.1s;
@@ -231,13 +237,13 @@
 .iv-icon-btn:hover { background: var(--iv-bg-subtle); }
 .iv-icon-btn.recording {
   background: #fee2e2 !important;
-  border-color: #f87171 !important;
-  color: #ef4444 !important;
+  border-color: #b91c1c !important;
+  color: #991b1b !important;
   animation: iv-pulse 1.5s infinite;
 }
 @keyframes iv-pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(185, 28, 28, 0.2); }
   100% { transform: scale(1); }
 }
 
@@ -250,15 +256,15 @@
 }
 .iv-send-btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3); }
 .iv-send-btn:active:not(:disabled) { transform: translateY(0) scale(0.95); }
-.iv-send-btn:disabled { background: var(--iv-border); color: #9ca3af; cursor: not-allowed; transition: none; box-shadow: none; }
+.iv-send-btn:disabled { background: var(--iv-border); color: #64748b; cursor: not-allowed; transition: none; box-shadow: none; }
 
 .iv-end-btn {
-  background: transparent; border: 1px solid #f87171; color: #ef4444;
-  border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600;
+  background: #ffffff; border: 1.5px solid #b91c1c; color: #991b1b;
+  border-radius: 6px; padding: 8px 14px; font-size: 1.0rem; font-weight: 600;
   cursor: pointer; transition: background 0.1s;
 }
-.iv-end-btn:hover { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
-.iv-silence { font-size: 0.78rem; color: #94a3b8; text-align: center; padding: 6px 0; display: none; font-weight: 500; }
+.iv-end-btn:hover, .iv-end-btn:focus { background: #fee2e2; color: #7f1d1d; border-color: #991b1b; }
+.iv-silence { font-size: 1.0rem; color: #475569; text-align: center; padding: 6px 0; display: none; font-weight: 500; }
 
 /* ── Verdict Screen ────────────────────────────────────── */
 .iv-verdict { display: none; padding: 20px 0; animation: fadeIn 0.3s ease; }
@@ -269,19 +275,25 @@
   background: var(--iv-surface); text-align: center; margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
-.iv-verdict-title { font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.iv-verdict-title { font-size: 1.0rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
 .iv-verdict-decision { font-size: 2.1rem; font-weight: 800; color: var(--text, #111827); margin: 6px 0; letter-spacing: -0.02em; }
-.iv-verdict-score { font-size: 0.95rem; color: #4b5563; margin-bottom: 16px; }
+.iv-verdict-score { font-size: 1.0rem; color: #334155; margin-bottom: 16px; }
 
 .iv-verdict-meta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .iv-verdict-badge {
   background: var(--iv-bg-subtle); border: 1px solid var(--iv-border); border-radius: 6px;
-  padding: 5px 14px; font-size: 0.82rem; color: #4b5563; font-weight: 600;
+  padding: 6px 14px; font-size: 1.0rem; color: #1e293b; font-weight: 600;
+}
+.iv-verdict-heading {
+  font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 24px 0 12px;
+}
+.iv-center-action {
+  text-align: center;
 }
 
 .iv-panel-notes { text-align: left; margin-top: 16px; padding-left: 20px; }
-.iv-panel-notes li { font-size: 0.88rem; color: #4b5563; line-height: 1.6; }
-.iv-curiosity { margin-top: 12px; font-size: 0.88rem; color: #6b7280; background: var(--iv-bg-subtle); padding: 10px; border-radius: 6px; }
+.iv-panel-notes li { font-size: 1.0rem; color: #1e293b; line-height: 1.6; }
+.iv-curiosity { margin-top: 12px; font-size: 1.0rem; color: #1e293b; background: var(--iv-bg-subtle); padding: 12px; border-radius: 6px; }
 
 /* ── QA List ────────────────────────────────────────────── */
 .iv-qa-list { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; }
@@ -292,46 +304,74 @@
 .iv-qa-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 16px; background: var(--iv-bg-subtle); border-bottom: 1px solid var(--iv-border);
-  font-weight: 600; font-size: 0.88rem; color: var(--text, #111827);
+  font-weight: 600; font-size: 1.0rem; color: var(--text, #111827);
 }
 .iv-qa-score {
   background: var(--iv-accent); color: var(--iv-surface); font-weight: 700;
-  padding: 3px 10px; border-radius: 4px; font-size: 0.8rem;
+  padding: 4px 10px; border-radius: 4px; font-size: 1.0rem;
 }
 .iv-qa-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
 .iv-qa-col { padding: 14px; }
 .iv-qa-col + .iv-qa-col { border-left: 1px solid var(--iv-border); }
-.iv-qa-col h4 { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 6px; }
-.iv-qa-col p { font-size: 0.85rem; color: #4b5563; line-height: 1.5; margin: 0; }
+.iv-qa-col h4 { font-size: 1.0rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 6px; }
+.iv-qa-col p { font-size: 1.0rem; color: #1e293b; line-height: 1.5; margin: 0; }
 
-.col-you h4 { color: #6b7280; }
-.col-ideal h4 { color: #059669; }
-.col-ideal { background: rgba(16, 185, 129, 0.03); } /* very subtle tint */
-.col-feedback h4 { color: #d97706; }
-.col-feedback { background: rgba(245, 158, 11, 0.03); }
+.col-you h4 { color: #334155; }
+.col-ideal h4 { color: #065f46; }
+.col-ideal { background: rgba(16, 185, 129, 0.04); }
+.col-feedback h4 { color: #78350f; }
+.col-feedback { background: rgba(245, 158, 11, 0.04); }
 
 .iv-new-btn {
   display: inline-block; background: var(--iv-accent); color: var(--iv-surface); text-decoration: none;
-  border-radius: 6px; padding: 11px 24px; font-size: 0.95rem; font-weight: 600;
+  border-radius: 6px; padding: 11px 24px; font-size: 1.0rem; font-weight: 600;
   margin-top: 20px; transition: background 0.1s;
 }
 .iv-new-btn:hover { background: var(--iv-accent-hover); }
-.iv-lock { color: #ef4444; font-size: 0.85rem; margin-bottom: 12px; }
+
+/* High contrast WCAG AAA notification lock */
+.iv-lock {
+  color: #991b1b;
+  background-color: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 1.0rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.iv-lock a {
+  color: #7f1d1d;
+  background-color: transparent;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.iv-lock a:hover, .iv-lock a:focus {
+  color: #450a0a;
+}
+.theme-dark .iv-lock {
+  color: #fecaca !important;
+  background-color: #450a0a !important;
+  border-color: #7f1d1d !important;
+}
+.theme-dark .iv-lock a {
+  color: #fee2e2 !important;
+}
 
 .iv-msg-wrap { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; position: relative; }
 .iv-replay-btn {
-  background: rgba(255, 255, 255, 0.4); border: none; color: #475569; 
+  background: rgba(255, 255, 255, 0.9); border: 1.5px solid #64748b; color: #1e293b; 
   cursor: pointer; padding: 6px; border-radius: 6px; display: flex; 
   align-items: center; justify-content: center; transition: all 0.2s;
   position: absolute; top: 8px; right: 8px; z-index: 10;
 }
-.iv-replay-btn:hover { background: #f1f5f9; color: #475569; }
+.iv-replay-btn:hover { background: #f1f5f9; color: #0f172a; }
 .theme-dark .iv-replay-btn:hover { background: #1e293b; color: #cbd5e1; }
 .iv-replay-btn.speaking { color: var(--iv-accent) !important; animation: iv-audio-pulse 1s infinite alternate; }
 @keyframes iv-audio-pulse { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
 .iv-stt-live {
-  font-size: 0.85rem; color: var(--iv-accent); margin-top: 6px;
-  min-height: 1.2em; font-style: italic; opacity: 0.7;
+  font-size: 1.0rem; color: var(--iv-accent); margin-top: 6px;
+  min-height: 1.2em; font-style: italic; opacity: 0.8;
 }
 .app-loader.hidden { display: none !important; }
 </style>
@@ -352,18 +392,18 @@
     </div>
 
     <!-- ── Setup Form ─────────────────────────────── -->
-    <div class="iv-setup rr-form" id="ivSetup" style="margin-top:0;">
+    <div class="iv-setup rr-form" id="ivSetup">
 
     {% if (user_plan or "free") != "premium" %}
-    <p class="iv-lock">Free plan: up to 3 rounds. Pressure Test mode requires Premium. <a href="/pricing">Upgrade →</a></p>
+    <p class="iv-lock">Free plan: up to 3 rounds. Pressure Test mode requires Premium. <a href="/pricing">Upgrade &rarr;</a></p>
     {% endif %}
     {% if premium_notice %}
-    <p style="color:#ef4444; font-size:0.88rem; margin-bottom:12px;">{{ premium_notice }}</p>
+    <p class="iv-lock">{{ premium_notice }}</p>
     {% endif %}
     <form id="ivSetupForm" action="/generate" method="post" class="iv-form-grid">
       <div class="iv-field">
-        <label>Topic</label>
-        <select name="topic" id="iv-topic">
+        <label for="iv-topic">Topic</label>
+        <select name="topic" id="iv-topic" aria-label="Interview Topic">
           <option value="Python">Python</option>
           <option value="SQL">SQL</option>
           <option value="React">React</option>
@@ -372,16 +412,16 @@
         </select>
       </div>
       <div class="iv-field">
-        <label>Target Role</label>
-        <input name="role" type="text" placeholder="e.g. Backend Engineer" value="{{ (config.role if config else '') or (default_setup.role if default_setup else '') }}">
+        <label for="iv-role">Target Role</label>
+        <input name="role" id="iv-role" type="text" placeholder="e.g. Backend Engineer" aria-label="Target Role" value="{{ (config.role if config else '') or (default_setup.role if default_setup else '') }}">
       </div>
       <div class="iv-field">
-        <label>Company Style</label>
-        <input name="company" type="text" placeholder="e.g. Stripe, FAANG" value="{{ (config.company if config else '') or (default_setup.company if default_setup else '') }}">
+        <label for="iv-company">Company Style</label>
+        <input name="company" id="iv-company" type="text" placeholder="e.g. Stripe, FAANG" aria-label="Company Style" value="{{ (config.company if config else '') or (default_setup.company if default_setup else '') }}">
       </div>
       <div class="iv-field">
-        <label>Round Type</label>
-        <select name="round_type">
+        <label for="iv-round-type">Round Type</label>
+        <select name="round_type" id="iv-round-type" aria-label="Round Type">
           <option value="technical">Technical</option>
           <option value="behavioral">Behavioral</option>
           <option value="system_design">System Design</option>
@@ -389,8 +429,8 @@
         </select>
       </div>
       <div class="iv-field">
-        <label>Rounds</label>
-        <select name="max_rounds">
+        <label for="iv-max-rounds">Rounds</label>
+        <select name="max_rounds" id="iv-max-rounds" aria-label="Maximum Rounds">
           <option value="3" {% if (user_plan or "free") != "premium" %}selected{% endif %}>3</option>
           <option value="5" {% if (user_plan or "free") == "premium" %}selected{% endif %}>5{% if (user_plan or "free") != "premium" %} (Premium){% endif %}</option>
           {% if (user_plan or "free") == "premium" %}
@@ -400,36 +440,36 @@
         </select>
       </div>
       <div class="iv-field">
-        <label>Persona</label>
-        <select name="persona">
+        <label for="iv-persona">Persona</label>
+        <select name="persona" id="iv-persona" aria-label="Interviewer Persona">
           <option value="Friendly">Friendly</option>
           <option value="Neutral" selected>Neutral</option>
           <option value="Pressure Test" {% if (user_plan or "free") != "premium" %}disabled{% endif %}>Pressure Test (Premium)</option>
         </select>
       </div>
-      <div class="iv-field" style="grid-column:span 2;">
-        <label>Difficulty</label>
-        <select name="difficulty">
+      <div class="iv-field iv-field-full">
+        <label for="iv-difficulty">Difficulty</label>
+        <select name="difficulty" id="iv-difficulty" aria-label="Interview Difficulty">
           <option value="beginner">Beginner</option>
           <option value="intermediate" selected>Intermediate</option>
           <option value="advanced">Advanced</option>
         </select>
       </div>
-      <div style="grid-column: span 2; text-align: right; margin-top: 12px;">
-        <button type="submit" class="iv-start-btn" style="width: auto; padding: 11px 28px;">Start Interview →</button>
+      <div class="iv-actions">
+        <button type="submit" class="iv-start-btn">Start Interview &rarr;</button>
       </div>
     </form>
   </div>
 
   <!-- ── Chat Interface ─────────────────────────── -->
   {% if questions %}
-  <div class="iv-chat-wrap" id="ivChat" style="display:flex;">
-    <div id="ivChat-container" style="display:none;" data-persona="{{ config.persona if config else 'Neutral' }}"></div>
+  <div class="iv-chat-wrap is-active" id="ivChat">
+    <div id="ivChat-container" class="iv-hidden" data-persona="{{ config.persona if config else 'Neutral' }}"></div>
     <div class="iv-status-bar">
       <span><span class="iv-status-dot"></span> Interview in progress</span>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span id="ivPhaseLabel" style="font-size:0.82rem; color:#94a3b8; text-transform:capitalize;"></span>
-        <button class="iv-end-btn" id="ivEndBtn" onclick="endInterview()">End Interview</button>
+      <div class="iv-status-actions">
+        <span id="ivPhaseLabel" class="iv-phase-label"></span>
+        <button class="iv-end-btn" id="ivEndBtn" onclick="endInterview()" aria-label="End Interview">End Interview</button>
       </div>
     </div>
 
@@ -439,35 +479,34 @@
 
     <div class="iv-input-bar" id="ivInputBar">
       <div class="iv-input-main">
-        <textarea id="ivInput" placeholder="Type your answer…" rows="2"
+        <textarea id="ivInput" placeholder="Type your answer…" aria-label="Your interview response" rows="2"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}
                      resetSilenceTimer();"
           oninput="autoGrow(this); resetSilenceTimer();"></textarea>
         <div id="ivSttLive" class="iv-stt-live"></div>
       </div>
-      <button class="iv-icon-btn" id="ivMicBtn" onclick="toggleMic()" title="Speak your answer">
+      <button class="iv-icon-btn" id="ivMicBtn" onclick="toggleMic()" title="Speak your answer" aria-label="Speak your answer">
         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6 10a6 6 0 0 1-12 0H4a8 8 0 0 0 16 0h-2zm-6 8a8 8 0 0 0 7.94-7H18a6 6 0 0 1-12 0H6.06A8 8 0 0 0 12 19z"/></svg>
       </button>
-      <button class="iv-send-btn" id="ivSendBtn" onclick="sendMessage()" title="Send">
+      <button class="iv-send-btn" id="ivSendBtn" onclick="sendMessage()" title="Send" aria-label="Send message">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
     </div>
   </div>
   {% else %}
-  <div class="iv-chat-wrap" id="ivChat" style="display:none;"></div>
+  <div class="iv-chat-wrap" id="ivChat"></div>
   {% endif %}
 
   <!-- ── Verdict Screen ─────────────────────────── -->
   <div class="iv-verdict" id="ivVerdict">
     <div class="iv-verdict-card" id="ivVerdictCard"></div>
-    <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:24px 0 12px;">Question Breakdown</h3>
+    <h3 class="iv-verdict-heading">Question Breakdown</h3>
     <div class="iv-qa-list" id="ivQaList"></div>
-    <div style="text-align:center;">
+    <div class="iv-center-action">
       <a href="/interview/new" class="iv-new-btn">Start New Session</a>
     </div>
   </div>
 
-    </div> <!-- .iv-setup / .iv-chat-wrap / .iv-verdict -->
   </div> <!-- .rr-container -->
 </section> <!-- .rr-page -->
 
@@ -681,7 +720,7 @@ function showVerdict(data) {
 
   // Gap 5: show partial result notice if scoring was cut short
   const partialNotice = data.partial
-    ? `<div style="background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:10px 14px; font-size:0.85rem; color:#f59e0b; margin-top:12px; text-align:left;">
+    ? `<div style="background-color:#fef3c7; border:1.5px solid #fde68a; border-radius:8px; padding:12px 16px; font-size:1.0rem; color:#78350f; margin-top:12px; text-align:left;">
         Scoring timed out. Some rounds show a default baseline score — the full session transcript is preserved.
        </div>` : '';
 
@@ -689,7 +728,7 @@ function showVerdict(data) {
     <div class="iv-verdict-title">Hiring Decision Simulator</div>
     <div class="iv-verdict-decision" style="color:${color}">${decision}</div>
     <div class="iv-verdict-score">Session Score: <strong>${score}/10</strong> &middot; Confidence: ${confidence}</div>
-    <p style="color:#475569; font-size:0.93rem; margin:10px 0 0">${summary}</p>
+    <p style="color:#1e293b; font-size:1.0rem; margin:10px 0 0">${summary}</p>
     ${panelNotes.length ? `<ul class="iv-panel-notes">${panelNotes.map(n => `<li>${n}</li>`).join('')}</ul>` : ''}
     ${curiosity.notes ? `<div class="iv-curiosity">Candidate inquiry evaluation: <strong>${curiosity.score}/10</strong> — ${curiosity.notes}</div>` : ''}
     <div class="iv-verdict-meta">
@@ -705,11 +744,11 @@ function showVerdict(data) {
     const rubric = item.rubric || {};
     const rubricHtml = Object.keys(rubric).length
       ? `<div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">${Object.entries(rubric).map(([k, v]) =>
-          `<span style="background:var(--ui-bg); border-radius:12px; padding:3px 10px; font-size:0.78rem; color:var(--ui-text-muted);"><strong>${k.replace(/_/g,' ')}</strong> ${v}</span>`
+          `<span style="background:var(--ui-bg); border-radius:12px; padding:4px 12px; font-size:1.0rem; color:var(--ui-text);"><strong>${k.replace(/_/g,' ')}</strong> ${v}</span>`
         ).join('')}</div>` : '';
 
-    const strengths = (item.strengths || []).map(s => `<li style="color:#10b981">${s}</li>`).join('');
-    const improvements = (item.improvements || []).map(s => `<li style="color:#92400e">→ ${s}</li>`).join('');
+    const strengths = (item.strengths || []).map(s => `<li style="color:#065f46; font-size:1.0rem;">${s}</li>`).join('');
+    const improvements = (item.improvements || []).map(s => `<li style="color:#78350f; font-size:1.0rem;">&rarr; ${s}</li>`).join('');
 
     qaList.innerHTML += `
       <div class="iv-qa-item">
@@ -721,8 +760,8 @@ function showVerdict(data) {
           <div class="iv-qa-col col-you"><h4>Your Answer</h4><p>${item.user_answer || ''}</p>${rubricHtml}</div>
           <div class="iv-qa-col col-ideal"><h4>Ideal Answer</h4><p>${item.ideal_answer || 'N/A'}</p></div>
           <div class="iv-qa-col col-feedback"><h4>Feedback</h4>
-            ${strengths ? `<ul style="margin:0 0 8px; padding-left:16px; font-size:0.88rem;">${strengths}</ul>` : ''}
-            ${improvements ? `<ul style="margin:0; padding-left:16px; font-size:0.88rem;">${improvements}</ul>` : ''}
+            ${strengths ? `<ul style="margin:0 0 8px; padding-left:16px; font-size:1.0rem;">${strengths}</ul>` : ''}
+            ${improvements ? `<ul style="margin:0; padding-left:16px; font-size:1.0rem;">${improvements}</ul>` : ''}
           </div>
         </div>
       </div>`;
