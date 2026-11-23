@@ -11,7 +11,7 @@
       <div class="rr-chip-row">
         <span class="rr-chip">Plan: {{ (user_plan or 'free')|upper }}</span>
         {% if (user_plan or "free") != "premium" %}
-        <a href="/pricing" class="rr-chip acc-chip-upgrade" aria-label="Upgrade to Premium Plan">Upgrade to Premium &rarr;</a>
+        <a href="/pricing" class="rr-chip acc-chip-upgrade">Upgrade to Premium &rarr;</a>
         {% else %}
         <span class="rr-chip acc-chip-active">Premium Active</span>
         {% endif %}
@@ -30,19 +30,19 @@
         <div class="rr-grid-2">
           <div class="rr-field">
             <label for="target_role">Target role</label>
-            <input id="target_role" name="target_role" type="text" value="{{ (memory.target_role if memory else '') }}" placeholder="Backend Engineer" aria-label="Target career role">
+            <input id="target_role" name="target_role" type="text" value="{{ (memory.target_role if memory else '') }}" placeholder="Backend Engineer" aria-label="Target role">
           </div>
           <div class="rr-field">
             <label for="target_company">Target company</label>
-            <input id="target_company" name="target_company" type="text" value="{{ (memory.target_company if memory else '') }}" placeholder="e.g. Google, Vercel" aria-label="Target target company">
+            <input id="target_company" name="target_company" type="text" value="{{ (memory.target_company if memory else '') }}" placeholder="e.g. Google, Vercel" aria-label="Target company">
           </div>
         </div>
         <div class="rr-field">
           <label for="focus_area">Focus area</label>
-          <input id="focus_area" name="focus_area" type="text" value="{{ (memory.focus_area if memory else '') }}" placeholder="System Design, Python, Behavioral" aria-label="Skill focus areas">
+          <input id="focus_area" name="focus_area" type="text" value="{{ (memory.focus_area if memory else '') }}" placeholder="System Design, Python, Behavioral" aria-label="Focus area">
         </div>
         <div class="rr-actions">
-          <button type="submit" class="rr-submit" aria-label="Save Personal Preferences">Save Preferences</button>
+          <button type="submit" class="rr-submit">Save Preferences</button>
         </div>
       </form>
     </div>
@@ -83,7 +83,7 @@
         Deleting your account permanently removes your profile and saved data.
       </p>
       <form action="/account/delete" method="post" onsubmit="return confirm('Delete your account and data? This cannot be undone.');">
-        <button type="submit" class="acc-delete-btn" aria-label="Permanently Delete Account">
+        <button type="submit" class="acc-delete-btn">
           Delete Account
         </button>
       </form>
