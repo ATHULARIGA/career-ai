@@ -4,14 +4,27 @@
 <style>
 /* ── Coding IDE Accessibility & WCAG AAA Contrast Overrides ── */
 .cp-eyebrow {
-  color: #4338ca !important;
+  color: #1e1b4b !important;
   font-size: 1.0rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.05em !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
   margin-bottom: 6px !important;
 }
 .theme-dark .cp-eyebrow {
-  color: #818cf8 !important;
+  color: #93c5fd !important;
+}
+
+.cp-inline-label,
+.cp-ide-form .cp-inline-label {
+  display: block !important;
+  font-size: 1.0rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 6px !important;
+}
+.theme-dark .cp-inline-label,
+.theme-dark .cp-ide-form .cp-inline-label {
+  color: #f8fafc !important;
 }
 
 .cp-block-label {
@@ -67,12 +80,19 @@
   white-space: nowrap;
 }
 
+.cp-ide-form .cp-custom-input,
+.cp-ide-notes .cp-custom-input,
+textarea.cp-custom-input,
 .cp-custom-input {
   border: 1.5px solid #64748b !important;
+  border-color: #64748b !important;
   font-size: 1.0rem !important;
   color: #0f172a !important;
   background: #ffffff !important;
 }
+.theme-dark .cp-ide-form .cp-custom-input,
+.theme-dark .cp-ide-notes .cp-custom-input,
+.theme-dark textarea.cp-custom-input,
 .theme-dark .cp-custom-input {
   border-color: #64748b !important;
   background: #0f172a !important;

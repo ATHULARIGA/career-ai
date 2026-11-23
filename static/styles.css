@@ -2985,8 +2985,9 @@ html.theme-dark body,
   display: inline-block;
   margin-top: 10px;
   margin-bottom: 6px;
-  font-size: 0.82rem;
-  color: #6b7280;
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #0f172a;
   font-family: "IBM Plex Mono", monospace;
 }
 
@@ -3990,10 +3991,10 @@ html.theme-dark body,
   width: 100%;
   min-height: 120px !important;
   resize: vertical;
-  border: 1px solid #dbe3ef !important;
+  border: 1.5px solid #64748b !important;
   border-radius: 10px;
   padding: 10px 12px;
-  font-size: 0.9rem !important;
+  font-size: 1.0rem !important;
   line-height: 1.45;
   box-sizing: border-box;
   font-family: "IBM Plex Mono", monospace;
