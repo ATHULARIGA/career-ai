@@ -7030,10 +7030,10 @@ textarea:focus {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #2563eb;
+  color: #1e40af;
   margin: 0 0 6px;
 }
-.theme-dark .rf-eyebrow { color: #60a5fa; }
+.theme-dark .rf-eyebrow { color: #93c5fd; }
 .rf-title {
   font-size: 1.85rem;
   font-weight: 800;
@@ -7272,22 +7272,22 @@ textarea:focus {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #2563eb;
+  color: #1e40af;
 }
-.theme-dark .rf-diff-section { color: #60a5fa; }
+.theme-dark .rf-diff-section { color: #93c5fd; }
 .rf-diff-reason-badge {
   font-size: 0.95rem;
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1d4ed8;
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  font-weight: 600;
+  background: rgba(30, 64, 175, 0.1);
+  color: #1e40af;
+  border: 1px solid rgba(30, 64, 175, 0.25);
+  font-weight: 700;
 }
 .theme-dark .rf-diff-reason-badge {
-  background: rgba(96, 165, 250, 0.15);
-  color: #93c5fd;
-  border-color: rgba(96, 165, 250, 0.3);
+  background: rgba(147, 197, 253, 0.15);
+  color: #bfdbfe;
+  border-color: rgba(147, 197, 253, 0.3);
 }
 .rf-diff-grid {
   display: grid;
@@ -7307,7 +7307,7 @@ textarea:focus {
 .rf-diff-orig {
   background: #fef2f2;
   border: 1px solid #fecaca;
-  color: #991b1b;
+  color: #7f1d1d;
 }
 .theme-dark .rf-diff-orig {
   background: rgba(239, 68, 68, 0.12);
@@ -7317,7 +7317,7 @@ textarea:focus {
 .rf-diff-tailored {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  color: #166534;
+  color: #064e3b;
 }
 .theme-dark .rf-diff-tailored {
   background: rgba(16, 185, 129, 0.12);
@@ -7334,10 +7334,10 @@ textarea:focus {
   align-items: center;
   gap: 6px;
 }
-.rf-diff-orig .rf-diff-label { color: #dc2626; }
-.theme-dark .rf-diff-orig .rf-diff-label { color: #f87171; }
-.rf-diff-tailored .rf-diff-label { color: #16a34a; }
-.theme-dark .rf-diff-tailored .rf-diff-label { color: #4ade80; }
+.rf-diff-orig .rf-diff-label { color: #7f1d1d; }
+.theme-dark .rf-diff-orig .rf-diff-label { color: #fca5a5; }
+.rf-diff-tailored .rf-diff-label { color: #064e3b; }
+.theme-dark .rf-diff-tailored .rf-diff-label { color: #86efac; }
 .rf-diff-reason-text {
   font-size: 1.05rem;
   color: var(--ui-text-muted, #334155);
