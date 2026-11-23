@@ -2302,67 +2302,120 @@ html.theme-dark body,
 /* Admin 2.0 */
 
 .al-page {
-  min-height: calc(100vh - 120px);
-  display: grid;
-  place-items: center;
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 30px 16px 60px;
 }
 
 .al-card {
   width: 100%;
-  max-width: 420px;
-  border: 1px solid #e5e7eb;
+  max-width: 440px;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  background: #fff;
-  padding: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  padding: 36px 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.al-header {
+  text-align: center;
+  margin-bottom: 24px;
 }
 
 .al-eyebrow {
-  margin: 0;
-  color: #6b7280;
+  margin: 0 0 8px;
+  color: #1e3a8a;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.78rem;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
-.al-card h1 {
-  margin: 8px 0 14px;
-  font-size: 1.5rem;
+.al-title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
   letter-spacing: -0.02em;
+}
+
+.al-subtitle {
+  font-size: 1.05rem;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.al-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 20px;
 }
 
 .al-form {
   display: grid;
-  gap: 8px;
+  gap: 16px;
 }
 
-.al-form label {
-  font-size: 0.85rem;
-  color: #374151;
+.al-honeypot {
+  display: none !important;
+}
+
+.al-field {
+  display: grid;
+  gap: 6px;
+}
+
+.al-field label {
+  font-size: 1.05rem;
+  color: #0f172a;
   font-weight: 700;
 }
 
-.al-form input {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.95rem;
+.al-field input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 1.05rem;
+  color: #0f172a;
+  background: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.al-form input:focus {
-  outline: none;
-  border-color: #9ca3af;
-  box-shadow: 0 0 0 3px #f3f4f6;
+.al-field input:focus {
+  outline: 2px solid #1e40af;
+  outline-offset: 1px;
+  border-color: #1e40af;
 }
 
-.al-error {
-  color: #b91c1c;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  padding: 8px 10px;
+.al-submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px 20px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1e40af;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.al-submit:hover,
+.al-submit:focus-visible {
+  background: #1e3a8a;
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
 }
 
 .adm-page {

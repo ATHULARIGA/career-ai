@@ -40,7 +40,8 @@ Allow: /roadmap/
 Allow: /book-call
 Allow: /pricing
 Allow: /sitemap
-Disallow: /admin
+Allow: /admin-login
+Disallow: /admin/
 Disallow: /account
 Disallow: /api/
 
@@ -565,10 +566,7 @@ def career_map_page(request: Request):
     )
 
 
-@router.get("/admin-login", response_class=HTMLResponse)
-def admin_login_page(request: Request):
-    log_event("admin_login_page_view", "admin")
-    return templates.TemplateResponse(request=request, name="admin_login.html", context={"request": request})
+# Admin login route is handled in routers/admin.py for unified GET/HEAD/POST routing
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin(request: Request):

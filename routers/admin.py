@@ -303,6 +303,12 @@ def admin_traffic_export(request: Request, format: str = "csv"):
         )
 
 
+@router.api_route("/admin-login", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def admin_login_page(request: Request):
+    log_event("admin_login_page_view", "admin")
+    return templates.TemplateResponse(request=request, name="admin_login.html", context={"request": request})
+
+
 @router.post("/admin-login")
 def admin_login(
     request: Request,
