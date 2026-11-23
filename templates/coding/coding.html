@@ -297,12 +297,12 @@ textarea.cp-custom-input,
               </div>
               <div id="sample-tab" class="cp-tab-panel active">
                 {% for t in problem.sample_tests %}
-                <article class="cp-sample-item">
+                <div class="cp-sample-item">
                   <p><strong>Input</strong></p>
                   <pre>{{ t.input }}</pre>
                   <p><strong>Expected</strong></p>
                   <pre>{{ t.expected }}</pre>
-                </article>
+                </div>
                 {% endfor %}
               </div>
               <div id="hidden-tab" class="cp-tab-panel">
@@ -310,9 +310,9 @@ textarea.cp-custom-input,
               </div>
             </section>
 
-            <section class="cp-panel cp-editor-card">
+            <div class="cp-panel cp-editor-card">
               <div id="editorCode" class="cp-ace"></div>
-            </section>
+            </div>
           </div>
 
           <div class="cp-ide-notes">
@@ -341,25 +341,25 @@ textarea.cp-custom-input,
 
           <div id="output-result-tab" class="cp-tab-panel active">
             {% if judge_job and (judge_job.status == "queued" or judge_job.status == "running") %}
-            <article class="cp-case cp-queue-panel" data-job-id="{{ judge_job.job_id }}" data-problem-id="{{ selected_problem_id }}" data-language="{{ language }}">
+            <div class="cp-case cp-queue-panel" data-job-id="{{ judge_job.job_id }}" data-problem-id="{{ selected_problem_id }}" data-language="{{ language }}">
               <p><strong>Judge Queue</strong></p>
               <p class="cp-muted">Your submission is in queue. This page auto-refreshes when results are ready.</p>
               <div class="cp-result-meta">
                 <span>Job: <strong>{{ judge_job.job_id }}</strong></span>
                 <span>Status: <strong id="jobStatusText">{{ judge_job.status }}</strong></span>
               </div>
-            </article>
+            </div>
             {% endif %}
 
             {% if hint_result %}
-            <article class="cp-case ok">
+            <div class="cp-case ok">
               <p><strong>Hint Ladder · Level {{ hint_result.level }}</strong></p>
               <p>{{ hint_result.hint }}</p>
-            </article>
+            </div>
             {% endif %}
 
             {% if result %}
-            <article class="cp-case {{ 'ok' if result.status == 'Accepted' else 'bad' }}">
+            <div class="cp-case {{ 'ok' if result.status == 'Accepted' else 'bad' }}">
               <div class="cp-result-meta">
                 <span>Status: <strong>{{ result.status }}</strong></span>
                 <span>Score: <strong>{{ result.passed }}/{{ result.total }}</strong></span>
@@ -376,11 +376,11 @@ textarea.cp-custom-input,
                 <span>Verdict: <strong>{{ result.complexity.verdict }}</strong></span>
               </div>
               {% endif %}
-            </article>
+            </div>
 
             <div class="cp-cases cp-case-list">
               {% for c in result.cases %}
-              <article class="cp-case {% if c.passed %}ok{% else %}bad{% endif %}">
+              <div class="cp-case {% if c.passed %}ok{% else %}bad{% endif %}">
                 <p><strong>Case {{ c.index }}</strong> · {{ "Pass" if c.passed else "Fail" }}{% if c.hidden %} · Hidden{% endif %}</p>
                 <p><strong>Input:</strong></p>
                 <pre>{{ c.input }}</pre>
@@ -391,19 +391,19 @@ textarea.cp-custom-input,
                 {% if (c.diff_index is defined) and (c.diff_index is not none) and (c.diff_index >= 0) %}
                 <p class="cp-muted">First mismatch index: {{ c.diff_index }}</p>
                 {% endif %}
-              </article>
+              </div>
               {% endfor %}
             </div>
 
             {% if result.failure_debug %}
-            <article class="cp-case bad cp-case-spaced">
+            <div class="cp-case bad cp-case-spaced">
               <p><strong>Failure Debug View</strong> · Case {{ result.failure_debug.case_index }}</p>
               <p class="cp-muted">Mismatch index: {{ result.failure_debug.mismatch_index }} · {{ result.failure_debug.hint }}</p>
               <p><strong>Expected Context</strong></p>
               <pre>{{ result.failure_debug.expected_ctx.snippet }}</pre>
               <p><strong>Actual Context</strong></p>
               <pre>{{ result.failure_debug.actual_ctx.snippet }}</pre>
-            </article>
+            </div>
             {% endif %}
             {% elif not hint_result and not (judge_job and (judge_job.status == "queued" or judge_job.status == "running")) %}
             <p class="cp-muted">Run your code to see output here.</p>
@@ -412,7 +412,7 @@ textarea.cp-custom-input,
 
           <div id="output-feedback-tab" class="cp-tab-panel">
             {% if code_review %}
-            <article class="cp-case ok">
+            <div class="cp-case ok">
               <p><strong>Premium Code Review</strong></p>
               <p>{{ code_review.summary }}</p>
               <ul>
@@ -420,11 +420,11 @@ textarea.cp-custom-input,
                 <li>{{ note }}</li>
                 {% endfor %}
               </ul>
-            </article>
+            </div>
             {% endif %}
 
             {% if editorial %}
-            <article class="cp-case ok">
+            <div class="cp-case ok">
               <p><strong>Editorial Compare</strong></p>
               <p>{{ editorial.approach }}</p>
               <div class="cp-result-meta">
@@ -440,18 +440,18 @@ textarea.cp-custom-input,
               </ul>
               <p><strong>Next Step</strong></p>
               <p>{{ editorial.next_step }}</p>
-            </article>
+            </div>
             {% endif %}
 
             {% if followups %}
-            <article class="cp-case ok">
+            <div class="cp-case ok">
               <p><strong>Mock Coding Interview Follow-ups</strong></p>
               <ol>
                 {% for f in followups %}
                 <li>{{ f }}</li>
                 {% endfor %}
               </ol>
-            </article>
+            </div>
             {% endif %}
 
             {% if not code_review and not editorial and not followups %}
@@ -491,44 +491,44 @@ textarea.cp-custom-input,
           </p>
           {% endif %}
           <div class="cp-grid-2 cp-plan-grid">
-            <article class="cp-case ok">
+            <div class="cp-case ok">
               <p><strong>7-Day Plan</strong></p>
               <ul>
                 {% for step in study_plan_7d %}
                 <li>{{ step }}</li>
                 {% endfor %}
               </ul>
-            </article>
-            <article class="cp-case ok">
+            </div>
+            <div class="cp-case ok">
               <p><strong>30-Day Plan</strong></p>
               <ul>
                 {% for step in study_plan_30d %}
                 <li>{{ step }}</li>
                 {% endfor %}
               </ul>
-            </article>
+            </div>
           </div>
-        </section>
+        </div>
 
-        <section class="cp-grid-2 cp-grid-rich">
-          <article class="cp-panel cp-panel-compact">
+        <div class="cp-grid-2 cp-grid-rich">
+          <div class="cp-panel cp-panel-compact">
             <h2>Personalized Practice Queue</h2>
             {% if practice_queue %}
             <div class="cp-problem-list">
               {% for p in practice_queue %}
-              <article class="cp-case ok">
+              <div class="cp-case ok">
                 <p><strong>{{ p.title }}</strong> · {{ p.difficulty }}</p>
                 <p class="cp-muted">{{ p.reason }}</p>
                 <a href="/coding?problem={{ p.id }}" class="btn-secondary">Open</a>
-              </article>
+              </div>
               {% endfor %}
             </div>
             {% else %}
             <p class="cp-muted">Solve a few problems to unlock personalized recommendations.</p>
             {% endif %}
-          </article>
+          </div>
 
-          <article class="cp-panel cp-panel-compact">
+          <div class="cp-panel cp-panel-compact">
             <h2>Topic Mastery Tracker</h2>
             {% if mastery %}
             <div class="cp-mastery-list">
@@ -547,16 +547,16 @@ textarea.cp-custom-input,
             {% else %}
             <p class="cp-muted">Mastery data will appear after your first few submissions.</p>
             {% endif %}
-          </article>
-        </section>
+          </div>
+        </div>
 
-        <section class="cp-grid-2 cp-grid-rich">
-          <article class="cp-panel cp-panel-compact">
+        <div class="cp-grid-2 cp-grid-rich">
+          <div class="cp-panel cp-panel-compact">
             <h2>Attempt Timeline ({{ problem.title }})</h2>
             {% if problem_timeline %}
             <div class="cp-timeline">
               {% for t in problem_timeline %}
-              <article class="cp-case {{ 'ok' if t.status == 'Accepted' else 'bad' }}">
+              <div class="cp-case {{ 'ok' if t.status == 'Accepted' else 'bad' }}">
                 <p><strong>{{ t.mode|upper }}</strong> · {{ t.status }} · {{ t.score }} · {{ t.runtime_ms }} ms</p>
                 <p class="cp-muted">Code: {{ t.code_size }} chars · Fingerprint {{ t.code_hash }}</p>
                 {% if t.failure_reason %}
@@ -568,15 +568,15 @@ textarea.cp-custom-input,
                 {% if t.code_preview %}
                 <pre>{{ t.code_preview }}</pre>
                 {% endif %}
-              </article>
+              </div>
               {% endfor %}
             </div>
             {% else %}
             <p class="cp-muted">No attempt history for this problem yet.</p>
             {% endif %}
-          </article>
+          </div>
 
-          <article class="cp-panel cp-panel-compact">
+          <div class="cp-panel cp-panel-compact">
             <h2>{{ contest_snapshot.contest.title if contest_snapshot and contest_snapshot.contest else "Weekly Contest" }}</h2>
             {% if contest_snapshot and contest_snapshot.contest and contest_snapshot.contest.problems %}
             <div class="cp-result-meta">
@@ -603,8 +603,8 @@ textarea.cp-custom-input,
             {% else %}
             <p class="cp-muted">Contest set will appear once enough problems are available.</p>
             {% endif %}
-          </article>
-        </section>
+          </div>
+        </div>
       </div>
     </details>
   </div>
