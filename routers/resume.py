@@ -513,10 +513,63 @@ async def download_latex_endpoint(request: Request, report_id: int):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
-@router.get("/resume/compare", response_class=HTMLResponse)
+@router.api_route("/resume/compare", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/resume/compare/demo", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def compare_resumes(request: Request, current_id: Optional[int] = None, previous_id: Optional[int] = None):
     log_event("page_view", "resume_compare", metadata={"current": current_id, "previous": previous_id})
     user_email = (request.session.get("user_email") or "").strip().lower()
+    is_demo = request.url.path.endswith("/demo") or request.query_params.get("demo") in ("true", "1", "audit")
+    
+    if is_demo:
+        current_report = {
+            "id": 2,
+            "target_role": "Staff Software Engineer",
+            "company_tier": "Tier 1 Tech",
+            "critical_changes_required": [],
+            "scores": {
+                "impact": 9.2,
+                "brevity": 8.8,
+                "style": 9.0,
+                "skills": 9.5,
+                "structure": 9.1,
+            }
+        }
+        previous_report = {
+            "id": 1,
+            "target_role": "Staff Software Engineer",
+            "company_tier": "Tier 1 Tech",
+            "critical_changes_required": [
+                "Quantify revenue and latency metrics in work experience.",
+                "Consolidate legacy tech stack into relevant cloud technologies.",
+            ],
+            "scores": {
+                "impact": 7.4,
+                "brevity": 8.0,
+                "style": 8.2,
+                "skills": 8.5,
+                "structure": 8.6,
+            }
+        }
+        curr_scores = current_report["scores"]
+        prev_scores = previous_report["scores"]
+        deltas = {k: round(curr_scores[k] - prev_scores[k], 1) for k in curr_scores}
+        return templates.TemplateResponse(
+            request=request,
+            name="resume_compare.html",
+            context={
+                "request": request,
+                "current": current_report,
+                "previous": previous_report,
+                "curr_scores": curr_scores,
+                "prev_scores": prev_scores,
+                "deltas": deltas,
+                "all_zero": False,
+                "warning": "",
+                "current_id": 2,
+                "previous_id": 1,
+            },
+        )
+
     if not user_email:
         return RedirectResponse(url="/login")
 

@@ -3,9 +3,9 @@
 {% block meta_desc %}Visualize how your resume iterations affected dimensional ATS scores, keyword coverage, and critical gaps.{% endblock %}
 {% block content %}
 <section class="rr-page">
-    <div class="rr-container" style="max-width: 1040px;">
+    <div class="rr-container rc-container">
         <div class="rr-header">
-            <p class="rr-eyebrow">Versioning & Audit Deltas</p>
+            <p class="rr-eyebrow">Versioning &amp; Audit Deltas</p>
             <h1>Score Delta Breakdown</h1>
             <p>Visualize how your recent resume iterations affected dimensional ATS weight scores and keyword coverage.</p>
             <div class="rr-chip-row">
@@ -16,37 +16,37 @@
         </div>
 
         {% if warning %}
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #f59e0b; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.92rem;">
+        <div class="rc-warning-banner" role="alert">
             {{ warning }}
         </div>
         {% endif %}
 
         {% if all_zero %}
-        <div style="background: var(--ui-surface-subtle); border: 1px solid var(--ui-border); color: var(--ui-text-muted); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.92rem;">
+        <div class="rc-neutral-banner" role="status">
             No dimensional changes detected between these two resume versions.
         </div>
         {% endif %}
 
         <!-- DELTAS GRID -->
-        <h2 style="font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted); margin-bottom: 14px;">Dimension Comparisons</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 32px;">
+        <h2 class="rc-section-heading">Dimension Comparisons</h2>
+        <div class="rc-deltas-grid">
             {% for key, delta in deltas.items() %}
-            <div class="rd-stat">
-                <div style="font-size: 0.75rem; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--ui-text-muted);">{{ key }}</div>
-                <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 8px;">
-                    <span style="font-size: 1.9rem; font-weight: 800; color: var(--ui-text); letter-spacing: -0.03em;">
+            <div class="rc-stat-box">
+                <div class="rc-stat-key">{{ key }}</div>
+                <div class="rc-stat-row">
+                    <span class="rc-curr-score">
                         {{ "%.1f"|format(curr_scores.get(key, 0.0)) }}
                     </span>
-                    <span style="font-size: 0.95rem; color: var(--ui-text-muted); text-decoration: line-through;">
+                    <span class="rc-prev-score">
                         {{ "%.1f"|format(prev_scores.get(key, 0.0)) }}
                     </span>
                     
                     {% if delta > 0 %}
-                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">↑ +{{ "%.1f"|format(delta) }}</span>
+                        <span class="rc-delta-pos">&uarr; +{{ "%.1f"|format(delta) }}</span>
                     {% elif delta < 0 %}
-                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">↓ {{ "%.1f"|format(delta) }}</span>
+                        <span class="rc-delta-neg">&darr; {{ "%.1f"|format(delta) }}</span>
                     {% else %}
-                        <span style="font-size: 0.82rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--ui-surface-subtle); color: var(--ui-text-muted); border: 1px solid var(--ui-border);">0.0</span>
+                        <span class="rc-delta-neutral">0.0</span>
                     {% endif %}
                 </div>
             </div>
@@ -54,30 +54,30 @@
         </div>
 
         <!-- SIDE BY SIDE PANES -->
-        <h2 style="font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: var(--ui-text-muted); margin-bottom: 14px;">Fix Resolutions</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 36px;">
-            <div class="rd-panel">
-                <h3 style="font-size: 1rem; font-weight: 700; color: var(--ui-text); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ui-border);">V1 Critical Gaps (Previous)</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
+        <h2 class="rc-section-heading">Fix Resolutions</h2>
+        <div class="rc-panes-grid">
+            <div class="rc-panel">
+                <h3 class="rc-panel-title">V1 Critical Gaps (Previous)</h3>
+                <ul class="rc-gaps-list">
                     {% if previous.get("critical_changes_required") %}
                         {% for item in previous.get("critical_changes_required", []) %}
-                            <li class="rd-item" style="margin-bottom: 8px;">{{ item }}</li>
+                            <li class="rc-gap-item">{{ item }}</li>
                         {% endfor %}
                     {% else %}
-                        <li style="color: var(--ui-text-muted); font-size: 0.9rem; padding: 12px 0;">No critical changes listed in previous version.</li>
+                        <li class="rc-empty-gap">No critical changes listed in previous version.</li>
                     {% endif %}
                 </ul>
             </div>
-            <div class="rd-panel">
-                <h3 style="font-size: 1rem; font-weight: 700; color: var(--ui-text); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ui-border);">V2 Critical Gaps (Current)</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
+            <div class="rc-panel">
+                <h3 class="rc-panel-title">V2 Critical Gaps (Current)</h3>
+                <ul class="rc-gaps-list">
                     {% if current.get("critical_changes_required") %}
                         {% for item in current.get("critical_changes_required", []) %}
-                            <li class="rd-item" style="margin-bottom: 8px;">{{ item }}</li>
+                            <li class="rc-gap-item">{{ item }}</li>
                         {% endfor %}
                     {% else %}
-                        <li style="color: #10b981; font-weight: 600; font-size: 0.9rem; padding: 12px 0; display: flex; align-items: center; gap: 8px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <li class="rc-resolved-gap">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             All critical items resolved.
                         </li>
                     {% endif %}
@@ -85,9 +85,9 @@
             </div>
         </div>
 
-        <div style="text-align: center; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-            <a href="/resume" class="btn-primary" style="text-decoration: none; padding: 10px 22px;">Run Another Review</a>
-            <a href="/resume/{{ current_id if current_id else 0 }}" class="btn-secondary" style="text-decoration: none; padding: 10px 22px;">Back to Audit</a>
+        <div class="rc-actions-row">
+            <a href="/resume" class="rc-action-btn-primary">Run Another Review</a>
+            <a href="/resume/{{ current_id if current_id else 0 }}" class="rc-action-btn-secondary">Back to Audit</a>
         </div>
 
     </div>

@@ -40,6 +40,8 @@ PUBLIC_PATHS = {
     "/book-call",
     "/account",
     "/account/demo",
+    "/resume/compare",
+    "/resume/compare/demo",
 }
 PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/.well-known")
 

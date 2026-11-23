@@ -42,6 +42,8 @@ Allow: /pricing
 Allow: /sitemap
 Allow: /admin-login
 Allow: /account
+Allow: /resume/compare
+Allow: /resume/compare/demo
 Disallow: /admin/
 Disallow: /api/
 
