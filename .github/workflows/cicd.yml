@@ -16,6 +16,8 @@ jobs:
   quality-and-tests:
     name: Quality Checks & Automated Tests
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +39,7 @@ jobs:
 
       - name: Run test suite
         run: |
-          pytest -q
+          python -m pytest -q
 
   deploy-production:
     name: Deploy to Production

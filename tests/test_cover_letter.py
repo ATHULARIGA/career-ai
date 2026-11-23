@@ -64,7 +64,7 @@ def test_cover_letter_post_cached():
     assert get_res.status_code == 200
     assert "Your Cover Letter" in get_res.text
     assert "Copy to Clipboard" in get_res.text
-    print("✅ Passed - POST cached redirects correctly")
+    print("Passed - POST cached redirects correctly")
 
 def test_cover_letter_foreign_block():
     print("Testing foreign user block for cover letter view...")
@@ -73,7 +73,7 @@ def test_cover_letter_foreign_block():
     
     res = c_foreign.get(f"/resume/{report_id}/cover_letter")
     assert res.status_code == 404 # Non-enumerated Access denied
-    print("✅ Passed - Cover letter foreign block restricted")
+    print("Passed - Cover letter foreign block restricted")
 
 def test_cover_letter_unauthenticated():
     print("Testing unauthenticated redirects...")
@@ -81,7 +81,7 @@ def test_cover_letter_unauthenticated():
     anon_client = TestClient(app)
     res = anon_client.get(f"/resume/{report_id}/cover_letter", follow_redirects=False)
     assert res.status_code in (302, 303, 307)
-    print("✅ Passed - unauthenticated redirects")
+    print("Passed - unauthenticated redirects")
 
 def seed_report_with_overrides(keyword_gaps=None, jd_text=""):
     conn = db.get_conn()
@@ -110,7 +110,7 @@ def test_cover_letter_empty_gaps():
     
     get_res = c.get(f"/resume/{report_id}/cover_letter")
     assert get_res.status_code == 200
-    print("✅ Passed - empty gaps handled")
+    print("Passed - empty gaps handled")
 
 def test_cover_letter_empty_jd():
     print("Testing cover letter with empty JD (Warning banner test)...")
@@ -123,7 +123,7 @@ def test_cover_letter_empty_jd():
     get_res = c.get(f"/resume/{report_id}/cover_letter")
     assert get_res.status_code == 200
     assert "Empty or generic Job Description" in get_res.text
-    print("✅ Passed - empty JD banner triggers")
+    print("Passed - empty JD banner triggers")
 
 def test_cover_letter_hallucination_audit():
     print("Testing cover letter for hallucinated non-present entities...")
@@ -148,7 +148,7 @@ def test_cover_letter_hallucination_audit():
     hallucination_list = ["google", "facebook", "amazon", "microsoft"]
     for word in hallucination_list:
         assert word not in text, f"Potential Hallucination: Found {word}"
-    print("✅ Passed - hallucination audit clean")
+    print("Passed - hallucination audit clean")
 
 if __name__ == "__main__":
     try:
@@ -158,13 +158,13 @@ if __name__ == "__main__":
         test_cover_letter_hallucination_audit()
         test_cover_letter_foreign_block()
         test_cover_letter_unauthenticated()
-        print("\n🎉 All Cover Letter Verification Tests Passed!")
+        print("\nAll Cover Letter Verification Tests Passed!")
         sys.exit(0)
     except AssertionError:
         import traceback
-        print("\n❌ Test Failed:")
+        print("\nTest Failed:")
         traceback.print_exc()
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Execution Error: {e}")
+        print(f"\nExecution Error: {e}")
         sys.exit(1)
