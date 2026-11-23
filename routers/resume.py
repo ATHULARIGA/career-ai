@@ -648,6 +648,152 @@ def compare_resumes(request: Request, current_id: Optional[int] = None, previous
     )
 
 
+@router.api_route("/resume/demo", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def view_dashboard_demo(request: Request):
+    demo_report = {
+        "id": 1,
+        "target_role": "Staff Software Engineer",
+        "company_tier": "Tier 1 Tech",
+        "region": "US",
+        "jd_text": "Sample Job Description for Staff Software Engineer role requiring distributed architecture, Python, and cloud services.",
+        "scores": {
+            "Overall": 8.7,
+            "ATS": 9.2,
+            "Status": "Strong Candidate",
+        },
+        "keyword_coverage": 88,
+        "job_match_percent": 91,
+        "critical_changes_required": [
+            "Quantify revenue and latency metrics in your recent technical leadership projects.",
+            "Consolidate legacy tech stack into modern cloud-native frameworks.",
+        ],
+        "recruiter_simulation": {
+            "first_impression": "Highly qualified technical lead with demonstrated architectural ownership and team leadership.",
+            "likely_outcome": "Fast-track to technical screening and onsite system design interview.",
+            "strengths": [
+                "Proven track record scaling microservices and distributed database systems.",
+                "Demonstrated mentorship and cross-functional leadership.",
+            ],
+            "risks": [
+                "Detailed infrastructure cost optimization metrics could be highlighted more prominently.",
+            ],
+        },
+        "benchmarking": {
+            "matched_requirements": 9,
+            "total_requirements": 10,
+            "percentile": 92,
+            "summary": "Exceeds the 90th percentile bar for Tier 1 engineering candidates.",
+            "missing_critical": [],
+        },
+        "link_validation": [
+            {
+                "url": "https://github.com/alex-morgan",
+                "status": "valid (200 OK)",
+                "note": "Verified active open source profile",
+            },
+            {
+                "url": "https://linkedin.com/in/alex-morgan",
+                "status": "valid (200 OK)",
+                "note": "Professional profile verified",
+            },
+        ],
+        "evidence": [
+            {
+                "category": "Impact",
+                "snippet": "Architected low-latency caching tier serving 50M requests/day.",
+                "issue": "Add specific p99 latency reduction percentage to highlight performance gain.",
+            },
+            {
+                "category": "Brevity",
+                "snippet": "Responsible for managing and organizing quarterly technical sprint planning.",
+                "issue": "Replace passive phrasing with active ownership: 'Led quarterly roadmap planning for 14 engineers.'",
+            },
+        ],
+        "keyword_gaps": [
+            {
+                "keyword": "Kubernetes",
+                "reason": "Crucial container orchestration keyword listed in target job requirements.",
+                "priority": "High",
+                "estimated_score_gain": 0.4,
+            },
+            {
+                "keyword": "gRPC",
+                "reason": "Primary inter-service communication protocol mentioned in the role description.",
+                "priority": "Medium",
+                "estimated_score_gain": 0.3,
+            },
+        ],
+        "targeted_rewrites": [
+            {
+                "before": "Helped improve data processing speed across internal analytics pipelines.",
+                "after": "Engineered distributed streaming pipeline with Apache Kafka, accelerating ETL throughput by 3.4x.",
+                "why": "Demonstrates specific technologies, scale, and measurable performance enhancement.",
+                "matched_keywords": ["Apache Kafka", "Streaming", "ETL"],
+            },
+        ],
+        "quantification_suggestions": [
+            {
+                "before": "Reduced server infrastructure costs through cloud optimization.",
+                "after": "Reduced annualized AWS expenditure by $180,000 via auto-scaling and spot instances.",
+                "metric_hint": "Financial ROI / Dollar savings",
+            },
+        ],
+        "interview_questions": [
+            "How did you design your high-throughput caching tier to prevent cache stampedes under peak traffic?",
+            "Can you walk through a time you resolved a major production incident involving distributed state reconciliation?",
+        ],
+        "region_advice": [
+            "Format dates consistently in MM/YYYY format for US ATS systems.",
+            "Keep length strictly to 1 or 2 pages based on years of relevant experience.",
+        ],
+        "alternative_fits": [
+            {
+                "role": "Principal Systems Architect",
+                "tier": "Tier 1 Tech",
+                "score": 8.4,
+                "match": 86,
+                "summary": "Strong systems design alignment; emphasize multi-year infrastructure strategy.",
+            },
+        ],
+        "latex_code": "% Tailored resume...",
+        "resume_text": "Alex Morgan\nStaff Software Engineer...",
+    }
+    
+    version_history = [
+        {
+            "id": 1,
+            "target_role": "Staff Software Engineer",
+            "overall": 8.7,
+            "ats": 9.2,
+            "keyword_coverage": 88,
+            "status": "Reviewed",
+            "timestamp": "Today",
+        }
+    ]
+    
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={
+        "request": request,
+        "report": demo_report,
+        "resume_versions": version_history,
+        "user_plan": "premium",
+        "progress": {
+            "resume_runs_7d": 4,
+            "resume_avg_7d": 8.7,
+            "coding_submissions_7d": 12,
+            "coding_accept_rate_7d": 83.3,
+            "active_days_7d": 5,
+            "current_streak_days": 3,
+            "next_action": "Complete technical mock interview (15 min).",
+        },
+        "analysis_inputs": {
+            "target_role": "Staff Software Engineer",
+            "seniority": "Senior / Staff",
+            "region": "US",
+            "has_job_description": True,
+        },
+    })
+
+
 @router.get("/resume/{report_id}", response_class=HTMLResponse)
 async def view_dashboard_by_id(request: Request, report_id: int):
     user_email = (request.session.get("user_email") or "").strip().lower()

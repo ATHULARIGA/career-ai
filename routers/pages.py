@@ -46,6 +46,7 @@ Allow: /resume/compare
 Allow: /resume/compare/demo
 Allow: /resume/cover-letter/demo
 Allow: /resume/demo/cover-letter
+Allow: /resume/demo
 Disallow: /admin/
 Disallow: /api/
 

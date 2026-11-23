@@ -1,4 +1,7 @@
 {% extends "layout.html" %}
+{% block title %}Resume ATS Audit Report | ResuMate{% endblock %}
+{% block meta_desc %}Comprehensive AI analysis of dimensional ATS score, keyword coverage, recruiter simulation, and tailored gap fixes.{% endblock %}
+
 {% block content %}
 <section class="rd-page">
     <div class="rd-container">
@@ -8,9 +11,9 @@
                 <h1>Candidate report</h1>
                 <p class="rd-meta">
                     {% if analysis_inputs.target_role %}
-                    Role: <strong>{{ analysis_inputs.target_role }}</strong>
+                    <span>Role: <strong>{{ analysis_inputs.target_role }}</strong></span>
                     {% else %}
-                    Role: <strong>Not specified</strong>
+                    <span>Role: <strong>Not specified</strong></span>
                     {% endif %}
                     <span>Region: <strong>{{ analysis_inputs.region or "US" }}</strong></span>
                     <span>JD mode: <strong>{{ "On" if analysis_inputs.has_job_description else "Off" }}</strong></span>
@@ -28,7 +31,7 @@
                 {% if report.latex_code or report.fixed_resume_md %}
                 <a href="/resume/{{ report.id or 0 }}/fix" class="btn-primary">Tailored LaTeX Resume</a>
                 {% elif report.resume_text %}
-                <form action="/resume/{{ report.id or 0 }}/fix" method="post" style="display:inline;" id="autoFixForm">
+                <form action="/resume/{{ report.id or 0 }}/fix" method="post" class="rd-inline-form" id="autoFixForm">
                     <button type="submit" class="btn-primary" onclick="this.innerHTML='Generating LaTeX...'; this.disabled=true; document.getElementById('autoFixForm').submit();">Tailor LaTeX Resume</button>
                 </form>
                 {% else %}
@@ -50,16 +53,16 @@
         {% set coverage = report.keyword_coverage or 0 %}
         {% set match_percent = report.job_match_percent or 0 %}
 
-        <nav class="rd-tabs" id="dashboardTabs">
-            <button class="rd-tab-btn rd-tab-active" data-target="tab-overview">Overview</button>
-            <button class="rd-tab-btn" data-target="tab-deepdive">Deep Dive</button>
-            <button class="rd-tab-btn" data-target="tab-nextsteps">Next Steps</button>
-            <button class="rd-tab-btn" data-target="tab-history">History</button>
-            <button class="rd-tab-btn" data-target="tab-multirole">Compare Roles</button>
+        <nav class="rd-tabs" id="dashboardTabs" aria-label="Dashboard sections">
+            <button type="button" class="rd-tab-btn rd-tab-active" data-target="tab-overview">Overview</button>
+            <button type="button" class="rd-tab-btn" data-target="tab-deepdive">Deep Dive</button>
+            <button type="button" class="rd-tab-btn" data-target="tab-nextsteps">Next Steps</button>
+            <button type="button" class="rd-tab-btn" data-target="tab-history">History</button>
+            <button type="button" class="rd-tab-btn" data-target="tab-multirole">Compare Roles</button>
         </nav>
 
         <div id="tab-overview" class="rd-tab-content rd-active-section">
-            <section class="rd-score-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+            <section class="rd-score-grid rd-score-grid-4">
                 <article class="rd-stat">
                     <p>Overall Score</p>
                     <h3>{{ overall }}/10</h3>
@@ -68,7 +71,7 @@
                 <article class="rd-stat">
                     <p>ATS Readable</p>
                     <h3>{{ ats }}/10</h3>
-                    <span>Structure & Parsing</span>
+                    <span>Structure &amp; Parsing</span>
                 </article>
                 <article class="rd-stat">
                     <p>Keyword Coverage</p>
@@ -82,28 +85,29 @@
                 </article>
             </section>
 
-            <section class="rd-panel" style="margin-top:24px;">
+            <section class="rd-panel rd-panel-mt">
                 <h2>Interview Progress Trend</h2>
-                <div style="height:280px; width:100%; position:relative; margin-top: 16px;">
+                <div class="rd-chart-box">
                     <canvas id="interviewProgressChart"></canvas>
                 </div>
             </section>
+
             {% if report.critical_changes_required %}
             <section class="rd-panel-critical">
                 <h2 class="rd-critical-title">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     Critical Changes Required
                 </h2>
-                <p class="rd-critical-text" style="margin-bottom:12px;">Address these items immediately to improve your {{ report.job_match_percent }}% job match.</p>
-                <ul class="rd-critical-text" style="margin:0; padding-left:18px;">
+                <p class="rd-critical-desc">Address these items immediately to improve your {{ report.job_match_percent }}% job match.</p>
+                <ul class="rd-critical-list">
                     {% for change in report.critical_changes_required %}
-                    <li style="margin-bottom:6px;"><strong>{{ change }}</strong></li>
+                    <li class="rd-critical-item"><strong>{{ change }}</strong></li>
                     {% endfor %}
                 </ul>
             </section>
             {% endif %}
 
-            <div class="rd-grid-2" style="margin-top:24px;">
+            <div class="rd-grid-2 rd-grid-mt">
                 <section class="rd-panel">
                     <h2>Recruiter simulation</h2>
                     <p><strong>First impression:</strong> {{ report.recruiter_simulation.first_impression or "N/A" }}</p>
@@ -124,17 +128,17 @@
 
                 <section class="rd-panel">
                     <h2>Role Requirements</h2>
-                    <p class="rd-muted" style="margin-top:-4px; margin-bottom:8px; font-size:0.85rem;">Calibrated for: <strong>{{ report.company_tier or "General" }}</strong></p>
+                    <p class="rd-role-calibrated">Calibrated for: <strong>{{ report.company_tier or "General" }}</strong></p>
                     {% if report.benchmarking.matched_requirements is not none %}
-                    <p style="font-size: 1.1rem; font-weight: 600;">{{ report.benchmarking.matched_requirements or 0 }} of {{ report.benchmarking.total_requirements or 10 }} matched</p>
+                    <p class="rd-req-count">{{ report.benchmarking.matched_requirements or 0 }} of {{ report.benchmarking.total_requirements or 10 }} matched</p>
                     {% elif report.benchmarking.percentile is not none %}
-                    <p style="font-size: 1.1rem; font-weight: 600;">Percentile: {{ report.benchmarking.percentile or 0 }}th</p>
+                    <p class="rd-req-count">Percentile: {{ report.benchmarking.percentile or 0 }}th</p>
                     {% endif %}
-                    <p class="rd-muted" style="margin-top: 4px;">{{ report.benchmarking.summary or "" }}</p>
+                    <p class="rd-bench-summary">{{ report.benchmarking.summary or "" }}</p>
                     
                     {% if report.benchmarking.missing_critical %}
-                    <p class="rd-subtitle" style="margin-top:12px; margin-bottom:6px; color: #ef4444;">Missing Critical Gaps</p>
-                    <ul style="padding-left: 18px; color: #ef4444;">
+                    <p class="rd-missing-critical-title">Missing Critical Gaps</p>
+                    <ul class="rd-missing-critical-list">
                         {% for item in report.benchmarking.missing_critical %}
                         <li>{{ item }}</li>
                         {% endfor %}
@@ -142,13 +146,14 @@
                     {% endif %}
                 </section>
             </div>
-            <section class="rd-panel" style="margin-top: 24px;">
+
+            <section class="rd-panel rd-panel-mt">
                 <h2>Portfolio and proof links</h2>
                 {% if report.link_validation %}
                 <div class="rd-link-grid">
                     {% for item in report.link_validation %}
                     <article class="rd-link link-card">
-                        <p class="rd-link-url" style="word-break: break-all;">{{ item.url or "N/A" }}</p>
+                        <p class="rd-link-url">{{ item.url or "N/A" }}</p>
                         <p class="rd-link-status">{{ item.status or "unknown" }}</p>
                         <p class="rd-muted">{{ item.note or "" }}</p>
                     </article>
@@ -198,92 +203,90 @@
                 </section>
             </div>
 
-        <div class="rd-grid-2">
-            <section class="rd-panel">
-                <h2>Rewrite mode</h2>
-                {% if report.targeted_rewrites %}
-                    {% for item in report.targeted_rewrites %}
-                    <article class="rd-item">
-                        <p><strong>Before</strong> {{ item.before }}</p>
-                        <p><strong>After</strong> {{ item.after }}</p>
-                        <p class="rd-muted">{{ item.why }}</p>
-                        {% if item.matched_keywords %}
-                        <p class="rd-hint">Matched: {{ item.matched_keywords|join(", ") }}</p>
-                        {% endif %}
-                    </article>
-                    {% endfor %}
-                {% else %}
-                    <p class="rd-empty">No rewrites generated.</p>
-                {% endif %}
-            </section>
+            <div class="rd-grid-2">
+                <section class="rd-panel">
+                    <h2>Rewrite mode</h2>
+                    {% if report.targeted_rewrites %}
+                        {% for item in report.targeted_rewrites %}
+                        <article class="rd-item">
+                            <p><strong>Before</strong> {{ item.before }}</p>
+                            <p><strong>After</strong> {{ item.after }}</p>
+                            <p class="rd-muted">{{ item.why }}</p>
+                            {% if item.matched_keywords %}
+                            <p class="rd-hint">Matched: {{ item.matched_keywords|join(", ") }}</p>
+                            {% endif %}
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rd-empty">No rewrites generated.</p>
+                    {% endif %}
+                </section>
 
-            <section class="rd-panel">
-                <h2>Quantification assistant</h2>
-                {% if report.quantification_suggestions %}
-                    {% for item in report.quantification_suggestions %}
-                    <article class="rd-item">
-                        <p><strong>Before</strong> {{ item.before }}</p>
-                        <p><strong>After</strong> {{ item.after }}</p>
-                        <p class="rd-hint">Metric idea: {{ item.metric_hint }}</p>
-                    </article>
-                    {% endfor %}
-                {% else %}
-                    <p class="rd-empty">No quantification suggestions available.</p>
-                {% endif %}
-            </section>
-        </div>
-
+                <section class="rd-panel">
+                    <h2>Quantification assistant</h2>
+                    {% if report.quantification_suggestions %}
+                        {% for item in report.quantification_suggestions %}
+                        <article class="rd-item">
+                            <p><strong>Before</strong> {{ item.before }}</p>
+                            <p><strong>After</strong> {{ item.after }}</p>
+                            <p class="rd-hint">Metric idea: {{ item.metric_hint }}</p>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rd-empty">No quantification suggestions available.</p>
+                    {% endif %}
+                </section>
+            </div>
         </div>
 
         <div id="tab-nextsteps" class="rd-tab-content">
+            <div class="rd-grid-2">
+                <section class="rd-panel">
+                    <h2>Interview handoff</h2>
+                    {% if report.interview_questions %}
+                    <ol>
+                        {% for q in report.interview_questions %}
+                        <li>{{ q }}</li>
+                        {% endfor %}
+                    </ol>
+                    <form action="/interview/from-resume" method="post">
+                        <input type="hidden" name="questions_json" value='{{ (report.interview_questions or [])|tojson }}'>
+                        <button type="submit" class="btn-primary rd-inline-button">Start interview with these questions</button>
+                    </form>
+                    {% else %}
+                    <p class="rd-empty">No interview questions generated.</p>
+                    {% endif %}
+                </section>
 
-        <div class="rd-grid-2">
-            <section class="rd-panel">
-                <h2>Interview handoff</h2>
-                {% if report.interview_questions %}
-                <ol>
-                    {% for q in report.interview_questions %}
-                    <li>{{ q }}</li>
-                    {% endfor %}
-                </ol>
-                <form action="/interview/from-resume" method="post">
-                    <input type="hidden" name="questions_json" value='{{ (report.interview_questions or [])|tojson }}'>
-                    <button type="submit" class="btn-primary rd-inline-button">Start interview with these questions</button>
-                </form>
-                {% else %}
-                <p class="rd-empty">No interview questions generated.</p>
+                {% if report.region_advice %}
+                <section class="rd-panel">
+                    <h2>Region advice</h2>
+                    <ul>
+                        {% for item in report.region_advice %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
                 {% endif %}
-            </section>
-
-            {% if report.region_advice %}
-            <section class="rd-panel">
-                <h2>Region advice</h2>
-                <ul>
-                    {% for item in report.region_advice %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </section>
-            {% endif %}
-        </div>
+            </div>
         </div>
 
         <div id="tab-history" class="rd-tab-content">
             {% if progress %}
-            <section class="rd-panel" style="margin-bottom:14px;">
+            <section class="rd-panel rd-panel-mb">
                 <h2>Progress Snapshot (Last 7 days)</h2>
-                <div class="rd-delta-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+                <div class="rd-delta-grid rd-delta-grid-4">
                     <div><p>Resume runs</p><strong>{{ progress.resume_runs_7d }}</strong></div>
                     <div><p>Resume avg</p><strong>{{ progress.resume_avg_7d }}/10</strong></div>
                     <div><p>Coding subs</p><strong>{{ progress.coding_submissions_7d }}</strong></div>
                     <div><p>Accept rate</p><strong>{{ progress.coding_accept_rate_7d }}%</strong></div>
                 </div>
-                <div style="margin-top:10px; border:1px solid rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.08); border-radius:10px; padding:12px 14px;">
-                    <p style="margin:0; color: #60a5fa; font-size:0.82rem; font-family:'IBM Plex Mono', monospace; font-weight:700; text-transform:uppercase;">Next best action (10 min)</p>
-                    <p style="margin:4px 0 0; font-weight:600; color:var(--ui-text);">{{ progress.next_action }}</p>
-                    <p style="margin:6px 0 0; color:var(--ui-text-muted); font-size:0.85rem;">
+                <div class="rd-next-action-card">
+                    <p class="rd-next-action-eyebrow">Next best action (10 min)</p>
+                    <p class="rd-next-action-body">{{ progress.next_action }}</p>
+                    <p class="rd-next-action-meta">
                         Streak: <strong>{{ progress.current_streak_days }} day{{ '' if progress.current_streak_days == 1 else 's' }}</strong>
-                        · Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
+                        &middot; Active days (7d): <strong>{{ progress.active_days_7d }}</strong>
                     </p>
                 </div>
             </section>
@@ -304,8 +307,8 @@
             <section class="rd-panel">
                 <h2>Recent Resume Runs</h2>
                 {% if resume_versions|length == 1 %}
-                <p style="font-size: 0.85rem; color: var(--ui-text-muted, #334155); margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="rd-upload-hint">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Upload a second version to enable Side-by-Side comparison deltas.
                 </p>
                 {% endif %}
@@ -313,46 +316,44 @@
                     {% for v in resume_versions|reverse %}
                     {% set prev_v = (resume_versions|reverse)[loop.index] if loop.index < (resume_versions|length) else None %}
                     <article class="rd-link">
-                        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <div class="rd-run-header">
                             <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
                             {% if prev_v %}
-                            <a href="/resume/compare?current_id={{ v.id }}&previous_id={{ prev_v.id }}" style="font-size:0.75rem; color:#60a5fa; text-decoration:none; font-weight:600; background:rgba(59, 130, 246, 0.15); border:1px solid rgba(59, 130, 246, 0.3); padding:3px 8px; border-radius:6px;">Compare delta</a>
+                            <a href="/resume/compare?current_id={{ v.id }}&previous_id={{ prev_v.id }}" class="rd-run-chip-compare">Compare delta</a>
                             {% endif %}
                         </div>
-                        <p class="rd-link-status">Overall {{ v.overall }} · ATS {{ v.ats }} · Coverage {{ v.keyword_coverage }}%</p>
-                        <p class="rd-muted">{{ v.status or "Reviewed" }} · {{ v.timestamp }}</p>
-                        <div style="margin-top: 8px; display: flex; gap: 8px;">
-                            <a href="/resume/{{ v.id }}/cover_letter" style="font-size:0.75rem; color:#34d399; text-decoration:none; font-weight:600; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.3); padding:3px 8px; border-radius:6px;">Generate Cover Letter</a>
+                        <p class="rd-link-status">Overall {{ v.overall }} &middot; ATS {{ v.ats }} &middot; Coverage {{ v.keyword_coverage }}%</p>
+                        <p class="rd-muted">{{ v.status or "Reviewed" }} &middot; {{ v.timestamp }}</p>
+                        <div class="rd-run-footer">
+                            <a href="/resume/{{ v.id }}/cover_letter" class="rd-run-chip-cover">Generate Cover Letter</a>
                         </div>
                     </article>
                     {% endfor %}
                 </div>
             </section>
             {% endif %}
-
         </div>
 
-        <!-- Added by Multi-Role Comparison -->
         <div id="tab-multirole" class="rd-tab-content">
-            <section class="rd-panel" style="margin-bottom: 24px;">
+            <section class="rd-panel rd-panel-mb">
                 <h2>Test Fit for Another Role</h2>
                 <p class="rd-subtitle">Compare your current resume against different Job Descriptions (Max 5 items).</p>
 
                 {% if report.multi_fit_error %}
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.88rem;">
+                <div class="rd-fit-error" role="alert">
                     {{ report.multi_fit_error }}
                 </div>
                 {% endif %}
 
-                <form action="/resume/{{ report.id or 0 }}/test_fit" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <form action="/resume/{{ report.id or 0 }}/test_fit" method="POST" class="rd-fit-form">
+                    <div class="rd-fit-grid">
                         <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Target Role *</label>
-                            <input type="text" name="target_role" placeholder="e.g. Solution Architect" required style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px;">
+                            <label for="fit_target_role" class="rd-fit-label">Target Role *</label>
+                            <input id="fit_target_role" type="text" name="target_role" placeholder="e.g. Solution Architect" required class="rd-fit-input" aria-label="Target Role">
                         </div>
                         <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Company Tier</label>
-                            <select name="company_tier" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px;">
+                            <label for="fit_company_tier" class="rd-fit-label">Company Tier</label>
+                            <select id="fit_company_tier" name="company_tier" class="rd-fit-select" aria-label="Company Tier">
                                 <option value="General">General</option>
                                 <option value="FAANG">FAANG / Big Tech</option>
                                 <option value="Startup">Growth Startups</option>
@@ -361,11 +362,11 @@
                         </div>
                     </div>
                     <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.85rem; color: var(--ui-text);">Job Description (Optional)</label>
-                        <textarea name="jd_text" rows="4" placeholder="Paste the job description to address keyword gaps..." style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--ui-bg); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+                        <label for="fit_jd_text" class="rd-fit-label">Job Description (Optional)</label>
+                        <textarea id="fit_jd_text" name="jd_text" rows="4" placeholder="Paste the job description to address keyword gaps..." class="rd-fit-textarea" aria-label="Job Description"></textarea>
                     </div>
                     <div>
-                        <button type="submit" class="btn-primary" style="padding: 10px 22px;">Check Fit</button>
+                        <button type="submit" class="rd-fit-btn">Check Fit</button>
                     </div>
                 </form>
             </section>
@@ -373,36 +374,36 @@
             <section class="rd-panel">
                 <h2>Alternative Role Comparisons</h2>
                 {% if report.alternative_fits %}
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                <div class="rd-table-wrap">
+                    <table class="rd-table">
                         <thead>
-                            <tr style="border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted);">
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Role</th>
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Tier</th>
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Score</th>
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Match</th>
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Verdict</th>
-                                <th style="padding: 12px 8px; font-size: 0.8rem; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;">Action</th>
+                            <tr class="rd-thead-tr">
+                                <th class="rd-th">Role</th>
+                                <th class="rd-th">Tier</th>
+                                <th class="rd-th">Score</th>
+                                <th class="rd-th">Match</th>
+                                <th class="rd-th">Verdict</th>
+                                <th class="rd-th">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="border-bottom: 1px solid var(--ui-border); background: var(--ui-surface-subtle);">
-                                <td style="padding: 12px 8px; font-weight: 600; color: var(--ui-text);">{{ analysis_inputs.target_role or "Original" }} (Current)</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">{{ report.company_tier or "General" }}</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text); font-weight: 700;">{{ report.scores.Overall or "0" }}/10</td>
-                                <td style="padding: 12px 8px; color: #10b981; font-weight: 700;">{{ report.job_match_percent or "0" }}%</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text-muted); font-size: 0.85rem;">Current primary review.</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">-</td>
+                            <tr class="rd-tr-current">
+                                <td class="rd-td-role">{{ analysis_inputs.target_role or "Original" }} (Current)</td>
+                                <td class="rd-td">{{ report.company_tier or "General" }}</td>
+                                <td class="rd-td-score">{{ report.scores.Overall or "0" }}/10</td>
+                                <td class="rd-td-match">{{ report.job_match_percent or "0" }}%</td>
+                                <td class="rd-td">Current primary review.</td>
+                                <td class="rd-td">-</td>
                             </tr>
                             {% for f in report.alternative_fits %}
-                            <tr style="border-bottom: 1px solid var(--ui-border);">
-                                <td style="padding: 12px 8px; font-weight: 600; color: var(--ui-text);">{{ f.role }}</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text-muted);">{{ f.tier }}</td>
-                                <td style="padding: 12px 8px; color: var(--ui-text); font-weight: 700;">{{ f.score or 0 }}/10</td>
-                                <td style="padding: 12px 8px; color: #10b981; font-weight: 700;">{{ f.match or 0 }}%</td>
-                                <td style="padding: 12px 8px; font-size: 0.85rem; color: var(--ui-text-muted);">{{ f.summary or "N/A" }}</td>
-                                <td style="padding: 12px 8px;">
-                                    <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" style="color: #ef4444; font-size: 0.8rem; text-decoration: none; font-weight:600;">Remove</a>
+                            <tr class="rd-tr-item">
+                                <td class="rd-td-role">{{ f.role }}</td>
+                                <td class="rd-td">{{ f.tier }}</td>
+                                <td class="rd-td-score">{{ f.score or 0 }}/10</td>
+                                <td class="rd-td-match">{{ f.match or 0 }}%</td>
+                                <td class="rd-td">{{ f.summary or "N/A" }}</td>
+                                <td class="rd-td">
+                                    <a href="/resume/{{ report.id or 0 }}/test_fit/remove/{{ loop.index0 }}" class="rd-remove-link" aria-label="Remove {{ f.role }}">Remove</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -410,48 +411,72 @@
                     </table>
                 </div>
                 {% else %}
-                <p style="text-align: center; color: var(--ui-text-muted, #334155); padding: 40px 20px;">No alternative roles tested yet. Use the form above to add your first comparison targets.</p>
+                <p class="rd-empty-table-text">No alternative roles tested yet. Use the form above to add your first comparison targets.</p>
                 {% endif %}
             </section>
         </div>
     </div>
 </section>
 
+<!-- Fix My Resume Modal -->
+<div id="fixResumeModal" class="rd-modal" role="dialog" aria-modal="true" aria-labelledby="fixModalTitle">
+  <div class="rd-modal-card">
+    <button type="button" onclick="closeFixModal()" class="rd-modal-close" aria-label="Close modal">&times;</button>
+    <p class="rd-modal-eyebrow">Resume Optimizer</p>
+    <h2 id="fixModalTitle" class="rd-modal-title">Optimize Resume</h2>
+    <p class="rd-modal-desc">Upload your PDF resume to apply action-verb rewrites, quantification suggestions, and keyword anchors from your audit.</p>
+    <form id="fixResumeForm" action="/resume/{{ report.id or 0 }}/fix-upload" method="POST" enctype="multipart/form-data">
+      <label id="fixDropZone" for="fixFileInput" class="rd-dropzone" ondragover="event.preventDefault();this.classList.add('rd-dropzone-active')" ondragleave="this.classList.remove('rd-dropzone-active')" ondrop="handleDrop(event)">
+        <svg class="rd-dropzone-icon" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <span id="fixFileLabel" class="rd-dropzone-label">Drop your PDF here or click to browse</span>
+        <span class="rd-dropzone-hint">PDF only &middot; Max 10MB</span>
+        <input type="file" name="file" id="fixFileInput" accept=".pdf" required class="rd-dropzone-input" onchange="onFileSelected(this)" aria-label="Upload PDF Resume">
+      </label>
+      <div class="rd-modal-actions">
+        <button type="submit" id="fixSubmitBtn" class="rd-modal-submit-btn">Generate Optimized Resume</button>
+        <button type="button" onclick="closeFixModal()" class="rd-modal-cancel-btn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const tabs = document.querySelectorAll(".rd-tab-btn");
-        const contents = document.querySelectorAll(".rd-tab-content");
+    document.addEventListener("DOMContentLoaded", function() {
+        var tabs = document.querySelectorAll(".rd-tab-btn");
+        var contents = document.querySelectorAll(".rd-tab-content");
 
-        tabs.forEach(tab => {
-            tab.addEventListener("click", () => {
-                // Remove active styling from all tabs
-                tabs.forEach(t => t.classList.remove("rd-tab-active"));
-                contents.forEach(c => c.classList.remove("rd-active-section"));
+        tabs.forEach(function(tab) {
+            tab.addEventListener("click", function() {
+                tabs.forEach(function(t) { t.classList.remove("rd-tab-active"); });
+                contents.forEach(function(c) { c.classList.remove("rd-active-section"); });
 
-                // Add active styling back to the clicked target
                 tab.classList.add("rd-tab-active");
-                const targetId = tab.getAttribute("data-target");
-                document.getElementById(targetId).classList.add("rd-active-section");
+                var targetId = tab.getAttribute("data-target");
+                var targetEl = document.getElementById(targetId);
+                if (targetEl) targetEl.classList.add("rd-active-section");
             });
         });
 
-        fetch("/api/interview-progress").then(r => r.json()).then(data => {
+        fetch("/api/interview-progress").then(function(r) { return r.json(); }).then(function(data) {
             if (!data || data.length === 0) {
                 var c = document.getElementById('interviewProgressChart');
-                if(c) c.parentElement.innerHTML = "<p style='color:var(--ui-text-muted, #334155); margin-top:20px;'>Complete your first Mock Interview to see progress scoring trends here.</p>";
+                if (c && c.parentElement) {
+                    c.parentElement.innerHTML = "<p class='rd-empty-table-text'>Complete your first Mock Interview to see progress scoring trends here.</p>";
+                }
                 return;
             }
-            const ctx = document.getElementById('interviewProgressChart');
+            var ctx = document.getElementById('interviewProgressChart');
             if (!ctx) return;
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(d => d.date),
+                    labels: data.map(function(d) { return d.date; }),
                     datasets: [{
                         label: 'Overall Score (out of 10)',
-                        data: data.map(d => d.score),
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        data: data.map(function(d) { return d.score; }),
+                        borderColor: '#1e40af',
+                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
                         tension: 0.3,
                         fill: true
                     }]
@@ -464,66 +489,50 @@
                     }
                 }
             });
-        }).catch(e => console.error(e));
+        }).catch(function(e) { console.error(e); });
     });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Fix My Resume Modal -->
-<div id="fixResumeModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
-  <div style="background:var(--ui-surface); border:1px solid var(--ui-border); border-radius:16px; padding:36px; max-width:480px; width:90%; box-shadow:var(--ui-shadow); position:relative;">
-    <button onclick="closeFixModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--ui-text-muted);">×</button>
-    <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ui-text-muted);margin:0 0 8px;">Resume Optimizer</p>
-    <h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;color:var(--ui-text);">Optimize Resume</h2>
-    <p style="color:var(--ui-text-muted);font-size:0.92rem;margin:0 0 24px;line-height:1.6;">Upload your PDF resume to apply action-verb rewrites, quantification suggestions, and keyword anchors from your audit.</p>
-    <form id="fixResumeForm" action="/resume/{{ report.id or 0 }}/fix-upload" method="POST" enctype="multipart/form-data">
-      <label id="fixDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--ui-bg);border:2px dashed var(--ui-border-strong);border-radius:12px;padding:32px 20px;cursor:pointer;transition:all 0.2s;" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor='var(--ui-border-strong)'" ondrop="handleDrop(event)">
-        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--ui-text-muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-        <span id="fixFileLabel" style="font-weight:600;color:var(--ui-text);font-size:0.92rem;">Drop your PDF here or click to browse</span>
-        <span style="font-size:0.78rem;color:var(--ui-text-muted);">PDF only · Max 10MB</span>
-        <input type="file" name="file" id="fixFileInput" accept=".pdf" required style="display:none;" onchange="onFileSelected(this)">
-      </label>
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button type="submit" id="fixSubmitBtn" class="btn-primary" style="flex:1;padding:13px;font-size:1rem;border-radius:10px;">Generate Optimized Resume</button>
-        <button type="button" onclick="closeFixModal()" class="btn-secondary" style="padding:13px 20px;border-radius:10px;">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function openFixModal() {
-  const m = document.getElementById('fixResumeModal');
-  m.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closeFixModal() {
-  const m = document.getElementById('fixResumeModal');
-  m.style.display = 'none';
-  document.body.style.overflow = '';
-}
-function onFileSelected(input) {
-  const label = document.getElementById('fixFileLabel');
-  label.textContent = input.files[0] ? input.files[0].name : 'Drop your PDF here or click to browse';
-  document.getElementById('fixDropZone').style.borderColor = '#3b82f6';
-}
-function handleDrop(e) {
-  e.preventDefault();
-  const dt = e.dataTransfer;
-  if (dt.files.length) {
-    const input = document.getElementById('fixFileInput');
-    input.files = dt.files;
-    onFileSelected(input);
-  }
-  e.currentTarget.style.borderColor = '#3b82f6';
-}
-document.getElementById('fixResumeForm').addEventListener('submit', function() {
-  const btn = document.getElementById('fixSubmitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Generating…';
-});
-document.getElementById('fixResumeModal').addEventListener('click', function(e) {
-  if (e.target === this) closeFixModal();
-});
+    function openFixModal() {
+        var m = document.getElementById('fixResumeModal');
+        if (m) m.classList.add('rd-modal-open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeFixModal() {
+        var m = document.getElementById('fixResumeModal');
+        if (m) m.classList.remove('rd-modal-open');
+        document.body.style.overflow = '';
+    }
+    function onFileSelected(input) {
+        var label = document.getElementById('fixFileLabel');
+        if (label) label.textContent = input.files[0] ? input.files[0].name : 'Drop your PDF here or click to browse';
+        var dropzone = document.getElementById('fixDropZone');
+        if (dropzone) dropzone.classList.add('rd-dropzone-active');
+    }
+    function handleDrop(e) {
+        e.preventDefault();
+        var dt = e.dataTransfer;
+        if (dt.files.length) {
+            var input = document.getElementById('fixFileInput');
+            input.files = dt.files;
+            onFileSelected(input);
+        }
+        e.currentTarget.classList.add('rd-dropzone-active');
+    }
+    var fixForm = document.getElementById('fixResumeForm');
+    if (fixForm) {
+        fixForm.addEventListener('submit', function() {
+            var btn = document.getElementById('fixSubmitBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Generating…';
+            }
+        });
+    }
+    var fixModal = document.getElementById('fixResumeModal');
+    if (fixModal) {
+        fixModal.addEventListener('click', function(e) {
+            if (e.target === this) closeFixModal();
+        });
+    }
 </script>
 {% endblock %}

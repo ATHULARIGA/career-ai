@@ -44,6 +44,7 @@ PUBLIC_PATHS = {
     "/resume/compare/demo",
     "/resume/cover-letter/demo",
     "/resume/demo/cover-letter",
+    "/resume/demo",
 }
 PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/.well-known")
 
