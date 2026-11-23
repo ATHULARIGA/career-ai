@@ -63,26 +63,26 @@
 
         <div id="tab-overview" class="rd-tab-content rd-active-section">
             <section class="rd-score-grid rd-score-grid-4">
-                <article class="rd-stat">
+                <div class="rd-stat">
                     <p>Overall Score</p>
                     <h3>{{ overall }}/10</h3>
                     <span>{{ report.scores.Status or "Needs Review" }}</span>
-                </article>
-                <article class="rd-stat">
+                </div>
+                <div class="rd-stat">
                     <p>ATS Readable</p>
                     <h3>{{ ats }}/10</h3>
                     <span>Structure &amp; Parsing</span>
-                </article>
-                <article class="rd-stat">
+                </div>
+                <div class="rd-stat">
                     <p>Keyword Coverage</p>
                     <h3>{{ coverage }}%</h3>
                     <span>Lexical Alignment</span>
-                </article>
-                <article class="rd-stat rd-score-card">
+                </div>
+                <div class="rd-stat rd-score-card">
                     <p class="rd-score-card-title">Job Match</p>
                     <h3 class="rd-score-card-value">{{ match_percent }}%</h3>
                     <span>Requirements Met</span>
-                </article>
+                </div>
             </section>
 
             <section class="rd-panel rd-panel-mt">
@@ -152,11 +152,11 @@
                 {% if report.link_validation %}
                 <div class="rd-link-grid">
                     {% for item in report.link_validation %}
-                    <article class="rd-link link-card">
+                    <div class="rd-link link-card">
                         <p class="rd-link-url">{{ item.url or "N/A" }}</p>
                         <p class="rd-link-status">{{ item.status or "unknown" }}</p>
                         <p class="rd-muted">{{ item.note or "" }}</p>
-                    </article>
+                    </div>
                     {% endfor %}
                 </div>
                 {% else %}
@@ -171,11 +171,11 @@
                     <h2>Evidence-based findings</h2>
                     {% if report.evidence %}
                         {% for item in report.evidence %}
-                        <article class="rd-item">
+                        <div class="rd-item">
                             <span class="rd-tag">{{ item.category or "General" }}</span>
                             <p class="rd-quote">{{ item.snippet or "No snippet provided." }}</p>
                             <p>{{ item.issue or "No issue details." }}</p>
-                        </article>
+                        </div>
                         {% endfor %}
                     {% else %}
                         <p class="rd-empty">No evidence items available.</p>
@@ -186,7 +186,7 @@
                     <h2>Keyword gap priorities</h2>
                     {% if report.keyword_gaps %}
                         {% for gap in report.keyword_gaps %}
-                        <article class="rd-gap">
+                        <div class="rd-gap">
                             <div>
                                 <p class="rd-keyword">{{ gap.keyword or "Keyword" }}</p>
                                 <p class="rd-muted">{{ gap.reason or "No reason provided." }}</p>
@@ -195,7 +195,7 @@
                                 <span>{{ gap.priority or "Useful" }}</span>
                                 <strong>+{{ gap.estimated_score_gain or 0 }}</strong>
                             </div>
-                        </article>
+                        </div>
                         {% endfor %}
                     {% else %}
                         <p class="rd-empty">No major keyword gaps detected.</p>
@@ -208,14 +208,14 @@
                     <h2>Rewrite mode</h2>
                     {% if report.targeted_rewrites %}
                         {% for item in report.targeted_rewrites %}
-                        <article class="rd-item">
+                        <div class="rd-item">
                             <p><strong>Before</strong> {{ item.before }}</p>
                             <p><strong>After</strong> {{ item.after }}</p>
                             <p class="rd-muted">{{ item.why }}</p>
                             {% if item.matched_keywords %}
                             <p class="rd-hint">Matched: {{ item.matched_keywords|join(", ") }}</p>
                             {% endif %}
-                        </article>
+                        </div>
                         {% endfor %}
                     {% else %}
                         <p class="rd-empty">No rewrites generated.</p>
@@ -226,11 +226,11 @@
                     <h2>Quantification assistant</h2>
                     {% if report.quantification_suggestions %}
                         {% for item in report.quantification_suggestions %}
-                        <article class="rd-item">
+                        <div class="rd-item">
                             <p><strong>Before</strong> {{ item.before }}</p>
                             <p><strong>After</strong> {{ item.after }}</p>
                             <p class="rd-hint">Metric idea: {{ item.metric_hint }}</p>
-                        </article>
+                        </div>
                         {% endfor %}
                     {% else %}
                         <p class="rd-empty">No quantification suggestions available.</p>
@@ -315,7 +315,7 @@
                 <div class="rd-link-grid">
                     {% for v in resume_versions|reverse %}
                     {% set prev_v = (resume_versions|reverse)[loop.index] if loop.index < (resume_versions|length) else None %}
-                    <article class="rd-link">
+                    <div class="rd-link">
                         <div class="rd-run-header">
                             <p class="rd-link-url">{{ v.target_role or "General role" }}</p>
                             {% if prev_v %}
@@ -327,7 +327,7 @@
                         <div class="rd-run-footer">
                             <a href="/resume/{{ v.id }}/cover_letter" class="rd-run-chip-cover">Generate Cover Letter</a>
                         </div>
-                    </article>
+                    </div>
                     {% endfor %}
                 </div>
             </section>

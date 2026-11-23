@@ -536,7 +536,7 @@
 
     {% if diff_changes %}
       {% for change in diff_changes %}
-      <article class="rf-diff-card">
+      <div class="rf-diff-card">
         <div class="rf-diff-head">
           <span class="rf-diff-section">{{ change.section or "Experience" }}</span>
           <span class="rf-diff-reason-badge">Surgical Alignment</span>
@@ -562,7 +562,7 @@
           <strong style="color: var(--ui-text);">Why this changed:</strong> {{ change.reason }}
         </p>
         {% endif %}
-      </article>
+      </div>
       {% endfor %}
     {% else %}
       <div class="rf-empty-card">
