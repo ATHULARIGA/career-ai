@@ -44,6 +44,8 @@ Allow: /admin-login
 Allow: /account
 Allow: /resume/compare
 Allow: /resume/compare/demo
+Allow: /resume/cover-letter/demo
+Allow: /resume/demo/cover-letter
 Disallow: /admin/
 Disallow: /api/
 

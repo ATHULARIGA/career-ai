@@ -1,20 +1,6 @@
 {% extends "layout.html" %}
-
-{% block extra_head %}
-<style>
-    .cl-container { margin-top: 20px; max-width: 820px; margin-left: auto; margin-right: auto; }
-    .cl-banner { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #f59e0b; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 500; font-size: 0.92rem; }
-    .cl-card { margin-bottom: 24px; min-height: 400px; position: relative; background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 12px; padding: 28px; box-shadow: var(--ui-shadow); }
-    .cl-text { white-space: pre-wrap; line-height: 1.65; font-size: 1rem; color: var(--ui-text); font-family: inherit; }
-    .cl-actions { display: flex; gap: 12px; justify-content: flex-start; margin-top: 20px; flex-wrap: wrap; }
-    .cl-btn { padding: 10px 22px; border-radius: 8px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.15s; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 8px; }
-    .cl-btn.btn-primary { background: #3b82f6; color: #ffffff; }
-    .cl-btn.btn-primary:hover { background: #2563eb; }
-    .cl-btn.btn-secondary { background: var(--ui-surface); border: 1px solid var(--ui-border-strong); color: var(--ui-text); }
-    .cl-btn.btn-secondary:hover { background: var(--ui-surface-subtle); }
-    .cl-empty { text-align: center; padding: 60px 20px; color: var(--ui-text-muted); }
-</style>
-{% endblock %}
+{% block title %}Tailored Cover Letter | ResuMate{% endblock %}
+{% block meta_desc %}AI-generated tailored cover letter addressing key job requirements and technical keywords.{% endblock %}
 
 {% block content %}
 <section class="rr-page">
@@ -26,7 +12,7 @@
         </div>
 
         {% if warning %}
-        <div class="cl-banner">
+        <div class="cl-banner" role="alert">
             {{ warning }}
         </div>
         {% endif %}
@@ -36,13 +22,13 @@
                 <div class="cl-text tool-text-area" id="coverLetterText">{{ cover_letter }}</div>
             {% else %}
                 <div class="cl-empty">
-                    <svg style="margin: 0 auto 16px; color: #94a3b8;" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <svg class="cl-empty-icon" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     {% if "requires resume text" in (cover_letter or "") %}
-                        <p style="font-size: 1.1rem; font-weight: 500;">Generation Unavailable</p>
-                        <p style="font-size: 0.9rem; margin-top: 4px;">This historical report lacks the required text data.</p>
+                        <p class="cl-empty-title">Generation Unavailable</p>
+                        <p class="cl-empty-desc">This historical report lacks the required text data.</p>
                     {% else %}
-                        <p style="font-size: 1.1rem; font-weight: 500;">No Cover Letter Generated Yet</p>
-                        <p style="font-size: 0.9rem; margin-top: 4px;">Click the button below to generate one with AI.</p>
+                        <p class="cl-empty-title">No Cover Letter Generated Yet</p>
+                        <p class="cl-empty-desc">Click the button below to generate one with AI.</p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -50,17 +36,17 @@
 
         <div class="cl-actions">
             {% if cover_letter %}
-                <button onclick="copyCoverLetter()" class="cl-btn btn-primary" id="copyBtn">Copy to Clipboard</button>
+                <button type="button" onclick="copyCoverLetter()" class="cl-btn cl-btn-primary" id="copyBtn">Copy to Clipboard</button>
             {% else %}
                 {% if "requires resume text" in (cover_letter or "") %}
-                    <a href="/resume" class="cl-btn btn-primary">Start New Review</a>
+                    <a href="/resume" class="cl-btn cl-btn-primary">Start New Review</a>
                 {% else %}
-                    <form action="/resume/{{ report_id }}/cover_letter" method="POST" style="display:inline;">
-                        <button type="submit" class="cl-btn btn-primary">Generate Cover Letter</button>
+                    <form action="/resume/{{ report_id }}/cover_letter" method="POST" class="cl-form-inline">
+                        <button type="submit" class="cl-btn cl-btn-primary">Generate Cover Letter</button>
                     </form>
                 {% endif %}
             {% endif %}
-            <a href="/resume" class="cl-btn btn-secondary">Back to Dashboard</a>
+            <a href="/resume" class="cl-btn cl-btn-secondary">Back to Dashboard</a>
         </div>
 
     </div>
@@ -68,19 +54,20 @@
 
 <script>
 function copyCoverLetter() {
-    const text = document.getElementById("coverLetterText").innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById("copyBtn");
-        const orig = btn.innerText;
+    var textEl = document.getElementById("coverLetterText");
+    if (!textEl) return;
+    var text = textEl.innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = document.getElementById("copyBtn");
+        if (!btn) return;
+        var orig = btn.innerText;
         btn.innerText = "Copied!";
-        btn.style.background = "#10b981"; // success green
-        btn.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
-        setTimeout(() => {
+        btn.classList.add("cl-btn-copied");
+        setTimeout(function() {
             btn.innerText = orig;
-            btn.style.background = "#2563eb";
-            btn.style.boxShadow = "0 4px 12px rgba(37,99,235,0.2)";
+            btn.classList.remove("cl-btn-copied");
         }, 2000);
-    }).catch(err => {
+    }).catch(function() {
         alert("Failed to copy text. Please select and copy manually.");
     });
 }

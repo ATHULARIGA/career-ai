@@ -312,6 +312,26 @@ async def generate_cover_letter_endpoint(request: Request, report_id: int):
     
     return RedirectResponse(f"/resume/{report_id}/cover_letter", status_code=303)
 
+@router.api_route("/resume/demo/cover-letter", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/resume/cover-letter/demo", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def view_cover_letter_demo(request: Request):
+    demo_cover_letter = """Dear Hiring Team,
+
+I am writing to express my strong enthusiasm for the Staff Software Engineer position. With over eight years of experience architecting distributed cloud systems and optimizing high-throughput APIs, I have spearheaded mission-critical platforms that reduced latency by 42% and scaled to millions of active users.
+
+My background in Python, distributed database design, and end-to-end cloud infrastructure aligns directly with your technical stack and strategic goals. I welcome the opportunity to discuss how my experience can deliver immediate impact to your engineering initiatives.
+
+Sincerely,
+Alex Morgan"""
+    return templates.TemplateResponse(request=request, name="cover_letter.html", context={
+        "request": request,
+        "cover_letter": demo_cover_letter,
+        "report_id": 1,
+        "warning": "",
+        "user_plan": "premium",
+    })
+
+
 @router.get("/resume/{report_id}/cover_letter", response_class=HTMLResponse)
 async def view_cover_letter_endpoint(request: Request, report_id: int):
     user_email = (request.session.get("user_email") or "").strip().lower()
