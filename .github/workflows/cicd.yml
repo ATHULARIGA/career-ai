@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: .
+      OPENAI_API_KEY: 'ci-mock-key'
+      GEMINI_API_KEY: 'ci-mock-key'
+      GROQ_API_KEY: 'ci-mock-key'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
