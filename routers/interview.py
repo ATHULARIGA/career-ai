@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 import uuid
+import asyncio
 import json
 from core import *
 from services.interview.ideal_generator import generate_ideal_answer
@@ -207,7 +208,6 @@ async def interview_chat_json(request: Request):
     # Persist full (un-trimmed) conversation to DB, keyed by session + email (Gap 1)
     session_id_val = request.session.get("interview_id")
     if session_id_val:
-        import time
         for attempt in range(3):
             try:
                 db_conn = db.get_conn()
@@ -220,7 +220,7 @@ async def interview_chat_json(request: Request):
             except Exception as e:
                 print(f"CHAT DB SAVE ERR (attempt {attempt+1}): {e}")
                 if attempt == 2: pass # last try; don't return 500 but log error
-                time.sleep(0.1)
+                await asyncio.sleep(0.1)
 
     return JSONResponse({"reply": reply, "phase": next_phase, "topics_covered": topics_covered})
 
