@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  quality-and-tests:
+    name: Quality Checks & Automated Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      - name: Bytecode syntax validation
+        run: |
+          python -m compileall -q core routers services tests main.py
+
+      - name: Run test suite
+        run: |
+          pytest -q
+
+  deploy-production:
+    name: Deploy to Production
+    needs: quality-and-tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via Vercel CLI
+        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
+        run: |
+          npm install -g vercel
+          vercel pull --yes --environment=production
+          vercel build --prod
+          vercel deploy --prebuilt --prod
+
+      - name: Vercel GitHub App Deployment Confirmation
+        if: env.VERCEL_TOKEN == '' || env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == ''
+        run: |
+          echo "Continuous deployment is managed by the Vercel GitHub Integration."
+          echo "All automated quality and test gates passed for commit ${{ github.sha }}."
+          echo "Production target: https://career-ai-psi-dun.vercel.app/"
