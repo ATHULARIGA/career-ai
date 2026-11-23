@@ -444,10 +444,153 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
 
     return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
 
-@router.get("/resume/{report_id}/fix", response_class=HTMLResponse)
-async def view_fixed_resume_endpoint(request: Request, report_id: int):
+DEMO_LATEX_CODE = r"""\documentclass[letterpaper,11pt]{article}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\begin{document}
+
+\begin{center}
+    \textbf{\Huge \scshape Alex Morgan} \\ \vspace{1pt}
+    \small 555-123-4567 $|$ \href{mailto:alex.morgan@example.com}{\underline{alex.morgan@example.com}} $|$ 
+    \href{https://linkedin.com/in/alex-morgan}{\underline{linkedin.com/in/alex-morgan}} $|$
+    \href{https://github.com/alex-morgan}{\underline{github.com/alex-morgan}}
+\end{center}
+
+\section{Professional Summary}
+Senior Software Engineer with 8+ years of expertise in architecting high-throughput distributed systems, scalable microservices, and asynchronous event-driven pipelines using Python, FastAPI, PostgreSQL, and AWS.
+
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Python, TypeScript, Go, SQL, Bash} \\
+     \textbf{Frameworks}{: FastAPI, Django, React, Next.js, Celery} \\
+     \textbf{Developer Tools}{: Git, Docker, Kubernetes, Terraform, AWS, GitHub Actions} \\
+     \textbf{Databases}{: PostgreSQL, Redis, DynamoDB, Elasticsearch}
+    }}
+ \end{itemize}
+
+\section{Work Experience}
+  \begin{itemize}[leftmargin=0.15in, label={}]
+    \resumeSubheading
+      {TechNova Systems}{San Francisco, CA}
+      {Lead Distributed Systems Engineer}{2021 -- Present}
+      \begin{itemize}
+        \resumeItem{Architected high-throughput async processing pipeline with FastAPI and Kafka handling 45M daily transactions.}
+        \resumeItem{Reduced API p99 latency by 42\% through Redis caching and PostgreSQL database connection pooling.}
+        \resumeItem{Spearheaded automated CI/CD deployment pipelines on AWS EKS reducing production release failure rates by 65\%.}
+      \end{itemize}
+    \resumeSubheading
+      {Apex Cloud Innovations}{Austin, TX}
+      {Senior Software Engineer}{2018 -- 2021}
+      \begin{itemize}
+        \resumeItem{Designed and implemented resilient microservices architecture serving 2M+ active enterprise users.}
+        \resumeItem{Optimized SQL query performance across distributed relational databases, cutting cloud infrastructure costs by \$180K annually.}
+      \end{itemize}
+  \end{itemize}
+
+\section{Education}
+  \begin{itemize}[leftmargin=0.15in, label={}]
+    \resumeSubheading
+      {University of California, Berkeley}{Berkeley, CA}
+      {Bachelor of Science in Computer Science}{2014 -- 2018}
+  \end{itemize}
+
+\end{document}
+"""
+
+DEMO_DIFF_CHANGES = [
+    {
+        "section": "Professional Experience",
+        "original": "Worked on backend microservices and improved performance of data pipelines.",
+        "tailored": "Architected high-throughput async processing pipeline with FastAPI and Kafka handling 45M daily transactions, reducing p99 latency by 42%.",
+        "reason": "Quantified scale (45M transactions) and measured impact (42% latency reduction) aligning with Staff Engineer requirements."
+    },
+    {
+        "section": "Infrastructure & Operations",
+        "original": "Helped manage AWS deployments and set up CI/CD workflows for the team.",
+        "tailored": "Spearheaded automated CI/CD deployment pipelines on AWS EKS with Kubernetes and Terraform, reducing production release failure rates by 65%.",
+        "reason": "Incorporated essential JD keywords (AWS EKS, Kubernetes, Terraform) and quantified production stability metrics."
+    }
+]
+
+@router.api_route("/resume/demo/fix", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/resume/fix/demo", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/resume/{report_id}/fix", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def view_fixed_resume_endpoint(request: Request, report_id: str = "1"):
     user_email = (request.session.get("user_email") or "").strip().lower()
-    report = get_resume_report_by_id_for_user(report_id, user_email)
+    is_demo = (
+        request.url.path.endswith("/demo/fix")
+        or request.url.path.endswith("/fix/demo")
+        or str(report_id).lower() in ("demo", "audit")
+        or request.query_params.get("demo") in ("true", "1", "audit")
+        or (str(report_id) == "1" and not user_email)
+    )
+
+    if is_demo:
+        return templates.TemplateResponse(request=request, name="resume_fix.html", context={
+            "request": request,
+            "report_id": 1,
+            "fixed_md": "# Alex Morgan\nStaff Software Engineer",
+            "latex_code": DEMO_LATEX_CODE,
+            "diff_changes": DEMO_DIFF_CHANGES,
+            "changes_summary": "Surgically aligned bullet points with Staff Software Engineer specifications while preserving verified employment history.",
+            "target_role": "Staff Software Engineer",
+            "jd_text": "Sample Job Description for Staff Software Engineer requiring distributed systems, FastAPI, and Kubernetes.",
+            "warning": "",
+            "error": "",
+            "user_plan": "premium"
+        })
+
+    try:
+        numeric_id = int(report_id)
+    except ValueError:
+        return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Invalid report ID."}, status_code=400)
+
+    report = get_resume_report_by_id_for_user(numeric_id, user_email)
     if not report:
          return templates.TemplateResponse(request=request, name="error.html", context={"request": request, "message": "Report not found or access denied."}, status_code=404)
          
@@ -473,7 +616,7 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
             report["diff_changes"] = tailored_result.get("diff_changes", [])
             report["changes_summary"] = tailored_result.get("changes_summary", "")
             report["fixed_resume_md"] = fixed_md
-            update_resume_report_json(report_id, user_email, report)
+            update_resume_report_json(numeric_id, user_email, report)
 
             latex_code = report["latex_code"]
             diff_changes = report["diff_changes"]
@@ -488,7 +631,7 @@ async def view_fixed_resume_endpoint(request: Request, report_id: int):
          
     return templates.TemplateResponse(request=request, name="resume_fix.html", context={
          "request": request,
-         "report_id": report_id,
+         "report_id": numeric_id,
          "fixed_md": fixed_md,
          "latex_code": latex_code,
          "diff_changes": diff_changes,

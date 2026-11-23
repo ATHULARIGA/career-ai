@@ -1,15 +1,17 @@
 {% extends "layout.html" %}
+{% block title %}Error | ResuMate{% endblock %}
+{% block meta_desc %}An unexpected error occurred. Please return to the homepage or contact ResuMate support.{% endblock %}
 {% block content %}
 <section class="al-page">
-  <div class="al-card" style="max-width:560px; text-align:left;">
+  <div class="al-card al-card-error">
     <p class="al-eyebrow">Error</p>
     <h1>Something went wrong</h1>
     <p>Please try again. If this keeps happening, contact support with request id:</p>
-    <p style="font-family:'IBM Plex Mono', monospace; background:var(--ui-surface-subtle, #141d2e); border:1px solid var(--ui-border, #1e293b); color:var(--ui-text, #f1f5f9); border-radius:8px; padding:10px 12px; word-break:break-all;">{{ request_id }}</p>
+    <p class="al-error-code">{{ request_id }}</p>
     {% if message %}
-    <p style="color: #ef4444; font-weight: 500; margin-top: 10px;">Error detail: {{ message }}</p>
+    <p class="al-error-detail">Error detail: {{ message }}</p>
     {% endif %}
-    <p><a href="/">Return to home</a></p>
+    <p><a href="/" class="al-return-link">Return to home &rarr;</a></p>
   </div>
 </section>
 {% endblock %}
