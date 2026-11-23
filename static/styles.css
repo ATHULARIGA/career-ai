@@ -7163,9 +7163,9 @@ textarea:focus {
   color: #f8fafc;
 }
 .rf-badge-count {
-  background: #2563eb;
+  background: #1e40af;
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   padding: 2px 8px;
   border-radius: 999px;
   font-weight: 700;
@@ -7190,20 +7190,20 @@ textarea:focus {
   text-decoration: none;
 }
 .rf-btn-primary {
-  background: #2563eb;
+  background: #1e40af;
   color: #ffffff;
-  border-color: #2563eb;
+  border-color: #1e40af;
 }
 .rf-btn-primary:hover {
-  background: #1d4ed8;
+  background: #172554;
 }
 .rf-btn-overleaf {
-  background: #0f8043;
+  background: #064e3b;
   color: #ffffff;
-  border-color: #0f8043;
+  border-color: #064e3b;
 }
 .rf-btn-overleaf:hover {
-  background: #0d6e39;
+  background: #022c22;
 }
 .rf-btn-secondary {
   background: var(--ui-surface, #ffffff);
