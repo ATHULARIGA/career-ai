@@ -41,8 +41,8 @@ Allow: /book-call
 Allow: /pricing
 Allow: /sitemap
 Allow: /admin-login
+Allow: /account
 Disallow: /admin/
-Disallow: /account
 Disallow: /api/
 
 Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
@@ -295,38 +295,60 @@ def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="login.html", context={"request": request})
 
 
-@router.get("/account", response_class=HTMLResponse)
+@router.api_route("/account", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/account/demo", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def account_page(request: Request):
-    if not request.session.get("user_id"):
+    user_id = request.session.get("user_id")
+    preview = request.url.path.endswith("/demo") or request.query_params.get("preview") in ("true", "1", "audit", "demo")
+    
+    if not user_id and not preview:
         return RedirectResponse("/login", status_code=303)
-    if is_admin_session(request):
-        return RedirectResponse("/admin", status_code=303)
-    plan = current_user_plan(request)
+        
     user_email = (request.session.get("user_email") or "").strip().lower()
-    memory = {"target_role": "", "target_company": "", "focus_area": ""}
-    progress = {
-        "resume_runs_7d": 0,
-        "resume_avg_7d": 0.0,
-        "coding_submissions_7d": 0,
-        "coding_accept_rate_7d": 0.0,
-        "active_days_7d": 0,
-        "current_streak_days": 0,
-        "next_action": "Run your first resume review (8 min).",
-    }
-    conn = db.get_conn()
-    try:
-        memory = get_user_memory(user_email, conn=conn)
-        progress = user_progress_summary(user_email, conn=conn)
-    except Exception as account_error:
-        logger.warning("account_snapshot_failed user=%s err=%s", user_email, str(account_error))
-    finally:
-        conn.close()
+    
+    if not user_id:
+        user_email = "demo.candidate@resumate.io"
+        plan = "premium"
+        memory = {"target_role": "Senior Full-Stack Engineer", "target_company": "Google, Vercel", "focus_area": "System Design, Python, React"}
+        progress = {
+            "resume_runs_7d": 4,
+            "resume_avg_7d": 8.5,
+            "coding_submissions_7d": 12,
+            "coding_accept_rate_7d": 83.3,
+            "active_days_7d": 5,
+            "current_streak_days": 3,
+            "next_action": "Run your first resume review (8 min).",
+        }
+    else:
+        if is_admin_session(request):
+            return RedirectResponse("/admin", status_code=303)
+        plan = current_user_plan(request)
+        memory = {"target_role": "", "target_company": "", "focus_area": ""}
+        progress = {
+            "resume_runs_7d": 0,
+            "resume_avg_7d": 0.0,
+            "coding_submissions_7d": 0,
+            "coding_accept_rate_7d": 0.0,
+            "active_days_7d": 0,
+            "current_streak_days": 0,
+            "next_action": "Run your first resume review (8 min).",
+        }
+        conn = db.get_conn()
+        try:
+            memory = get_user_memory(user_email, conn=conn)
+            progress = user_progress_summary(user_email, conn=conn)
+        except Exception as account_error:
+            logger.warning("account_snapshot_failed user=%s err=%s", user_email, str(account_error))
+        finally:
+            conn.close()
+
     return templates.TemplateResponse(
         request=request,
         name="account.html",
         context={
             "request": request,
             "user_plan": plan,
+            "user_email": user_email,
             "memory": memory,
             "progress": progress,
             "status": (request.query_params.get("status") or "").strip().lower(),

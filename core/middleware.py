@@ -38,6 +38,8 @@ PUBLIC_PATHS = {
     "/coding",
     "/coding/problems",
     "/book-call",
+    "/account",
+    "/account/demo",
 }
 PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/.well-known")
 
