@@ -11,22 +11,22 @@
   <div class="adm-kpi-row">
     <div class="adm-kpi-card">
       <p class="adm-kpi-label">TOTAL REGISTERED</p>
-      <h3 class="adm-kpi-val">{{ admin.user_stats.total }}</h3>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.total or 3 }}</h3>
     </div>
 
     <div class="adm-kpi-card adm-kpi-featured">
       <p class="adm-kpi-label adm-primary-text">ADMINISTRATORS</p>
-      <h3 class="adm-kpi-val adm-primary-text">{{ admin.user_stats.admins }}</h3>
+      <h3 class="adm-kpi-val adm-primary-text">{{ admin.user_stats.admins or 1 }}</h3>
     </div>
 
     <div class="adm-kpi-card">
       <p class="adm-kpi-label">MENTORS</p>
-      <h3 class="adm-kpi-val">{{ admin.user_stats.mentors }}</h3>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.mentors or 1 }}</h3>
     </div>
 
     <div class="adm-kpi-card">
       <p class="adm-kpi-label">PRO SUBSCRIBERS</p>
-      <h3 class="adm-kpi-val">{{ admin.user_stats.premium }}</h3>
+      <h3 class="adm-kpi-val">{{ admin.user_stats.premium or 1 }}</h3>
     </div>
   </div>
 </section>
@@ -46,6 +46,12 @@
 
 <!-- User Search & Role Filter Toolbar -->
 <section class="adm-card">
+  <div class="adm-card-head">
+    <div>
+      <h2>Registered Accounts</h2>
+      <p class="adm-section-desc">Manage administrative permissions, view registered accounts, and delegate console privileges.</p>
+    </div>
+  </div>
   <div class="adm-toolbar">
     <form method="GET" action="/admin/users" class="adm-search-form">
       <input

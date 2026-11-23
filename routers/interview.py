@@ -720,7 +720,8 @@ def schedule(request: Request,
         return templates.TemplateResponse(request=request, name="book_call.html", context={"request": request, "error": "Request blocked.", "prefill": {}})
     start = time.time()
 
-    room = f"mock-{topic}-{int(time.time())}"
+    safe_topic = re.sub(r'[^a-zA-Z0-9]+', '-', topic.strip()).strip('-') or 'session'
+    room = f"mock-{safe_topic}-{int(time.time())}"
     link = f"https://meet.jit.si/{room}"
 
     checklist = [

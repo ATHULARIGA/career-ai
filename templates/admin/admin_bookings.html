@@ -61,10 +61,11 @@
 
           <td>
             <div class="adm-flex-row-6">
-              <a href="{{ d[5] }}" target="_blank" rel="noopener noreferrer" class="adm-btn adm-btn-assign">
+              <a href="{{ (d[5] or '').replace(' ', '-') }}" target="_blank" rel="noopener noreferrer" class="adm-btn adm-btn-assign" title="Join video call (opens in a new window)">
                 Join Call
+                <span class="sr-only"> (opens in a new window)</span>
               </a>
-              <button onclick="copyLink('{{ d[5] }}')" class="adm-btn adm-btn-prep">
+              <button onclick="copyLink('{{ (d[5] or '').replace(' ', '-') }}')" class="adm-btn adm-btn-prep">
                 Copy
               </button>
             </div>

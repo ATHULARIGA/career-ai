@@ -165,7 +165,8 @@
     <div class="adm-sub-card adm-sub-card-mt16">
       <strong class="adm-form-title">Import Problems (JSON)</strong>
       <form method="post" action="/admin/coding/import" enctype="multipart/form-data" class="adm-flex-row-8">
-        <input type="file" name="file" accept=".json,application/json" required class="adm-input-file" aria-label="Select JSON file to import">
+        <label for="import_json_file" class="sr-only">Select JSON file to import</label>
+        <input type="file" id="import_json_file" name="file" accept=".json,application/json" required class="adm-input-file">
         <button type="submit" class="adm-btn adm-btn-xs">Upload JSON</button>
       </form>
     </div>

@@ -7419,9 +7419,15 @@ html.theme-dark .adm-btn,
 }
 
 .adm-nav-item.active .adm-nav-badge {
-  background: var(--adm-accent-glow);
-  color: var(--adm-primary);
-  border-color: transparent;
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border-color: #1e3a8a !important;
+}
+
+.theme-dark .adm-nav-item.active .adm-nav-badge {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
 }
 
 /* KPI Cards */
