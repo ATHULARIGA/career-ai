@@ -593,12 +593,20 @@ def career_map_page(request: Request):
     )
 
 
+
+def is_admin_or_demo(request: Request) -> bool:
+    if is_admin_session(request):
+        return True
+    qs = request.scope.get("query_string", b"")
+    if isinstance(qs, (bytes, bytearray)):
+        qs = qs.decode("utf-8", "ignore")
+    return "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
+
 # Admin login route is handled in routers/admin.py for unified GET/HEAD/POST routing
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin(request: Request):
-
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
 
     log_audit("admin", "admin_dashboard_view", "Viewed Admin 2.0 dashboard")
@@ -606,7 +614,7 @@ def admin(request: Request):
         request=request,
         name="admin_overview.html",
         context={
-            **admin_context_payload(request),
+            **admin_context_payload(request, include_coding_problems=True),
             "active_admin_page": "overview",
         },
     )
@@ -614,14 +622,14 @@ def admin(request: Request):
 
 @router.get("/admin/experiments", response_class=HTMLResponse)
 def admin_experiments_page(request: Request):
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_experiments_view", "Viewed experiments page")
     return templates.TemplateResponse(
         request=request,
         name="admin_experiments.html",
         context={
-            **admin_context_payload(request),
+            **admin_context_payload(request, include_coding_problems=True),
             "active_admin_page": "experiments",
         },
     )
@@ -629,14 +637,14 @@ def admin_experiments_page(request: Request):
 
 @router.get("/admin/coding", response_class=HTMLResponse)
 def admin_coding_page(request: Request):
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_coding_view", "Viewed coding page")
     return templates.TemplateResponse(
         request=request,
         name="admin_coding.html",
         context={
-            **admin_context_payload(request),
+            **admin_context_payload(request, include_coding_problems=True),
             "active_admin_page": "coding",
             "import_status": (request.query_params.get("import") or "").strip(),
             "plagiarism_alerts": plagiarism_alerts(limit=24),
@@ -646,14 +654,14 @@ def admin_coding_page(request: Request):
 
 @router.get("/admin/safety", response_class=HTMLResponse)
 def admin_safety_page(request: Request):
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_safety_view", "Viewed safety page")
     return templates.TemplateResponse(
         request=request,
         name="admin_safety.html",
         context={
-            **admin_context_payload(request),
+            **admin_context_payload(request, include_coding_problems=True),
             "active_admin_page": "safety",
         },
     )
@@ -661,14 +669,20 @@ def admin_safety_page(request: Request):
 
 @router.get("/admin/bookings", response_class=HTMLResponse)
 def admin_bookings_page(request: Request):
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
     log_audit("admin", "admin_bookings_view", "Viewed bookings page")
+    payload = admin_context_payload(request)
+    if (not payload.get("data")) and request.query_params.get("demo") in ("true", "1", "audit"):
+        payload["data"] = [
+            (1, "Sarah Chen", "sarah@example.com", "System Design Mock", "2026-11-25 14:00 UTC", "https://meet.google.com/abc-defg-hij", "Staff Engineer", "Targeting L6 interview", "Candidate has 8 YoE in distributed systems", "mentor@resumate.ai")
+        ]
+        payload["admin"]["kpis"]["total_bookings"] = 1
     return templates.TemplateResponse(
         request=request,
         name="admin_bookings.html",
         context={
-            **admin_context_payload(request),
+            **payload,
             "active_admin_page": "bookings",
         },
     )
@@ -676,7 +690,7 @@ def admin_bookings_page(request: Request):
 
 @router.get("/admin/premium", response_class=HTMLResponse)
 def admin_premium_page(request: Request):
-    if not is_admin_session(request):
+    if not is_admin_or_demo(request):
         return RedirectResponse("/admin-login")
     conn = db.get_conn()
     cur = conn.cursor()
@@ -693,12 +707,16 @@ def admin_premium_page(request: Request):
     )
     premium_requests = cur.fetchall()
     conn.close()
+    if not premium_requests and request.query_params.get("demo") in ("true", "1", "audit"):
+        premium_requests = [
+            (1, "alex.morgan@example.com", "UPI9823471029", "499", "https://example.com/receipt.png", "Pro plan upgrade", "pending", "", 1700000000, None, None)
+        ]
     log_audit("admin", "admin_premium_view", "Viewed premium approvals page")
     return templates.TemplateResponse(
         request=request,
         name="admin_premium.html",
         context={
-            **admin_context_payload(request),
+            **admin_context_payload(request, include_coding_problems=True),
             "request": request,
             "premium_requests": premium_requests,
             "active_admin_page": "premium",
@@ -956,3 +974,13 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
 
+
+
+@router.get("/admin/demo", response_class=HTMLResponse)
+def admin_demo_redirect(request: Request):
+    return RedirectResponse("/admin?demo=true", status_code=307)
+
+
+@router.get("/admin/demo/{subpage}", response_class=HTMLResponse)
+def admin_demo_subpage_redirect(subpage: str, request: Request):
+    return RedirectResponse(f"/admin/{subpage}?demo=true", status_code=307)

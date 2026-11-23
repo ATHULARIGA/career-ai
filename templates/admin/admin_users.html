@@ -9,25 +9,25 @@
   </div>
 
   <div class="adm-kpi-row">
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">TOTAL REGISTERED</p>
       <h3 class="adm-kpi-val">{{ admin.user_stats.total }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card adm-kpi-featured">
+    <div class="adm-kpi-card adm-kpi-featured">
       <p class="adm-kpi-label adm-primary-text">ADMINISTRATORS</p>
       <h3 class="adm-kpi-val adm-primary-text">{{ admin.user_stats.admins }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">MENTORS</p>
       <h3 class="adm-kpi-val">{{ admin.user_stats.mentors }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">PRO SUBSCRIBERS</p>
       <h3 class="adm-kpi-val">{{ admin.user_stats.premium }}</h3>
-    </article>
+    </div>
   </div>
 </section>
 
@@ -52,7 +52,7 @@
         type="text"
         name="q"
         value="{{ search_query }}"
-        placeholder="Search user by name or email address..."
+        placeholder="Search user by name or email address..." aria-label="Search user by name or email address"
         class="adm-input"
       />
       {% if role_filter %}

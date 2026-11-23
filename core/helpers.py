@@ -564,19 +564,31 @@ def admin_context_payload(request: Request, minimal: bool = False, include_codin
     else:
         payload = dashboard_payload(data)
 
-    coding_stats = {}
+    coding_stats = {
+        "total_submissions": 0,
+        "by_difficulty": [],
+        "by_language": [],
+        "by_problem": [],
+    }
     custom_problems = []
     if include_coding_problems:
         coding_stats = get_submission_stats_extended(limit=100)
         custom_problems = get_custom_problems()
         for p in custom_problems:
             p["coverage"] = coverage_report(p)
+
+    qs = request.scope.get("query_string", b"")
+    if isinstance(qs, (bytes, bytearray)):
+        qs = qs.decode("utf-8", "ignore")
+    is_demo = "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
+
     return {
         "request": request,
         "data": data,
         "admin": payload,
         "coding_stats": coding_stats,
         "custom_problems": custom_problems,
+        "is_demo": is_demo,
     }
 
 

@@ -13,19 +13,18 @@
         id="searchInput"
         placeholder="Filter by candidate, email, or domain..."
         onkeyup="searchTable()"
-        class="adm-input"
-        style="width: 260px;"
+        class="adm-input adm-w-260" aria-label="Filter by candidate, email, or domain"
       >
     </div>
   </div>
 
   {% set mail_state = request.query_params.get("mail") %}
   {% if mail_state == "sent" %}
-  <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 500;">
+  <div class="adm-alert-success">
     Mentor briefing email sent successfully.
   </div>
   {% elif mail_state == "failed" %}
-  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.84rem; font-weight: 500;">
+  <div class="adm-alert-error">
     Mentor briefing email could not be delivered. Please verify the mentor email address and SMTP configuration.
   </div>
   {% endif %}
@@ -46,43 +45,42 @@
         {% for d in data %}
         <tr>
           <td>
-            <strong style="display: block; font-size: 0.88rem; color: var(--adm-text);">{{ d[1] }}</strong>
-            <span style="font-size: 0.78rem; color: var(--adm-text-muted);">{{ d[2] }}</span>
+            <strong class="adm-booking-user">{{ d[1] }}</strong>
+            <span class="adm-booking-meta">{{ d[2] }}</span>
           </td>
 
           <td>
-            <span class="badge-neutral" style="font-size: 0.75rem;">
+            <span class="badge-neutral adm-booking-badge">
               {{ d[3] }}
             </span>
           </td>
 
-          <td style="font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--adm-text);">
+          <td class="adm-booking-date">
             {{ d[4] }}
           </td>
 
           <td>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <a href="{{ d[5] }}" target="_blank" rel="noopener noreferrer" class="adm-btn" style="padding: 4px 10px; font-size: 0.76rem; background: var(--adm-primary); color: #ffffff; border-color: var(--adm-primary);">
+            <div class="adm-flex-row-6">
+              <a href="{{ d[5] }}" target="_blank" rel="noopener noreferrer" class="adm-btn adm-btn-assign">
                 Join Call
               </a>
-              <button onclick="copyLink('{{ d[5] }}')" class="adm-btn" style="padding: 4px 8px; font-size: 0.76rem;">
+              <button onclick="copyLink('{{ d[5] }}')" class="adm-btn adm-btn-prep">
                 Copy
               </button>
             </div>
           </td>
 
           <td>
-            <form method="post" action="/admin/booking/{{ d[0] }}/assign-mentor" style="display: flex; gap: 6px; align-items: center;">
+            <form method="post" action="/admin/booking/{{ d[0] }}/assign-mentor" class="adm-flex-row-6">
               <input
                 type="email"
                 name="mentor_email"
                 value="{{ d[9] if d|length > 9 and d[9] else '' }}"
                 placeholder="mentor@domain.com"
-                class="adm-input"
-                style="padding: 4px 8px; font-size: 0.78rem; width: 170px;"
+                class="adm-input adm-input-mentor" aria-label="Mentor email address"
                 required
               >
-              <button type="submit" class="adm-btn" style="padding: 4px 10px; font-size: 0.76rem; white-space: nowrap;">
+              <button type="submit" class="adm-btn adm-btn-resend">
                 Assign
               </button>
             </form>
@@ -92,7 +90,7 @@
             <a
               href="/admin-delete/{{ d[0] }}"
               onclick="return confirm('Delete this booking for {{ d[1] }}?')"
-              style="color: var(--adm-danger); font-size: 0.78rem; text-decoration: none; font-weight: 600; padding: 4px 8px;"
+              class="adm-link-cancel"
             >
               Delete
             </a>
@@ -100,7 +98,7 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="6" style="text-align: center; color: var(--adm-text-muted); padding: 36px 0;">
+          <td colspan="6" class="adm-table-empty">
             No mentorship bookings found. Incoming candidate requests will appear here automatically.
           </td>
         </tr>

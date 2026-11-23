@@ -21,35 +21,35 @@
 
   <!-- Unique IP KPI Cards -->
   <div class="adm-kpi-row">
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">UNIQUE IPS TODAY</p>
       <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_today }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">UNIQUE IPS (7 DAYS)</p>
       <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_week }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">UNIQUE IPS (30 DAYS)</p>
       <h3 class="adm-kpi-val">{{ traffic.kpis.unique_ips_month }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card adm-kpi-featured">
+    <div class="adm-kpi-card adm-kpi-featured">
       <p class="adm-kpi-label adm-primary-text">TOTAL UNIQUE VISITORS</p>
       <h3 class="adm-kpi-val adm-primary-text">{{ traffic.kpis.unique_ips_total }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">TOTAL PAGE HITS</p>
       <h3 class="adm-kpi-val">{{ traffic.kpis.total_hits }}</h3>
-    </article>
+    </div>
 
-    <article class="adm-kpi-card">
+    <div class="adm-kpi-card">
       <p class="adm-kpi-label">DISTINCT COUNTRIES</p>
       <h3 class="adm-kpi-val">{{ traffic.kpis.unique_countries }}</h3>
-    </article>
+    </div>
   </div>
 </section>
 
@@ -161,7 +161,7 @@
         type="text"
         name="q"
         value="{{ search_query }}"
-        placeholder="Filter by IP address, country, city, or path..."
+        placeholder="Filter by IP address, country, city, or path..." aria-label="Filter by IP address, country, city, or path"
         class="adm-input"
       />
       <button type="submit" class="adm-btn">
