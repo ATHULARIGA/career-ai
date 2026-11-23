@@ -49,10 +49,8 @@ Allow: /resume/demo/cover-letter
 Allow: /resume/demo
 Allow: /resume/demo/fix
 Allow: /resume/1/fix
-Allow: /admin/demo
-Allow: /admin/demo/
-Allow: /admin
-Allow: /admin/
+Disallow: /admin/
+Disallow: /admin
 Disallow: /api/
 Disallow: /admin-delete/
 
@@ -601,15 +599,7 @@ def career_map_page(request: Request):
 
 
 def is_admin_or_demo(request: Request) -> bool:
-    if is_admin_session(request):
-        return True
-    path = request.scope.get("path", "")
-    if path.startswith("/admin/demo"):
-        return True
-    qs = request.scope.get("query_string", b"")
-    if isinstance(qs, (bytes, bytearray)):
-        qs = qs.decode("utf-8", "ignore")
-    return "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
+    return is_admin_session(request)
 
 # Admin login route is handled in routers/admin.py for unified GET/HEAD/POST routing
 
@@ -678,15 +668,10 @@ def admin_safety_page(request: Request):
 
 @router.get("/admin/bookings", response_class=HTMLResponse)
 def admin_bookings_page(request: Request):
-    if not is_admin_or_demo(request):
-        return RedirectResponse("/admin-login")
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
     log_audit("admin", "admin_bookings_view", "Viewed bookings page")
     payload = admin_context_payload(request)
-    if (not payload.get("data")) and request.query_params.get("demo") in ("true", "1", "audit"):
-        payload["data"] = [
-            (1, "Sarah Chen", "sarah@example.com", "System Design Mock", "2026-11-25 14:00 UTC", "https://meet.google.com/abc-defg-hij", "Staff Engineer", "Targeting L6 interview", "Candidate has 8 YoE in distributed systems", "mentor@resumate.ai")
-        ]
-        payload["admin"]["kpis"]["total_bookings"] = 1
     return templates.TemplateResponse(
         request=request,
         name="admin_bookings.html",
@@ -699,8 +684,8 @@ def admin_bookings_page(request: Request):
 
 @router.get("/admin/premium", response_class=HTMLResponse)
 def admin_premium_page(request: Request):
-    if not is_admin_or_demo(request):
-        return RedirectResponse("/admin-login")
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
     conn = db.get_conn()
     cur = conn.cursor()
     db.execute(
@@ -716,10 +701,6 @@ def admin_premium_page(request: Request):
     )
     premium_requests = cur.fetchall()
     conn.close()
-    if not premium_requests and request.query_params.get("demo") in ("true", "1", "audit"):
-        premium_requests = [
-            (1, "alex.morgan@example.com", "UPI9823471029", "499", "https://example.com/receipt.png", "Pro plan upgrade", "pending", "", 1700000000, None, None)
-        ]
     log_audit("admin", "admin_premium_view", "Viewed premium approvals page")
     return templates.TemplateResponse(
         request=request,
@@ -986,35 +967,9 @@ if __name__ == "__main__":
 
 
 @router.get("/admin/demo", response_class=HTMLResponse)
-def admin_demo_page(request: Request):
-    return admin(request)
-
-
-@router.get("/admin/demo/overview", response_class=HTMLResponse)
-def admin_demo_overview(request: Request):
-    return admin(request)
-
-
-@router.get("/admin/demo/experiments", response_class=HTMLResponse)
-def admin_demo_experiments(request: Request):
-    return admin_experiments_page(request)
-
-
-@router.get("/admin/demo/coding", response_class=HTMLResponse)
-def admin_demo_coding(request: Request):
-    return admin_coding_page(request)
-
-
-@router.get("/admin/demo/safety", response_class=HTMLResponse)
-def admin_demo_safety(request: Request):
-    return admin_safety_page(request)
-
-
-@router.get("/admin/demo/bookings", response_class=HTMLResponse)
-def admin_demo_bookings(request: Request):
-    return admin_bookings_page(request)
-
-
-@router.get("/admin/demo/premium", response_class=HTMLResponse)
-def admin_demo_premium(request: Request):
-    return admin_premium_page(request)
+@router.get("/admin/demo/{subpath:path}", response_class=HTMLResponse)
+def admin_demo_redirect(request: Request, subpath: str = ""):
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
+    target = f"/admin/{subpath}" if subpath else "/admin"
+    return RedirectResponse(target, status_code=303)

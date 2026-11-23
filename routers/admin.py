@@ -6,15 +6,7 @@ router = APIRouter()
 
 
 def is_admin_or_demo(request: Request) -> bool:
-    if is_admin_session(request):
-        return True
-    path = request.scope.get("path", "")
-    if path.startswith("/admin/demo"):
-        return True
-    qs = request.scope.get("query_string", b"")
-    if isinstance(qs, (bytes, bytearray)):
-        qs = qs.decode("utf-8", "ignore")
-    return "demo=true" in qs or "demo=1" in qs or "demo=audit" in qs
+    return is_admin_session(request)
 
 @router.post("/admin/coding-problem/add")
 def admin_add_coding_problem(
@@ -168,16 +160,10 @@ async def admin_import_coding_problems(request: Request, file: UploadFile = File
 
 @router.get("/admin/users", response_class=HTMLResponse)
 def admin_users_page(request: Request, q: str = "", role: str = "", msg: str = "", error: str = ""):
-    if not is_admin_or_demo(request):
-        return RedirectResponse("/admin-login")
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
 
     users_list = get_admin_users_list(search=q, role_filter=role)
-    if not users_list and request.query_params.get("demo") in ("true", "1", "audit"):
-        users_list = [
-            {"id": 1, "name": "Admin Operator", "email": "admin@resumate.ai", "role": "admin", "plan": "enterprise", "created_at": "2026-01-01 00:00:00", "is_self": True},
-            {"id": 2, "name": "Sarah Chen", "email": "sarah.chen@example.com", "role": "mentor", "plan": "pro", "created_at": "2026-01-15 10:30:00", "is_self": False},
-            {"id": 3, "name": "Alex Morgan", "email": "alex.morgan@example.com", "role": "user", "plan": "free", "created_at": "2026-02-01 14:20:00", "is_self": False},
-        ]
     payload = admin_context_payload(request, minimal=True)
 
     current_email = (request.session.get("user_email") or "").strip().lower()
@@ -394,14 +380,20 @@ def admin_login(
 
 @router.get("/admin/demo/users", response_class=HTMLResponse)
 def admin_demo_users_page(request: Request, q: str = "", role: str = "", msg: str = "", error: str = ""):
-    return admin_users_page(request, q=q, role=role, msg=msg, error=error)
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
+    return RedirectResponse("/admin/users", status_code=303)
 
 
 @router.get("/admin/demo/reports", response_class=HTMLResponse)
 def admin_demo_reports_page(request: Request, period: str = "daily"):
-    return admin_reports_page(request, period=period)
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
+    return RedirectResponse("/admin/reports", status_code=303)
 
 
 @router.get("/admin/demo/traffic", response_class=HTMLResponse)
 def admin_demo_traffic_page(request: Request, q: str = ""):
-    return admin_traffic_page(request, q=q)
+    if not is_admin_session(request):
+        return RedirectResponse("/admin-login", status_code=303)
+    return RedirectResponse("/admin/traffic", status_code=303)
