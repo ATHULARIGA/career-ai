@@ -920,6 +920,9 @@ async def api_interview_select_resume(request: Request):
     selectable = get_selectable_resumes_for_user(user_email, request)
     available_ids = [r["id"] for r in selectable]
 
+    if resume_id == "__upload__":
+        return JSONResponse({"error": "Upload option selected, please upload a file"}, status_code=400)
+
     if resume_id not in available_ids:
         return JSONResponse({"error": "Selected resume not found"}, status_code=404)
 
@@ -945,6 +948,107 @@ async def api_interview_select_resume(request: Request):
         "success": True,
         "selected_resume_id": resume_id,
         "target_role": target_role,
+        "resume_technologies": resume_techs,
+        "active_technology": active_tech,
+        "cheatsheet": cheatsheet,
+    })
+
+
+@router.post("/api/interview/upload-resume", response_class=JSONResponse)
+async def api_interview_upload_resume(
+    request: Request,
+    file: UploadFile = File(...),
+    target_role: str = Form(""),
+):
+    """Uploads a new resume (PDF, TXT, TEX, MD), extracts text, sets it active, and returns tailored data."""
+    filename = (file.filename or "uploaded_resume.pdf").strip()
+    lower_name = filename.lower()
+
+    content = await file.read()
+    if not content:
+        return JSONResponse({"error": "The uploaded file was empty. Please select a valid resume."}, status_code=400)
+
+    text = ""
+    resume_type = "pdf"
+    if lower_name.endswith(".pdf"):
+        resume_type = "pdf"
+        try:
+            from services.resume.resume_parser import extract_text
+            text = extract_text(filename, content)
+        except Exception as e:
+            return JSONResponse({"error": f"Failed to parse PDF resume: {str(e)}"}, status_code=400)
+    elif lower_name.endswith((".tex", ".latex")):
+        resume_type = "latex"
+        try:
+            raw_str = content.decode("utf-8", errors="ignore")
+            from core.helpers import extract_text_from_latex
+            text = extract_text_from_latex(raw_str)
+        except Exception:
+            text = content.decode("utf-8", errors="ignore")
+    elif lower_name.endswith((".txt", ".md")):
+        resume_type = "text"
+        text = content.decode("utf-8", errors="ignore")
+    else:
+        return JSONResponse({"error": "Unsupported file format. Please upload a PDF, TXT, LaTeX, or Markdown file."}, status_code=400)
+
+    if not text.strip():
+        return JSONResponse({"error": "Could not extract readable text from the file. Please ensure it is not a scanned image."}, status_code=400)
+
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    clean_title = filename.rsplit(".", 1)[0][:60]
+
+    role = (target_role or "").strip()
+    if not role:
+        lowered = text.lower()
+        if "data engineer" in lowered:
+            role = "Data Engineer"
+        elif "frontend" in lowered or "react" in lowered:
+            role = "Frontend Developer"
+        elif "backend" in lowered:
+            role = "Backend Developer"
+        elif "machine learning" in lowered or "data scientist" in lowered:
+            role = "Machine Learning Engineer"
+        elif "devops" in lowered or "cloud" in lowered:
+            role = "DevOps Engineer"
+        else:
+            role = "Software Engineer"
+
+    from core.database import save_user_resume
+    new_saved_id = 0
+    if user_email:
+        try:
+            new_saved_id = save_user_resume(
+                user_email=user_email,
+                title=clean_title,
+                resume_type=resume_type,
+                raw_content=text,
+                target_role=role,
+            )
+        except Exception as e:
+            print("Failed to save user resume:", e)
+
+    resume_id = f"saved_{new_saved_id}" if new_saved_id else f"uploaded_{uuid.uuid4().hex[:8]}"
+
+    request.session["interview_uploaded_resume"] = {
+        "id": resume_id,
+        "title": clean_title,
+        "text": text,
+        "target_role": role,
+    }
+    request.session["selected_resume_id"] = resume_id
+
+    resume_techs = extract_technologies_from_resume(text, {"resume_text": text, "target_role": role})
+    active_tech = resume_techs[0] if resume_techs else "FastAPI"
+    cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=text, target_role=role)
+
+    selectable = get_selectable_resumes_for_user(user_email, request)
+
+    return JSONResponse({
+        "success": True,
+        "selected_resume_id": resume_id,
+        "title": clean_title,
+        "target_role": role,
+        "resumes": selectable,
         "resume_technologies": resume_techs,
         "active_technology": active_tech,
         "cheatsheet": cheatsheet,
