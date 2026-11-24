@@ -21,6 +21,7 @@ def ensure_performance_indexes(conn) -> None:
         "CREATE INDEX IF NOT EXISTS idx_resume_reports_user_ts ON resume_reports(user_email, created_ts DESC)",
         # Interview history lookups
         "CREATE INDEX IF NOT EXISTS idx_interview_sessions_user_ts ON interview_sessions(user_email, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_user_cheatsheets ON user_cheatsheets(user_email, tech_name)",
         # Booking lookups
         "CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(email)",
         "CREATE INDEX IF NOT EXISTS idx_bookings_mentor ON bookings(mentor_email)",

@@ -191,6 +191,27 @@ def interview_context_payload(request: Request, **extra):
         "role": memory.get("target_role", ""),
         "company": memory.get("target_company", ""),
     }
+
+    from core.database import get_latest_resume_report_for_user, get_user_cheatsheets
+    from services.interview.cheatsheet_generator import extract_technologies_from_resume, get_cheatsheet_for_technology
+
+    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
+    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
+    target_role = (resume_report or {}).get("target_role", "") or memory.get("target_role", "") or "Software Engineer"
+
+    resume_techs = extract_technologies_from_resume(resume_text, resume_report)
+    saved_custom = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
+    custom_tech_names = [c["tech_name"] for c in saved_custom if isinstance(c, dict) and c.get("tech_name")]
+
+    initial_tech = resume_techs[0] if resume_techs else "FastAPI"
+    initial_cheatsheet = get_cheatsheet_for_technology(initial_tech, resume_text=resume_text, target_role=target_role)
+
+    revised_map = {c["tech_name"]: c.get("revised_indices", []) for c in saved_custom if isinstance(c, dict)}
+    if initial_tech in revised_map:
+        initial_cheatsheet["revised_indices"] = revised_map[initial_tech]
+    else:
+        initial_cheatsheet["revised_indices"] = request.session.get(f"revised_{initial_tech.lower()}", [])
+
     payload = {
         "request": request,
         "questions": request.session.get("questions", []),
@@ -205,6 +226,12 @@ def interview_context_payload(request: Request, **extra):
         "next_followup": request.session.get("next_followup"),
         "session_metrics": interview_metrics(timeline),
         "user_plan": current_user_plan(request),
+        "resume_technologies": resume_techs,
+        "custom_technologies": custom_tech_names,
+        "active_technology": initial_tech,
+        "initial_cheatsheet": initial_cheatsheet,
+        "has_resume": bool(resume_text),
+        "target_role": target_role,
     }
     payload.update(extra)
     return payload
