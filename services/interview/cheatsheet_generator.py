@@ -579,8 +579,65 @@ def _generate_deterministic_cards(tech_name: str, target_role: str = "") -> List
     ]
 
 # ---------------------------------------------------------------------------
-# Tailoring Cards with Resume Context
+# Tailoring Cards with Resume Context & Project Bullet Points
 # ---------------------------------------------------------------------------
+def extract_project_talking_points_for_tech(resume_context: str, tech_name: str) -> List[Dict[str, str]]:
+    """
+    Extracts candidate projects, work experiences, metrics, and bullet points from
+    the resume that utilize or relate to the given technology.
+    """
+    if not resume_context or not tech_name:
+        return []
+
+    tech_lower = tech_name.lower().strip()
+    clean_text = resume_context.replace(r"\textbf{", "").replace("}", "").replace(r"\resumeItem{", "")
+    clean_text = clean_text.replace(r"\textit{", "").replace(r"\noindent", "").replace(r"\section*{", "")
+    clean_text = clean_text.replace(r"\small", "").replace(r"\\", "\n")
+
+    lines = [ln.strip() for ln in clean_text.splitlines() if ln.strip()]
+    matches = []
+    current_context = ""
+
+    in_skills_section = False
+    for line in lines:
+        lower = line.lower()
+        if "technical skills" in lower or ("skills" in lower and len(line) < 30):
+            in_skills_section = True
+            continue
+        if any(sec in lower for sec in ["professional experience", "experience", "key projects", "projects", "employment"]):
+            in_skills_section = False
+
+        if in_skills_section:
+            continue
+
+        if any(term in lower for term in ["capgemini", "associate consultant"]):
+            current_context = "Capgemini Data Engineering"
+        elif "tech solutions lab" in lower:
+            current_context = "Tech Solutions Lab"
+        elif "careerai" in lower or "career intelligence" in lower:
+            current_context = "CareerAI Platform Project"
+        elif "lakehouse" in lower or "streaming pipeline" in lower:
+            current_context = "Enterprise Lakehouse Pipeline"
+        elif line.startswith(("#", "**", "Project:", "Role:")) or (" – " in line and len(line) < 80 and not line.startswith("-")):
+            current_context = re.sub(r"[\#\*\\]", "", line).strip()[:50]
+
+        if tech_lower in lower:
+            clean_line = re.sub(r"\\[a-zA-Z]+\*?|\{|\}", "", line)
+            clean_line = clean_line.strip(" *#-\t\n\r")
+            words = clean_line.split()
+            if len(words) >= 5 and not any(h in lower for h in ["languages:", "frameworks:", "tools:", "platforms:"]):
+                matches.append({"context": current_context or "Resume Project", "point": clean_line})
+
+    seen = set()
+    deduped = []
+    for m in matches:
+        if m["point"] not in seen:
+            seen.add(m["point"])
+            deduped.append(m)
+
+    return deduped
+
+
 def tailor_cheatsheet_for_resume(
     cards: List[List[str]],
     resume_context: str = "",
@@ -589,19 +646,34 @@ def tailor_cheatsheet_for_resume(
 ) -> List[List[str]]:
     """
     Enriches cheat sheet cards with personalized candidate talking points
-    tailored to the user's specific resume and role.
+    tailored to the user's specific resume projects and target role.
     """
     if not resume_context and not target_role:
         return cards
 
-    tailored_cards = []
+    project_points = extract_project_talking_points_for_tech(resume_context, tech_name)
     role_mention = target_role or "Software Engineer"
+    tailored_cards = []
+
+    point_idx = 0
+    num_points = len(project_points)
 
     for idx, card in enumerate(cards):
         c_cat, c_title, c_say, c_code, c_use, c_tip = card
 
-        # Add targeted advice to the first card and Q&A cards
-        if idx == 0 and target_role:
+        if project_points and (c_cat in ["Q&A", "Performance", "Architecture", "Basics"] or idx == 0):
+            active_pt = project_points[point_idx % num_points]
+            point_idx += 1
+            ctx_name = active_pt["context"]
+            pt_text = active_pt["point"]
+
+            if idx == 0:
+                c_tip = f"From your resume ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
+            elif c_cat == "Q&A":
+                c_tip = f"Project talking point ({ctx_name}): Connect this question to: '{pt_text}'. " + c_tip
+            elif c_cat in ["Performance", "Architecture"] and "From your" not in c_use:
+                c_use = f"From your {ctx_name}: {pt_text} " + c_use
+        elif idx == 0 and target_role:
             c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
         elif c_cat == "Q&A" and resume_context:
             c_tip = f"Resume anchor: Connect this question to the architectural decisions you made in your resume projects. " + c_tip
