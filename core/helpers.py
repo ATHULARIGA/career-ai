@@ -181,23 +181,148 @@ Proposed Session Plan (30-45 min):
 """.strip()
 
 
+def get_selectable_resumes_for_user(user_email: str, request: Request = None) -> list:
+    """Returns all available resumes for selection (reports and saved resumes)."""
+    email = (user_email or "").strip().lower()
+    items = []
+    seen_ids = set()
+
+    from core.database import get_recent_resume_runs_for_user, get_user_saved_resumes
+    if email:
+        runs = get_recent_resume_runs_for_user(email, limit=10)
+        for r in runs:
+            r_id = f"report_{r['id']}"
+            if r_id not in seen_ids:
+                seen_ids.add(r_id)
+                role_label = r.get("target_role") or "General"
+                overall = r.get("overall", 0)
+                ts = r.get("created_ts", 0)
+                date_str = time.strftime("%b %d", time.localtime(ts)) if ts else "Recent"
+                items.append({
+                    "id": r_id,
+                    "title": f"{role_label} Review ({overall}/10 - {date_str})",
+                    "target_role": role_label,
+                    "source": "report",
+                    "raw_id": r["id"],
+                })
+
+        saved = get_user_saved_resumes(email)
+        for s in saved:
+            s_id = f"saved_{s['id']}"
+            if s_id not in seen_ids:
+                seen_ids.add(s_id)
+                items.append({
+                    "id": s_id,
+                    "title": f"{s.get('title') or 'Saved Resume'} ({s.get('target_role') or 'Engineer'})",
+                    "target_role": s.get("target_role") or "",
+                    "source": "saved",
+                    "raw_id": s["id"],
+                })
+
+    if request:
+        last_report = request.session.get("last_resume_report", {})
+        if last_report and "session_latest" not in seen_ids:
+            seen_ids.add("session_latest")
+            target_role = last_report.get("target_role") or "Software Engineer"
+            items.insert(0, {
+                "id": "session_latest",
+                "title": f"Current Session Resume ({target_role})",
+                "target_role": target_role,
+                "source": "session",
+                "raw_id": 0,
+            })
+
+    if not items:
+        items.append({
+            "id": "latest",
+            "title": "Default Full-Stack Profile",
+            "target_role": "Software Engineer",
+            "source": "default",
+            "raw_id": 0,
+        })
+
+    return items
+
+
+def resolve_resume_context(selected_id: str, user_email: str, request: Request = None) -> tuple:
+    """Resolves resume data, text, and target role for a given selected resume id."""
+    email = (user_email or "").strip().lower()
+    sel = (selected_id or "").strip()
+
+    from core.database import (
+        get_latest_resume_report_for_user,
+        get_resume_report_by_id_for_user,
+        get_saved_resume_by_id,
+    )
+
+    report = None
+    resume_text = ""
+    target_role = ""
+
+    if sel.startswith("report_"):
+        try:
+            raw_id = int(sel.replace("report_", ""))
+            report = get_resume_report_by_id_for_user(raw_id, email)
+            if report:
+                resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
+                target_role = report.get("target_role", "")
+        except Exception:
+            pass
+    elif sel.startswith("saved_"):
+        try:
+            raw_id = int(sel.replace("saved_", ""))
+            saved = get_saved_resume_by_id(raw_id, email)
+            if saved:
+                resume_text = saved.get("raw_content", "")
+                target_role = saved.get("target_role", "")
+                report = {"resume_text": resume_text, "target_role": target_role}
+        except Exception:
+            pass
+    elif sel == "session_latest" and request:
+        report = request.session.get("last_resume_report", {})
+        if report:
+            resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
+            target_role = report.get("target_role", "")
+
+    if not resume_text:
+        report = get_latest_resume_report_for_user(email) if email else (request.session.get("last_resume_report", {}) if request else {})
+        if report:
+            resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
+            target_role = report.get("target_role", "")
+
+    if not target_role and request:
+        target_role = (request.session.get("interview_config", {}) or {}).get("role", "")
+
+    if not target_role:
+        target_role = "Software Engineer"
+
+    return report or {}, resume_text, target_role
+
+
 def interview_context_payload(request: Request, **extra):
     timeline = request.session.get("timeline", [])
     user_email = (request.session.get("user_email") or "").strip().lower()
     memory = get_user_memory(user_email)
     config = request.session.get("interview_config", {}) or {}
-    default_setup = {
-        "topic": memory.get("focus_area", "") or "Python",
-        "role": memory.get("target_role", ""),
-        "company": memory.get("target_company", ""),
-    }
 
-    from core.database import get_latest_resume_report_for_user, get_user_cheatsheets
+    from core.database import get_user_cheatsheets
     from services.interview.cheatsheet_generator import extract_technologies_from_resume, get_cheatsheet_for_technology
 
-    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-    target_role = (resume_report or {}).get("target_role", "") or memory.get("target_role", "") or "Software Engineer"
+    selectable_resumes = get_selectable_resumes_for_user(user_email, request)
+    available_ids = [r["id"] for r in selectable_resumes]
+
+    selected_resume_id = request.session.get("selected_resume_id", "")
+    if selected_resume_id not in available_ids:
+        selected_resume_id = available_ids[0] if available_ids else "latest"
+    request.session["selected_resume_id"] = selected_resume_id
+
+    resume_report, resume_text, target_role = resolve_resume_context(selected_resume_id, user_email, request)
+
+    default_setup = {
+        "topic": memory.get("focus_area", "") or "Python",
+        "role": target_role or memory.get("target_role", ""),
+        "company": memory.get("target_company", ""),
+    }
 
     resume_techs = extract_technologies_from_resume(resume_text, resume_report)
     saved_custom = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
@@ -232,6 +357,8 @@ def interview_context_payload(request: Request, **extra):
         "initial_cheatsheet": initial_cheatsheet,
         "has_resume": bool(resume_text),
         "target_role": target_role,
+        "selectable_resumes": selectable_resumes,
+        "selected_resume_id": selected_resume_id,
     }
     payload.update(extra)
     return payload

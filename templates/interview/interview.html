@@ -586,6 +586,43 @@
   color: var(--cs-ac);
 }
 
+/* ── Resume Selector Bar ────────────────────────────────── */
+.cs-resume-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--cs-card);
+  border: 1.5px solid var(--cs-line);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cs-resume-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cs-ink);
+}
+.cs-resume-select {
+  flex: 1 1 240px;
+  padding: 8px 12px;
+  background: var(--cs-bg);
+  border: 1.5px solid var(--cs-line);
+  border-radius: 8px;
+  color: var(--cs-ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 500;
+}
+.cs-resume-select:focus {
+  outline: 2px solid var(--cs-ac);
+  outline-offset: 2px;
+  border-color: var(--cs-ac);
+}
+
 /* ── Cheatsheet Header & Controls ───────────────────────── */
 .cs-title {
   margin: 0;
@@ -880,6 +917,16 @@
     <p class="iv-lock">{{ premium_notice }}</p>
     {% endif %}
     <form id="ivSetupForm" action="/generate" method="post" class="iv-form-grid">
+      <div class="iv-field iv-field-full">
+        <label for="iv-selected-resume">Target Resume</label>
+        <select name="selected_resume" id="iv-selected-resume" aria-label="Target Resume" onchange="onSetupResumeChange(this)">
+          {% for r in (selectable_resumes or []) %}
+          <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %} data-role="{{ r.target_role }}">
+            {{ r.title }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
       <div class="iv-field">
         <label for="iv-topic">Topic</label>
         <select name="topic" id="iv-topic" aria-label="Interview Topic">
@@ -992,6 +1039,21 @@
   <div id="viewCheatsheet" class="iv-view-pane" style="display: none;">
     <div class="cs-wrap">
       
+      <!-- Resume Tailoring Selector -->
+      <div class="cs-resume-bar">
+        <label for="csResumeSelect" class="cs-resume-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>Select Resume for Tailoring:</span>
+        </label>
+        <select id="csResumeSelect" class="cs-resume-select" onchange="switchCheatsheetResume(this.value)" aria-label="Select Resume for Tailoring">
+          {% for r in (selectable_resumes or []) %}
+          <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %}>
+            {{ r.title }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
       <!-- Technology Selector Row -->
       <div class="cs-tech-nav" id="csTechNav" role="tablist" aria-label="Available Technologies">
         {% for t in (resume_technologies or ['FastAPI', 'Python', 'PostgreSQL', 'Docker', 'React']) %}
@@ -1902,6 +1964,85 @@ async function copySnippet(btn) {
   setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
 }
 
+function onSetupResumeChange(selectEl) {
+  const selectedOpt = selectEl.options[selectEl.selectedIndex];
+  const targetRole = selectedOpt ? selectedOpt.getAttribute('data-role') : '';
+  const roleInput = document.getElementById('iv-role');
+  if (targetRole && roleInput && (!roleInput.value || roleInput.value === 'Software Engineer')) {
+    roleInput.value = targetRole;
+  }
+  const csSelect = document.getElementById('csResumeSelect');
+  if (csSelect && csSelect.value !== selectEl.value) {
+    csSelect.value = selectEl.value;
+    switchCheatsheetResume(selectEl.value);
+  }
+}
+
+async function switchCheatsheetResume(resumeId) {
+  if (!resumeId) return;
+  showLoader('Re-tailoring for selected resume…');
+  try {
+    const res = await fetch('/api/interview/select-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume_id: resumeId })
+    });
+    const data = await res.json();
+    hideLoader();
+
+    if (data && data.success) {
+      const setupSelect = document.getElementById('iv-selected-resume');
+      if (setupSelect && setupSelect.value !== resumeId) {
+        setupSelect.value = resumeId;
+        const opt = setupSelect.options[setupSelect.selectedIndex];
+        const roleInput = document.getElementById('iv-role');
+        if (opt && roleInput && opt.getAttribute('data-role')) {
+          roleInput.value = opt.getAttribute('data-role');
+        }
+      }
+
+      const nav = document.getElementById('csTechNav');
+      if (nav && data.resume_technologies) {
+        const customPills = [...nav.querySelectorAll('.cs-tech-pill')].filter(p => p.querySelector('.cs-tech-remove'));
+        const addBtn = nav.querySelector('.cs-add-tech-btn');
+        nav.innerHTML = '';
+        data.resume_technologies.forEach((t, i) => {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = `cs-tech-pill ${i === 0 ? 'active' : ''}`;
+          pill.setAttribute('role', 'tab');
+          pill.setAttribute('data-tech', t);
+          pill.onclick = () => selectTechnology(t, pill);
+          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+          nav.appendChild(pill);
+        });
+        customPills.forEach(p => nav.appendChild(p));
+        if (addBtn) nav.appendChild(addBtn);
+      }
+
+      currentTech = data.active_technology || 'FastAPI';
+      if (data.cheatsheet && data.cheatsheet.cards) {
+        cheatsheetCards = data.cheatsheet.cards;
+        revisedIndices = new Set(data.cheatsheet.revised_indices || []);
+        activeCategory = 'All';
+
+        const titleEl = document.getElementById('csTechTitle');
+        const subEl = document.getElementById('csSubText');
+        if (titleEl) titleEl.textContent = `${data.cheatsheet.tech_name} interview cheatsheet`;
+        if (subEl) {
+          const rolePart = data.target_role ? `Tailored for ${data.target_role} interviews. ` : '';
+          subEl.textContent = `${data.cheatsheet.total_cards} cards. ${rolePart}Tap a card to open it: interview answer, example, use case, and tip.`;
+        }
+
+        renderCards();
+      }
+    }
+  } catch (err) {
+    hideLoader();
+    console.error('Failed to switch resume:', err);
+  }
+}
+
 // ── Search & Action Listeners ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('csSearch');
@@ -1968,6 +2109,8 @@ window.exportCurrentCheatsheet = exportCurrentCheatsheet;
 window.copySnippet = copySnippet;
 window.toggleRevised = toggleRevised;
 window.filterCategory = filterCategory;
+window.onSetupResumeChange = onSetupResumeChange;
+window.switchCheatsheetResume = switchCheatsheetResume;
 
 })();
 </script>

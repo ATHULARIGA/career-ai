@@ -200,3 +200,37 @@ def test_interview_page_renders_cheatsheet_elements(client):
     assert "csRandomCard" in res.text
     assert "csExportHtml" in res.text
     assert "csProgressFill" in res.text
+    # Resume selector elements exist
+    assert "iv-selected-resume" in res.text
+    assert "csResumeSelect" in res.text
+
+
+def test_api_interview_resumes(client):
+    res = client.get("/api/interview/resumes")
+    assert res.status_code == 200
+    data = res.json()
+    assert "resumes" in data
+    assert "selected_resume_id" in data
+    assert len(data["resumes"]) >= 1
+
+
+def test_api_interview_select_resume(client):
+    # Fetch list
+    list_res = client.get("/api/interview/resumes")
+    assert list_res.status_code == 200
+    resumes = list_res.json()["resumes"]
+    first_id = resumes[0]["id"]
+
+    # Select resume
+    sel_res = client.post("/api/interview/select-resume", json={"resume_id": first_id})
+    assert sel_res.status_code == 200
+    sel_data = sel_res.json()
+    assert sel_data["success"] is True
+    assert sel_data["selected_resume_id"] == first_id
+    assert "resume_technologies" in sel_data
+    assert "cheatsheet" in sel_data
+
+
+def test_api_interview_select_resume_invalid(client):
+    res = client.post("/api/interview/select-resume", json={"resume_id": "non_existent_id_12345"})
+    assert res.status_code == 404

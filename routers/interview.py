@@ -390,6 +390,7 @@ def generate(
     difficulty: str = Form("intermediate"),
     persona: str = Form("Neutral"),
     max_rounds: int = Form(5),
+    selected_resume: str = Form(""),
     db_conn = Depends(db.get_conn),
 ):
     start = time.time()
@@ -408,6 +409,17 @@ def generate(
             context=interview_context_payload(request, premium_notice="More than 3 rounds requires Premium."),
         )
     user_email = (request.session.get("user_email") or "").strip().lower()
+
+    if selected_resume:
+        request.session["selected_resume_id"] = selected_resume.strip()
+
+    resume_report, resume_context, resolved_role = resolve_resume_context(
+        selected_resume or request.session.get("selected_resume_id", ""),
+        user_email,
+        request,
+    )
+    role = role.strip() or resolved_role or ""
+
     if user_email and (role.strip() or company.strip() or topic.strip()):
         prior_memory = get_user_memory(user_email)
         save_user_memory(
@@ -416,13 +428,10 @@ def generate(
             target_company=company or prior_memory.get("target_company", ""),
             focus_area=topic or prior_memory.get("focus_area", ""),
         )
-    resume_report = get_latest_resume_report_for_user(user_email) or request.session.get("last_resume_report", {})
     gaps = resume_report.get("keyword_gaps", []) if isinstance(resume_report, dict) else []
     skill_gaps = [str(g.get("keyword", "")).strip() for g in gaps if isinstance(g, dict) and g.get("keyword")]
     past_weaknesses = get_user_weaknesses(user_email) if user_email else []
     skill_gaps = list(set(skill_gaps + past_weaknesses))[:5]
-
-    resume_context = resume_report.get("fixed_resume_md", "") or resume_report.get("resume_text", "")
 
     seeded = bank_questions(topic=topic, role=role, round_type=round_type, limit=2)
     questions = generate_questions(
@@ -878,15 +887,76 @@ async def get_lifeline(request: Request, question: str = Form(...)):
 
 
 # ---------------------------------------------------------------------------
-# Technology Cheatsheet Endpoints
+# Technology Cheatsheet & Resume Selection Endpoints
 # ---------------------------------------------------------------------------
+@router.get("/api/interview/resumes", response_class=JSONResponse)
+def api_interview_resumes(request: Request):
+    """Returns all available resumes for selection and the active selection."""
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    resumes = get_selectable_resumes_for_user(user_email, request)
+    selected_id = request.session.get("selected_resume_id", "")
+    available_ids = [r["id"] for r in resumes]
+    if selected_id not in available_ids:
+        selected_id = available_ids[0] if available_ids else "latest"
+    return JSONResponse({
+        "resumes": resumes,
+        "selected_resume_id": selected_id,
+    })
+
+
+@router.post("/api/interview/select-resume", response_class=JSONResponse)
+async def api_interview_select_resume(request: Request):
+    """Switches the active resume context and re-tailors technologies and cheat sheets."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    resume_id = str(body.get("resume_id", "")).strip()
+    if not resume_id:
+        return JSONResponse({"error": "resume_id is required"}, status_code=400)
+
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    selectable = get_selectable_resumes_for_user(user_email, request)
+    available_ids = [r["id"] for r in selectable]
+
+    if resume_id not in available_ids:
+        return JSONResponse({"error": "Selected resume not found"}, status_code=404)
+
+    request.session["selected_resume_id"] = resume_id
+    report, resume_text, target_role = resolve_resume_context(resume_id, user_email, request)
+
+    resume_techs = extract_technologies_from_resume(resume_text, report)
+    active_tech = resume_techs[0] if resume_techs else "FastAPI"
+
+    cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=resume_text, target_role=target_role)
+
+    saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
+    revised_indices = []
+    for rec in saved_records:
+        if rec.get("tech_name", "").lower() == active_tech.lower():
+            revised_indices = rec.get("revised_indices", [])
+            break
+    if not revised_indices:
+        revised_indices = request.session.get(f"revised_{active_tech.lower()}", [])
+    cheatsheet["revised_indices"] = revised_indices
+
+    return JSONResponse({
+        "success": True,
+        "selected_resume_id": resume_id,
+        "target_role": target_role,
+        "resume_technologies": resume_techs,
+        "active_technology": active_tech,
+        "cheatsheet": cheatsheet,
+    })
+
+
 @router.get("/api/interview/technologies", response_class=JSONResponse)
-def api_interview_technologies(request: Request):
+def api_interview_technologies(request: Request, resume_id: str = ""):
     """Returns detected resume technologies, saved custom technologies, and user role."""
     user_email = (request.session.get("user_email") or "").strip().lower()
-    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-    target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+    selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
+    resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
     resume_techs = extract_technologies_from_resume(resume_text, resume_report)
 
@@ -905,21 +975,21 @@ def api_interview_technologies(request: Request):
         "custom_technologies": custom_techs,
         "saved_revised": saved_revised,
         "target_role": target_role,
+        "selected_resume_id": selected_id,
         "has_resume": bool(resume_text),
     })
 
 
 @router.get("/api/interview/cheatsheet", response_class=JSONResponse)
-def api_interview_cheatsheet(request: Request, tech: str = ""):
+def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = ""):
     """Returns the interview cheat sheet for a specific technology, tailored for the resume."""
     tech_name = tech.strip()
     if not tech_name:
         return JSONResponse({"error": "Technology name is required"}, status_code=400)
 
     user_email = (request.session.get("user_email") or "").strip().lower()
-    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-    target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+    selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
+    resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
     payload = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
 
@@ -934,6 +1004,7 @@ def api_interview_cheatsheet(request: Request, tech: str = ""):
         revised_indices = request.session.get(f"revised_{tech_name.lower()}", [])
 
     payload["revised_indices"] = revised_indices
+    payload["selected_resume_id"] = selected_id
     return JSONResponse(payload)
 
 
