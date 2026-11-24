@@ -21,6 +21,8 @@ jobs:
       OPENAI_API_KEY: 'ci-mock-key'
       GEMINI_API_KEY: 'ci-mock-key'
       GROQ_API_KEY: 'ci-mock-key'
+      GOOGLE_CLIENT_ID: 'ci-mock-google-client-id'
+      GOOGLE_CLIENT_SECRET: 'ci-mock-google-client-secret'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

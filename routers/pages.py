@@ -292,7 +292,8 @@ def home(request: Request):
 def signup_page(request: Request):
     if request.session.get("user_id"):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request=request, name="signup.html", context={"request": request})
+    error = request.query_params.get("error", "")
+    return templates.TemplateResponse(request=request, name="signup.html", context={"request": request, "error": error})
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -301,7 +302,9 @@ def login_page(request: Request):
         return RedirectResponse("/admin", status_code=303)
     if request.session.get("user_id"):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request=request, name="login.html", context={"request": request})
+    error = request.query_params.get("error", "")
+    message = request.query_params.get("message", "")
+    return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": error, "message": message})
 
 
 @router.api_route("/account", methods=["GET", "HEAD"], response_class=HTMLResponse)
