@@ -507,17 +507,56 @@
   color: var(--cs-onac);
 }
 .cs-tech-remove {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1;
-  padding: 0 0 0 4px;
+  margin-left: 6px;
   cursor: pointer;
-  opacity: 0.7;
+  transition: all 0.15s ease;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 .cs-tech-remove:hover {
-  opacity: 1;
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+.cs-tech-pill.active .cs-tech-remove {
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.4);
+}
+.cs-tech-pill.active .cs-tech-remove:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+.cs-action-btn {
+  background: var(--cs-card) !important;
+  color: var(--cs-ink) !important;
+  border: 1.5px solid var(--cs-line) !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+.cs-action-btn:hover {
+  border-color: var(--cs-ac) !important;
+  color: var(--cs-ac) !important;
+  background: var(--cs-acs) !important;
 }
 .cs-add-tech-btn {
   display: inline-flex;
@@ -928,7 +967,7 @@
             {% endfor %}
             <option value="__upload__">+ Upload New Resume...</option>
           </select>
-          <button type="button" class="btn-ghost" onclick="triggerResumeUpload('iv-selected-resume')" style="padding: 11px 16px; border: 1.5px solid #64748b; border-radius: 10px; font-weight: 600; white-space: nowrap; cursor: pointer; color: inherit; background: transparent;" aria-label="Upload a new resume">
+          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('iv-selected-resume')" aria-label="Upload a new resume">
             + Upload Resume
           </button>
         </div>
