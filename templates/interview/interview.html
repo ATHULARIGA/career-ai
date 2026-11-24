@@ -812,43 +812,119 @@
 .card[open] summary::after {
   content: "\2013";
 }
+/* ── Organized Card Layout & Sections ─────────────────────── */
+.card {
+  background: var(--cs-card);
+  border: 1.5px solid var(--cs-line);
+  border-radius: 12px;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+.card:hover {
+  border-color: var(--cs-ac);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.card.done {
+  border-left: 5px solid var(--cs-ac);
+}
+.card summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  list-style: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--cs-ink);
+  user-select: none;
+}
+.card summary::-webkit-details-marker {
+  display: none;
+}
+.card summary::after {
+  content: "+";
+  margin-left: auto;
+  color: var(--cs-ac);
+  font-size: 1.4rem;
+  line-height: 1;
+  font-weight: 700;
+}
+.card[open] summary::after {
+  content: "\2013";
+}
 .tg {
   font-size: 0.75rem;
   background: var(--cs-acs);
   color: var(--cs-ac);
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 99px;
   white-space: nowrap;
   font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 .bd {
-  padding: 0 16px 16px;
+  padding: 12px 18px 18px;
   border-top: 1px solid var(--cs-line);
-  margin-top: 4px;
+  background: var(--cs-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.bd p {
-  margin: 0.8em 0;
+.cs-sec {
+  background: var(--cs-bg);
+  border: 1px solid var(--cs-line);
+  border-radius: 9px;
+  padding: 12px 14px;
+}
+.cs-sec-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.cs-label-def {
+  color: #3b82f6;
+}
+.cs-label-project {
+  color: #10b981;
+}
+.cs-label-code {
+  color: #8b5cf6;
+}
+.cs-label-tip {
+  color: #d97706;
+}
+.cs-sec-def {
+  border-left: 3.5px solid #3b82f6;
+}
+.cs-sec-project {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-left: 4px solid #10b981;
+}
+.cs-sec-p {
+  margin: 0;
   font-size: 0.95rem;
   line-height: 1.6;
   color: var(--cs-ink);
 }
-.bd p b {
-  display: block;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  color: var(--cs-mute);
-  margin-bottom: 3px;
-  letter-spacing: 0.4px;
-}
 .cw {
   position: relative;
-  margin: 10px 0;
+  margin: 0;
 }
 .cw pre {
   margin: 0;
   background: var(--cs-cb);
   color: var(--cs-cf);
-  padding: 12px 14px;
+  padding: 14px 14px;
   border-radius: 8px;
   overflow-x: auto;
   font: 12.5px/1.55 ui-monospace, Menlo, Consolas, monospace;
@@ -859,7 +935,7 @@
   top: 8px;
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   background: rgba(255,255,255,0.15);
   color: #ffffff;
@@ -870,21 +946,24 @@
 .cp:hover {
   background: rgba(255,255,255,0.25);
 }
-.tip {
+.cs-sec-tip {
   background: var(--cs-tip);
-  border-left: 3.5px solid var(--cs-tl);
-  padding: 10px 12px;
-  border-radius: 0 8px 8px 0;
+  border: 1px solid rgba(217, 164, 0, 0.3);
+  border-left: 4px solid var(--cs-tl);
+}
+.cs-sec-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
 }
 .dn {
-  margin-top: 10px;
   font-size: 0.85rem;
   font-weight: 600;
-  padding: 7px 14px;
-  border: 1px solid var(--cs-line);
+  padding: 8px 16px;
+  border: 1.5px solid var(--cs-line);
   background: var(--cs-card);
   color: var(--cs-ink);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1748,19 +1827,55 @@ function renderCards() {
     const isDone = revisedIndices.has(idx);
     const cat = esc(r[0]);
     const title = esc(r[1]);
-    const sayIt = esc(r[2]);
-    const code = r[3] ? `<div class="cw"><button type="button" class="cp" onclick="copySnippet(this)">Copy</button><pre><code>${esc(r[3])}</code></pre></div>` : '';
-    const useCase = r[4] ? `<p><b>Use case</b>${esc(r[4])}</p>` : '';
-    const tip = r[5] ? `<p class="tip"><b>Interview tip</b>${esc(r[5])}</p>` : '';
+    const standardDef = esc(r[2]);
+    const code = r[3] ? esc(r[3]) : '';
+    const projectExp = esc(r[4]);
+    const tip = esc(r[5]);
 
     return `<details class="card ${isDone ? 'done' : ''}" data-c="${cat}" data-idx="${idx}">
-      <summary><span class="tg">${cat}</span><b>${title}</b></summary>
+      <summary>
+        <span class="tg">${cat}</span>
+        <b>${title}</b>
+      </summary>
       <div class="bd">
-        <p><b>Say it like this</b>${sayIt}</p>
-        ${code}
-        ${useCase}
-        ${tip}
-        <button type="button" class="dn" onclick="toggleRevised(${idx}, this)">${isDone ? 'Revised' : 'Mark as revised'}</button>
+        
+        <!-- Standard Definition -->
+        <div class="cs-sec cs-sec-def">
+          <div class="cs-sec-label cs-label-def">Standard Definition</div>
+          <p class="cs-sec-p">${standardDef}</p>
+        </div>
+
+        <!-- How I Used This in My Work Experience / Personal Project -->
+        ${projectExp ? `
+        <div class="cs-sec cs-sec-project">
+          <div class="cs-sec-label cs-label-project">How I Used This in My Work Experience / Personal Project</div>
+          <p class="cs-sec-p">${projectExp}</p>
+        </div>` : ''}
+
+        <!-- Code Example -->
+        ${code ? `
+        <div class="cs-sec">
+          <div class="cs-sec-label cs-label-code">Production Code & Syntax Example</div>
+          <div class="cw">
+            <button type="button" class="cp" onclick="copySnippet(this)">Copy</button>
+            <pre><code>${code}</code></pre>
+          </div>
+        </div>` : ''}
+
+        <!-- Interview Gotcha & Pro Tip -->
+        ${tip ? `
+        <div class="cs-sec cs-sec-tip">
+          <div class="cs-sec-label cs-label-tip">Interview Pro Tip & Gotchas</div>
+          <p class="cs-sec-p">${tip}</p>
+        </div>` : ''}
+
+        <!-- Footer Revised Toggle -->
+        <div class="cs-sec-footer">
+          <button type="button" class="dn" onclick="toggleRevised(${idx}, this)">
+            ${isDone ? 'Revised' : 'Mark as revised'}
+          </button>
+        </div>
+
       </div>
     </details>`;
   }).join('');
