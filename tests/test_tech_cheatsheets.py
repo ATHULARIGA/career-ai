@@ -161,6 +161,19 @@ def test_api_interview_cheatsheet_add_custom(client):
     assert len(data["cards"]) >= 4
 
 
+def test_api_interview_cheatsheet_delete(client):
+    del_res = client.delete("/api/interview/cheatsheet?tech=Docker")
+    assert del_res.status_code == 200
+    data = del_res.json()
+    assert data["success"] is True
+    assert data["deleted"] == "Docker"
+
+    tech_res = client.get("/api/interview/technologies")
+    assert tech_res.status_code == 200
+    tech_data = tech_res.json()
+    assert "Docker" not in tech_data["resume_technologies"]
+
+
 def test_api_interview_cheatsheet_revise(client):
     payload = {"tech": "FastAPI", "card_index": 0, "revised": True}
     res = client.post("/api/interview/cheatsheet/revise", json=payload)
