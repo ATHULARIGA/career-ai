@@ -791,6 +791,26 @@
   align-items: center;
   gap: 6px;
 }
+.cs-switch-tech-btn {
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--cs-bg);
+  border: 1.5px solid var(--cs-line);
+  color: var(--cs-mute);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+.cs-switch-tech-btn:hover,
+.cs-switch-tech-btn.is-active {
+  border-color: var(--cs-ac);
+  color: var(--cs-ac);
+  background: var(--cs-acs);
+}
 .cs-ctrl-btn:hover {
   border-color: var(--cs-ac);
   color: var(--cs-ac);
@@ -1312,7 +1332,13 @@
       <div class="cs-header-card">
         <div class="cs-header-top">
           <div class="cs-header-title-box">
-            <h2 class="cs-title" id="csTechTitle">{{ active_technology or 'FastAPI' }} interview cheatsheet</h2>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <h2 class="cs-title" id="csTechTitle">{{ active_technology or 'FastAPI' }} interview cheatsheet</h2>
+              <button type="button" class="cs-switch-tech-btn" id="csSwitchTechBtn" onclick="toggleTechNav()" aria-label="Switch technology">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                <span>Switch Technology</span>
+              </button>
+            </div>
             <p class="cs-subtitle" id="csSubText">
               {% if target_role %}Tailored for {{ target_role }} interviews. {% endif %}Tap a card to open it: interview answer, example, use case, and tip.
             </p>
@@ -2084,6 +2110,38 @@ async function toggleRevised(idx, btn) {
   }
 }
 
+function hideTechNav() {
+  const nav = document.getElementById('csTechNav');
+  const addBar = document.getElementById('csAddTechBar');
+  const toggleBtn = document.getElementById('csSwitchTechBtn');
+  if (nav) {
+    nav.style.display = 'none';
+  }
+  if (addBar) {
+    addBar.style.display = 'none';
+  }
+  if (toggleBtn) {
+    toggleBtn.classList.remove('is-active');
+    toggleBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"></path></svg> <span>Switch Technology</span>';
+  }
+}
+
+function toggleTechNav(forceShow) {
+  const nav = document.getElementById('csTechNav');
+  const toggleBtn = document.getElementById('csSwitchTechBtn');
+  if (!nav) return;
+  const isCurrentlyHidden = (nav.style.display === 'none' || getComputedStyle(nav).display === 'none');
+  const show = typeof forceShow === 'boolean' ? forceShow : isCurrentlyHidden;
+
+  nav.style.display = show ? 'flex' : 'none';
+  if (toggleBtn) {
+    toggleBtn.classList.toggle('is-active', show);
+    toggleBtn.innerHTML = show
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> <span>Hide Technologies</span>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"></path></svg> <span>Switch Technology</span>';
+  }
+}
+
 async function selectTechnology(tech, btn) {
   currentTech = tech;
   document.querySelectorAll('.cs-tech-pill').forEach(b => {
@@ -2091,6 +2149,9 @@ async function selectTechnology(tech, btn) {
     b.classList.toggle('active', isMatch);
     b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
   });
+
+  // Hide technologies list once candidate selects which tech cheatsheet they want to see
+  hideTechNav();
 
   showLoader(`Loading ${tech} cheatsheet…`);
   try {
@@ -2200,6 +2261,7 @@ async function addCustomTechnology(e) {
       });
 
       renderCards();
+      hideTechNav();
     } else {
       if (status) {
         status.textContent = data.error || 'Failed to add technology. Please try again.';
@@ -2520,6 +2582,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Expose cheatsheet helpers globally
 window.switchMainTab = switchMainTab;
 window.selectTechnology = selectTechnology;
+window.toggleTechNav = toggleTechNav;
+window.hideTechNav = hideTechNav;
 window.toggleAddTechBar = toggleAddTechBar;
 window.addCustomTechnology = addCustomTechnology;
 window.removeTechnology = removeTechnology;
