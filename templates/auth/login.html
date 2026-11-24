@@ -90,23 +90,32 @@
   }
 
   .auth-subtitle {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #334155;
     margin: 0;
   }
 
   .theme-dark .auth-subtitle {
-    color: #cbd5e1;
+    color: #e2e8f0;
   }
 
   .auth-subtitle a {
-    color: #111827;
-    font-weight: 600;
-    text-decoration: none;
+    color: #0369a1;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .theme-dark .auth-subtitle a {
+    color: #38bdf8 !important;
   }
 
   .auth-subtitle a:hover {
-    text-decoration: underline;
+    color: #0284c7;
+  }
+
+  .theme-dark .auth-subtitle a:hover {
+    color: #7dd3fc !important;
   }
 
   /* ━━━━ NOTION STYLE INPUTS ━━━━ */
@@ -311,7 +320,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
     border-radius: 10px;
     padding: 12px 14px;
     margin-bottom: 20px;
@@ -325,9 +334,21 @@
   }
 
   .af-alert-error {
-    color: #b91c1c;
+    color: #991b1b;
     background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .theme-dark .af-alert-error {
+    color: #fca5a5 !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  }
+
+  .theme-dark .af-alert-success {
+    color: #86efac !important;
+    background: rgba(16, 185, 129, 0.2) !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
   }
 
   .af-foot {
