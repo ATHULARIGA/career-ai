@@ -1075,6 +1075,7 @@
         <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" role="tab" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
           <span>{{ t }}</span>
           <span class="cs-tech-tag">Resume</span>
+          <span class="cs-tech-remove" onclick="removeTechnology(event, '{{ t }}', this)" title="Remove {{ t }}" aria-label="Remove {{ t }}">&times;</span>
         </button>
         {% endfor %}
 
@@ -2084,7 +2085,7 @@ async function handleResumeFileSelected(input) {
         pill.setAttribute('role', 'tab');
         pill.setAttribute('data-tech', t);
         pill.onclick = () => selectTechnology(t, pill);
-        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span><span class="cs-tech-remove" onclick="removeTechnology(event, '${t}', this)" title="Remove ${t}" aria-label="Remove ${t}">&times;</span>`;
         nav.appendChild(pill);
       });
       customPills.forEach(p => nav.appendChild(p));
@@ -2155,7 +2156,7 @@ async function switchCheatsheetResume(resumeId) {
           pill.setAttribute('role', 'tab');
           pill.setAttribute('data-tech', t);
           pill.onclick = () => selectTechnology(t, pill);
-          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span><span class="cs-tech-remove" onclick="removeTechnology(event, '${t}', this)" title="Remove ${t}" aria-label="Remove ${t}">&times;</span>`;
           nav.appendChild(pill);
         });
         customPills.forEach(p => nav.appendChild(p));

@@ -1063,9 +1063,12 @@ def api_interview_technologies(request: Request, resume_id: str = ""):
     resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
     resume_techs = extract_technologies_from_resume(resume_text, resume_report)
+    excluded = request.session.get("excluded_technologies", [])
+    if excluded:
+        resume_techs = [t for t in resume_techs if t.lower() not in [x.lower() for x in excluded]]
 
     saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
-    custom_techs = [c["tech_name"] for c in saved_records if isinstance(c, dict) and c.get("is_custom") and c.get("tech_name")]
+    custom_techs = [c["tech_name"] for c in saved_records if isinstance(c, dict) and c.get("is_custom") and c.get("tech_name") and c["tech_name"].lower() not in [x.lower() for x in excluded]]
     saved_revised = {c["tech_name"]: c.get("revised_indices", []) for c in saved_records if isinstance(c, dict) and c.get("tech_name")}
 
     for tech in resume_techs:
@@ -1135,6 +1138,11 @@ async def api_interview_cheatsheet_add(request: Request):
 
     payload = get_cheatsheet_for_technology(clean_tech, resume_text=resume_text, target_role=target_role)
     payload["revised_indices"] = []
+
+    # Re-enable if previously excluded
+    excluded = request.session.get("excluded_technologies", [])
+    if clean_tech.lower() in [x.lower() for x in excluded]:
+        request.session["excluded_technologies"] = [x for x in excluded if x.lower() != clean_tech.lower()]
 
     if user_email:
         save_user_cheatsheet(user_email, payload["tech_name"], payload, is_custom=True, revised_indices=[])
@@ -1210,7 +1218,7 @@ async def api_interview_cheatsheet_revise(request: Request):
 
 @router.delete("/api/interview/cheatsheet", response_class=JSONResponse)
 def api_interview_cheatsheet_delete(request: Request, tech: str = ""):
-    """Removes a custom technology from the candidate's list."""
+    """Removes a custom or resume technology from the candidate's list."""
     tech_name = tech.strip()
     if not tech_name:
         return JSONResponse({"error": "Technology name is required"}, status_code=400)
@@ -1222,6 +1230,11 @@ def api_interview_cheatsheet_delete(request: Request, tech: str = ""):
         session_custom = request.session.get("session_custom_cheatsheets", [])
         session_custom = [c for c in session_custom if c.get("tech_name", "").lower() != tech_name.lower()]
         request.session["session_custom_cheatsheets"] = session_custom
+
+    excluded = request.session.get("excluded_technologies", [])
+    if tech_name.lower() not in [x.lower() for x in excluded]:
+        excluded.append(tech_name)
+        request.session["excluded_technologies"] = excluded
 
     return JSONResponse({"success": True, "deleted": tech_name})
 
