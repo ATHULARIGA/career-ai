@@ -25,7 +25,7 @@ def get_google_redirect_uri(request: Request) -> str:
 
 @router.get("/auth/google", response_class=RedirectResponse)
 def google_auth_login(request: Request):
-    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    client_id = (os.getenv("GOOGLE_CLIENT_ID") or os.getenv("google_client_id") or "").strip().strip("'\"")
     if not client_id:
         _log.warning("Google OAuth initiated but GOOGLE_CLIENT_ID is not configured.")
         return RedirectResponse("/login?error=Google+Sign-In+is+not+configured+yet", status_code=303)
@@ -54,8 +54,8 @@ def google_auth_callback(request: Request):
         _log.info("Google OAuth returned error: %s", error)
         return RedirectResponse("/login?error=Google+Sign-In+was+cancelled", status_code=303)
 
-    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
-    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+    client_id = (os.getenv("GOOGLE_CLIENT_ID") or os.getenv("google_client_id") or "").strip().strip("'\"")
+    client_secret = (os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("google_client_secret") or "").strip().strip("'\"")
     if not client_id or not client_secret:
         return RedirectResponse("/login?error=Google+OAuth+credentials+are+not+configured", status_code=303)
 
