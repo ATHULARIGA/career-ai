@@ -212,6 +212,10 @@ def test_api_interview_resumes(client):
     assert "resumes" in data
     assert "selected_resume_id" in data
     assert len(data["resumes"]) >= 1
+    # Verify no report review history runs clutter the dropdown
+    for r in data["resumes"]:
+        assert not r["id"].startswith("report_")
+        assert "Review (" not in r["title"]
 
 
 def test_api_interview_select_resume(client):
@@ -234,3 +238,35 @@ def test_api_interview_select_resume(client):
 def test_api_interview_select_resume_invalid(client):
     res = client.post("/api/interview/select-resume", json={"resume_id": "non_existent_id_12345"})
     assert res.status_code == 404
+
+
+def test_api_interview_upload_resume(client):
+    # Test uploading a new text resume
+    resume_content = b"""
+    John Doe
+    Backend Software Engineer
+    Technologies: Python, FastAPI, Docker, PostgreSQL, Redis, Kubernetes
+    Experience building high performance REST APIs with FastAPI and asyncpg.
+    """
+    files = {"file": ("my_custom_resume.txt", resume_content, "text/plain")}
+    data = {"target_role": "Backend Engineer"}
+    res = client.post("/api/interview/upload-resume", files=files, data=data)
+    assert res.status_code == 200
+    res_data = res.json()
+    assert res_data["success"] is True
+    assert "my_custom_resume" in res_data["title"]
+    assert "FastAPI" in res_data["resume_technologies"]
+    assert "cheatsheet" in res_data
+    assert res_data["selected_resume_id"]
+
+
+def test_api_interview_upload_resume_empty(client):
+    files = {"file": ("empty.txt", b"", "text/plain")}
+    res = client.post("/api/interview/upload-resume", files=files)
+    assert res.status_code == 400
+
+
+def test_api_interview_upload_resume_invalid_format(client):
+    files = {"file": ("malware.exe", b"binarycontent", "application/octet-stream")}
+    res = client.post("/api/interview/upload-resume", files=files)
+    assert res.status_code == 400

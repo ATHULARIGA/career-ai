@@ -182,30 +182,30 @@ Proposed Session Plan (30-45 min):
 
 
 def get_selectable_resumes_for_user(user_email: str, request: Request = None) -> list:
-    """Returns all available resumes for selection (reports and saved resumes)."""
+    """Returns saved resumes or uploaded resume for selection (no report review runs)."""
     email = (user_email or "").strip().lower()
     items = []
     seen_ids = set()
 
-    from core.database import get_recent_resume_runs_for_user, get_user_saved_resumes
-    if email:
-        runs = get_recent_resume_runs_for_user(email, limit=10)
-        for r in runs:
-            r_id = f"report_{r['id']}"
-            if r_id not in seen_ids:
-                seen_ids.add(r_id)
-                role_label = r.get("target_role") or "General"
-                overall = r.get("overall", 0)
-                ts = r.get("created_ts", 0)
-                date_str = time.strftime("%b %d", time.localtime(ts)) if ts else "Recent"
+    from core.database import get_user_saved_resumes, seed_default_sample_resume, get_saved_resume_by_id
+
+    # 1. Any resume uploaded in the active session
+    if request:
+        uploaded = request.session.get("interview_uploaded_resume")
+        if uploaded and isinstance(uploaded, dict) and uploaded.get("id"):
+            u_id = uploaded["id"]
+            if u_id not in seen_ids:
+                seen_ids.add(u_id)
                 items.append({
-                    "id": r_id,
-                    "title": f"{role_label} Review ({overall}/10 - {date_str})",
-                    "target_role": role_label,
-                    "source": "report",
-                    "raw_id": r["id"],
+                    "id": u_id,
+                    "title": f"{uploaded.get('title') or 'Uploaded Resume'} ({uploaded.get('target_role') or 'Engineer'})",
+                    "target_role": uploaded.get("target_role") or "Software Engineer",
+                    "source": "uploaded",
+                    "raw_id": 0,
                 })
 
+    # 2. Saved resumes for authenticated user
+    if email:
         saved = get_user_saved_resumes(email)
         for s in saved:
             s_id = f"saved_{s['id']}"
@@ -219,27 +219,26 @@ def get_selectable_resumes_for_user(user_email: str, request: Request = None) ->
                     "raw_id": s["id"],
                 })
 
-    if request:
-        last_report = request.session.get("last_resume_report", {})
-        if last_report and "session_latest" not in seen_ids:
-            seen_ids.add("session_latest")
-            target_role = last_report.get("target_role") or "Software Engineer"
-            items.insert(0, {
-                "id": "session_latest",
-                "title": f"Current Session Resume ({target_role})",
-                "target_role": target_role,
-                "source": "session",
-                "raw_id": 0,
-            })
-
+    # 3. If no saved resumes exist, provide the default sample saved resume
     if not items:
-        items.append({
-            "id": "latest",
-            "title": "Default Full-Stack Profile",
-            "target_role": "Software Engineer",
-            "source": "default",
-            "raw_id": 0,
-        })
+        sample_id = seed_default_sample_resume()
+        sample_resume = get_saved_resume_by_id(sample_id, email)
+        if sample_resume:
+            items.append({
+                "id": f"saved_{sample_id}",
+                "title": f"{sample_resume.get('title') or 'Athul Ariga - Data Engineer & Python Developer (LaTeX)'} ({sample_resume.get('target_role') or 'Data Engineer'})",
+                "target_role": sample_resume.get("target_role") or "Data Engineer & Python Developer",
+                "source": "saved",
+                "raw_id": sample_id,
+            })
+        else:
+            items.append({
+                "id": "saved_1",
+                "title": "Athul Ariga - Data Engineer & Python Developer (LaTeX)",
+                "target_role": "Data Engineer & Python Developer",
+                "source": "saved",
+                "raw_id": 1,
+            })
 
     return items
 
@@ -250,8 +249,6 @@ def resolve_resume_context(selected_id: str, user_email: str, request: Request =
     sel = (selected_id or "").strip()
 
     from core.database import (
-        get_latest_resume_report_for_user,
-        get_resume_report_by_id_for_user,
         get_saved_resume_by_id,
     )
 
@@ -259,16 +256,17 @@ def resolve_resume_context(selected_id: str, user_email: str, request: Request =
     resume_text = ""
     target_role = ""
 
-    if sel.startswith("report_"):
-        try:
-            raw_id = int(sel.replace("report_", ""))
-            report = get_resume_report_by_id_for_user(raw_id, email)
-            if report:
-                resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
-                target_role = report.get("target_role", "")
-        except Exception:
-            pass
-    elif sel.startswith("saved_"):
+    # Check session uploaded resume
+    if request:
+        uploaded = request.session.get("interview_uploaded_resume")
+        if uploaded and isinstance(uploaded, dict):
+            if not sel or sel == uploaded.get("id") or sel.startswith("uploaded_"):
+                resume_text = uploaded.get("text", "")
+                target_role = uploaded.get("target_role", "")
+                report = {"resume_text": resume_text, "target_role": target_role}
+                return report, resume_text, target_role or "Software Engineer"
+
+    if sel.startswith("saved_"):
         try:
             raw_id = int(sel.replace("saved_", ""))
             saved = get_saved_resume_by_id(raw_id, email)
@@ -278,17 +276,20 @@ def resolve_resume_context(selected_id: str, user_email: str, request: Request =
                 report = {"resume_text": resume_text, "target_role": target_role}
         except Exception:
             pass
-    elif sel == "session_latest" and request:
-        report = request.session.get("last_resume_report", {})
-        if report:
-            resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
-            target_role = report.get("target_role", "")
 
     if not resume_text:
-        report = get_latest_resume_report_for_user(email) if email else (request.session.get("last_resume_report", {}) if request else {})
-        if report:
-            resume_text = report.get("resume_text", "") or report.get("fixed_resume_md", "")
-            target_role = report.get("target_role", "")
+        from core.database import seed_default_sample_resume, DEFAULT_ATHUL_RESUME
+        try:
+            sample_id = seed_default_sample_resume()
+            saved = get_saved_resume_by_id(sample_id, email)
+            if saved:
+                resume_text = saved.get("raw_content", "")
+                target_role = saved.get("target_role", "")
+                report = {"resume_text": resume_text, "target_role": target_role}
+        except Exception:
+            resume_text = DEFAULT_ATHUL_RESUME
+            target_role = "Data Engineer & Python Developer"
+            report = {"resume_text": resume_text, "target_role": target_role}
 
     if not target_role and request:
         target_role = (request.session.get("interview_config", {}) or {}).get("role", "")

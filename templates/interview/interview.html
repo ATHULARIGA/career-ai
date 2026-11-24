@@ -919,13 +919,19 @@
     <form id="ivSetupForm" action="/generate" method="post" class="iv-form-grid">
       <div class="iv-field iv-field-full">
         <label for="iv-selected-resume">Target Resume</label>
-        <select name="selected_resume" id="iv-selected-resume" aria-label="Target Resume" onchange="onSetupResumeChange(this)">
-          {% for r in (selectable_resumes or []) %}
-          <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %} data-role="{{ r.target_role }}">
-            {{ r.title }}
-          </option>
-          {% endfor %}
-        </select>
+        <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+          <select name="selected_resume" id="iv-selected-resume" aria-label="Target Resume" onchange="onSetupResumeChange(this)" style="flex: 1;">
+            {% for r in (selectable_resumes or []) %}
+            <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %} data-role="{{ r.target_role }}">
+              {{ r.title }}
+            </option>
+            {% endfor %}
+            <option value="__upload__">+ Upload New Resume...</option>
+          </select>
+          <button type="button" class="btn-ghost" onclick="triggerResumeUpload('iv-selected-resume')" style="padding: 11px 16px; border: 1.5px solid #64748b; border-radius: 10px; font-weight: 600; white-space: nowrap; cursor: pointer; color: inherit; background: transparent;" aria-label="Upload a new resume">
+            + Upload Resume
+          </button>
+        </div>
       </div>
       <div class="iv-field">
         <label for="iv-topic">Topic</label>
@@ -1040,19 +1046,28 @@
     <div class="cs-wrap">
       
       <!-- Resume Tailoring Selector -->
-      <div class="cs-resume-bar">
-        <label for="csResumeSelect" class="cs-resume-label">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          <span>Select Resume for Tailoring:</span>
-        </label>
-        <select id="csResumeSelect" class="cs-resume-select" onchange="switchCheatsheetResume(this.value)" aria-label="Select Resume for Tailoring">
-          {% for r in (selectable_resumes or []) %}
-          <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %}>
-            {{ r.title }}
-          </option>
-          {% endfor %}
-        </select>
+      <div class="cs-resume-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <label for="csResumeSelect" class="cs-resume-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Target Resume:</span>
+          </label>
+          <select id="csResumeSelect" class="cs-resume-select" onchange="switchCheatsheetResume(this.value)" aria-label="Select Resume for Tailoring">
+            {% for r in (selectable_resumes or []) %}
+            <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %}>
+              {{ r.title }}
+            </option>
+            {% endfor %}
+            <option value="__upload__">+ Upload New Resume...</option>
+          </select>
+        </div>
+        <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('csResumeSelect')" aria-label="Upload New Resume" style="padding: 7px 14px; font-size: 0.95rem; font-weight: 600;">
+          + Upload Resume
+        </button>
       </div>
+
+      <!-- Hidden File Input for Resume Upload -->
+      <input type="file" id="sharedResumeFileInput" accept=".pdf,.txt,.tex,.md" style="display: none;" onchange="handleResumeFileSelected(this)" aria-hidden="true">
 
       <!-- Technology Selector Row -->
       <div class="cs-tech-nav" id="csTechNav" role="tablist" aria-label="Available Technologies">
@@ -1965,6 +1980,10 @@ async function copySnippet(btn) {
 }
 
 function onSetupResumeChange(selectEl) {
+  if (selectEl.value === '__upload__') {
+    triggerResumeUpload('iv-selected-resume');
+    return;
+  }
   const selectedOpt = selectEl.options[selectEl.selectedIndex];
   const targetRole = selectedOpt ? selectedOpt.getAttribute('data-role') : '';
   const roleInput = document.getElementById('iv-role');
@@ -1978,8 +1997,131 @@ function onSetupResumeChange(selectEl) {
   }
 }
 
+let uploadSourceSelectId = 'iv-selected-resume';
+
+function triggerResumeUpload(sourceSelectId) {
+  uploadSourceSelectId = sourceSelectId || 'iv-selected-resume';
+  const fileInput = document.getElementById('sharedResumeFileInput');
+  if (fileInput) {
+    fileInput.value = '';
+    fileInput.click();
+  }
+}
+
+function syncDropdownsToPrevious() {
+  const setupSelect = document.getElementById('iv-selected-resume');
+  const csSelect = document.getElementById('csResumeSelect');
+  if (setupSelect && setupSelect.value === '__upload__') {
+    setupSelect.selectedIndex = 0;
+  }
+  if (csSelect && csSelect.value === '__upload__') {
+    csSelect.selectedIndex = 0;
+  }
+}
+
+async function handleResumeFileSelected(input) {
+  const file = input.files && input.files[0];
+  if (!file) {
+    syncDropdownsToPrevious();
+    return;
+  }
+  showLoader('Uploading and tailoring for your resume…');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const roleInput = document.getElementById('iv-role');
+    if (roleInput && roleInput.value) {
+      formData.append('target_role', roleInput.value);
+    }
+    const res = await fetch('/api/interview/upload-resume', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    hideLoader();
+
+    if (!res.ok || !data.success) {
+      alert(data.error || 'Failed to parse resume.');
+      syncDropdownsToPrevious();
+      return;
+    }
+
+    const populateSelect = (selectEl, selectedId) => {
+      if (!selectEl) return;
+      selectEl.innerHTML = '';
+      (data.resumes || []).forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.title;
+        if (r.target_role) opt.setAttribute('data-role', r.target_role);
+        if (r.id === selectedId) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+      const uploadOpt = document.createElement('option');
+      uploadOpt.value = '__upload__';
+      uploadOpt.textContent = '+ Upload New Resume...';
+      selectEl.appendChild(uploadOpt);
+    };
+
+    const setupSelect = document.getElementById('iv-selected-resume');
+    const csSelect = document.getElementById('csResumeSelect');
+    populateSelect(setupSelect, data.selected_resume_id);
+    populateSelect(csSelect, data.selected_resume_id);
+
+    if (roleInput && data.target_role) {
+      roleInput.value = data.target_role;
+    }
+
+    const nav = document.getElementById('csTechNav');
+    if (nav && data.resume_technologies) {
+      const customPills = [...nav.querySelectorAll('.cs-tech-pill')].filter(p => p.querySelector('.cs-tech-remove'));
+      const addBtn = nav.querySelector('.cs-add-tech-btn');
+      nav.innerHTML = '';
+      data.resume_technologies.forEach((t, i) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = `cs-tech-pill ${i === 0 ? 'active' : ''}`;
+        pill.setAttribute('role', 'tab');
+        pill.setAttribute('data-tech', t);
+        pill.onclick = () => selectTechnology(t, pill);
+        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+        nav.appendChild(pill);
+      });
+      customPills.forEach(p => nav.appendChild(p));
+      if (addBtn) nav.appendChild(addBtn);
+    }
+
+    currentTech = data.active_technology || 'FastAPI';
+    if (data.cheatsheet && data.cheatsheet.cards) {
+      cheatsheetCards = data.cheatsheet.cards;
+      revisedIndices = new Set(data.cheatsheet.revised_indices || []);
+      activeCategory = 'All';
+
+      const titleEl = document.getElementById('csTechTitle');
+      const subEl = document.getElementById('csSubText');
+      if (titleEl) titleEl.textContent = `${data.cheatsheet.tech_name} interview cheatsheet`;
+      if (subEl) {
+        const rolePart = data.target_role ? `Tailored for ${data.target_role} interviews. ` : '';
+        subEl.textContent = `${data.cheatsheet.total_cards} cards. ${rolePart}Tap a card to open it: interview answer, example, use case, and tip.`;
+      }
+      renderCards();
+    }
+  } catch (err) {
+    hideLoader();
+    console.error('Failed to upload resume:', err);
+    alert('An error occurred while uploading the resume.');
+    syncDropdownsToPrevious();
+  } finally {
+    input.value = '';
+  }
+}
+
 async function switchCheatsheetResume(resumeId) {
   if (!resumeId) return;
+  if (resumeId === '__upload__') {
+    triggerResumeUpload('csResumeSelect');
+    return;
+  }
   showLoader('Re-tailoring for selected resume…');
   try {
     const res = await fetch('/api/interview/select-resume', {
@@ -2111,6 +2253,8 @@ window.toggleRevised = toggleRevised;
 window.filterCategory = filterCategory;
 window.onSetupResumeChange = onSetupResumeChange;
 window.switchCheatsheetResume = switchCheatsheetResume;
+window.triggerResumeUpload = triggerResumeUpload;
+window.handleResumeFileSelected = handleResumeFileSelected;
 
 })();
 </script>
