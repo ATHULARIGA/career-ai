@@ -9,7 +9,7 @@ app.include_router(admin.router)
 app.include_router(pages.router)
 
 from fastapi import Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from core import templates, logger
 
 @app.exception_handler(Exception)
@@ -18,6 +18,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     import traceback
     traceback.print_exc()
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
+
+    # Return clean JSON errors for API routes or JSON requests so clients can handle them properly
+    accept_header = request.headers.get("accept", "")
+    if request.url.path.startswith("/api/") or "application/json" in accept_header:
+        return JSONResponse(
+            {
+                "error": str(exc) if str(exc) else "An unexpected error occurred. Please try again.",
+                "request_id": req_id,
+            },
+            status_code=500,
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="error.html",

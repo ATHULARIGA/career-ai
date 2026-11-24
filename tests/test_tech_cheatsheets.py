@@ -287,3 +287,32 @@ def test_api_interview_upload_resume_invalid_format(client):
     files = {"file": ("malware.exe", b"binarycontent", "application/octet-stream")}
     res = client.post("/api/interview/upload-resume", files=files)
     assert res.status_code == 400
+
+
+def test_interview_page_error_handling_and_toast(client):
+    res = client.get("/interview")
+    assert res.status_code == 200
+    # Toast notification container exists
+    assert 'id="ivToast"' in res.text
+    assert 'role="status"' in res.text
+    assert 'aria-live="polite"' in res.text
+    # Heading level hierarchy valid: h2 for verdict breakdown
+    assert '<h2 class="iv-verdict-heading">Question Breakdown</h2>' in res.text
+    # No aria-label on span tags
+    assert '<span class="cs-tech-remove" title=' not in res.text
+    # Tech pills use aria-pressed, not role="tab"
+    assert 'class="cs-tech-pill active" onclick="selectTechnology(\'FastAPI\', this)" aria-pressed="true"' in res.text
+
+
+def test_global_exception_handler_returns_json_for_api_endpoints(client, monkeypatch):
+    import routers.interview
+    def broken_func(*args, **kwargs):
+        raise RuntimeError("Simulated internal backend error")
+
+    monkeypatch.setattr(routers.interview, "resolve_resume_context", broken_func)
+    res = client.get("/api/interview/cheatsheet?tech=Python")
+    assert res.status_code == 500
+    data = res.json()
+    assert "error" in data
+    assert "Simulated internal backend error" in data["error"] or "Failed to load" in data["error"]
+

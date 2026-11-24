@@ -627,7 +627,19 @@
   color: #0b0f19 !important;
   border: 1px solid rgba(11, 15, 25, 0.22) !important;
 }
+.cs-tech-pill-wrap {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+.cs-tech-pill-wrap .cs-tech-pill {
+  padding-right: 32px;
+}
 .cs-tech-remove {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -640,6 +652,7 @@
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  padding: 0;
   transition: all 0.15s ease;
   border: 1px solid var(--cs-line);
 }
@@ -648,20 +661,20 @@
   color: var(--cs-ink);
   border-color: var(--cs-line-strong);
 }
-.cs-tech-pill.active .cs-tech-remove {
+.cs-tech-pill.active + .cs-tech-remove {
   background: rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
 }
-.theme-dark .cs-tech-pill.active .cs-tech-remove {
+.theme-dark .cs-tech-pill.active + .cs-tech-remove {
   background: rgba(11, 15, 25, 0.12) !important;
   color: #0b0f19 !important;
   border-color: rgba(11, 15, 25, 0.25) !important;
 }
-.cs-tech-pill.active .cs-tech-remove:hover {
+.cs-tech-pill.active + .cs-tech-remove:hover {
   background: rgba(255, 255, 255, 0.4) !important;
 }
-.theme-dark .cs-tech-pill.active .cs-tech-remove:hover {
+.theme-dark .cs-tech-pill.active + .cs-tech-remove:hover {
   background: rgba(11, 15, 25, 0.25) !important;
 }
 .cs-add-tech-btn {
@@ -1149,6 +1162,70 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* ── Toast Notifications ────────────────────────────────── */
+.iv-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  max-width: 440px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f8fafc;
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.iv-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.iv-toast.error {
+  background: #1e1318;
+  border-color: #991b1b;
+  color: #fecaca;
+}
+.iv-toast.info {
+  background: #0f172a;
+  border-color: #3b82f6;
+  color: #e2e8f0;
+}
+.iv-toast.success {
+  background: #06201b;
+  border-color: #059669;
+  color: #a7f3d0;
+}
+
+/* ── Cheatsheet Error State Card ────────────────────────── */
+.cs-error-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--cs-card);
+  border: 1.5px dashed var(--cs-line);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.cs-error-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cs-ink);
+  margin-bottom: 6px;
+}
+.cs-error-desc {
+  font-size: 0.95rem;
+  color: var(--cs-mute);
+  margin-bottom: 16px;
+}
 </style>
 {% endblock %}
 
@@ -1307,7 +1384,7 @@
   <!-- ── Verdict Screen ─────────────────────────── -->
   <div class="iv-verdict" id="ivVerdict">
     <div class="iv-verdict-card" id="ivVerdictCard"></div>
-    <h3 class="iv-verdict-heading">Question Breakdown</h3>
+    <h2 class="iv-verdict-heading">Question Breakdown</h2>
     <div class="iv-qa-list" id="ivQaList"></div>
     <div class="iv-center-action">
       <a href="/interview/new" class="iv-new-btn">Start New Session</a>
@@ -1353,16 +1430,17 @@
         <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
           <span>{{ t }}</span>
           <span class="cs-tech-tag">Resume</span>
-          <span class="cs-tech-remove" onclick="removeTechnology(event, '{{ t }}', this)" title="Remove {{ t }}" aria-label="Remove {{ t }}">&times;</span>
         </button>
         {% endfor %}
 
         {% for ct in (custom_technologies or []) %}
-        <button type="button" class="cs-tech-pill" onclick="selectTechnology('{{ ct }}', this)" aria-pressed="false" data-tech="{{ ct }}">
-          <span>{{ ct }}</span>
-          <span class="cs-tech-tag">Custom</span>
-          <span class="cs-tech-remove" onclick="removeTechnology(event, '{{ ct }}', this)" title="Remove {{ ct }}" aria-label="Remove {{ ct }}">&times;</span>
-        </button>
+        <div class="cs-tech-pill-wrap">
+          <button type="button" class="cs-tech-pill" onclick="selectTechnology('{{ ct }}', this)" aria-pressed="false" data-tech="{{ ct }}">
+            <span>{{ ct }}</span>
+            <span class="cs-tech-tag">Custom</span>
+          </button>
+          <button type="button" class="cs-tech-remove" onclick="removeTechnology(event, '{{ ct }}', this)" title="Remove {{ ct }}" aria-label="Remove {{ ct }}">&times;</button>
+        </div>
         {% endfor %}
 
         <button type="button" class="cs-add-tech-btn" onclick="toggleAddTechBar(true)" aria-label="Add Technology">
@@ -1441,8 +1519,30 @@
   </div>
 </div>
 
+<!-- Accessible Toast Notifications -->
+<div id="ivToast" class="iv-toast" role="status" aria-live="polite"></div>
+
 <script>
 (function() {
+// ── Toast Utility ──────────────────────────────────────────────
+function showToast(message, type = 'error', duration = 4500) {
+  let toast = document.getElementById('ivToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ivToast';
+    toast.className = 'iv-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+  }
+  toast.className = `iv-toast ${type} show`;
+  toast.textContent = message;
+  clearTimeout(window._ivToastTimeout);
+  window._ivToastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, duration);
+}
+
 // ── State ──────────────────────────────────────────────────────
 let conversationHistory = [];
 let currentPhase = 'warmup';
@@ -1479,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 function showTroubleModal() {
-  alert('Microphone access failed. Please check your browser permissions and ensure you are using a secure connection (HTTPS or localhost).');
+  showToast('Microphone access failed. Please check your browser permissions and ensure you are using HTTPS.', 'error');
 }
 
 function hideTroubleModal() {
@@ -1727,7 +1827,7 @@ async function interviewerSpeaks(text, btnElement = null) {
 // ── STT ────────────────────────────────────────────────────────
 function toggleMic() {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert('Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your answer.');
+    showToast('Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your answer.', 'info');
     return;
   }
   if (isRecording) {
@@ -1741,7 +1841,7 @@ let micIsPermanentlyBlocked = false;
 
 async function startMic() {
   if (micIsPermanentlyBlocked) {
-    alert('Microphone access was denied. Please check your browser settings.');
+    showToast('Microphone access was denied. Please check your browser settings.', 'error');
     return;
   }
   
@@ -1750,7 +1850,7 @@ async function startMic() {
   
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    alert('Speech recognition is not supported in this browser.');
+    showToast('Speech recognition is not supported in this browser.', 'info');
     return;
   }
 
@@ -1790,7 +1890,7 @@ async function startMic() {
     console.error('STT error:', e.error);
     if (e.error === 'not-allowed' || e.error === 'permission-denied') {
       micIsPermanentlyBlocked = true;
-      alert('Microphone permission denied. Please enable it in your browser settings.');
+      showToast('Microphone permission denied. Please enable it in your browser settings.', 'error');
       stopMic();
     } else if (e.error !== 'no-speech' && e.error !== 'network') {
       stopMic();
@@ -2196,7 +2296,24 @@ function toggleTechNav(forceShow) {
   }
 }
 
+let currentSelectedResumeId = '{{ selected_resume_id or "latest" }}';
+
+function renderCheatsheetError(tech, errorMsg) {
+  const grid = document.getElementById('csGrid');
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="cs-error-card">
+      <div class="cs-error-title">Could not load ${tech} cheat sheet</div>
+      <div class="cs-error-desc">${errorMsg}</div>
+      <button type="button" class="cs-action-btn" onclick="selectTechnology('${tech}', null)">
+        Retry
+      </button>
+    </div>
+  `;
+}
+
 async function selectTechnology(tech, btn) {
+  if (!tech) return;
   currentTech = tech;
   document.querySelectorAll('.cs-tech-pill').forEach(b => {
     const isMatch = (b === btn || b.dataset.tech === tech);
@@ -2213,7 +2330,7 @@ async function selectTechnology(tech, btn) {
     const data = await res.json();
     hideLoader();
 
-    if (data && data.cards) {
+    if (res.ok && data && data.cards) {
       cheatsheetCards = data.cards;
       revisedIndices = new Set(data.revised_indices || []);
       activeCategory = 'All';
@@ -2227,10 +2344,17 @@ async function selectTechnology(tech, btn) {
       }
 
       renderCards();
+    } else {
+      const errMsg = (data && data.error) || 'Failed to load cheat sheet. Please try again.';
+      showToast(errMsg, 'error');
+      renderCheatsheetError(tech, errMsg);
     }
   } catch (err) {
     hideLoader();
     console.error('Failed to load technology cheatsheet:', err);
+    const errMsg = 'Network error while loading cheat sheet. Please check your connection and retry.';
+    showToast(errMsg, 'error');
+    renderCheatsheetError(tech, errMsg);
   }
 }
 
@@ -2279,21 +2403,23 @@ async function addCustomTechnology(e) {
       if (!existingPill) {
         const nav = document.getElementById('csTechNav');
         const addBtn = nav ? nav.querySelector('.cs-add-tech-btn') : null;
-        const newPill = document.createElement('button');
-        newPill.type = 'button';
-        newPill.className = 'cs-tech-pill active';
-        newPill.setAttribute('role', 'tab');
-        newPill.setAttribute('data-tech', data.tech_name);
-        newPill.onclick = () => selectTechnology(data.tech_name, newPill);
-        newPill.innerHTML = `
-          <span>${data.tech_name}</span>
-          <span class="cs-tech-tag">Custom</span>
-          <span class="cs-tech-remove" onclick="removeTechnology(event, '${data.tech_name}', this)" title="Remove ${data.tech_name}" aria-label="Remove ${data.tech_name}">&times;</span>
+        const wrap = document.createElement('div');
+        wrap.className = 'cs-tech-pill-wrap';
+        wrap.innerHTML = `
+          <button type="button" class="cs-tech-pill active" aria-pressed="true" data-tech="${data.tech_name}">
+            <span>${data.tech_name}</span>
+            <span class="cs-tech-tag">Custom</span>
+          </button>
+          <button type="button" class="cs-tech-remove" title="Remove ${data.tech_name}" aria-label="Remove ${data.tech_name}">&times;</button>
         `;
+        const pillBtn = wrap.querySelector('.cs-tech-pill');
+        pillBtn.onclick = () => selectTechnology(data.tech_name, pillBtn);
+        const remBtn = wrap.querySelector('.cs-tech-remove');
+        remBtn.onclick = (ev) => removeTechnology(ev, data.tech_name, remBtn);
         if (addBtn && nav) {
-          nav.insertBefore(newPill, addBtn);
+          nav.insertBefore(wrap, addBtn);
         }
-        existingPill = newPill;
+        existingPill = pillBtn;
       }
 
       // Switch to the newly added tech
@@ -2312,19 +2438,25 @@ async function addCustomTechnology(e) {
 
       document.querySelectorAll('.cs-tech-pill').forEach(b => {
         b.classList.toggle('active', b === existingPill);
+        b.setAttribute('aria-pressed', b === existingPill ? 'true' : 'false');
       });
 
       renderCards();
       hideTechNav();
+      showToast(`Added ${data.tech_name} cheat sheet`, 'success', 3000);
     } else {
+      const errMsg = (data && data.error) || 'Failed to add technology. Please try again.';
       if (status) {
-        status.textContent = data.error || 'Failed to add technology. Please try again.';
+        status.textContent = errMsg;
       }
+      showToast(errMsg, 'error');
     }
   } catch (err) {
+    const errMsg = 'Network error while generating cheat sheet. Please try again.';
     if (status) {
-      status.textContent = 'Network error while generating cheat sheet.';
+      status.textContent = errMsg;
     }
+    showToast(errMsg, 'error');
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -2335,13 +2467,19 @@ async function addCustomTechnology(e) {
 
 async function removeTechnology(e, tech, removeBtn) {
   e.stopPropagation();
-  const pill = removeBtn.closest('.cs-tech-pill');
-  if (!pill) return;
+  const wrap = removeBtn.closest('.cs-tech-pill-wrap') || removeBtn.closest('.cs-tech-pill');
+  if (!wrap) return;
 
   try {
-    await fetch(`/api/interview/cheatsheet?tech=${encodeURIComponent(tech)}`, { method: 'DELETE' });
-    const wasActive = pill.classList.contains('active');
-    pill.remove();
+    const res = await fetch(`/api/interview/cheatsheet?tech=${encodeURIComponent(tech)}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok || (data && !data.success)) {
+      showToast((data && data.error) || 'Failed to remove technology. Please try again.', 'error');
+      return;
+    }
+
+    const wasActive = wrap.querySelector ? wrap.querySelector('.cs-tech-pill.active') : wrap.classList.contains('active');
+    wrap.remove();
 
     if (wasActive) {
       const firstRemaining = document.querySelector('.cs-tech-pill');
@@ -2349,8 +2487,10 @@ async function removeTechnology(e, tech, removeBtn) {
         firstRemaining.click();
       }
     }
+    showToast(`Removed ${tech}`, 'info', 2500);
   } catch (err) {
     console.error('Failed to remove custom technology:', err);
+    showToast('Failed to remove technology. Please check your connection.', 'error');
   }
 }
 
@@ -2403,11 +2543,11 @@ function triggerResumeUpload(sourceSelectId) {
 function syncDropdownsToPrevious() {
   const setupSelect = document.getElementById('iv-selected-resume');
   const csSelect = document.getElementById('csResumeSelect');
-  if (setupSelect && setupSelect.value === '__upload__') {
-    setupSelect.selectedIndex = 0;
+  if (setupSelect) {
+    setupSelect.value = currentSelectedResumeId;
   }
-  if (csSelect && csSelect.value === '__upload__') {
-    csSelect.selectedIndex = 0;
+  if (csSelect) {
+    csSelect.value = currentSelectedResumeId;
   }
 }
 
@@ -2433,10 +2573,12 @@ async function handleResumeFileSelected(input) {
     hideLoader();
 
     if (!res.ok || !data.success) {
-      alert(data.error || 'Failed to parse resume.');
+      showToast((data && data.error) || 'Failed to parse resume.', 'error');
       syncDropdownsToPrevious();
       return;
     }
+
+    currentSelectedResumeId = data.selected_resume_id;
 
     const populateSelect = (selectEl, selectedId) => {
       if (!selectEl) return;
@@ -2466,20 +2608,20 @@ async function handleResumeFileSelected(input) {
 
     const nav = document.getElementById('csTechNav');
     if (nav && data.resume_technologies) {
-      const customPills = [...nav.querySelectorAll('.cs-tech-pill')].filter(p => p.querySelector('.cs-tech-remove'));
+      const customWraps = [...nav.querySelectorAll('.cs-tech-pill-wrap')];
       const addBtn = nav.querySelector('.cs-add-tech-btn');
       nav.innerHTML = '';
       data.resume_technologies.forEach((t, i) => {
         const pill = document.createElement('button');
         pill.type = 'button';
         pill.className = `cs-tech-pill ${i === 0 ? 'active' : ''}`;
-        pill.setAttribute('role', 'tab');
+        pill.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
         pill.setAttribute('data-tech', t);
         pill.onclick = () => selectTechnology(t, pill);
-        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span><span class="cs-tech-remove" onclick="removeTechnology(event, '${t}', this)" title="Remove ${t}" aria-label="Remove ${t}">&times;</span>`;
+        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
         nav.appendChild(pill);
       });
-      customPills.forEach(p => nav.appendChild(p));
+      customWraps.forEach(w => nav.appendChild(w));
       if (addBtn) nav.appendChild(addBtn);
     }
 
@@ -2498,10 +2640,11 @@ async function handleResumeFileSelected(input) {
       }
       renderCards();
     }
+    showToast('Resume uploaded and cheat sheets tailored', 'success', 3500);
   } catch (err) {
     hideLoader();
     console.error('Failed to upload resume:', err);
-    alert('An error occurred while uploading the resume.');
+    showToast('An error occurred while uploading the resume. Please check format.', 'error');
     syncDropdownsToPrevious();
   } finally {
     input.value = '';
@@ -2524,7 +2667,8 @@ async function switchCheatsheetResume(resumeId) {
     const data = await res.json();
     hideLoader();
 
-    if (data && data.success) {
+    if (res.ok && data && data.success) {
+      currentSelectedResumeId = data.selected_resume_id || resumeId;
       const setupSelect = document.getElementById('iv-selected-resume');
       if (setupSelect && setupSelect.value !== resumeId) {
         setupSelect.value = resumeId;
@@ -2537,20 +2681,20 @@ async function switchCheatsheetResume(resumeId) {
 
       const nav = document.getElementById('csTechNav');
       if (nav && data.resume_technologies) {
-        const customPills = [...nav.querySelectorAll('.cs-tech-pill')].filter(p => p.querySelector('.cs-tech-remove'));
+        const customWraps = [...nav.querySelectorAll('.cs-tech-pill-wrap')];
         const addBtn = nav.querySelector('.cs-add-tech-btn');
         nav.innerHTML = '';
         data.resume_technologies.forEach((t, i) => {
           const pill = document.createElement('button');
           pill.type = 'button';
           pill.className = `cs-tech-pill ${i === 0 ? 'active' : ''}`;
-          pill.setAttribute('role', 'tab');
+          pill.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
           pill.setAttribute('data-tech', t);
           pill.onclick = () => selectTechnology(t, pill);
-          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span><span class="cs-tech-remove" onclick="removeTechnology(event, '${t}', this)" title="Remove ${t}" aria-label="Remove ${t}">&times;</span>`;
+          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
           nav.appendChild(pill);
         });
-        customPills.forEach(p => nav.appendChild(p));
+        customWraps.forEach(w => nav.appendChild(w));
         if (addBtn) nav.appendChild(addBtn);
       }
 
@@ -2570,9 +2714,18 @@ async function switchCheatsheetResume(resumeId) {
 
         renderCards();
       }
+      showToast('Tailored cheatsheets updated for ' + (data.target_role || 'resume'), 'success', 3000);
+    } else {
+      syncDropdownsToPrevious();
+      showToast((data && data.error) || 'Failed to switch resume. Please try again.', 'error');
     }
   } catch (err) {
     hideLoader();
+    console.error('Failed to switch resume:', err);
+    syncDropdownsToPrevious();
+    showToast('Network error while switching resume. Please try again.', 'error');
+  }
+}
     console.error('Failed to switch resume:', err);
   }
 }

@@ -892,66 +892,74 @@ async def get_lifeline(request: Request, question: str = Form(...)):
 @router.get("/api/interview/resumes", response_class=JSONResponse)
 def api_interview_resumes(request: Request):
     """Returns all available resumes for selection and the active selection."""
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    resumes = get_selectable_resumes_for_user(user_email, request)
-    selected_id = request.session.get("selected_resume_id", "")
-    available_ids = [r["id"] for r in resumes]
-    if selected_id not in available_ids:
-        selected_id = available_ids[0] if available_ids else "latest"
-    return JSONResponse({
-        "resumes": resumes,
-        "selected_resume_id": selected_id,
-    })
+    try:
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        resumes = get_selectable_resumes_for_user(user_email, request)
+        selected_id = request.session.get("selected_resume_id", "")
+        available_ids = [r["id"] for r in resumes]
+        if selected_id not in available_ids:
+            selected_id = available_ids[0] if available_ids else "latest"
+        return JSONResponse({
+            "resumes": resumes,
+            "selected_resume_id": selected_id,
+        })
+    except Exception as e:
+        logger.exception("api_interview_resumes failed: %s", e)
+        return JSONResponse({"error": "Failed to load resumes. Please try again."}, status_code=500)
 
 
 @router.post("/api/interview/select-resume", response_class=JSONResponse)
 async def api_interview_select_resume(request: Request):
     """Switches the active resume context and re-tailors technologies and cheat sheets."""
     try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
 
-    resume_id = str(body.get("resume_id", "")).strip()
-    if not resume_id:
-        return JSONResponse({"error": "resume_id is required"}, status_code=400)
+        resume_id = str(body.get("resume_id", "")).strip()
+        if not resume_id:
+            return JSONResponse({"error": "resume_id is required"}, status_code=400)
 
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    selectable = get_selectable_resumes_for_user(user_email, request)
-    available_ids = [r["id"] for r in selectable]
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        selectable = get_selectable_resumes_for_user(user_email, request)
+        available_ids = [r["id"] for r in selectable]
 
-    if resume_id == "__upload__":
-        return JSONResponse({"error": "Upload option selected, please upload a file"}, status_code=400)
+        if resume_id == "__upload__":
+            return JSONResponse({"error": "Upload option selected, please upload a file"}, status_code=400)
 
-    if resume_id not in available_ids:
-        return JSONResponse({"error": "Selected resume not found"}, status_code=404)
+        if resume_id not in available_ids:
+            return JSONResponse({"error": "Selected resume not found"}, status_code=404)
 
-    request.session["selected_resume_id"] = resume_id
-    report, resume_text, target_role = resolve_resume_context(resume_id, user_email, request)
+        request.session["selected_resume_id"] = resume_id
+        report, resume_text, target_role = resolve_resume_context(resume_id, user_email, request)
 
-    resume_techs = extract_technologies_from_resume(resume_text, report)
-    active_tech = resume_techs[0] if resume_techs else "FastAPI"
+        resume_techs = extract_technologies_from_resume(resume_text, report)
+        active_tech = resume_techs[0] if resume_techs else "FastAPI"
 
-    cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=resume_text, target_role=target_role)
+        cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=resume_text, target_role=target_role)
 
-    saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
-    revised_indices = []
-    for rec in saved_records:
-        if rec.get("tech_name", "").lower() == active_tech.lower():
-            revised_indices = rec.get("revised_indices", [])
-            break
-    if not revised_indices:
-        revised_indices = request.session.get(f"revised_{active_tech.lower()}", [])
-    cheatsheet["revised_indices"] = revised_indices
+        saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
+        revised_indices = []
+        for rec in saved_records:
+            if rec.get("tech_name", "").lower() == active_tech.lower():
+                revised_indices = rec.get("revised_indices", [])
+                break
+        if not revised_indices:
+            revised_indices = request.session.get(f"revised_{active_tech.lower()}", [])
+        cheatsheet["revised_indices"] = revised_indices
 
-    return JSONResponse({
-        "success": True,
-        "selected_resume_id": resume_id,
-        "target_role": target_role,
-        "resume_technologies": resume_techs,
-        "active_technology": active_tech,
-        "cheatsheet": cheatsheet,
-    })
+        return JSONResponse({
+            "success": True,
+            "selected_resume_id": resume_id,
+            "target_role": target_role,
+            "resume_technologies": resume_techs,
+            "active_technology": active_tech,
+            "cheatsheet": cheatsheet,
+        })
+    except Exception as e:
+        logger.exception("api_interview_select_resume failed: %s", e)
+        return JSONResponse({"error": f"Failed to switch resume: {str(e)}"}, status_code=500)
 
 
 @router.post("/api/interview/upload-resume", response_class=JSONResponse)
@@ -961,299 +969,327 @@ async def api_interview_upload_resume(
     target_role: str = Form(""),
 ):
     """Uploads a new resume (PDF, TXT, TEX, MD), extracts text, sets it active, and returns tailored data."""
-    filename = (file.filename or "uploaded_resume.pdf").strip()
-    lower_name = filename.lower()
+    try:
+        filename = (file.filename or "uploaded_resume.pdf").strip()
+        lower_name = filename.lower()
 
-    content = await file.read()
-    if not content:
-        return JSONResponse({"error": "The uploaded file was empty. Please select a valid resume."}, status_code=400)
+        content = await file.read()
+        if not content:
+            return JSONResponse({"error": "The uploaded file was empty. Please select a valid resume."}, status_code=400)
 
-    text = ""
-    resume_type = "pdf"
-    if lower_name.endswith(".pdf"):
+        text = ""
         resume_type = "pdf"
-        try:
-            from services.resume.resume_parser import extract_text
-            text = extract_text(filename, content)
-        except Exception as e:
-            return JSONResponse({"error": f"Failed to parse PDF resume: {str(e)}"}, status_code=400)
-    elif lower_name.endswith((".tex", ".latex")):
-        resume_type = "latex"
-        try:
-            raw_str = content.decode("utf-8", errors="ignore")
-            from core.helpers import extract_text_from_latex
-            text = extract_text_from_latex(raw_str)
-        except Exception:
+        if lower_name.endswith(".pdf"):
+            resume_type = "pdf"
+            try:
+                from services.resume.resume_parser import extract_text
+                text = extract_text(filename, content)
+            except Exception as e:
+                return JSONResponse({"error": f"Failed to parse PDF resume: {str(e)}"}, status_code=400)
+        elif lower_name.endswith((".tex", ".latex")):
+            resume_type = "latex"
+            try:
+                raw_str = content.decode("utf-8", errors="ignore")
+                from core.helpers import extract_text_from_latex
+                text = extract_text_from_latex(raw_str)
+            except Exception:
+                text = content.decode("utf-8", errors="ignore")
+        elif lower_name.endswith((".txt", ".md")):
+            resume_type = "text"
             text = content.decode("utf-8", errors="ignore")
-    elif lower_name.endswith((".txt", ".md")):
-        resume_type = "text"
-        text = content.decode("utf-8", errors="ignore")
-    else:
-        return JSONResponse({"error": "Unsupported file format. Please upload a PDF, TXT, LaTeX, or Markdown file."}, status_code=400)
-
-    if not text.strip():
-        return JSONResponse({"error": "Could not extract readable text from the file. Please ensure it is not a scanned image."}, status_code=400)
-
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    clean_title = filename.rsplit(".", 1)[0][:60]
-
-    role = (target_role or "").strip()
-    if not role:
-        lowered = text.lower()
-        if "data engineer" in lowered:
-            role = "Data Engineer"
-        elif "frontend" in lowered or "react" in lowered:
-            role = "Frontend Developer"
-        elif "backend" in lowered:
-            role = "Backend Developer"
-        elif "machine learning" in lowered or "data scientist" in lowered:
-            role = "Machine Learning Engineer"
-        elif "devops" in lowered or "cloud" in lowered:
-            role = "DevOps Engineer"
         else:
-            role = "Software Engineer"
+            return JSONResponse({"error": "Unsupported file format. Please upload a PDF, TXT, LaTeX, or Markdown file."}, status_code=400)
 
-    from core.database import save_user_resume
-    new_saved_id = 0
-    if user_email:
-        try:
-            new_saved_id = save_user_resume(
-                user_email=user_email,
-                title=clean_title,
-                resume_type=resume_type,
-                raw_content=text,
-                target_role=role,
-            )
-        except Exception as e:
-            print("Failed to save user resume:", e)
+        if not text.strip():
+            return JSONResponse({"error": "Could not extract readable text from the file. Please ensure it is not a scanned image."}, status_code=400)
 
-    resume_id = f"saved_{new_saved_id}" if new_saved_id else f"uploaded_{uuid.uuid4().hex[:8]}"
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        clean_title = filename.rsplit(".", 1)[0][:60]
 
-    request.session["interview_uploaded_resume"] = {
-        "id": resume_id,
-        "title": clean_title,
-        "text": text,
-        "target_role": role,
-    }
-    request.session["selected_resume_id"] = resume_id
+        role = (target_role or "").strip()
+        if not role:
+            lowered = text.lower()
+            if "data engineer" in lowered:
+                role = "Data Engineer"
+            elif "frontend" in lowered or "react" in lowered:
+                role = "Frontend Developer"
+            elif "backend" in lowered:
+                role = "Backend Developer"
+            elif "machine learning" in lowered or "data scientist" in lowered:
+                role = "Machine Learning Engineer"
+            elif "devops" in lowered or "cloud" in lowered:
+                role = "DevOps Engineer"
+            else:
+                role = "Software Engineer"
 
-    resume_techs = extract_technologies_from_resume(text, {"resume_text": text, "target_role": role})
-    active_tech = resume_techs[0] if resume_techs else "FastAPI"
-    cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=text, target_role=role)
+        from core.database import save_user_resume
+        new_saved_id = 0
+        if user_email:
+            try:
+                new_saved_id = save_user_resume(
+                    user_email=user_email,
+                    title=clean_title,
+                    resume_type=resume_type,
+                    raw_content=text,
+                    target_role=role,
+                )
+            except Exception as e:
+                logger.warning("Failed to save user resume to db: %s", e)
 
-    selectable = get_selectable_resumes_for_user(user_email, request)
+        resume_id = f"saved_{new_saved_id}" if new_saved_id else f"uploaded_{uuid.uuid4().hex[:8]}"
 
-    return JSONResponse({
-        "success": True,
-        "selected_resume_id": resume_id,
-        "title": clean_title,
-        "target_role": role,
-        "resumes": selectable,
-        "resume_technologies": resume_techs,
-        "active_technology": active_tech,
-        "cheatsheet": cheatsheet,
-    })
+        request.session["interview_uploaded_resume"] = {
+            "id": resume_id,
+            "title": clean_title,
+            "text": text,
+            "target_role": role,
+        }
+        request.session["selected_resume_id"] = resume_id
+
+        resume_techs = extract_technologies_from_resume(text, {"resume_text": text, "target_role": role})
+        active_tech = resume_techs[0] if resume_techs else "FastAPI"
+        cheatsheet = get_cheatsheet_for_technology(active_tech, resume_text=text, target_role=role)
+
+        selectable = get_selectable_resumes_for_user(user_email, request)
+
+        return JSONResponse({
+            "success": True,
+            "selected_resume_id": resume_id,
+            "title": clean_title,
+            "target_role": role,
+            "resumes": selectable,
+            "resume_technologies": resume_techs,
+            "active_technology": active_tech,
+            "cheatsheet": cheatsheet,
+        })
+    except Exception as e:
+        logger.exception("api_interview_upload_resume failed: %s", e)
+        return JSONResponse({"error": f"Failed to upload resume: {str(e)}"}, status_code=500)
 
 
 @router.get("/api/interview/technologies", response_class=JSONResponse)
 def api_interview_technologies(request: Request, resume_id: str = ""):
     """Returns detected resume technologies, saved custom technologies, and user role."""
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
-    resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
+    try:
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
+        resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
-    resume_techs = extract_technologies_from_resume(resume_text, resume_report)
-    excluded = request.session.get("excluded_technologies", [])
-    if excluded:
-        resume_techs = [t for t in resume_techs if t.lower() not in [x.lower() for x in excluded]]
+        resume_techs = extract_technologies_from_resume(resume_text, resume_report)
+        excluded = request.session.get("excluded_technologies", [])
+        if excluded:
+            resume_techs = [t for t in resume_techs if t.lower() not in [x.lower() for x in excluded]]
 
-    saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
-    custom_techs = [c["tech_name"] for c in saved_records if isinstance(c, dict) and c.get("is_custom") and c.get("tech_name") and c["tech_name"].lower() not in [x.lower() for x in excluded]]
-    saved_revised = {c["tech_name"]: c.get("revised_indices", []) for c in saved_records if isinstance(c, dict) and c.get("tech_name")}
+        saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
+        custom_techs = [c["tech_name"] for c in saved_records if isinstance(c, dict) and c.get("is_custom") and c.get("tech_name") and c["tech_name"].lower() not in [x.lower() for x in excluded]]
+        saved_revised = {c["tech_name"]: c.get("revised_indices", []) for c in saved_records if isinstance(c, dict) and c.get("tech_name")}
 
-    for tech in resume_techs:
-        if tech not in saved_revised:
-            session_revised = request.session.get(f"revised_{tech.lower()}", [])
-            if session_revised:
-                saved_revised[tech] = session_revised
+        for tech in resume_techs:
+            if tech not in saved_revised:
+                session_revised = request.session.get(f"revised_{tech.lower()}", [])
+                if session_revised:
+                    saved_revised[tech] = session_revised
 
-    return JSONResponse({
-        "resume_technologies": resume_techs,
-        "custom_technologies": custom_techs,
-        "saved_revised": saved_revised,
-        "target_role": target_role,
-        "selected_resume_id": selected_id,
-        "has_resume": bool(resume_text),
-    })
+        return JSONResponse({
+            "resume_technologies": resume_techs,
+            "custom_technologies": custom_techs,
+            "saved_revised": saved_revised,
+            "target_role": target_role,
+            "selected_resume_id": selected_id,
+            "has_resume": bool(resume_text),
+        })
+    except Exception as e:
+        logger.exception("api_interview_technologies failed: %s", e)
+        return JSONResponse({"error": "Failed to load technologies. Please try again."}, status_code=500)
 
 
 @router.get("/api/interview/cheatsheet", response_class=JSONResponse)
 def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = ""):
     """Returns the interview cheat sheet for a specific technology, tailored for the resume."""
-    tech_name = tech.strip()
-    if not tech_name:
-        return JSONResponse({"error": "Technology name is required"}, status_code=400)
+    try:
+        tech_name = tech.strip()
+        if not tech_name:
+            return JSONResponse({"error": "Technology name is required"}, status_code=400)
 
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
-    resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
+        resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
-    payload = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
+        payload = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
 
-    saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
-    revised_indices = []
-    for rec in saved_records:
-        if rec.get("tech_name", "").lower() == tech_name.lower():
-            revised_indices = rec.get("revised_indices", [])
-            break
+        saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
+        revised_indices = []
+        for rec in saved_records:
+            if rec.get("tech_name", "").lower() == tech_name.lower():
+                revised_indices = rec.get("revised_indices", [])
+                break
 
-    if not revised_indices:
-        revised_indices = request.session.get(f"revised_{tech_name.lower()}", [])
+        if not revised_indices:
+            revised_indices = request.session.get(f"revised_{tech_name.lower()}", [])
 
-    payload["revised_indices"] = revised_indices
-    payload["selected_resume_id"] = selected_id
-    return JSONResponse(payload)
+        payload["revised_indices"] = revised_indices
+        payload["selected_resume_id"] = selected_id
+        return JSONResponse(payload)
+    except Exception as e:
+        logger.exception("api_interview_cheatsheet failed: %s", e)
+        return JSONResponse({"error": f"Failed to load cheat sheet: {str(e)}"}, status_code=500)
 
 
 @router.post("/api/interview/cheatsheet/add", response_class=JSONResponse)
 async def api_interview_cheatsheet_add(request: Request):
     """Adds a custom technology and generates its cheat sheet tailored to the candidate."""
     try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
 
-    tech_name = str(body.get("tech", "")).strip()
-    if not tech_name or len(tech_name) > 60:
-        return JSONResponse({"error": "Technology name must be between 1 and 60 characters"}, status_code=400)
+        tech_name = str(body.get("tech", "")).strip()
+        if not tech_name or len(tech_name) > 60:
+            return JSONResponse({"error": "Technology name must be between 1 and 60 characters"}, status_code=400)
 
-    clean_tech = re.sub(r"[^\w\s\.\+\#\-\/]", "", tech_name).strip()
-    if not clean_tech:
-        return JSONResponse({"error": "Invalid technology name"}, status_code=400)
+        clean_tech = re.sub(r"[^\w\s\.\+\#\-\/]", "", tech_name).strip()
+        if not clean_tech:
+            return JSONResponse({"error": "Invalid technology name"}, status_code=400)
 
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-    target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
+        resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
+        target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
 
-    payload = get_cheatsheet_for_technology(clean_tech, resume_text=resume_text, target_role=target_role)
-    payload["revised_indices"] = []
+        payload = get_cheatsheet_for_technology(clean_tech, resume_text=resume_text, target_role=target_role)
+        payload["revised_indices"] = []
 
-    # Re-enable if previously excluded
-    excluded = request.session.get("excluded_technologies", [])
-    if clean_tech.lower() in [x.lower() for x in excluded]:
-        request.session["excluded_technologies"] = [x for x in excluded if x.lower() != clean_tech.lower()]
+        # Re-enable if previously excluded
+        excluded = request.session.get("excluded_technologies", [])
+        if clean_tech.lower() in [x.lower() for x in excluded]:
+            request.session["excluded_technologies"] = [x for x in excluded if x.lower() != clean_tech.lower()]
 
-    if user_email:
-        save_user_cheatsheet(user_email, payload["tech_name"], payload, is_custom=True, revised_indices=[])
-    else:
-        session_custom = request.session.get("session_custom_cheatsheets", [])
-        filtered = [c for c in session_custom if c.get("tech_name", "").lower() != payload["tech_name"].lower()]
-        filtered.append({
-            "tech_name": payload["tech_name"],
-            "is_custom": True,
-            "revised_indices": [],
-            "cheatsheet": payload,
-        })
-        request.session["session_custom_cheatsheets"] = filtered
+        if user_email:
+            save_user_cheatsheet(user_email, payload["tech_name"], payload, is_custom=True, revised_indices=[])
+        else:
+            session_custom = request.session.get("session_custom_cheatsheets", [])
+            filtered = [c for c in session_custom if c.get("tech_name", "").lower() != payload["tech_name"].lower()]
+            filtered.append({
+                "tech_name": payload["tech_name"],
+                "is_custom": True,
+                "revised_indices": [],
+                "cheatsheet": payload,
+            })
+            request.session["session_custom_cheatsheets"] = filtered
 
-    return JSONResponse(payload)
+        return JSONResponse(payload)
+    except Exception as e:
+        logger.exception("api_interview_cheatsheet_add failed: %s", e)
+        return JSONResponse({"error": f"Failed to generate cheat sheet: {str(e)}"}, status_code=500)
 
 
 @router.post("/api/interview/cheatsheet/revise", response_class=JSONResponse)
 async def api_interview_cheatsheet_revise(request: Request):
     """Updates revision status for a card in a technology cheat sheet."""
     try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
 
-    tech_name = str(body.get("tech", "")).strip()
-    card_index = body.get("card_index")
-    revised = bool(body.get("revised", True))
+        tech_name = str(body.get("tech", "")).strip()
+        card_index = body.get("card_index")
+        revised = bool(body.get("revised", True))
 
-    if not tech_name or card_index is None:
-        return JSONResponse({"error": "Technology name and card_index are required"}, status_code=400)
+        if not tech_name or card_index is None:
+            return JSONResponse({"error": "Technology name and card_index are required"}, status_code=400)
 
-    try:
-        idx = int(card_index)
-    except (ValueError, TypeError):
-        return JSONResponse({"error": "card_index must be an integer"}, status_code=400)
+        try:
+            idx = int(card_index)
+        except (ValueError, TypeError):
+            return JSONResponse({"error": "card_index must be an integer"}, status_code=400)
 
-    user_email = (request.session.get("user_email") or "").strip().lower()
+        user_email = (request.session.get("user_email") or "").strip().lower()
 
-    if user_email:
-        records = get_user_cheatsheets(user_email)
-        curr_indices = []
-        found = False
-        for rec in records:
-            if rec.get("tech_name", "").lower() == tech_name.lower():
-                curr_indices = list(rec.get("revised_indices", []))
-                found = True
-                break
-        if revised:
-            if idx not in curr_indices:
-                curr_indices.append(idx)
+        if user_email:
+            records = get_user_cheatsheets(user_email)
+            curr_indices = []
+            found = False
+            for rec in records:
+                if rec.get("tech_name", "").lower() == tech_name.lower():
+                    curr_indices = list(rec.get("revised_indices", []))
+                    found = True
+                    break
+            if revised:
+                if idx not in curr_indices:
+                    curr_indices.append(idx)
+            else:
+                if idx in curr_indices:
+                    curr_indices.remove(idx)
+
+            if found:
+                update_cheatsheet_revised(user_email, tech_name, curr_indices)
+            else:
+                save_user_cheatsheet(user_email, tech_name, {}, is_custom=False, revised_indices=curr_indices)
         else:
-            if idx in curr_indices:
-                curr_indices.remove(idx)
+            key = f"revised_{tech_name.lower()}"
+            curr_indices = list(request.session.get(key, []))
+            if revised:
+                if idx not in curr_indices:
+                    curr_indices.append(idx)
+            else:
+                if idx in curr_indices:
+                    curr_indices.remove(idx)
+            request.session[key] = curr_indices
 
-        if found:
-            update_cheatsheet_revised(user_email, tech_name, curr_indices)
-        else:
-            save_user_cheatsheet(user_email, tech_name, {}, is_custom=False, revised_indices=curr_indices)
-    else:
-        key = f"revised_{tech_name.lower()}"
-        curr_indices = list(request.session.get(key, []))
-        if revised:
-            if idx not in curr_indices:
-                curr_indices.append(idx)
-        else:
-            if idx in curr_indices:
-                curr_indices.remove(idx)
-        request.session[key] = curr_indices
-
-    return JSONResponse({"success": True, "tech": tech_name, "revised_indices": curr_indices})
+        return JSONResponse({"success": True, "tech": tech_name, "revised_indices": curr_indices})
+    except Exception as e:
+        logger.exception("api_interview_cheatsheet_revise failed: %s", e)
+        return JSONResponse({"error": f"Failed to update revision status: {str(e)}"}, status_code=500)
 
 
 @router.delete("/api/interview/cheatsheet", response_class=JSONResponse)
 def api_interview_cheatsheet_delete(request: Request, tech: str = ""):
     """Removes a custom or resume technology from the candidate's list."""
-    tech_name = tech.strip()
-    if not tech_name:
-        return JSONResponse({"error": "Technology name is required"}, status_code=400)
+    try:
+        tech_name = tech.strip()
+        if not tech_name:
+            return JSONResponse({"error": "Technology name is required"}, status_code=400)
 
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    if user_email:
-        delete_user_cheatsheet(user_email, tech_name)
-    else:
-        session_custom = request.session.get("session_custom_cheatsheets", [])
-        session_custom = [c for c in session_custom if c.get("tech_name", "").lower() != tech_name.lower()]
-        request.session["session_custom_cheatsheets"] = session_custom
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        if user_email:
+            delete_user_cheatsheet(user_email, tech_name)
+        else:
+            session_custom = request.session.get("session_custom_cheatsheets", [])
+            session_custom = [c for c in session_custom if c.get("tech_name", "").lower() != tech_name.lower()]
+            request.session["session_custom_cheatsheets"] = session_custom
 
-    excluded = request.session.get("excluded_technologies", [])
-    if tech_name.lower() not in [x.lower() for x in excluded]:
-        excluded.append(tech_name)
-        request.session["excluded_technologies"] = excluded
+        excluded = request.session.get("excluded_technologies", [])
+        if tech_name.lower() not in [x.lower() for x in excluded]:
+            excluded.append(tech_name)
+            request.session["excluded_technologies"] = excluded
 
-    return JSONResponse({"success": True, "deleted": tech_name})
+        return JSONResponse({"success": True, "deleted": tech_name})
+    except Exception as e:
+        logger.exception("api_interview_cheatsheet_delete failed: %s", e)
+        return JSONResponse({"error": f"Failed to delete technology: {str(e)}"}, status_code=500)
 
 
 @router.get("/interview/cheatsheet/export", response_class=HTMLResponse)
 def interview_cheatsheet_export(request: Request, tech: str = "FastAPI"):
     """Downloads a standalone, fully offline-compatible HTML cheat sheet matching the user specification."""
-    tech_name = tech.strip() or "FastAPI"
-    user_email = (request.session.get("user_email") or "").strip().lower()
-    resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-    resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-    target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+    try:
+        tech_name = tech.strip() or "FastAPI"
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
+        resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
+        target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
 
-    cheatsheet = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
-    html_content = build_standalone_cheatsheet_html(
-        tech_name=cheatsheet["tech_name"],
-        cards=cheatsheet["cards"],
-        target_role=target_role,
-    )
-    slug = re.sub(r"[^a-zA-Z0-9]+", "_", cheatsheet["tech_name"].lower()).strip("_")
-    headers = {"Content-Disposition": f'attachment; filename="{slug}_interview_cheatsheet.html"'}
-    return HTMLResponse(content=html_content, headers=headers)
+        cheatsheet = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
+        html_content = build_standalone_cheatsheet_html(
+            tech_name=cheatsheet["tech_name"],
+            cards=cheatsheet["cards"],
+            target_role=target_role,
+        )
+        slug = re.sub(r"[^a-zA-Z0-9]+", "_", cheatsheet["tech_name"].lower()).strip("_")
+        headers = {"Content-Disposition": f'attachment; filename="{slug}_interview_cheatsheet.html"'}
+        return HTMLResponse(content=html_content, headers=headers)
+    except Exception as e:
+        logger.exception("interview_cheatsheet_export failed: %s", e)
+        return HTMLResponse(content=f"<html><body><h1>Export Error</h1><p>{str(e)}</p></body></html>", status_code=500)
