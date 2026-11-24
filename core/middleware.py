@@ -13,6 +13,8 @@ PUBLIC_PATHS = {
     "/",
     "/login",
     "/signup",
+    "/auth/google",
+    "/auth/google/callback",
     "/admin-login",
     "/admin-logout",
     "/forgot-password",
@@ -47,7 +49,7 @@ PUBLIC_PATHS = {
     "/resume/demo",
     "/admin/demo",
 }
-PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/admin/demo", "/.well-known")
+PUBLIC_PREFIXES = ("/static", "/roadmap", "/resume", "/coding", "/admin/demo", "/.well-known", "/auth")
 
 _rate_hits = defaultdict(deque)
 

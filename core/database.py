@@ -243,6 +243,8 @@ def init_user_tables() -> None:
         db.execute(cur, "ALTER TABLE users ADD COLUMN premium_since INTEGER NOT NULL DEFAULT 0")
     if "premium_expires_ts" not in cols:
         db.execute(cur, "ALTER TABLE users ADD COLUMN premium_expires_ts INTEGER NOT NULL DEFAULT 0")
+    if "auth_provider" not in cols:
+        db.execute(cur, "ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'local'")
     db.execute(cur, "UPDATE users SET plan='free' WHERE plan IS NULL OR TRIM(plan)=''")
     db.execute(cur, "UPDATE users SET premium_since=0 WHERE premium_since IS NULL")
     db.execute(cur, "UPDATE users SET premium_expires_ts=0 WHERE premium_expires_ts IS NULL")

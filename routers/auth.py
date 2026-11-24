@@ -1,12 +1,175 @@
+import os
+import secrets
+import urllib.parse
+import time
+import requests
+import logging
+import traceback
 from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
 from core import *
-import logging
-import traceback
 
 _log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def get_google_redirect_uri(request: Request) -> str:
+    env_uri = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
+    if env_uri:
+        return env_uri
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.url.netloc)
+    return f"{proto}://{host}/auth/google/callback"
+
+
+@router.get("/auth/google", response_class=RedirectResponse)
+def google_auth_login(request: Request):
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    if not client_id:
+        _log.warning("Google OAuth initiated but GOOGLE_CLIENT_ID is not configured.")
+        return RedirectResponse("/login?error=Google+Sign-In+is+not+configured+yet", status_code=303)
+
+    state = secrets.token_urlsafe(32)
+    request.session["oauth_state"] = state
+    redirect_uri = get_google_redirect_uri(request)
+
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "access_type": "online",
+        "prompt": "select_account",
+    }
+    google_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+    return RedirectResponse(google_url, status_code=303)
+
+
+@router.get("/auth/google/callback", response_class=RedirectResponse)
+def google_auth_callback(request: Request):
+    error = request.query_params.get("error")
+    if error:
+        _log.info("Google OAuth returned error: %s", error)
+        return RedirectResponse("/login?error=Google+Sign-In+was+cancelled", status_code=303)
+
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+    if not client_id or not client_secret:
+        return RedirectResponse("/login?error=Google+OAuth+credentials+are+not+configured", status_code=303)
+
+    query_state = request.query_params.get("state")
+    saved_state = request.session.pop("oauth_state", None)
+    if not saved_state or saved_state != query_state:
+        _log.warning("Google OAuth state mismatch: saved=%s, query=%s", saved_state, query_state)
+        return RedirectResponse("/login?error=Invalid+or+expired+session.+Please+try+again.", status_code=303)
+
+    code = request.query_params.get("code")
+    if not code:
+        return RedirectResponse("/login?error=Missing+authorization+code+from+Google", status_code=303)
+
+    redirect_uri = get_google_redirect_uri(request)
+
+    # 1. Exchange code for access token
+    try:
+        token_resp = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code",
+            },
+            headers={"Accept": "application/json"},
+            timeout=10,
+        )
+        if token_resp.status_code != 200:
+            _log.error("Google token exchange failed: %s %s", token_resp.status_code, token_resp.text)
+            return RedirectResponse("/login?error=Failed+to+exchange+Google+authorization+token", status_code=303)
+        token_data = token_resp.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            return RedirectResponse("/login?error=Failed+to+obtain+access+token+from+Google", status_code=303)
+    except Exception as e:
+        _log.error("Google token request exception: %s", e)
+        return RedirectResponse("/login?error=Error+connecting+to+Google+authentication+service", status_code=303)
+
+    # 2. Fetch user profile from Google UserInfo
+    try:
+        userinfo_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        if userinfo_resp.status_code != 200:
+            _log.error("Google userinfo fetch failed: %s %s", userinfo_resp.status_code, userinfo_resp.text)
+            return RedirectResponse("/login?error=Failed+to+retrieve+Google+user+profile", status_code=303)
+        user_info = userinfo_resp.json()
+    except Exception as e:
+        _log.error("Google userinfo request exception: %s", e)
+        return RedirectResponse("/login?error=Error+fetching+Google+user+profile", status_code=303)
+
+    email = (user_info.get("email") or "").strip().lower()
+    if not email or "@" not in email:
+        return RedirectResponse("/login?error=Google+did+not+provide+a+valid+email+address", status_code=303)
+
+    full_name = (user_info.get("name") or user_info.get("given_name") or email.split("@")[0]).strip()
+    if len(full_name) < 2:
+        full_name = email.split("@")[0].capitalize()
+
+    # 3. Look up or create user in database
+    conn = db.get_conn()
+    cur = conn.cursor()
+    try:
+        db.execute(cur, "SELECT id, full_name, role, plan FROM users WHERE email=?", (email,))
+        row = cur.fetchone()
+        if row:
+            user_id = int(row[0])
+            full_name = row[1] or full_name
+            role = row[2] or "user"
+            plan = row[3] or "free"
+            cols = db.list_columns(conn, "users")
+            if "auth_provider" in cols:
+                db.execute(cur, "UPDATE users SET auth_provider='google' WHERE id=?", (user_id,))
+                conn.commit()
+        else:
+            dummy_hash = hash_password(f"oauth:google:{secrets.token_hex(16)}")
+            now = int(time.time())
+            cols = db.list_columns(conn, "users")
+            if "auth_provider" in cols:
+                db.execute(cur,
+                    "INSERT INTO users(full_name,email,password_hash,role,plan,auth_provider,password_updated_ts,created_ts) VALUES(?,?,?,?,?,?,?,?)",
+                    (full_name, email, dummy_hash, "user", "free", "google", now, now)
+                )
+            else:
+                db.execute(cur,
+                    "INSERT INTO users(full_name,email,password_hash,role,plan,password_updated_ts,created_ts) VALUES(?,?,?,?,?,?,?)",
+                    (full_name, email, dummy_hash, "user", "free", now, now)
+                )
+            conn.commit()
+            db.execute(cur, "SELECT id FROM users WHERE email=?", (email,))
+            created_row = cur.fetchone()
+            user_id = int((created_row or [0])[0] or 0)
+            role = "user"
+            plan = "free"
+    except Exception as e:
+        _log.error("Google user database sync failed: %s", traceback.format_exc())
+        conn.close()
+        return RedirectResponse("/login?error=Account+creation+failed.+Please+try+again.", status_code=303)
+    conn.close()
+
+    # 4. Set session
+    request.session["user_id"] = int(user_id)
+    request.session["user_name"] = full_name
+    request.session["user_email"] = email
+    request.session["user_role"] = role
+    request.session["user_plan"] = plan
+    request.session.pop("admin", None)
+    request.session.pop("admin_user", None)
+
+    return RedirectResponse("/?auth=success", status_code=303)
 
 @router.post("/signup", response_class=HTMLResponse)
 def signup(
