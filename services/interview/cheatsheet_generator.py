@@ -488,10 +488,10 @@ Return ONLY a valid JSON array of cards where each card is a 6-element array:
 [
   "Category",
   "Topic Title",
-  "Say it like this: A clear, articulate interview answer a candidate should say out loud",
+  "Standard Definition: A clear, authoritative technical definition explaining what the feature is and how it works",
   "Code example (or clean configuration snippet, or empty string if not applicable)",
-  "Real-world use case",
-  "Interview tip / common gotcha to watch out for"
+  "How I used this in my work experience / personal project: Concrete production use case with architectural details and metrics",
+  "Interview tip / common gotcha to watch out for: How to answer out loud and pitfalls to avoid"
 ]
 
 Strict rules:
@@ -661,22 +661,27 @@ def tailor_cheatsheet_for_resume(
     for idx, card in enumerate(cards):
         c_cat, c_title, c_say, c_code, c_use, c_tip = card
 
-        if project_points and (c_cat in ["Q&A", "Performance", "Architecture", "Basics"] or idx == 0):
+        if project_points:
             active_pt = project_points[point_idx % num_points]
             point_idx += 1
             ctx_name = active_pt["context"]
             pt_text = active_pt["point"]
 
+            c_use = f"In {ctx_name}: {pt_text}"
             if idx == 0:
-                c_tip = f"From your resume ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
+                c_tip = f"Resume anchor ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
             elif c_cat == "Q&A":
                 c_tip = f"Project talking point ({ctx_name}): Connect this question to: '{pt_text}'. " + c_tip
-            elif c_cat in ["Performance", "Architecture"] and "From your" not in c_use:
-                c_use = f"From your {ctx_name}: {pt_text} " + c_use
-        elif idx == 0 and target_role:
-            c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
-        elif c_cat == "Q&A" and resume_context:
-            c_tip = f"Resume anchor: Connect this question to the architectural decisions you made in your resume projects. " + c_tip
+        elif resume_context:
+            c_use = f"In your {role_mention} portfolio projects: Applied {c_title} in production workflows to eliminate bottlenecks, ensure high throughput, and maintain resilient data consistency."
+            if idx == 0 and target_role:
+                c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
+            elif c_cat == "Q&A":
+                c_tip = f"Resume anchor: Connect this question to the architectural decisions you made in your resume projects. " + c_tip
+        elif target_role:
+            c_use = f"Recommended application for {role_mention}: Implemented {c_title} in production services to eliminate single points of failure and streamline API operations."
+            if idx == 0:
+                c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
 
         tailored_cards.append([c_cat, c_title, c_say, c_code, c_use, c_tip])
 
@@ -770,12 +775,16 @@ summary::-webkit-details-marker{{display:none}}
 summary::after{{content:"+";margin-left:auto;color:var(--ac);font-size:1.3rem;line-height:1}}
 details[open] summary::after{{content:"\\2013"}}
 .tg{{font-size:.75rem;background:var(--acs);color:var(--ac);padding:2px 8px;border-radius:99px;white-space:nowrap}}
-.bd{{padding:0 14px 14px}}.bd p{{margin:.6em 0}}.bd p b{{display:block;font-size:.85rem;color:var(--mute);margin-bottom:2px}}
-.cw{{position:relative}}
+.bd{{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line)}}
+.sec{{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}}
+.sec-lbl{{display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}}
+.sec-def{{border-left:3.5px solid #3b82f6}}.lbl-def{{color:#3b82f6}}
+.sec-project{{background:var(--acs);border:1px solid var(--ac);border-left:4px solid var(--ac)}}.lbl-project{{color:var(--ac)}}
+.cw{{position:relative;margin:0}}
 pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}}
 .cp{{position:absolute;right:6px;top:6px;font-size:.75rem;padding:2px 8px}}
-.tip{{background:var(--tip);border-left:3px solid var(--tl);padding:8px 10px;border-radius:0 8px 8px 0}}
-.dn{{margin-top:6px;font-size:.85rem}}.done .dn{{background:var(--acs);color:var(--ac)}}
+.tip{{background:var(--tip);border:1px solid rgba(217,164,0,0.3);border-left:4px solid var(--tl);padding:10px 12px;border-radius:8px}}.lbl-tip{{color:var(--tl)}}
+.dn{{margin-top:4px;font-size:.85rem}}.done .dn{{background:var(--acs);color:var(--ac)}}
 #E{{text-align:center;color:var(--mute)}}
 @media(prefers-reduced-motion:reduce){{*{{transition:none!important}}}}
 </style></head><body>
@@ -792,7 +801,7 @@ const D={cards_json};
 const $=id=>document.getElementById(id),esc=s=>(s||'').replace(/[&<>]/g,m=>({{'&':'&amp;','<':'&lt;','>':'&gt;'}}[m]));
 const g=$('g');let cat='All',q='';
 $('sub').textContent=D.length+' cards. ' + ($('sub').textContent || 'Tap a card to open it: interview answer, example, use case and tip.');
-g.innerHTML=D.map(r=>`<details class="card" data-c="${{esc(r[0])}}"><summary><span class="tg">${{esc(r[0])}}</span><b>${{esc(r[1])}}</b></summary><div class="bd"><p><b>Say it like this</b>${{esc(r[2])}}</p>${{r[3]?`<div class="cw"><button class="cp">Copy</button><pre><code>${{esc(r[3])}}</code></pre></div>`:''}}${{r[4]?`<p><b>Use case</b>${{esc(r[4])}}</p>`:''}}${{r[5]?`<p class="tip"><b>Interview tip</b>${{esc(r[5])}}</p>`:''}}<button class="dn">Mark as revised</button></div></details>`).join('');
+g.innerHTML=D.map(r=>`<details class="card" data-c="${{esc(r[0])}}"><summary><span class="tg">${{esc(r[0])}}</span><b>${{esc(r[1])}}</b></summary><div class="bd">${{r[2]?`<div class="sec sec-def"><span class="sec-lbl lbl-def">Standard Definition</span>${{esc(r[2])}}</div>`:''}}${{r[4]?`<div class="sec sec-project"><span class="sec-lbl lbl-project">How I Used This In My Work Experience / Personal Project</span>${{esc(r[4])}}</div>`:''}}${{r[3]?`<div class="cw"><span class="sec-lbl" style="color:var(--mute);margin:0 0 6px 2px;">Production Code &amp; Syntax Example</span><button class="cp">Copy</button><pre><code>${{esc(r[3])}}</code></pre></div>`:''}}${{r[5]?`<div class="tip"><span class="sec-lbl lbl-tip">Interview Pro Tip &amp; Gotchas</span>${{esc(r[5])}}</div>`:''}}<button class="dn">Mark as revised</button></div></details>`).join('');
 const cards=()=>[...document.querySelectorAll('.card')],vis=()=>cards().filter(c=>!c.hidden);
 const C=['All',...new Set(D.map(r=>r[0]))];
 $('chips').innerHTML=C.map((c,i)=>`<button class="ch${{i?'':' on'}}">${{esc(c)}}</button>`).join('');
