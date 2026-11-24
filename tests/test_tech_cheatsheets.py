@@ -216,6 +216,10 @@ def test_interview_page_renders_cheatsheet_elements(client):
     # Resume selector elements exist
     assert "iv-selected-resume" in res.text
     assert "csResumeSelect" in res.text
+    # WCAG accessibility: tabs have corresponding tabpanels and labels match visible text
+    assert 'role="tabpanel" aria-labelledby="tabBtnSimulator"' in res.text
+    assert 'role="tabpanel" aria-labelledby="tabBtnCheatsheet"' in res.text
+    assert 'aria-label="+ Upload Resume"' in res.text
 
 
 def test_api_interview_resumes(client):
