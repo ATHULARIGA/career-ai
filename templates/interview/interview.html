@@ -590,15 +590,21 @@
   transform: translateY(-1px);
 }
 .cs-tech-pill.active {
-  background: var(--cs-ac);
-  color: var(--cs-onac);
-  border-color: var(--cs-ac);
+  background: var(--cs-ac) !important;
+  color: #ffffff !important;
+  border-color: var(--cs-ac) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
+.cs-tech-pill.active span {
+  color: #ffffff !important;
+}
 .theme-dark .cs-tech-pill.active {
-  background: var(--ui-text);
-  color: var(--ui-bg);
-  border-color: var(--ui-text);
+  background: var(--ui-text) !important;
+  color: #0b0f19 !important;
+  border-color: var(--ui-text) !important;
+}
+.theme-dark .cs-tech-pill.active span {
+  color: #0b0f19 !important;
 }
 .cs-tech-tag {
   font-size: 0.68rem;
@@ -612,14 +618,14 @@
   letter-spacing: 0.4px;
 }
 .cs-tech-pill.active .cs-tech-tag {
-  background: rgba(255, 255, 255, 0.18);
-  color: inherit;
-  border-color: transparent;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
 }
 .theme-dark .cs-tech-pill.active .cs-tech-tag {
-  background: rgba(0, 0, 0, 0.18);
-  color: inherit;
-  border-color: transparent;
+  background: rgba(11, 15, 25, 0.12) !important;
+  color: #0b0f19 !important;
+  border: 1px solid rgba(11, 15, 25, 0.22) !important;
 }
 .cs-tech-remove {
   display: inline-flex;
@@ -643,20 +649,20 @@
   border-color: var(--cs-line-strong);
 }
 .cs-tech-pill.active .cs-tech-remove {
-  background: rgba(255, 255, 255, 0.2);
-  color: inherit;
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 .theme-dark .cs-tech-pill.active .cs-tech-remove {
-  background: rgba(0, 0, 0, 0.2);
-  color: inherit;
-  border-color: rgba(0, 0, 0, 0.3);
+  background: rgba(11, 15, 25, 0.12) !important;
+  color: #0b0f19 !important;
+  border-color: rgba(11, 15, 25, 0.25) !important;
 }
 .cs-tech-pill.active .cs-tech-remove:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.4) !important;
 }
 .theme-dark .cs-tech-pill.active .cs-tech-remove:hover {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(11, 15, 25, 0.25) !important;
 }
 .cs-add-tech-btn {
   display: inline-flex;
@@ -701,15 +707,19 @@
   color: var(--cs-ink);
 }
 .cs-btn-primary {
-  background: var(--cs-ac);
-  color: var(--cs-onac);
-  border: none;
+  background: var(--cs-ink) !important;
+  color: var(--cs-bg) !important;
+  border: 1.5px solid var(--cs-ink);
   border-radius: 8px;
   padding: 10px 18px;
   font-weight: 700;
   font-size: 0.92rem;
   cursor: pointer;
   transition: opacity 0.15s;
+}
+.theme-dark .cs-btn-primary {
+  background: var(--ui-text) !important;
+  color: #0b0f19 !important;
 }
 .cs-btn-primary:hover {
   opacity: 0.9;
@@ -897,12 +907,18 @@
   transition: all 0.15s;
 }
 .cs-ch:hover {
-  border-color: var(--cs-ac);
+  border-color: var(--cs-line-strong);
 }
 .cs-ch.on {
-  background: var(--cs-ac);
-  border-color: var(--cs-ac);
-  color: var(--cs-onac);
+  background: var(--cs-ac) !important;
+  border-color: var(--cs-ac) !important;
+  color: #ffffff !important;
+}
+.theme-dark .cs-ch.on {
+  background: var(--ui-text) !important;
+  border-color: var(--ui-text) !important;
+  color: #0b0f19 !important;
+  font-weight: 700 !important;
 }
 
 /* ── Cards Grid & Content ───────────────────────────────── */
@@ -1332,7 +1348,7 @@
       <input type="file" id="sharedResumeFileInput" accept=".pdf,.txt,.tex,.md" style="display: none;" onchange="handleResumeFileSelected(this)" aria-hidden="true">
 
       <!-- Technology Selector Row -->
-      <div class="cs-tech-nav" id="csTechNav" role="tablist" aria-label="Available Technologies">
+      <div class="cs-tech-nav" id="csTechNav" role="tablist" aria-label="Available Technologies" style="display: none;">
         {% for t in (resume_technologies or ['FastAPI', 'Python', 'PostgreSQL', 'Docker', 'React']) %}
         <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" role="tab" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
           <span>{{ t }}</span>
