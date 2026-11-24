@@ -1180,7 +1180,7 @@
     </div>
 
     <!-- ── View Pane 1: Simulator (Setup, Chat, Verdict) ─────────────────── -->
-    <div id="viewSimulator" class="iv-view-pane active">
+    <div id="viewSimulator" class="iv-view-pane active" role="tabpanel" aria-labelledby="tabBtnSimulator">
 
     <!-- ── Setup Form ─────────────────────────────── -->
     <div class="iv-setup rr-form" id="ivSetup">
@@ -1203,7 +1203,7 @@
             {% endfor %}
             <option value="__upload__">+ Upload New Resume...</option>
           </select>
-          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('iv-selected-resume')" aria-label="Upload a new resume">
+          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('iv-selected-resume')" aria-label="+ Upload Resume">
             + Upload Resume
           </button>
         </div>
@@ -1317,7 +1317,7 @@
   </div> <!-- #viewSimulator -->
 
   <!-- ── View Pane 2: Technology Cheat Sheets ─────────────── -->
-  <div id="viewCheatsheet" class="iv-view-pane" style="display: none;">
+  <div id="viewCheatsheet" class="iv-view-pane" role="tabpanel" aria-labelledby="tabBtnCheatsheet" style="display: none;">
     <div class="cs-wrap">
       
       <!-- Resume Tailoring Selector -->
@@ -1337,7 +1337,7 @@
             {% endfor %}
             <option value="__upload__">+ Upload New Resume...</option>
           </select>
-          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('csResumeSelect')" aria-label="Upload New Resume">
+          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('csResumeSelect')" aria-label="+ Upload Resume">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             <span>+ Upload Resume</span>
           </button>
@@ -1348,9 +1348,9 @@
       <input type="file" id="sharedResumeFileInput" accept=".pdf,.txt,.tex,.md" style="display: none;" onchange="handleResumeFileSelected(this)" aria-hidden="true">
 
       <!-- Technology Selector Row -->
-      <div class="cs-tech-nav" id="csTechNav" role="tablist" aria-label="Available Technologies" style="display: none;">
+      <div class="cs-tech-nav" id="csTechNav" role="group" aria-label="Available Technologies" style="display: none;">
         {% for t in (resume_technologies or ['FastAPI', 'Python', 'PostgreSQL', 'Docker', 'React']) %}
-        <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" role="tab" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
+        <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
           <span>{{ t }}</span>
           <span class="cs-tech-tag">Resume</span>
           <span class="cs-tech-remove" onclick="removeTechnology(event, '{{ t }}', this)" title="Remove {{ t }}" aria-label="Remove {{ t }}">&times;</span>
@@ -1358,14 +1358,14 @@
         {% endfor %}
 
         {% for ct in (custom_technologies or []) %}
-        <button type="button" class="cs-tech-pill" onclick="selectTechnology('{{ ct }}', this)" role="tab" aria-selected="false" data-tech="{{ ct }}">
+        <button type="button" class="cs-tech-pill" onclick="selectTechnology('{{ ct }}', this)" aria-pressed="false" data-tech="{{ ct }}">
           <span>{{ ct }}</span>
           <span class="cs-tech-tag">Custom</span>
           <span class="cs-tech-remove" onclick="removeTechnology(event, '{{ ct }}', this)" title="Remove {{ ct }}" aria-label="Remove {{ ct }}">&times;</span>
         </button>
         {% endfor %}
 
-        <button type="button" class="cs-add-tech-btn" onclick="toggleAddTechBar(true)" aria-label="Add custom technology">
+        <button type="button" class="cs-add-tech-btn" onclick="toggleAddTechBar(true)" aria-label="Add Technology">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>Add Technology</span>
         </button>
@@ -2201,7 +2201,7 @@ async function selectTechnology(tech, btn) {
   document.querySelectorAll('.cs-tech-pill').forEach(b => {
     const isMatch = (b === btn || b.dataset.tech === tech);
     b.classList.toggle('active', isMatch);
-    b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    b.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
   });
 
   // Hide technologies list once candidate selects which tech cheatsheet they want to see
