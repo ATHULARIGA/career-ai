@@ -430,36 +430,119 @@
   --cs-bg: var(--ui-surface, #ffffff);
   --cs-card: #ffffff;
   --cs-ink: #0f172a;
-  --cs-mute: #475569;
-  --cs-line: #d1d5db;
-  --cs-ac: #0a8f82;
+  --cs-mute: #64748b;
+  --cs-line: #e2e8f0;
+  --cs-ac: #0d9488;
   --cs-onac: #ffffff;
-  --cs-acs: #e1f4f1;
-  --cs-cb: #0f1b19;
-  --cs-cf: #d6efe9;
+  --cs-acs: #f0fdfa;
+  --cs-cb: #0f172a;
+  --cs-cf: #f8fafc;
   --cs-tip: #fffbeb;
   --cs-tl: #b45309;
   background: var(--cs-bg);
-  border: 1px solid var(--iv-border);
-  border-radius: 16px;
+  border: 1.5px solid var(--cs-line);
+  border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
   margin-bottom: 30px;
 }
 .theme-dark .cs-wrap {
-  --cs-bg: #111827;
+  --cs-bg: #0f172a;
   --cs-card: #1e293b;
   --cs-ink: #f8fafc;
   --cs-mute: #94a3b8;
   --cs-line: #334155;
   --cs-ac: #2dd4bf;
   --cs-onac: #04110f;
-  --cs-acs: #12332f;
-  --cs-cb: #091110;
-  --cs-cf: #cdeee7;
-  --cs-tip: #2a2610;
-  --cs-tl: #e0b43a;
+  --cs-acs: #134e4a;
+  --cs-cb: #090d16;
+  --cs-cf: #e2e8f0;
+  --cs-tip: #2d2305;
+  --cs-tl: #fbbf24;
   border-color: #1f2937;
+}
+
+/* ── Resume Selector Bar ────────────────────────────────── */
+.cs-resume-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--cs-card);
+  border: 1.5px solid var(--cs-line);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.cs-resume-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cs-resume-badge-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--cs-acs);
+  color: var(--cs-ac);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cs-resume-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cs-ink);
+}
+.cs-resume-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cs-resume-select {
+  padding: 8px 14px;
+  background: var(--cs-bg);
+  border: 1.5px solid var(--cs-line);
+  border-radius: 8px;
+  color: var(--cs-ink);
+  font-size: 0.92rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 260px;
+  transition: border-color 0.15s;
+}
+.cs-resume-select:focus {
+  outline: 2px solid var(--cs-ac);
+  outline-offset: 2px;
+  border-color: var(--cs-ac);
+}
+.cs-action-btn {
+  background: var(--cs-card) !important;
+  color: var(--cs-ink) !important;
+  border: 1.5px solid var(--cs-line) !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  font-size: 0.92rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+.cs-action-btn:hover {
+  border-color: var(--cs-ac) !important;
+  color: var(--cs-ac) !important;
+  background: var(--cs-acs) !important;
 }
 
 /* ── Tech Selector Pills ────────────────────────────────── */
@@ -475,35 +558,39 @@
 .cs-tech-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 14px;
   background: var(--cs-card);
   color: var(--cs-ink);
   border: 1.5px solid var(--cs-line);
   border-radius: 99px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 .cs-tech-pill:hover {
   border-color: var(--cs-ac);
+  transform: translateY(-1px);
 }
 .cs-tech-pill.active {
   background: var(--cs-ac);
   color: var(--cs-onac);
   border-color: var(--cs-ac);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
 }
 .cs-tech-tag {
-  font-size: 0.7rem;
-  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
   border-radius: 99px;
   background: var(--cs-acs);
   color: var(--cs-ac);
   text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 .cs-tech-pill.active .cs-tech-tag {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   color: var(--cs-onac);
 }
 .cs-tech-remove {
@@ -513,15 +600,14 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
-  margin-left: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 .cs-tech-remove:hover {
   background: #ef4444;
@@ -531,43 +617,23 @@
 .cs-tech-pill.active .cs-tech-remove {
   background: rgba(0, 0, 0, 0.25);
   color: #ffffff;
-  border-color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(0, 0, 0, 0.35);
 }
 .cs-tech-pill.active .cs-tech-remove:hover {
   background: #ef4444;
   color: #ffffff;
   border-color: #ef4444;
 }
-.cs-action-btn {
-  background: var(--cs-card) !important;
-  color: var(--cs-ink) !important;
-  border: 1.5px solid var(--cs-line) !important;
-  border-radius: 8px !important;
-  padding: 8px 16px !important;
-  font-weight: 600 !important;
-  font-size: 0.95rem !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
-  transition: all 0.15s ease !important;
-}
-.cs-action-btn:hover {
-  border-color: var(--cs-ac) !important;
-  color: var(--cs-ac) !important;
-  background: var(--cs-acs) !important;
-}
 .cs-add-tech-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 8px 14px;
   background: transparent;
   color: var(--cs-ac);
   border: 1.5px dashed var(--cs-ac);
   border-radius: 99px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -595,7 +661,7 @@
   padding: 10px 14px;
   border: 1.5px solid var(--cs-line);
   border-radius: 8px;
-  font-size: 1.0rem;
+  font-size: 0.95rem;
   background: var(--cs-card);
   color: var(--cs-ink);
 }
@@ -606,16 +672,20 @@
   border-radius: 8px;
   padding: 10px 18px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   cursor: pointer;
+  transition: opacity 0.15s;
+}
+.cs-btn-primary:hover {
+  opacity: 0.9;
 }
 .cs-btn-secondary {
   background: transparent;
   color: var(--cs-ink);
-  border: 1px solid var(--cs-line);
+  border: 1.5px solid var(--cs-line);
   border-radius: 8px;
   padding: 10px 16px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   cursor: pointer;
 }
 .cs-add-status {
@@ -625,55 +695,38 @@
   color: var(--cs-ac);
 }
 
-/* ── Resume Selector Bar ────────────────────────────────── */
-.cs-resume-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* ── Cheatsheet Header & Controls ───────────────────────── */
+.cs-header-card {
   background: var(--cs-card);
   border: 1.5px solid var(--cs-line);
-  border-radius: 10px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cs-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
 }
-.cs-resume-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--cs-ink);
+.cs-header-title-box {
+  flex: 1 1 300px;
 }
-.cs-resume-select {
-  flex: 1 1 240px;
-  padding: 8px 12px;
-  background: var(--cs-bg);
-  border: 1.5px solid var(--cs-line);
-  border-radius: 8px;
-  color: var(--cs-ink);
-  font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 500;
-}
-.cs-resume-select:focus {
-  outline: 2px solid var(--cs-ac);
-  outline-offset: 2px;
-  border-color: var(--cs-ac);
-}
-
-/* ── Cheatsheet Header & Controls ───────────────────────── */
 .cs-title {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--cs-ink);
   letter-spacing: -0.01em;
 }
 .cs-subtitle {
-  margin: 6px 0 16px;
+  margin: 6px 0 0;
   color: var(--cs-mute);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1.5;
 }
 .cs-controls-row {
@@ -681,60 +734,91 @@
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 12px;
+}
+.cs-search-box {
+  position: relative;
+  width: 100%;
 }
 .cs-search-input {
-  flex: 1 1 240px;
-  padding: 9px 14px;
+  width: 100%;
+  padding: 10px 48px 10px 38px;
   border: 1.5px solid var(--cs-line);
-  border-radius: 8px;
-  background: var(--cs-card);
+  border-radius: 9px;
+  background: var(--cs-bg);
   color: var(--cs-ink);
-  font-size: 0.95rem;
+  font-size: 0.93rem;
+  box-sizing: border-box;
+  transition: border-color 0.15s, outline 0.15s;
 }
 .cs-search-input:focus {
   outline: 2px solid var(--cs-ac);
-  outline-offset: 2px;
+  outline-offset: 1px;
   border-color: var(--cs-ac);
 }
-.cs-ctrl-btn {
-  background: var(--cs-card);
-  color: var(--cs-ink);
+.cs-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cs-mute);
+  pointer-events: none;
+}
+.cs-search-kbd {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 7px;
   border: 1px solid var(--cs-line);
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--cs-mute);
+  background: var(--cs-card);
+  pointer-events: none;
+  font-family: ui-monospace, monospace;
+}
+.cs-ctrl-btn {
+  background: var(--cs-bg);
+  color: var(--cs-ink);
+  border: 1.5px solid var(--cs-line);
   border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
+  padding: 7px 12px;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .cs-ctrl-btn:hover {
   border-color: var(--cs-ac);
   color: var(--cs-ac);
+  background: var(--cs-acs);
 }
 
 /* ── Progress Bar ───────────────────────────────────────── */
 .cs-progress-row {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
-  font-size: 0.9rem;
+  align-items: center;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--cs-mute);
 }
 .cs-progress-bar {
-  height: 5px;
+  height: 6px;
   background: var(--cs-line);
-  border-radius: 3px;
-  margin: 6px 0 16px;
+  border-radius: 99px;
   overflow: hidden;
 }
 .cs-progress-bar i {
   display: block;
   height: 100%;
   width: 0%;
-  background: var(--cs-ac);
-  border-radius: 3px;
+  background: linear-gradient(90deg, #10b981, #06b6d4);
+  border-radius: 99px;
   transition: width 0.3s ease;
 }
 
@@ -743,17 +827,16 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 0 18px;
-  margin-bottom: 8px;
+  padding: 2px 0;
 }
 .cs-ch {
   border-radius: 99px;
   white-space: nowrap;
-  padding: 6px 14px;
-  font-size: 0.85rem;
+  padding: 5px 14px;
+  font-size: 0.84rem;
   font-weight: 600;
-  border: 1px solid var(--cs-line);
-  background: var(--cs-card);
+  border: 1.5px solid var(--cs-line);
+  background: var(--cs-bg);
   color: var(--cs-ink);
   cursor: pointer;
   transition: all 0.15s;
@@ -770,64 +853,26 @@
 /* ── Cards Grid & Content ───────────────────────────────── */
 .cs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
   align-items: start;
 }
 .card {
   background: var(--cs-card);
-  border: 1px solid var(--cs-line);
-  border-radius: 12px;
-  min-width: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-  border-color: var(--cs-ac);
-}
-.card.done {
-  border-left: 5px solid var(--cs-ac);
-}
-.card summary {
-  cursor: pointer;
-  padding: 14px 16px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  list-style: none;
-  font-size: 1.0rem;
-  color: var(--cs-ink);
-}
-.card summary::-webkit-details-marker {
-  display: none;
-}
-.card summary::after {
-  content: "+";
-  margin-left: auto;
-  color: var(--cs-ac);
-  font-size: 1.3rem;
-  line-height: 1;
-  font-weight: 700;
-}
-.card[open] summary::after {
-  content: "\2013";
-}
-/* ── Organized Card Layout & Sections ─────────────────────── */
-.card {
-  background: var(--cs-card);
   border: 1.5px solid var(--cs-line);
-  border-radius: 12px;
+  border-radius: 14px;
   min-width: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   overflow: hidden;
 }
 .card:hover {
   border-color: var(--cs-ac);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
 }
 .card.done {
-  border-left: 5px solid var(--cs-ac);
+  border-color: #10b981;
 }
 .card summary {
   cursor: pointer;
@@ -836,10 +881,11 @@
   gap: 12px;
   align-items: center;
   list-style: none;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: var(--cs-ink);
   user-select: none;
+  background: var(--cs-card);
 }
 .card summary::-webkit-details-marker {
   display: none;
@@ -848,26 +894,62 @@
   content: "+";
   margin-left: auto;
   color: var(--cs-ac);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   line-height: 1;
   font-weight: 700;
+  transition: transform 0.15s;
 }
 .card[open] summary::after {
   content: "\2013";
 }
 .tg {
-  font-size: 0.75rem;
-  background: var(--cs-acs);
-  color: var(--cs-ac);
-  padding: 3px 10px;
-  border-radius: 99px;
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  border-radius: 6px;
   white-space: nowrap;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
+  background: var(--cs-acs);
+  color: var(--cs-ac);
+}
+.tg-basics {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.tg-architecture {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.tg-performance {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.tg-qa {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.cs-done-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  margin-left: auto;
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 .bd {
-  padding: 12px 18px 18px;
+  padding: 14px 18px 18px;
   border-top: 1px solid var(--cs-line);
   background: var(--cs-card);
   display: flex;
@@ -877,17 +959,17 @@
 .cs-sec {
   background: var(--cs-bg);
   border: 1px solid var(--cs-line);
-  border-radius: 9px;
+  border-radius: 10px;
   padding: 12px 14px;
 }
 .cs-sec-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   margin-bottom: 6px;
 }
 .cs-label-def {
@@ -903,16 +985,27 @@
   color: #d97706;
 }
 .cs-sec-def {
-  border-left: 3.5px solid #3b82f6;
+  border-left: 4px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.04);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 .cs-sec-project {
   background: rgba(16, 185, 129, 0.05);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   border-left: 4px solid #10b981;
+}
+.cs-sec-tip {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-left: 4px solid #d97706;
+}
+.cs-sec-code {
+  background: var(--cs-bg);
+  border: 1px solid var(--cs-line);
 }
 .cs-sec-p {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.93rem;
   line-height: 1.6;
   color: var(--cs-ink);
 }
@@ -924,7 +1017,7 @@
   margin: 0;
   background: var(--cs-cb);
   color: var(--cs-cf);
-  padding: 14px 14px;
+  padding: 12px 14px;
   border-radius: 8px;
   overflow-x: auto;
   font: 12.5px/1.55 ui-monospace, Menlo, Consolas, monospace;
@@ -933,23 +1026,21 @@
   position: absolute;
   right: 8px;
   top: 8px;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
   background: rgba(255,255,255,0.15);
   color: #ffffff;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.25);
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .cp:hover {
   background: rgba(255,255,255,0.25);
-}
-.cs-sec-tip {
-  background: var(--cs-tip);
-  border: 1px solid rgba(217, 164, 0, 0.3);
-  border-left: 4px solid var(--cs-tl);
 }
 .cs-sec-footer {
   display: flex;
@@ -961,14 +1052,18 @@
   font-weight: 600;
   padding: 8px 16px;
   border: 1.5px solid var(--cs-line);
-  background: var(--cs-card);
+  background: var(--cs-bg);
   color: var(--cs-ink);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .dn:hover {
   border-color: var(--cs-ac);
+  color: var(--cs-ac);
 }
 .card.done .dn {
   background: var(--cs-acs);
@@ -1164,12 +1259,14 @@
     <div class="cs-wrap">
       
       <!-- Resume Tailoring Selector -->
-      <div class="cs-resume-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <label for="csResumeSelect" class="cs-resume-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span>Target Resume:</span>
-          </label>
+      <div class="cs-resume-bar">
+        <div class="cs-resume-meta">
+          <div class="cs-resume-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          </div>
+          <label for="csResumeSelect" class="cs-resume-label">Target Resume:</label>
+        </div>
+        <div class="cs-resume-controls">
           <select id="csResumeSelect" class="cs-resume-select" onchange="switchCheatsheetResume(this.value)" aria-label="Select Resume for Tailoring">
             {% for r in (selectable_resumes or []) %}
             <option value="{{ r.id }}" {% if r.id == selected_resume_id %}selected{% endif %}>
@@ -1178,10 +1275,11 @@
             {% endfor %}
             <option value="__upload__">+ Upload New Resume...</option>
           </select>
+          <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('csResumeSelect')" aria-label="Upload New Resume">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>+ Upload Resume</span>
+          </button>
         </div>
-        <button type="button" class="cs-action-btn" onclick="triggerResumeUpload('csResumeSelect')" aria-label="Upload New Resume" style="padding: 7px 14px; font-size: 0.95rem; font-weight: 600;">
-          + Upload Resume
-        </button>
       </div>
 
       <!-- Hidden File Input for Resume Upload -->
@@ -1224,17 +1322,25 @@
 
       <!-- Cheatsheet Header & Controls -->
       <div class="cs-header-card">
-        <h2 class="cs-title" id="csTechTitle">{{ active_technology or 'FastAPI' }} interview cheatsheet</h2>
-        <p class="cs-subtitle" id="csSubText">
-          {% if target_role %}Tailored for {{ target_role }} interviews. {% endif %}Tap a card to open it: interview answer, example, use case, and tip.
-        </p>
+        <div class="cs-header-top">
+          <div class="cs-header-title-box">
+            <h2 class="cs-title" id="csTechTitle">{{ active_technology or 'FastAPI' }} interview cheatsheet</h2>
+            <p class="cs-subtitle" id="csSubText">
+              {% if target_role %}Tailored for {{ target_role }} interviews. {% endif %}Tap a card to open it: interview answer, example, use case, and tip.
+            </p>
+          </div>
+          <div class="cs-controls-row">
+            <button id="csExpandAll" class="cs-ctrl-btn" type="button" title="Expand all cards">Expand all</button>
+            <button id="csCollapseAll" class="cs-ctrl-btn" type="button" title="Collapse all cards">Collapse all</button>
+            <button id="csRandomCard" class="cs-ctrl-btn" type="button" title="Jump to a random question">Random card</button>
+            <button id="csExportHtml" class="cs-ctrl-btn" type="button" onclick="exportCurrentCheatsheet()" title="Download offline cheat sheet HTML">Export HTML</button>
+          </div>
+        </div>
 
-        <div class="cs-controls-row">
+        <div class="cs-search-box">
+          <svg class="cs-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input id="csSearch" class="cs-search-input" type="search" placeholder="Search topics, e.g. Depends, JWT, async (press /)" aria-label="Search cheatsheet topics">
-          <button id="csExpandAll" class="cs-ctrl-btn" type="button">Expand all</button>
-          <button id="csCollapseAll" class="cs-ctrl-btn" type="button">Collapse all</button>
-          <button id="csRandomCard" class="cs-ctrl-btn" type="button">Random card</button>
-          <button id="csExportHtml" class="cs-ctrl-btn" type="button" onclick="exportCurrentCheatsheet()">Export HTML</button>
+          <kbd class="cs-search-kbd">/</kbd>
         </div>
 
         <div class="cs-progress-row">
@@ -1826,6 +1932,7 @@ function renderCards() {
   g.innerHTML = cheatsheetCards.map((r, idx) => {
     const isDone = revisedIndices.has(idx);
     const cat = esc(r[0]);
+    const catSlug = (r[0] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const title = esc(r[1]);
     const standardDef = esc(r[2]);
     const code = r[3] ? esc(r[3]) : '';
@@ -1834,30 +1941,43 @@ function renderCards() {
 
     return `<details class="card ${isDone ? 'done' : ''}" data-c="${cat}" data-idx="${idx}">
       <summary>
-        <span class="tg">${cat}</span>
+        <span class="tg tg-${catSlug}">${cat}</span>
         <b>${title}</b>
+        ${isDone ? '<span class="cs-done-pill" title="Mastered"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Mastered</span>' : ''}
       </summary>
       <div class="bd">
         
         <!-- Standard Definition -->
         <div class="cs-sec cs-sec-def">
-          <div class="cs-sec-label cs-label-def">Standard Definition</div>
+          <div class="cs-sec-label cs-label-def">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Standard Definition
+          </div>
           <p class="cs-sec-p">${standardDef}</p>
         </div>
 
         <!-- How I Used This in My Work Experience / Personal Project -->
         ${projectExp ? `
         <div class="cs-sec cs-sec-project">
-          <div class="cs-sec-label cs-label-project">How I Used This in My Work Experience / Personal Project</div>
+          <div class="cs-sec-label cs-label-project">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            How I Used This in My Work Experience / Personal Project
+          </div>
           <p class="cs-sec-p">${projectExp}</p>
         </div>` : ''}
 
         <!-- Code Example -->
         ${code ? `
-        <div class="cs-sec">
-          <div class="cs-sec-label cs-label-code">Production Code & Syntax Example</div>
+        <div class="cs-sec cs-sec-code">
+          <div class="cs-sec-label cs-label-code">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            Production Code &amp; Syntax Example
+          </div>
           <div class="cw">
-            <button type="button" class="cp" onclick="copySnippet(this)">Copy</button>
+            <button type="button" class="cp" onclick="copySnippet(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy
+            </button>
             <pre><code>${code}</code></pre>
           </div>
         </div>` : ''}
@@ -1865,14 +1985,17 @@ function renderCards() {
         <!-- Interview Gotcha & Pro Tip -->
         ${tip ? `
         <div class="cs-sec cs-sec-tip">
-          <div class="cs-sec-label cs-label-tip">Interview Pro Tip & Gotchas</div>
+          <div class="cs-sec-label cs-label-tip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Interview Pro Tip &amp; Gotchas
+          </div>
           <p class="cs-sec-p">${tip}</p>
         </div>` : ''}
 
         <!-- Footer Revised Toggle -->
         <div class="cs-sec-footer">
           <button type="button" class="dn" onclick="toggleRevised(${idx}, this)">
-            ${isDone ? 'Revised' : 'Mark as revised'}
+            ${isDone ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Revised' : 'Mark as revised'}
           </button>
         </div>
 
@@ -1943,11 +2066,21 @@ async function toggleRevised(idx, btn) {
   if (isNowRevised) {
     revisedIndices.add(idx);
     card.classList.add('done');
-    btn.textContent = 'Revised';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Revised';
+    const summary = card.querySelector('summary');
+    if (summary && !summary.querySelector('.cs-done-pill')) {
+      const pill = document.createElement('span');
+      pill.className = 'cs-done-pill';
+      pill.title = 'Mastered';
+      pill.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Mastered';
+      summary.appendChild(pill);
+    }
   } else {
     revisedIndices.delete(idx);
     card.classList.remove('done');
     btn.textContent = 'Mark as revised';
+    const pill = card.querySelector('.cs-done-pill');
+    if (pill) pill.remove();
   }
 
   updateProgress();
