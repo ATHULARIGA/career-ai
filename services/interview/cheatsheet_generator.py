@@ -749,9 +749,9 @@ def build_standalone_cheatsheet_html(
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{tech_name} interview cheatsheet</title>
 <style>
-:root{{--bg:#f4f8f7;--card:#fff;--ink:#14211f;--mute:#566a66;--line:#d7e3e0;--ac:#0a8f82;--onac:#fff;--acs:#e1f4f1;--cb:#0f1b19;--cf:#d6efe9;--tip:#fff6dc;--tl:#d9a400;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
-@media(prefers-color-scheme:dark){{:root:not([data-theme="light"]){{--bg:#0e1514;--card:#15201e;--ink:#e3efed;--mute:#93aaa5;--line:#25362f;--ac:#2dd4bf;--onac:#04110f;--acs:#12332f;--cb:#091110;--cf:#cdeee7;--tip:#2a2610;--tl:#e0b43a}}}}
-:root[data-theme="dark"]{{--bg:#0e1514;--card:#15201e;--ink:#e3efed;--mute:#93aaa5;--line:#25362f;--ac:#2dd4bf;--onac:#04110f;--acs:#12332f;--cb:#091110;--cf:#cdeee7;--tip:#2a2610;--tl:#e0b43a}}
+:root{{--bg:#f8fafc;--card:#ffffff;--ink:#0f172a;--mute:#334155;--line:#e2e8f0;--ac:#0f172a;--onac:#f8fafc;--acs:#f1f5f9;--cb:#0f172a;--cf:#f8fafc;--tip:#f1f5f9;--tl:#334155;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
+@media(prefers-color-scheme:dark){{:root:not([data-theme="light"]){{--bg:#090d16;--card:#0f172a;--ink:#f8fafc;--mute:#cbd5e1;--line:#1e293b;--ac:#f8fafc;--onac:#090d16;--acs:#141d2e;--cb:#050811;--cf:#e2e8f0;--tip:#141d2e;--tl:#cbd5e1}}}}
+:root[data-theme="dark"]{{--bg:#090d16;--card:#0f172a;--ink:#f8fafc;--mute:#cbd5e1;--line:#1e293b;--ac:#f8fafc;--onac:#090d16;--acs:#141d2e;--cb:#050811;--cf:#e2e8f0;--tip:#141d2e;--tl:#cbd5e1}}
 *{{box-sizing:border-box}}html{{scroll-padding-top:env(safe-area-inset-top,0px)}}
 body{{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}}
 body::before{{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:10}}
@@ -779,11 +779,11 @@ details[open] summary::after{{content:"\\2013"}}
 .sec{{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}}
 .sec-lbl{{display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}}
 .sec-def{{border-left:3.5px solid var(--mute)}}.lbl-def{{color:var(--mute)}}
-.sec-project{{background:var(--acs);border:1px solid var(--ac);border-left:4px solid var(--ac)}}.lbl-project{{color:var(--ac)}}
+.sec-project{{background:var(--acs);border:1px solid var(--line);border-left:4px solid var(--ac)}}.lbl-project{{color:var(--ac)}}
 .cw{{position:relative;margin:0}}
 pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}}
 .cp{{position:absolute;right:6px;top:6px;font-size:.75rem;padding:2px 8px}}
-.tip{{background:var(--tip);border:1px solid rgba(217,164,0,0.3);border-left:4px solid var(--tl);padding:10px 12px;border-radius:8px}}.lbl-tip{{color:var(--tl)}}
+.tip{{background:var(--tip);border:1px solid var(--line);border-left:4px solid var(--tl);padding:10px 12px;border-radius:8px}}.lbl-tip{{color:var(--tl)}}
 .dn{{margin-top:4px;font-size:.85rem}}.done .dn{{background:var(--acs);color:var(--ac)}}
 #E{{text-align:center;color:var(--mute)}}
 @media(prefers-reduced-motion:reduce){{*{{transition:none!important}}}}
