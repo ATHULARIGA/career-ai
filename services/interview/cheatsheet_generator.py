@@ -778,7 +778,7 @@ details[open] summary::after{{content:"\\2013"}}
 .bd{{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line)}}
 .sec{{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}}
 .sec-lbl{{display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}}
-.sec-def{{border-left:3.5px solid #3b82f6}}.lbl-def{{color:#3b82f6}}
+.sec-def{{border-left:3.5px solid var(--mute)}}.lbl-def{{color:var(--mute)}}
 .sec-project{{background:var(--acs);border:1px solid var(--ac);border-left:4px solid var(--ac)}}.lbl-project{{color:var(--ac)}}
 .cw{{position:relative;margin:0}}
 pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}}
