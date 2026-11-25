@@ -451,6 +451,93 @@ def get_ai_providers() -> List[Tuple[Any, List[str], str]]:
     return providers
 
 
+def _invoke_json_llm(
+    providers: List[Tuple[Any, List[str], str]],
+    prompt: str,
+    max_tokens: int = 4000,
+) -> Optional[Dict[str, Any]]:
+    """
+    Calls configured AI providers in order and parses a JSON object response.
+    Shared helper used by both interview-topic discovery and card generation.
+    """
+    for client, models, _provider_name in providers:
+        for model in models:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    response_format={"type": "json_object"},
+                    temperature=0.2,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=max_tokens,
+                )
+                content = (response.choices[0].message.content or "").strip()
+                if not content:
+                    continue
+                if "```json" in content:
+                    content = content.replace("```json", "").replace("```", "").strip()
+                if "{" in content and "}" in content:
+                    content = content[content.find("{") : content.rfind("}") + 1]
+                data = json.loads(content)
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                continue
+    return None
+
+
+def _discover_interview_topics_via_ai(
+    tech_name: str,
+    role_name: str,
+    providers: List[Tuple[Any, List[str], str]],
+) -> List[Dict[str, str]]:
+    """
+    Stage 1 Prompt: Identifies the exact high-signal interview topics and tricky
+    real-world questions specifically tested for `tech_name` in `role_name` interviews.
+    """
+    discovery_prompt = f"""You are a Bar-Raiser Principal Engineer designing an exhaustive technical interview rubric for "{tech_name}" (Target Role: "{role_name}").
+
+Identify the 20 to 24 MOST IMPORTANT, frequently tested interview topics and real-world interview questions specifically for "{tech_name}".
+Do NOT list generic filler topics—every topic must reflect what senior interviewers actually grill candidates on for "{tech_name}" specifically (its unique internals, execution engine, data/state model, concurrency/locking, performance tuning, common production failure modes, security pitfalls, trade-offs vs alternatives, and gotcha Q&As).
+
+Ensure balanced coverage across:
+- Basics & Core Primitives (2-3 topics)
+- Architecture & Deep Internals specific to {tech_name} (4 topics)
+- Concurrency, State & Consistency (2-3 topics)
+- Performance Tuning, Profiling & Scaling (3 topics)
+- Reliability, Debugging & Production Operations (3 topics)
+- Security & Hardening (2 topics)
+- System Design & When to Choose {tech_name} vs Alternatives (2 topics)
+- High-Bar Interview Q&A & Traps (6-7 specific interview questions starting with "Q: ")
+
+Return valid JSON only:
+{{
+  "topics": [
+    {{
+      "category": "Basics | Architecture | Concurrency | Performance | Reliability | Security | System Design | Q&A",
+      "topic": "Specific {tech_name} topic title (or 'Q: <Exact Interview Question>' for Q&A)",
+      "focus": "1-sentence note on the exact internal mechanism, trade-off, or trap interviewers test."
+    }}
+  ]
+}}
+No emojis."""
+
+    data = _invoke_json_llm(providers, discovery_prompt, max_tokens=2000)
+    if not data:
+        return []
+    raw_topics = data.get("topics", [])
+    if not isinstance(raw_topics, list):
+        return []
+    cleaned: List[Dict[str, str]] = []
+    for item in raw_topics:
+        if isinstance(item, dict) and str(item.get("topic", "")).strip():
+            cleaned.append({
+                "category": str(item.get("category", "Basics")).strip(),
+                "topic": str(item.get("topic", "")).strip(),
+                "focus": str(item.get("focus", "")).strip(),
+            })
+    return cleaned
+
+
 def _generate_custom_cards_via_ai(
     tech_name: str,
     target_role: str = "",
@@ -458,9 +545,9 @@ def _generate_custom_cards_via_ai(
     usage_info: Optional[Dict[str, Any]] = None,
 ) -> List[List[str]]:
     """
-    Invokes multi-provider LLM pipeline to dynamically generate 22 to 28
-    comprehensive, production-grade interview cards covering all critical topics
-    and important interview Q&A for ANY technology.
+    Two-stage multi-provider LLM pipeline:
+    1) Discovers the exact high-signal interview topics for `tech_name`.
+    2) Generates 22 to 28 production-grade cards covering EVERY discovered topic + Q&A.
     """
     providers = get_ai_providers()
     if not providers:
@@ -506,14 +593,17 @@ def _generate_custom_cards_via_ai(
     else:
         resume_usage_instruction = "Resume Usage Status: No resume provided; tailor for a general senior candidate."
 
-    prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer at top-tier technology companies.
-Generate an exhaustive, all-in-one interview cheat sheet deck for: "{tech_clean}".
-Target Candidate Role: "{role_name}".
-Candidate Resume Context: "{clean_resume if clean_resume else 'General senior candidate'}".
-{resume_usage_instruction}
-
-Generate 22 to 28 comprehensive, production-grade interview revision cards so the candidate has EVERY important topic, internal detail, code pattern, and high-frequency interview Q&A in one place.
-Distribute the cards across ALL of these essential interview pillars:
+    # Stage 1: Discover technology-specific high-yield interview syllabus
+    discovered_topics = _discover_interview_topics_via_ai(tech_clean, role_name, providers)
+    if discovered_topics:
+        syllabus_lines = "\n".join(
+            f"{idx + 1}. [{t['category']}] {t['topic']} — Focus: {t['focus']}"
+            for idx, t in enumerate(discovered_topics)
+        )
+        coverage_instruction = f"""Cover EVERY SINGLE ONE of these {len(discovered_topics)} high-priority interview topics for {tech_clean} (one dedicated card per topic, do not skip any):
+{syllabus_lines}"""
+    else:
+        coverage_instruction = f"""Generate 22 to 28 comprehensive, production-grade interview revision cards across ALL essential interview pillars for {tech_clean}:
 - Basics (2-3 cards): Core design philosophy, execution/runtime model, fundamental primitives, and when to choose {tech_clean} over alternatives.
 - Architecture (3-4 cards): Deep internals (memory layout, event loop/threading, storage engines, protocols, indexing, scheduling, clustering/partitioning, or rendering pipeline).
 - Concurrency (2-3 cards): Concurrent execution, race conditions, async I/O, locking, idempotency, backpressure, or transaction isolation levels.
@@ -521,7 +611,15 @@ Distribute the cards across ALL of these essential interview pillars:
 - Reliability (2-3 cards): Failure modes, retries with exponential backoff and jitter, circuit breaking, graceful shutdown, health checks, observability/debugging, and disaster recovery.
 - Security (2 cards): Authentication, authorization (RBAC/ABAC), secrets management, injection/vulnerability prevention, and encryption at rest and in-transit.
 - System Design (2 cards): How {tech_clean} fits into large-scale distributed systems, trade-offs vs competing technologies, and capacity/operational trade-offs.
-- Q&A (6-8 cards): The most important, frequently asked, and tricky real-world interview questions and model answers for {tech_clean}. For Q&A cards, prefix the title with "Q: " (the exact interview question) and start the definition with "A: " (a complete, structured, interview-ready answer covering edge cases and follow-ups).
+- Q&A (6-8 cards): The most important, frequently asked, and tricky real-world interview questions and model answers for {tech_clean}. Prefix title with "Q: " and start definition with "A: "."""
+
+    prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer at top-tier technology companies.
+Generate an exhaustive, all-in-one interview cheat sheet deck for: "{tech_clean}".
+Target Candidate Role: "{role_name}".
+Candidate Resume Context: "{clean_resume if clean_resume else 'General senior candidate'}".
+{resume_usage_instruction}
+
+{coverage_instruction}
 
 Return a valid JSON object with this exact structure:
 {{
@@ -538,55 +636,31 @@ Return a valid JSON object with this exact structure:
 }}
 
 Strict requirements:
+- For Q&A cards, prefix "title" with "Q: " and start "definition" with "A: ".
 - Ensure all string values are properly escaped (newlines as \\n, quotes as \\\").
 - Produce syntactically correct code or configuration for {tech_clean}.
 - Do NOT use emojis anywhere in the output.
 """
 
-    for client, models, provider_name in providers:
-        for model in models:
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=6000,
-                )
-                content = (response.choices[0].message.content or "").strip()
-                if not content:
-                    continue
+    data = _invoke_json_llm(providers, prompt, max_tokens=6000)
+    if data:
+        raw_items = data.get("cards", []) if isinstance(data, dict) else []
+        parsed_cards = []
+        for item in raw_items:
+            if isinstance(item, dict):
+                c_cat = str(item.get("category", "Basics")).strip()
+                c_title = str(item.get("title", "")).strip()
+                c_def = str(item.get("definition", "")).strip()
+                c_code = str(item.get("code", "")).strip()
+                c_work = str(item.get("work_experience", "")).strip()
+                c_tip = str(item.get("interview_tip", "")).strip()
+                if c_title and (c_def or c_work):
+                    parsed_cards.append([c_cat, c_title, c_def, c_code, c_work, c_tip])
+            elif isinstance(item, list) and len(item) >= 6:
+                parsed_cards.append([str(x) for x in item[:6]])
 
-                if "```json" in content:
-                    content = content.replace("```json", "").replace("```", "").strip()
-                if "{" in content and "}" in content:
-                    content = content[content.find("{") : content.rfind("}") + 1]
-
-                data = json.loads(content)
-                raw_items = []
-                if isinstance(data, dict) and "cards" in data:
-                    raw_items = data["cards"]
-                elif isinstance(data, list):
-                    raw_items = data
-
-                parsed_cards = []
-                for item in raw_items:
-                    if isinstance(item, dict):
-                        c_cat = str(item.get("category", "Basics")).strip()
-                        c_title = str(item.get("title", "")).strip()
-                        c_def = str(item.get("definition", "")).strip()
-                        c_code = str(item.get("code", "")).strip()
-                        c_work = str(item.get("work_experience", "")).strip()
-                        c_tip = str(item.get("interview_tip", "")).strip()
-                        if c_title and (c_def or c_work):
-                            parsed_cards.append([c_cat, c_title, c_def, c_code, c_work, c_tip])
-                    elif isinstance(item, list) and len(item) >= 6:
-                        parsed_cards.append([str(x) for x in item[:6]])
-
-                if len(parsed_cards) >= 5:
-                    return parsed_cards
-            except Exception:
-                continue
+        if len(parsed_cards) >= 5:
+            return parsed_cards
 
     return _generate_deterministic_cards(tech_name, target_role)
 

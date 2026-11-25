@@ -501,4 +501,77 @@ def test_api_cheatsheet_add_parses_selected_resume(client):
     assert unused_data["resume_match_status"] == "not_found"
 
 
+def test_two_stage_topic_discovery_and_card_coverage(monkeypatch):
+    import services.interview.cheatsheet_generator as cg
+
+    monkeypatch.setattr(cg, "get_ai_providers", lambda: [("dummy_client", ["dummy-model"], "Mock")])
+    captured_prompts = []
+
+    def fake_invoke(providers, prompt, max_tokens=4000):
+        captured_prompts.append(prompt)
+        if len(captured_prompts) == 1:
+            return {
+                "topics": [
+                    {"category": "Architecture", "topic": "Micro-partitions & Clustering", "focus": "Pruning"},
+                    {"category": "Performance", "topic": "Result Cache vs Warehouse Cache", "focus": "Caching"},
+                    {"category": "Q&A", "topic": "Q: How does Time Travel differ from Fail-safe?", "focus": "Retention"},
+                    {"category": "Security", "topic": "RBAC & Dynamic Data Masking", "focus": "Access control"},
+                    {"category": "Reliability", "topic": "Snowpipe vs Streams and Tasks", "focus": "Ingestion"},
+                ]
+            }
+        return {
+            "cards": [
+                {
+                    "category": "Architecture",
+                    "title": "Micro-partitions & Clustering",
+                    "definition": "Snowflake stores tables in 50-500MB micro-partitions.",
+                    "code": "ALTER TABLE events CLUSTER BY (event_date);",
+                    "work_experience": "Reduced scan cost by 60%.",
+                    "interview_tip": "Explain pruning.",
+                },
+                {
+                    "category": "Performance",
+                    "title": "Result Cache vs Warehouse Cache",
+                    "definition": "Result cache persists 24h; local SSD cache lives on warehouse.",
+                    "code": "SELECT * FROM table;",
+                    "work_experience": "Cut warehouse spend.",
+                    "interview_tip": "Distinguish both caches.",
+                },
+                {
+                    "category": "Q&A",
+                    "title": "Q: How does Time Travel differ from Fail-safe?",
+                    "definition": "A: Time Travel is user-queryable (up to 90d); Fail-safe is 7d Snowflake-managed recovery.",
+                    "code": "SELECT * FROM orders AT(OFFSET => -3600);",
+                    "work_experience": "Recovered dropped table.",
+                    "interview_tip": "Note edition limits.",
+                },
+                {
+                    "category": "Security",
+                    "title": "RBAC & Dynamic Data Masking",
+                    "definition": "Masking policies redact PII at query time by role.",
+                    "code": "CREATE MASKING POLICY email_mask AS (val STRING) ...",
+                    "work_experience": "Enforced PII masking.",
+                    "interview_tip": "Mention role hierarchy.",
+                },
+                {
+                    "category": "Reliability",
+                    "title": "Snowpipe vs Streams and Tasks",
+                    "definition": "Snowpipe ingests continuously; Streams + Tasks transform incrementally.",
+                    "code": "CREATE TASK etl_task SCHEDULE = '5 MINUTE' ...",
+                    "work_experience": "Automated CDC pipeline.",
+                    "interview_tip": "Compare latency vs cost.",
+                },
+            ]
+        }
+
+    monkeypatch.setattr(cg, "_invoke_json_llm", fake_invoke)
+    cards = cg._generate_custom_cards_via_ai("Snowflake", "Data Engineer", "Built Snowflake pipelines")
+    assert len(captured_prompts) == 2
+    assert "20 to 24 MOST IMPORTANT" in captured_prompts[0]
+    assert "Micro-partitions & Clustering" in captured_prompts[1]
+    assert "Q: How does Time Travel differ from Fail-safe?" in captured_prompts[1]
+    assert len(cards) == 5
+    assert cards[2][1].startswith("Q:")
+
+
 
