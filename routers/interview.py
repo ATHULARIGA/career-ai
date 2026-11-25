@@ -1123,7 +1123,7 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
             if rec.get("tech_name", "").lower() == tech_name.lower():
                 revised_indices = rec.get("revised_indices", [])
                 cs_obj = rec.get("cheatsheet")
-                if isinstance(cs_obj, dict) and cs_obj.get("cards") and len(cs_obj.get("cards", [])) >= 4:
+                if isinstance(cs_obj, dict) and cs_obj.get("cards") and cs_obj.get("deck_version", 1) >= 2 and len(cs_obj.get("cards", [])) >= 12:
                     cached_payload = dict(cs_obj)
                 break
 

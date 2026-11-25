@@ -351,14 +351,40 @@ def test_detect_technology_domain_and_deterministic_cards():
     assert _detect_technology_domain("FastAPI") == "framework"
     assert _detect_technology_domain("Python") == "language"
 
-    # Verify deterministic cards have real code snippets, not dummy setup = True
+    # Verify deterministic cards have real code snippets and comprehensive Q&A coverage
     db_cards = _generate_deterministic_cards("PostgreSQL", "Database Engineer")
-    assert len(db_cards) >= 6
+    assert len(db_cards) >= 12
     assert any("CREATE INDEX" in c[3] or "shared_buffers" in c[3] for c in db_cards)
+    assert sum(1 for c in db_cards if c[0] == "Q&A") >= 5
 
     kafka_cards = _generate_deterministic_cards("Kafka", "Streaming Engineer")
-    assert len(kafka_cards) >= 6
-    assert any("acks" in c[3] or "kafka-consumer-groups" in c[3] for c in kafka_cards)
+    assert len(kafka_cards) >= 12
+    assert any("acks" in c[3] or "group.id" in c[3] for c in kafka_cards)
+    assert sum(1 for c in kafka_cards if c[0] == "Q&A") >= 5
+
+    for domain_tech in ["React", "AWS", "FastAPI", "Node.js", "Python", "Rust", "GraphQL"]:
+        cards = _generate_deterministic_cards(domain_tech, "Senior Engineer")
+        assert len(cards) >= 12, f"{domain_tech} fallback should have >=12 cards"
+        assert sum(1 for c in cards if c[0] == "Q&A") >= 5, f"{domain_tech} fallback should have >=5 Q&A cards"
+
+
+def test_curated_decks_comprehensive_coverage():
+    from services.interview.cheatsheet_generator import CURATED_DECKS
+
+    expected_techs = [
+        "fastapi", "python", "postgresql", "docker", "react", "redis",
+        "sql", "kubernetes", "aws", "kafka", "git", "system_design",
+        "nodejs", "typescript", "django", "mongodb", "graphql",
+    ]
+    for tech in expected_techs:
+        assert tech in CURATED_DECKS, f"Missing curated deck for {tech}"
+        deck = CURATED_DECKS[tech]
+        assert len(deck) >= 12, f"{tech} curated deck should have >=12 cards, got {len(deck)}"
+        qa_cards = [c for c in deck if c[0] == "Q&A"]
+        assert len(qa_cards) >= 2, f"{tech} curated deck should include Q&A cards"
+        for card in deck:
+            assert len(card) == 6
+            assert card[1].strip() and card[2].strip()
 
 
 def test_extract_project_talking_points_dynamic():
