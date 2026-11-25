@@ -2348,7 +2348,8 @@ async function selectTechnology(tech, btn) {
       if (titleEl) titleEl.textContent = `${data.tech_name} interview cheatsheet`;
       if (subEl) {
         const rolePart = data.target_role ? `Tailored for ${data.target_role} interviews. ` : '';
-        subEl.textContent = `${data.total_cards} cards. ${rolePart}Tap a card to open it: interview answer, example, use case, and tip.`;
+        const matchPart = data.used_in_resume ? 'Matched in your selected resume. ' : (data.has_resume_tailoring ? 'Not listed in your selected resume — includes transferable framing. ' : '');
+        subEl.textContent = `${data.total_cards} cards. ${rolePart}${matchPart}Tap a card to open it: interview answer, example, use case, and tip.`;
       }
 
       renderCards();
@@ -2395,10 +2396,12 @@ async function addCustomTechnology(e) {
   }
 
   try {
+    const csResumeSelect = document.getElementById('csResumeSelect');
+    const selectedResumeId = csResumeSelect ? csResumeSelect.value : '';
     const res = await fetch('/api/interview/cheatsheet/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tech: techName })
+      body: JSON.stringify({ tech: techName, resume_id: selectedResumeId })
     });
     const data = await res.json();
 
@@ -2413,10 +2416,11 @@ async function addCustomTechnology(e) {
         const addBtn = nav ? nav.querySelector('.cs-add-tech-btn') : null;
         const wrap = document.createElement('div');
         wrap.className = 'cs-tech-pill-wrap';
+        const pillTag = data.used_in_resume ? 'Resume' : 'Custom';
         wrap.innerHTML = `
           <button type="button" class="cs-tech-pill active" aria-pressed="true" data-tech="${data.tech_name}">
             <span>${data.tech_name}</span>
-            <span class="cs-tech-tag">Custom</span>
+            <span class="cs-tech-tag">${pillTag}</span>
           </button>
           <button type="button" class="cs-tech-remove" title="Remove ${data.tech_name}" aria-label="Remove ${data.tech_name}">&times;</button>
         `;
@@ -2441,7 +2445,8 @@ async function addCustomTechnology(e) {
       if (titleEl) titleEl.textContent = `${data.tech_name} interview cheatsheet`;
       if (subEl) {
         const rolePart = data.target_role ? `Tailored for ${data.target_role} interviews. ` : '';
-        subEl.textContent = `${data.total_cards} cards. ${rolePart}Tap a card to open it: interview answer, example, use case, and tip.`;
+        const matchPart = data.used_in_resume ? 'Matched in your selected resume. ' : (data.has_resume_tailoring ? 'Not listed in your selected resume — includes transferable framing. ' : '');
+        subEl.textContent = `${data.total_cards} cards. ${rolePart}${matchPart}Tap a card to open it: interview answer, example, use case, and tip.`;
       }
 
       document.querySelectorAll('.cs-tech-pill').forEach(b => {

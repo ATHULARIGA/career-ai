@@ -76,15 +76,27 @@ def test_tailor_cheatsheet_for_resume():
         ["Basics", "Overview", "Answer text", "code()", "Use case", "Tip text"],
         ["Q&A", "Scaling", "Scaling answer", "", "Production", "Scaling tip"],
     ]
-    tailored = tailor_cheatsheet_for_resume(
+    # Case 1: Tech IS used in resume experience
+    tailored_used = tailor_cheatsheet_for_resume(
         base_cards,
-        resume_context="Architected 50k rpm microservice",
+        resume_context="### Core API\n- Architected 50k rpm microservice using FastAPI and asyncpg",
         target_role="Lead Architect",
         tech_name="FastAPI",
     )
-    assert len(tailored) == len(base_cards)
-    assert "Lead Architect" in tailored[0][5]
-    assert "Resume anchor" in tailored[1][5]
+    assert len(tailored_used) == len(base_cards)
+    assert "Resume anchor" in tailored_used[0][5]
+    assert "Project talking point" in tailored_used[1][5]
+
+    # Case 2: Tech is NOT used in resume -> honest transferable framing, no fabricated ownership
+    tailored_unused = tailor_cheatsheet_for_resume(
+        base_cards,
+        resume_context="### Core API\n- Architected 50k rpm microservice using FastAPI and asyncpg",
+        target_role="Lead Architect",
+        tech_name="Snowflake",
+    )
+    assert "Not listed on your selected resume yet" in tailored_unused[0][4]
+    assert "Honest interview framing" in tailored_unused[0][5]
+    assert "Transferable angle" in tailored_unused[1][5]
 
 
 def test_build_standalone_cheatsheet_html():
@@ -420,6 +432,73 @@ def test_interview_page_tab_accessibility_attributes(client):
     # Tabpanels have role="tabpanel" and tabindex="0"
     assert 'id="viewSimulator" class="iv-view-pane active" role="tabpanel" aria-labelledby="tabBtnSimulator" tabindex="0"' in html
     assert 'id="viewCheatsheet" class="iv-view-pane" role="tabpanel" aria-labelledby="tabBtnCheatsheet" tabindex="0"' in html
+
+
+def test_dynamic_resume_tech_extraction_and_usage_detection():
+    from services.interview.cheatsheet_generator import check_tech_used_in_resume
+
+    resume = """
+    Technical Skills: Python, Snowflake, Apache Airflow, Terraform, PySpark, dbt
+    Experience:
+    ### DataCorp - Senior Data Engineer
+    - Built automated ETL pipelines in Apache Airflow and PySpark processing 2TB daily.
+    """
+    techs = extract_technologies_from_resume(resume)
+    assert "Python" in techs
+    assert "Snowflake" in techs
+    assert "Apache Airflow" in techs
+    assert "Terraform" in techs
+    assert "dbt" in techs
+
+    # Used in experience
+    used_exp = check_tech_used_in_resume(resume, "Apache Airflow")
+    assert used_exp["used_in_resume"] is True
+    assert used_exp["resume_match_status"] == "experience"
+    assert len(used_exp["project_points"]) >= 1
+
+    # Listed in skills only
+    used_skills = check_tech_used_in_resume(resume, "Snowflake")
+    assert used_skills["used_in_resume"] is True
+    assert used_skills["resume_match_status"] == "skills_only"
+
+    # Not used in resume
+    not_used = check_tech_used_in_resume(resume, "Rust")
+    assert not_used["used_in_resume"] is False
+    assert not_used["resume_match_status"] == "not_found"
+
+
+def test_api_cheatsheet_add_parses_selected_resume(client):
+    # Upload a resume with Snowflake in experience
+    resume_content = b"""
+    Alex Rivera
+    Data Platform Engineer
+    Skills: Python, Snowflake, Terraform
+    Experience:
+    ### FinData Inc - Data Engineer
+    - Migrated legacy warehouse workloads to Snowflake cutting query cost by 40%.
+    """
+    up_res = client.post(
+        "/api/interview/upload-resume",
+        files={"file": ("data_eng_resume.txt", resume_content, "text/plain")},
+        data={"target_role": "Data Engineer"},
+    )
+    assert up_res.status_code == 200
+    selected_id = up_res.json()["selected_resume_id"]
+    assert "Snowflake" in up_res.json()["resume_technologies"]
+
+    # Add Snowflake -> should detect used_in_resume = True
+    add_used = client.post("/api/interview/cheatsheet/add", json={"tech": "Snowflake", "resume_id": selected_id})
+    assert add_used.status_code == 200
+    used_data = add_used.json()
+    assert used_data["used_in_resume"] is True
+    assert used_data["resume_match_status"] == "experience"
+
+    # Add Rust (not on resume) -> should detect used_in_resume = False
+    add_unused = client.post("/api/interview/cheatsheet/add", json={"tech": "Rust", "resume_id": selected_id})
+    assert add_unused.status_code == 200
+    unused_data = add_unused.json()
+    assert unused_data["used_in_resume"] is False
+    assert unused_data["resume_match_status"] == "not_found"
 
 
 

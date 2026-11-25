@@ -254,29 +254,123 @@ CURATED_DECKS.update(EXTRA_CURATED_DECKS)
 # ---------------------------------------------------------------------------
 # Technology Extraction from Resume
 # ---------------------------------------------------------------------------
+EXTENDED_TECH_ALIASES: Dict[str, List[str]] = {
+    "Apache Spark": ["apache spark", "pyspark", "spark"],
+    "Apache Airflow": ["apache airflow", "airflow"],
+    "Snowflake": ["snowflake"],
+    "dbt": ["dbt", "data build tool"],
+    "Terraform": ["terraform", "iac"],
+    "Go": ["golang", "go"],
+    "Rust": ["rust", "cargo"],
+    "Java": ["java", "jvm"],
+    "C++": ["c++", "cpp"],
+    "C#": ["c#", "csharp", ".net", "dotnet"],
+    "Next.js": ["next.js", "nextjs"],
+    "Vue.js": ["vue.js", "vuejs", "vue"],
+    "Tailwind CSS": ["tailwind", "tailwindcss", "tailwind css"],
+    "MySQL": ["mysql"],
+    "Elasticsearch": ["elasticsearch", "elastic search", "opensearch"],
+    "RabbitMQ": ["rabbitmq"],
+    "Linux": ["linux", "ubuntu", "bash"],
+    "GCP": ["gcp", "google cloud", "google cloud platform"],
+    "Azure": ["azure", "microsoft azure"],
+    "BigQuery": ["bigquery"],
+    "Databricks": ["databricks"],
+    "PyTorch": ["pytorch"],
+    "TensorFlow": ["tensorflow"],
+    "Pandas": ["pandas"],
+    "NumPy": ["numpy"],
+    "Scikit-learn": ["scikit-learn", "sklearn"],
+    "Flask": ["flask"],
+    "Spring Boot": ["spring boot", "springboot"],
+    "GitHub Actions": ["github actions"],
+    "CI/CD": ["ci/cd", "cicd"],
+    "SQLite": ["sqlite"],
+    "Fastly": ["fastly"],
+    "Nginx": ["nginx"],
+    "Jenkins": ["jenkins"],
+}
+
+_SKILL_STOPWORDS = {
+    "and", "or", "with", "using", "etc", "tools", "languages", "frameworks",
+    "databases", "cloud", "platforms", "libraries", "technologies", "skills",
+    "technical skills", "core competencies", "software", "engineering", "other",
+}
+
+
+def _clean_skill_token(raw: str) -> str:
+    """Normalizes a raw skill token extracted from a resume skills line."""
+    tok = re.sub(r"\([^)]*\)", "", raw).strip(" .,:;-•*|/\t\r\n")
+    if not tok or len(tok) > 35 or len(tok) < 2:
+        return ""
+    if tok.lower() in _SKILL_STOPWORDS:
+        return ""
+    # Skip sentences or prose fragments (> 4 words)
+    if len(tok.split()) > 4:
+        return ""
+    return tok
+
+
 def extract_technologies_from_resume(resume_text: str, report: Optional[Dict[str, Any]] = None) -> List[str]:
     """
-    Extracts all recognized technologies from the candidate's resume text and report.
-    Returns prioritized canonical technology names.
+    Extracts all recognized and listed technologies from the candidate's resume text and report.
+    Combines canonical registry matching, extended tech aliases, and dynamic skills-line parsing
+    so users can select any technology from their resume.
     """
     detected: List[str] = []
-    seen = set()
+    seen_lower = set()
+
+    def _add(name: str) -> None:
+        key = re.sub(r"[^a-zA-Z0-9\+\#\.]+", "", name.lower())
+        if key and key not in seen_lower:
+            seen_lower.add(key)
+            detected.append(name)
 
     full_corpus = (resume_text or "").lower()
     if report and isinstance(report, dict):
         full_corpus += " " + json.dumps(report).lower()
 
-    # Match against canonical registry
+    # 1. Match against canonical registry
     for tech_id, meta in TECH_REGISTRY.items():
         canonical = meta["canonical"]
         aliases = meta.get("aliases", [canonical.lower()])
         for alias in aliases:
             pattern = r"(?:\b|_)" + re.escape(alias) + r"(?:\b|_)"
             if re.search(pattern, full_corpus):
-                if canonical not in seen:
-                    seen.add(canonical)
-                    detected.append(canonical)
+                _add(canonical)
                 break
+
+    # 2. Match against extended tech aliases
+    for canonical, aliases in EXTENDED_TECH_ALIASES.items():
+        for alias in aliases:
+            pattern = r"(?:^|[\s,;|/(])" + re.escape(alias) + r"(?:$|[\s,;|/)])"
+            if re.search(pattern, full_corpus):
+                _add(canonical)
+                break
+
+    # 3. Dynamically parse explicit skills lines in resume_text (e.g. "Skills: Python, Airflow, Snowflake")
+    if resume_text:
+        clean_res = re.sub(r"\\textbf\{([^}]*)\}", r"\1", resume_text)
+        clean_res = re.sub(r"\\[a-zA-Z]+\*?\{?", " ", clean_res).replace("}", " ")
+        for line in clean_res.splitlines():
+            stripped = line.strip()
+            lower = stripped.lower()
+            if any(k in lower for k in ["skills:", "technologies:", "tools:", "frameworks:", "languages:", "databases:", "platforms:", "stack:", "competencies:"]):
+                after_colon = stripped.split(":", 1)[1] if ":" in stripped else stripped
+                for part in re.split(r"[,|•;/]+", after_colon):
+                    tok = _clean_skill_token(part)
+                    if tok:
+                        _add(tok)
+
+    # 4. Also inspect structured skill lists in report if available
+    if report and isinstance(report, dict):
+        for field_key in ("skills", "matched_skills", "extracted_skills", "technologies"):
+            vals = report.get(field_key)
+            if isinstance(vals, list):
+                for item in vals:
+                    tok = _clean_skill_token(str(item))
+                    if tok:
+                        _add(tok)
 
     # If no resume skills detected, fallback to popular full-stack stack
     if not detected:
@@ -357,7 +451,12 @@ def get_ai_providers() -> List[Tuple[Any, List[str], str]]:
     return providers
 
 
-def _generate_custom_cards_via_ai(tech_name: str, target_role: str = "", resume_context: str = "") -> List[List[str]]:
+def _generate_custom_cards_via_ai(
+    tech_name: str,
+    target_role: str = "",
+    resume_context: str = "",
+    usage_info: Optional[Dict[str, Any]] = None,
+) -> List[List[str]]:
     """
     Invokes multi-provider LLM pipeline to dynamically generate 22 to 28
     comprehensive, production-grade interview cards covering all critical topics
@@ -375,10 +474,43 @@ def _generate_custom_cards_via_ai(tech_name: str, target_role: str = "", resume_
     role_name = target_role.strip() or "Software Engineer"
     tech_clean = tech_name.strip()
 
+    if usage_info is None:
+        usage_info = check_tech_used_in_resume(resume_context, tech_clean) if resume_context else {
+            "used_in_resume": False,
+            "in_experience": False,
+            "in_skills_only": False,
+            "project_points": [],
+            "resume_match_status": "not_found",
+        }
+
+    if usage_info.get("in_experience") and usage_info.get("project_points"):
+        bullets_preview = "; ".join(
+            f"[{pt['context']}] {pt['point']}" for pt in usage_info["project_points"][:4]
+        )
+        resume_usage_instruction = (
+            f"Resume Usage Status: CONFIRMED USED in candidate's work/project experience ({bullets_preview}). "
+            f"Tailor 'work_experience' directly to these real resume projects and metrics."
+        )
+    elif usage_info.get("used_in_resume"):
+        resume_usage_instruction = (
+            f"Resume Usage Status: LISTED in candidate's resume skills for {role_name}. "
+            f"Frame 'work_experience' around realistic {role_name} production scenarios connecting to their resume stack."
+        )
+    elif clean_resume:
+        resume_usage_instruction = (
+            f"Resume Usage Status: NOT FOUND on the candidate's resume. "
+            f"Do NOT claim or fabricate that the candidate already used {tech_clean} in their past jobs. "
+            f"Instead, frame 'work_experience' as how to bridge their existing resume stack to {tech_clean} in {role_name} interviews, "
+            f"and give honest interview framing tips."
+        )
+    else:
+        resume_usage_instruction = "Resume Usage Status: No resume provided; tailor for a general senior candidate."
+
     prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer at top-tier technology companies.
 Generate an exhaustive, all-in-one interview cheat sheet deck for: "{tech_clean}".
 Target Candidate Role: "{role_name}".
 Candidate Resume Context: "{clean_resume if clean_resume else 'General senior candidate'}".
+{resume_usage_instruction}
 
 Generate 22 to 28 comprehensive, production-grade interview revision cards so the candidate has EVERY important topic, internal detail, code pattern, and high-frequency interview Q&A in one place.
 Distribute the cards across ALL of these essential interview pillars:
@@ -568,20 +700,91 @@ def extract_project_talking_points_for_tech(resume_context: str, tech_name: str)
     return deduped
 
 
+def check_tech_used_in_resume(resume_context: str, tech_name: str) -> Dict[str, Any]:
+    """
+    Parses the candidate's resume to determine whether `tech_name` was used in their
+    experience/projects, listed in skills only, or not present on the resume.
+    """
+    if not resume_context or not tech_name:
+        return {
+            "used_in_resume": False,
+            "in_experience": False,
+            "in_skills_only": False,
+            "project_points": [],
+            "resume_match_status": "not_found",
+        }
+
+    project_points = extract_project_talking_points_for_tech(resume_context, tech_name)
+    if project_points:
+        return {
+            "used_in_resume": True,
+            "in_experience": True,
+            "in_skills_only": False,
+            "project_points": project_points,
+            "resume_match_status": "experience",
+        }
+
+    tech_lower = tech_name.lower().strip()
+    norm_key = re.sub(r"[^a-zA-Z0-9]+", "", tech_lower)
+    aliases = [tech_lower]
+    for k, meta in TECH_REGISTRY.items():
+        if norm_key == k or norm_key in [re.sub(r"[^a-zA-Z0-9]+", "", a) for a in meta.get("aliases", [])]:
+            aliases.extend([a.lower() for a in meta.get("aliases", [])])
+            break
+    for canonical, ext_aliases in EXTENDED_TECH_ALIASES.items():
+        if norm_key == re.sub(r"[^a-zA-Z0-9]+", "", canonical.lower()) or tech_lower in ext_aliases:
+            aliases.extend(ext_aliases)
+            break
+
+    corpus = resume_context.lower()
+    in_resume_text = any(
+        re.search(r"(?:^|[\s,;|/(\b_])" + re.escape(alias) + r"(?:$|[\s,;|/)\b_])", corpus)
+        for alias in set(aliases)
+    )
+    if in_resume_text:
+        return {
+            "used_in_resume": True,
+            "in_experience": False,
+            "in_skills_only": True,
+            "project_points": [],
+            "resume_match_status": "skills_only",
+        }
+
+    return {
+        "used_in_resume": False,
+        "in_experience": False,
+        "in_skills_only": False,
+        "project_points": [],
+        "resume_match_status": "not_found",
+    }
+
+
 def tailor_cheatsheet_for_resume(
     cards: List[List[str]],
     resume_context: str = "",
     target_role: str = "",
     tech_name: str = "",
+    usage_info: Optional[Dict[str, Any]] = None,
 ) -> List[List[str]]:
     """
     Enriches cheat sheet cards with personalized candidate talking points
-    tailored to the user's specific resume projects and target role.
+    tailored to whether and how the technology was used in the user's resume.
     """
     if not resume_context and not target_role:
         return cards
 
-    project_points = extract_project_talking_points_for_tech(resume_context, tech_name)
+    if usage_info is None:
+        usage_info = check_tech_used_in_resume(resume_context, tech_name) if resume_context else {
+            "used_in_resume": False,
+            "in_experience": False,
+            "in_skills_only": False,
+            "project_points": [],
+            "resume_match_status": "not_found",
+        }
+
+    project_points = usage_info.get("project_points", [])
+    used_in_resume = bool(usage_info.get("used_in_resume"))
+    in_skills_only = bool(usage_info.get("in_skills_only"))
     role_mention = target_role or "Software Engineer"
     tailored_cards = []
 
@@ -602,14 +805,20 @@ def tailor_cheatsheet_for_resume(
                 c_tip = f"Resume anchor ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
             elif c_cat == "Q&A":
                 c_tip = f"Project talking point ({ctx_name}): Connect this question to: '{pt_text}'. " + c_tip
-        elif resume_context:
-            c_use = f"In your {role_mention} portfolio projects: Applied {c_title} in production workflows to eliminate bottlenecks, ensure high throughput, and maintain resilient data consistency."
+        elif in_skills_only:
+            c_use = f"Listed in your {role_mention} resume skills: Be ready to walk through how you applied {c_title} in production (or a hands-on project) with concrete latency/reliability metrics."
             if idx == 0 and target_role:
-                c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
+                c_tip = f"Resume check: {tech_name or 'This tech'} appears in your skills section without a detailed experience bullet—prepare one crisp 30-second production story. " + c_tip
             elif c_cat == "Q&A":
-                c_tip = f"Resume anchor: Connect this question to the architectural decisions you made in your resume projects. " + c_tip
+                c_tip = f"Resume anchor: Connect this {tech_name or 'topic'} question to the closest production project on your resume. " + c_tip
+        elif resume_context and not used_in_resume:
+            c_use = f"Not listed on your selected resume yet — Recommended {role_mention} framing: Bridge from your existing resume stack and explain how you would apply {c_title} in production."
+            if idx == 0:
+                c_tip = f"Honest interview framing: {tech_name or 'This technology'} is not on your selected resume. State your transferable foundation from your current stack rather than claiming prior production ownership. " + c_tip
+            elif c_cat == "Q&A":
+                c_tip = f"Transferable angle: Relate {c_title} to analogous patterns you built in your resume projects. " + c_tip
         elif target_role:
-            c_use = f"Recommended application for {role_mention}: Implemented {c_title} in production services to eliminate single points of failure and streamline API operations."
+            c_use = f"Recommended application for {role_mention}: Apply {c_title} in production services to eliminate single points of failure and streamline operations."
             if idx == 0:
                 c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
 
@@ -649,10 +858,19 @@ def get_cheatsheet_for_technology(
     providers = get_ai_providers()
     is_curated = norm_key in CURATED_DECKS
 
+    # Check whether the user actually used this technology in their resume
+    usage_info = check_tech_used_in_resume(resume_text, canonical_name) if resume_text else {
+        "used_in_resume": False,
+        "in_experience": False,
+        "in_skills_only": False,
+        "project_points": [],
+        "resume_match_status": "not_found",
+    }
+
     # If AI is active and requested or custom technology:
     if providers and (force_ai or not is_curated or (resume_text and len(resume_text) > 100)):
         try:
-            raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text)
+            raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text, usage_info=usage_info)
         except Exception:
             raw_cards = []
 
@@ -664,7 +882,13 @@ def get_cheatsheet_for_technology(
             raw_cards = _generate_deterministic_cards(canonical_name, target_role)
 
     # Apply tailoring
-    tailored_cards = tailor_cheatsheet_for_resume(raw_cards, resume_text, target_role, canonical_name)
+    tailored_cards = tailor_cheatsheet_for_resume(
+        raw_cards,
+        resume_text,
+        target_role,
+        canonical_name,
+        usage_info=usage_info,
+    )
 
     categories = ["All"] + list(dict.fromkeys(c[0] for c in tailored_cards if c[0]))
 
@@ -675,6 +899,8 @@ def get_cheatsheet_for_technology(
         "total_cards": len(tailored_cards),
         "target_role": target_role or "Software Engineer",
         "has_resume_tailoring": bool(resume_text or target_role),
+        "used_in_resume": bool(usage_info.get("used_in_resume")),
+        "resume_match_status": usage_info.get("resume_match_status", "not_found"),
         "deck_version": 2,
     }
 

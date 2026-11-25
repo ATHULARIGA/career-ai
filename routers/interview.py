@@ -1123,7 +1123,13 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
             if rec.get("tech_name", "").lower() == tech_name.lower():
                 revised_indices = rec.get("revised_indices", [])
                 cs_obj = rec.get("cheatsheet")
-                if isinstance(cs_obj, dict) and cs_obj.get("cards") and cs_obj.get("deck_version", 1) >= 2 and len(cs_obj.get("cards", [])) >= 12:
+                if (
+                    isinstance(cs_obj, dict)
+                    and cs_obj.get("cards")
+                    and cs_obj.get("deck_version", 1) >= 2
+                    and len(cs_obj.get("cards", [])) >= 12
+                    and cs_obj.get("selected_resume_id", "") == selected_id
+                ):
                     cached_payload = dict(cs_obj)
                 break
 
@@ -1173,12 +1179,12 @@ async def api_interview_cheatsheet_add(request: Request):
             return JSONResponse({"error": "Invalid technology name"}, status_code=400)
 
         user_email = (request.session.get("user_email") or "").strip().lower()
-        resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-        resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-        target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+        selected_id = str(body.get("resume_id", "")).strip() or request.session.get("selected_resume_id", "")
+        resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
         payload = get_cheatsheet_for_technology(clean_tech, resume_text=resume_text, target_role=target_role)
         payload["revised_indices"] = []
+        payload["selected_resume_id"] = selected_id
 
         # Re-enable if previously excluded
         excluded = request.session.get("excluded_technologies", [])
