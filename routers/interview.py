@@ -1115,17 +1115,37 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
         selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
         resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
 
-        payload = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
-
         saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
         revised_indices = []
+        cached_payload = None
+
         for rec in saved_records:
             if rec.get("tech_name", "").lower() == tech_name.lower():
                 revised_indices = rec.get("revised_indices", [])
+                cs_obj = rec.get("cheatsheet")
+                if isinstance(cs_obj, dict) and cs_obj.get("cards") and len(cs_obj.get("cards", [])) >= 4:
+                    cached_payload = dict(cs_obj)
                 break
 
         if not revised_indices:
             revised_indices = request.session.get(f"revised_{tech_name.lower()}", [])
+
+        if cached_payload:
+            payload = cached_payload
+        else:
+            payload = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
+            if user_email:
+                save_user_cheatsheet(user_email, payload["tech_name"], payload, is_custom=False, revised_indices=revised_indices)
+            else:
+                session_custom = request.session.get("session_custom_cheatsheets", [])
+                filtered = [c for c in session_custom if c.get("tech_name", "").lower() != payload["tech_name"].lower()]
+                filtered.append({
+                    "tech_name": payload["tech_name"],
+                    "is_custom": False,
+                    "revised_indices": revised_indices,
+                    "cheatsheet": payload
+                })
+                request.session["session_custom_cheatsheets"] = filtered
 
         payload["revised_indices"] = revised_indices
         payload["selected_resume_id"] = selected_id

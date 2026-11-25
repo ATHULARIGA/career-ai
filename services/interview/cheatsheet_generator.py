@@ -8,7 +8,7 @@ interview tips, and revision tracking.
 import re
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from openai import OpenAI
 
 # ---------------------------------------------------------------------------
@@ -466,117 +466,426 @@ def extract_technologies_from_resume(resume_text: str, report: Optional[Dict[str
     return detected
 
 # ---------------------------------------------------------------------------
-# Dynamic AI Generator for Custom Technologies
+# Dynamic AI Generator for All Technologies
 # ---------------------------------------------------------------------------
+def get_ai_providers() -> List[Tuple[Any, List[str], str]]:
+    """
+    Returns ordered list of configured AI provider clients, models, and provider labels:
+    1. Google Gemini (via OpenAI-compatible endpoint)
+    2. OpenRouter (Free models + BYOK fallbacks)
+    3. Groq (if configured)
+    """
+    providers: List[Tuple[Any, List[str], str]] = []
+
+    # 1. Google Gemini (via Google AI Studio OpenAI-compatible endpoint)
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if gemini_key and gemini_key not in ("dummy", "ci-mock-key"):
+        try:
+            client = OpenAI(
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                api_key=gemini_key,
+                timeout=12,
+                max_retries=0,
+            )
+            providers.append((
+                client,
+                ["gemini-3-flash-preview", "gemini-3.5-flash", "gemini-3.6-flash"],
+                "Gemini",
+            ))
+        except Exception:
+            pass
+
+    # 2. OpenRouter
+    openrouter_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if openrouter_key and openrouter_key not in ("dummy", "ci-mock-key"):
+        try:
+            client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=openrouter_key,
+                timeout=12,
+                max_retries=0,
+            )
+            providers.append((
+                client,
+                [
+                    "openai/gpt-4o-mini",
+                    "meta-llama/llama-3.3-70b-instruct",
+                    "google/gemma-4-26b-a4b-it:free",
+                ],
+                "OpenRouter",
+            ))
+        except Exception:
+            pass
+
+    # 3. Groq
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if groq_key and groq_key not in ("dummy", "ci-mock-key"):
+        try:
+            client = OpenAI(
+                base_url="https://api.groq.com/openai/v1",
+                api_key=groq_key,
+                timeout=10,
+                max_retries=0,
+            )
+            providers.append((
+                client,
+                ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+                "Groq",
+            ))
+        except Exception:
+            pass
+
+    return providers
+
+
 def _generate_custom_cards_via_ai(tech_name: str, target_role: str = "", resume_context: str = "") -> List[List[str]]:
     """
-    Invokes external LLM to generate 12-16 structured interview cards for any custom technology.
+    Invokes multi-provider LLM pipeline to dynamically generate 12 to 16
+    expert-level, production-grade interview cards for ANY technology.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "dummy":
+    providers = get_ai_providers()
+    if not providers:
         return _generate_deterministic_cards(tech_name, target_role)
 
-    prompt = f"""
-You are an expert technical interviewer preparing an interview cheat sheet for: {tech_name}.
-Candidate target role: {target_role or "Software Engineer"}.
-Resume context snippet: {resume_context[:600] if resume_context else "General candidate"}.
+    # Prepare sanitized resume context (up to 3000 chars)
+    clean_resume = re.sub(r"\\[a-zA-Z]+(\[[^\]]*\])?(\{([^}]*)\})?", r"\3", resume_context or "")
+    clean_resume = re.sub(r"[\{\}\$\\\#\*\~]", "", clean_resume)
+    clean_resume = re.sub(r"\s+", " ", clean_resume).strip()[:3000]
 
-Create 12 to 16 comprehensive, high-yield interview cards for {tech_name}.
-Categories to include: Basics, Architecture, Performance, Security, Testing & Best Practices, Common Interview Q&A.
+    role_name = target_role.strip() or "Software Engineer"
+    tech_clean = tech_name.strip()
 
-Return ONLY a valid JSON array of cards where each card is a 6-element array:
-[
-  "Category",
-  "Topic Title",
-  "Standard Definition: A clear, authoritative technical definition explaining what the feature is and how it works",
-  "Code example (or clean configuration snippet, or empty string if not applicable)",
-  "How I used this in my work experience / personal project: Concrete production use case with architectural details and metrics",
-  "Interview tip / common gotcha to watch out for: How to answer out loud and pitfalls to avoid"
-]
+    prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer at top-tier technology companies.
+Generate a comprehensive, high-yield interview cheat sheet deck for: "{tech_clean}".
+Target Candidate Role: "{role_name}".
+Candidate Resume Context: "{clean_resume if clean_resume else 'General senior candidate'}".
 
-Strict rules:
-- Return ONLY the JSON array, no markdown fences, no surrounding commentary.
-- Every card must have high technical accuracy and concrete talking points.
+Generate 12 to 16 production-grade, in-depth interview revision cards.
+Cover the standard engineering pillars across the cards:
+- Basics: Fundamental architecture, core design philosophy, runtime execution model, and why it is chosen over alternatives.
+- Architecture: Deep internals (thread/event-loop model, memory layout, storage engines, protocols, clustering/partitioning, consensus).
+- Concurrency: Handling concurrent requests/writes, race conditions, async I/O, locking, idempotency, or transaction isolation levels.
+- Performance: Latency profiling, memory management, query/index tuning, connection pooling, zero-copy, caching strategies, and benchmarking.
+- Reliability: Failure modes, split-brain, backpressure, retries with exponential backoff, circuit breaking, dead-letter queues, and recovery.
+- Security: Authentication, authorization (RBAC/ABAC), credential management, injection prevention, encryption at rest and in-transit.
+- Q&A: Real high-bar interview questions with counter-intuitive traps and battle-tested verbal answers.
+
+Return a valid JSON object with this exact structure:
+{{
+  "cards": [
+    {{
+      "category": "Category Name (Basics, Architecture, Concurrency, Performance, Reliability, Security, Q&A)",
+      "title": "Concise Technical Topic Title",
+      "definition": "Authoritative technical explanation of what it is and how it works under the hood (2-4 sentences).",
+      "code": "Syntactically valid, production-ready snippet or config with best practices (no dummy placeholders).",
+      "work_experience": "Concrete real-world production story tailored to the candidate's target role/resume with measurable metrics (e.g. latency, QPS, throughput).",
+      "interview_tip": "Actionable guidance on what interviewers look for, technical terminology to emphasize, and common pitfalls to avoid."
+    }}
+  ]
+}}
+
+Strict requirements:
+- Ensure all string values are properly escaped (newlines as \\n, quotes as \\\").
+- Produce syntactically correct code or configuration for {tech_clean}.
+- Do NOT use emojis anywhere in the output.
 """
-    try:
-        client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-        response = client.chat.completions.create(
-            model="openai/gpt-4o-mini",
-            temperature=0.2,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=2500,
-        )
-        content = response.choices[0].message.content or ""
-        cleaned = content.replace("```json", "").replace("```", "").strip()
-        if "[" in cleaned and "]" in cleaned:
-            cleaned = cleaned[cleaned.find("[") : cleaned.rfind("]") + 1]
-        data = json.loads(cleaned)
-        if isinstance(data, list) and len(data) >= 4 and all(isinstance(c, list) and len(c) >= 6 for c in data):
-            return data
-    except Exception:
-        pass
+
+    for client, models, provider_name in providers:
+        for model in models:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    response_format={"type": "json_object"},
+                    temperature=0.2,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=2500,
+                )
+                content = (response.choices[0].message.content or "").strip()
+                if not content:
+                    continue
+
+                if "```json" in content:
+                    content = content.replace("```json", "").replace("```", "").strip()
+                if "{" in content and "}" in content:
+                    content = content[content.find("{") : content.rfind("}") + 1]
+
+                data = json.loads(content)
+                raw_items = []
+                if isinstance(data, dict) and "cards" in data:
+                    raw_items = data["cards"]
+                elif isinstance(data, list):
+                    raw_items = data
+
+                parsed_cards = []
+                for item in raw_items:
+                    if isinstance(item, dict):
+                        c_cat = str(item.get("category", "Basics")).strip()
+                        c_title = str(item.get("title", "")).strip()
+                        c_def = str(item.get("definition", "")).strip()
+                        c_code = str(item.get("code", "")).strip()
+                        c_work = str(item.get("work_experience", "")).strip()
+                        c_tip = str(item.get("interview_tip", "")).strip()
+                        if c_title and (c_def or c_work):
+                            parsed_cards.append([c_cat, c_title, c_def, c_code, c_work, c_tip])
+                    elif isinstance(item, list) and len(item) >= 6:
+                        parsed_cards.append([str(x) for x in item[:6]])
+
+                if len(parsed_cards) >= 5:
+                    return parsed_cards
+            except Exception:
+                continue
 
     return _generate_deterministic_cards(tech_name, target_role)
 
 
+def _detect_technology_domain(tech_name: str) -> str:
+    """Classifies a technology into its engineering domain."""
+    norm = re.sub(r"[^a-zA-Z0-9]+", "", tech_name.lower().strip())
+    meta = TECH_REGISTRY.get(norm, {})
+    cat = meta.get("category", "").lower()
+
+    if "database" in cat or any(db in norm for db in ["postgres", "sql", "mongo", "redis", "mysql", "cassandra", "dynamo", "sqlite", "db"]):
+        return "database"
+    if "streaming" in cat or any(st in norm for st in ["kafka", "rabbit", "queue", "sqs", "event", "stream", "pulsar"]):
+        return "streaming"
+    if "frontend" in cat or any(fe in norm for fe in ["react", "vue", "angular", "svelte", "next", "tailwind", "css"]):
+        return "frontend"
+    if "container" in cat or any(co in norm for co in ["docker", "kubernetes", "k8s", "helm", "terraform", "ansible", "ci", "cd"]):
+        return "devops"
+    if "cloud" in cat or any(cl in norm for cl in ["aws", "gcp", "azure", "cloud"]):
+        return "cloud"
+    if "framework" in cat or any(fw in norm for fw in ["fastapi", "django", "flask", "express", "nest", "spring", "rails"]):
+        return "framework"
+    if "runtime" in cat or any(rt in norm for rt in ["node", "deno", "bun"]):
+        return "runtime"
+    if "language" in cat or any(pl in norm for pl in ["python", "typescript", "javascript", "golang", "go", "rust", "java", "cplusplus", "cpp"]):
+        return "language"
+    return "general"
+
+
 def _generate_deterministic_cards(tech_name: str, target_role: str = "") -> List[List[str]]:
     """
-    Deterministic offline fallback generator for any technology.
-    Produces rich, structured cards covering all critical interview angles.
+    Deterministic domain-aware offline fallback generator for any technology.
+    Produces rich, structured cards covering all critical interview angles with realistic syntax.
     """
     title_tech = tech_name.strip().title()
     role = target_role or "Software Engineer"
+    domain = _detect_technology_domain(tech_name)
 
-    return [
-        [
-            "Basics",
-            f"What is {title_tech} and when to use it",
-            f"{title_tech} is a critical industry tool designed for high reliability and scalability. In an interview, I explain that we adopt {title_tech} when building production systems that require clear separation of concerns, fast execution, and maintainable architecture. For our {role} responsibilities, it provides standardized patterns that reduce system downtime.",
-            f"# Core usage pattern for {title_tech}\n# Initialize and configure runtime parameters\nsetup_{tech_name.lower()} = True",
-            f"Standardizing backend microservices and reliable infrastructure in {role} workflows.",
-            f"Always begin your answer by stating the exact problem {title_tech} solves before diving into internal implementation details.",
-        ],
-        [
-            "Architecture",
-            f"Core Architecture & Internals of {title_tech}",
-            f"Under the hood, {title_tech} is structured around modular components that isolate execution, state handling, and resource pooling. It minimizes operational overhead by leveraging efficient communication protocols and predictable lifecycle events.",
-            "",
-            f"Deploying scalable components within high-throughput distributed systems.",
-            "Interviewers want to hear about trade-offs: what {title_tech} does well versus where it might introduce unnecessary complexity.",
-        ],
-        [
-            "Performance",
-            f"Performance Optimization & Bottlenecks in {title_tech}",
-            f"To optimize {title_tech} in production, I focus on connection pooling, minimizing serialization overhead, and profiling critical paths. When bottlenecks arise, we monitor CPU saturation, memory utilization, and network I/O latency to identify slow queries or blocking calls.",
-            f"# Performance profiling checklist\n# 1. Check thread/worker allocation\n# 2. Monitor I/O latency and buffer sizes",
-            "Eliminating tail latencies and handling peak traffic spikes gracefully.",
-            "Quantify your answers: explain how profiling {title_tech} reduced latency by 30-50% in prior production deployments.",
-        ],
-        [
-            "Security",
-            f"Security Best Practices with {title_tech}",
-            f"Security in {title_tech} requires strict adherence to the principle of least privilege, input sanitization to prevent injection vulnerabilities, secure credential rotation via environment variables or secret managers, and continuous vulnerability scanning.",
-            "",
-            "Securing enterprise deployments and adhering to SOC2 / ISO compliance.",
-            "Never hardcode tokens or credentials in codebases; mention secret management tools like AWS Secrets Manager or HashiCorp Vault.",
-        ],
-        [
-            "Testing",
-            f"Testing & CI/CD Verification for {title_tech}",
-            f"I test {title_tech} components by isolating business logic with unit tests, mocking external boundaries, and running comprehensive end-to-end integration tests in CI/CD before any production deployment.",
-            f"def test_{tech_name.lower()}_integration():\n    # Arrange: prepare mock input\n    # Act: execute pipeline\n    # Assert: verify deterministic outcome\n    assert True",
-            "Automated test coverage in fast deployment cycles.",
-            "Mention dependency injection and test fixtures; interviewers appreciate candidates who prioritize maintainable, flaky-free test suites.",
-        ],
-        [
-            "Q&A",
-            f"Common Pitfalls and Gotchas in {title_tech}",
-            f"A common trap with {title_tech} is failing to account for unhandled edge cases, connection leaks, or misconfigured timeout thresholds. In production, every network call and resource allocation should carry explicit timeouts and retry backoff policies.",
-            "",
-            "Building resilient failure recovery mechanisms.",
-            "Admitting a past bug or gotcha you resolved with {title_tech} demonstrates senior-level maturity and hands-on experience.",
-        ],
-    ]
+    if domain == "database":
+        return [
+            [
+                "Basics",
+                f"{title_tech} Architecture & Storage Engine",
+                f"{title_tech} organizes data using structured storage engines and page-based buffer pools to guarantee ACID consistency and durable recovery. In production, write-ahead logging (WAL) guarantees persistence before changes are flushed to disk.",
+                f"# Connection pool setup for {title_tech}\nmax_connections = 50\nshared_buffers = '4GB'\neffective_cache_size = '12GB'\nwork_mem = '64MB'",
+                f"Configured connection pools and buffer caches in production {role} services, reducing p99 query latency from 320ms to 42ms.",
+                "Interviewers test whether you understand the trade-offs between normalized relational integrity versus denormalized document access.",
+            ],
+            [
+                "Architecture",
+                f"Indexing Strategy & B-Tree Execution in {title_tech}",
+                f"{title_tech} leverages B-Tree and hash indexes to transform O(N) sequential table scans into O(log N) logarithmic point lookups. Composite indexes must follow the leftmost prefix rule to optimize multi-column filters.",
+                f"-- Optimized composite index\nCREATE INDEX CONCURRENTLY idx_orders_customer_status\nON orders (customer_id, status, created_at DESC);",
+                f"Analyzed slow-query logs with EXPLAIN ANALYZE, eliminating sequential table scans across 45M rows.",
+                "Always check index selectivity and avoid indexing low-cardinality boolean columns alone.",
+            ],
+            [
+                "Concurrency",
+                f"Transaction Isolation & Lock Contention in {title_tech}",
+                f"{title_tech} uses Multi-Version Concurrency Control (MVCC) to ensure readers never block writers and writers never block readers. Under high write concurrency, explicit row-level locking (SELECT FOR UPDATE) prevents lost updates.",
+                f"-- Atomic pessimistic lock pattern\nBEGIN;\nSELECT balance FROM accounts WHERE id = 42 FOR UPDATE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 42;\nCOMMIT;",
+                f"Implemented optimistic locking with version columns, preventing duplicate charging race conditions during peak traffic spikes.",
+                "Explain the anomalies prevented by each isolation level: Dirty Reads (Read Uncommitted), Non-Repeatable Reads (Read Committed), and Phantom Reads (Serializable).",
+            ],
+            [
+                "Performance",
+                f"Connection Pooling & Query Optimization in {title_tech}",
+                f"Unbounded database connections cause thread context-switching and memory exhaustion. Utilizing connection proxies (like PgBouncer or connection pools) maintains optimal throughput by queuing excess requests efficiently.",
+                f"# Connection pool configuration\npool_size = 20\nmax_overflow = 10\npool_timeout = 30\npool_recycle = 1800",
+                f"Integrated connection pooling across 18 microservice pods, eliminating database exhaustion errors and saving 4GB server memory.",
+                "Mention connection multiplexing and transaction-level pooling when scaling beyond 1,000 concurrent client threads.",
+            ],
+            [
+                "Reliability",
+                f"Replication, Failover & High Availability in {title_tech}",
+                f"{title_tech} deploys primary-replica streaming replication where write traffic routes to the primary while read traffic scales across read replicas. Automated consensus orchestrators trigger graceful failover on node heartbeats.",
+                f"# Replication status verification\nSELECT client_addr, state, sync_state, replay_lag FROM pg_stat_replication;",
+                f"Architected active-passive multi-AZ replica clusters with sub-second replication lag for disaster recovery.",
+                "Address replication lag: Explain how reading immediately after writing can return stale data if not routed to the primary.",
+            ],
+            [
+                "Q&A",
+                f"Mitigating Deadlocks & Long-Running Transactions in {title_tech}",
+                f"Deadlocks occur when two concurrent transactions acquire locks in opposing order. Production databases must enforce uniform lock acquisition ordering and strict statement_timeout thresholds to abort stalled transactions automatically.",
+                f"-- Enforce statement timeout safety\nSET statement_timeout = '5000ms';\nSET lock_timeout = '2000ms';",
+                f"Set up deadlock alerting and automated transaction timeouts, reducing application timeout errors to 0.01%.",
+                "Senior candidates proactively mention setting statement_timeout and idle_in_transaction_session_timeout in production configs.",
+            ],
+        ]
+    elif domain == "streaming":
+        return [
+            [
+                "Basics",
+                f"{title_tech} Event-Driven Architecture",
+                f"{title_tech} is a distributed event streaming platform built on a partitioned, immutable commit log. Producers append serial records to partitions, and independent consumer groups read sequentially using managed offset pointers.",
+                f"# Event publishing configuration\nacks = 'all'\nretries = 2147483647\nmax.in.flight.requests.per.connection = 5\nenable.idempotence = True",
+                f"Engineered real-time telemetry pipelines processing 2M events/sec with sub-second latency across distributed clusters.",
+                "Highlight that {title_tech} partitions provide strict total ordering within a single partition, but not across disparate partitions.",
+            ],
+            [
+                "Architecture",
+                f"Partitioning Strategy & Consumer Group Rebalancing in {title_tech}",
+                f"Partitions are the fundamental unit of parallelism in {title_tech}. Consumer group members negotiate partition ownership; when nodes join or fail, a group coordinator triggers rebalancing via eager or cooperative sticky assignors.",
+                f"# Consumer group configuration\ngroup.id = 'payment-processors'\nenable.auto.commit = False\nsession.timeout.ms = 45000\nmax.poll.interval.ms = 300000",
+                f"Tuned cooperative sticky rebalancing across 12 consumer workers, reducing stop-the-world partition rebalance pauses from 40s to 1.2s.",
+                "Gotcha: If consumer message processing takes longer than max.poll.interval.ms, the coordinator marks the consumer dead and triggers constant rebalance storms.",
+            ],
+            [
+                "Performance",
+                f"Zero-Copy, OS Page Cache & Batch Compression in {title_tech}",
+                f"{title_tech} bypasses JVM garbage collection overhead by reading directly from the Linux OS page cache and utilizing the sendfile() system call. Batching messages with lz4 or zstd compression maximizes network throughput.",
+                f"# High-throughput producer batching\ncompression.type = 'zstd'\nbatch.size = 65536  # 64KB\nlinger.ms = 20",
+                f"Enabled zstd batch compression and tuned linger.ms, decreasing cluster network bandwidth consumption by 48% and doubling throughput.",
+                "Drop the term 'zero-copy' and explain how sendfile() copies data straight from kernel buffer to socket buffer without application memory context switches.",
+            ],
+            [
+                "Reliability",
+                f"At-Least-Once Delivery & Dead Letter Queues (DLQ) in {title_tech}",
+                f"To prevent data loss, producers set acks=all and consumers commit offsets only after records are successfully persisted. Poison-pill messages that fail processing are routed to an isolated Dead Letter Queue for inspection.",
+                f"try:\n    process_record(msg.value)\n    consumer.commit(asynchronous=False)\nexcept TransientError:\n    retry_with_backoff(msg)\nexcept PermanentError:\n    dlq_producer.send('dead_letter_topic', msg.value)\n    consumer.commit()",
+                f"Engineered dead-letter queue routing and automated backoff mechanisms, preventing consumer group stalls across high-volume queues.",
+                "Clarify the difference between at-least-once, at-most-once, and effectively once (idempotent producer + transactional read-process-write).",
+            ],
+            [
+                "Security",
+                f"mTLS Authentication, SASL/SCRAM & ACL Authorization in {title_tech}",
+                f"Production {title_tech} clusters enforce mutual TLS (mTLS) for broker-to-broker and client-to-broker encryption. Fine-grained Access Control Lists (ACLs) restrict producer and consumer access to explicit topic prefixes.",
+                f"# Client mTLS configuration\nsecurity.protocol = 'SSL'\nssl.keystore.location = '/var/private/ssl/client.keystore.jks'\nssl.truststore.location = '/var/private/ssl/client.truststore.jks'",
+                f"Enforced mTLS and role-based ACLs across multi-tenant streaming clusters, satisfying enterprise SOC2 compliance.",
+                "Never share cluster credentials across services; each microservice must have its own dedicated principal and ACL scope.",
+            ],
+            [
+                "Q&A",
+                f"Handling Consumer Lag & Hot Partitions in {title_tech}",
+                f"Consumer lag measures the delta between the latest committed offset and the partition log-end offset. Hot partitions occur when an uneven key hashing strategy concentrates disproportionate traffic onto a single partition.",
+                f"# Inspect lag across consumer groups\nkafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group order-processors",
+                f"Diagnosed hot partition skew caused by null message keys; re-keyed events with composite IDs, balancing CPU load across all 32 partitions.",
+                "In an interview, outline a clear 3-step triage for high lag: 1. Verify consumer health/rebalances, 2. Check downstream sink latency, 3. Scale consumers up to partition count.",
+            ],
+        ]
+    elif domain == "devops":
+        return [
+            [
+                "Basics",
+                f"{title_tech} Runtime & Isolation Primitives",
+                f"{title_tech} packages applications and dependencies into immutable images, executing processes within isolated environments using Linux namespaces (PID, NET, MNT, IPC) and cgroups for CPU/memory resource containment.",
+                f"# Multi-stage production build\nFROM python:3.11-slim AS builder\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\nFROM python:3.11-slim\nWORKDIR /app\nCOPY --from=builder /usr/local /usr/local\nCOPY . .\nUSER appuser\nCMD [\"python\", \"main.py\"]",
+                f"Optimized container builds with multi-stage Dockerfiles, slashing image footprint from 1.4GB to 142MB and speeding up CI deployment by 65%.",
+                "Containers share the host kernel unlike full Virtual Machines with hypervisors, resulting in near-instantaneous startup times and near-zero CPU overhead.",
+            ],
+            [
+                "Architecture",
+                f"Layer Caching & Minimal Attack Surface in {title_tech}",
+                f"{title_tech} creates copy-on-write image layers for each build directive. Organizing commands from least-frequently changed to most-frequently changed maximizes cache hits, and using distroless/slim base images minimizes vulnerabilities.",
+                f"# Efficient layer ordering\nCOPY package.json package-lock.json ./\nRUN npm ci --only=production\nCOPY src/ ./src\nEXPOSE 8080",
+                f"Reordered layer directives in CI pipelines, increasing Docker build cache hit rate to 92% and cutting build times from 9m to 45s.",
+                "Avoid running containers as root: Always declare a non-privileged system user (USER 10001:10001) in production images.",
+            ],
+            [
+                "Performance",
+                f"Cgroups Resource Limits & OOM Killer Protection in {title_tech}",
+                f"Without explicit cgroup quotas, a runaway container can exhaust host RAM and trigger the Linux kernel Out-Of-Memory (OOM) killer to terminate critical host services. Setting memory limits and CPU throttles ensures multi-tenant stability.",
+                f"# Kubernetes resource specification\nresources:\n  requests:\n    memory: \"256Mi\"\n    cpu: \"250m\"\n  limits:\n    memory: \"512Mi\"\n    cpu: \"1000m\"",
+                f"Configured memory requests and limits across 40 container workloads, completely eliminating uncoordinated node-level OOM cascade crashes.",
+                "Know the difference between requests (used by the scheduler to place workloads) and limits (hard ceilings enforced by cgroups).",
+            ],
+            [
+                "Security",
+                f"Container Security Hardening & Rootless Execution in {title_tech}",
+                f"Container security requires dropping unneeded Linux capabilities (CAP_DROP_ALL), mounting root filesystems as read-only, preventing privilege escalation, and scanning images in CI for known CVEs.",
+                f"# Pod security context\nsecurityContext:\n  allowPrivilegeEscalation: false\n  readOnlyRootFilesystem: true\n  runAsNonRoot: true\n  capabilities:\n    drop: [\"ALL\"]",
+                f"Implemented automated vulnerability scanning with Trivy in CI pipelines, blocking builds with critical and high CVEs.",
+                "Emphasize that container isolation is NOT virtualization: never grant privileged=true to application containers in production.",
+            ],
+            [
+                "Reliability",
+                f"Health Probes & Graceful Termination (SIGTERM) in {title_tech}",
+                f"Orchestrators monitor container health via startup, liveness, and readiness probes. Upon termination, {title_tech} sends SIGTERM; applications must finish in-flight requests and close database connections before SIGKILL occurs.",
+                f"# Graceful shutdown handling\nimport signal, sys\ndef handle_sigterm(signum, frame):\n    logger.info('Shutting down gracefully...')\n    server.stop()\n    db_pool.close()\n    sys.exit(0)\nsignal.signal(signal.SIGTERM, handle_sigterm)",
+                f"Engineered graceful SIGTERM handling with 25s termination grace periods, eliminating 502 Bad Gateway errors during rolling cluster deployments.",
+                "Readiness probes determine traffic routing; liveness probes determine whether to restart the container. Never point liveness probes at external dependencies like databases.",
+            ],
+            [
+                "Q&A",
+                f"Troubleshooting CrashLoopBackOff & Networking in {title_tech}",
+                f"CrashLoopBackOff indicates a container repeatedly starts, fails, and crashes. Common root causes include failed health probes, missing environment secrets, unhandled startup exceptions, or port collisions.",
+                f"# Diagnostic command pipeline\ndocker logs --tail 100 --timestamps <container_id>\ndocker inspect <container_id> | grep -i oomkilled",
+                f"Root-caused silent container startup crashes by capturing unhandled tracebacks and adding pre-flight configuration validation.",
+                "When asked how to debug a failing container, walk through the structured sequence: check container logs, inspect exit codes (e.g. exit 137 = OOM Killed), verify env vars, and inspect network port bindings.",
+            ],
+        ]
+    else:
+        # Default high-yield engineering cards for any language, framework, or tool
+        return [
+            [
+                "Basics",
+                f"What is {title_tech} and Core Architectural Design",
+                f"{title_tech} is an essential technology adopted in modern engineering architectures for reliability, developer velocity, and maintainability. In an interview, I explain that we choose {title_tech} to build scalable production systems that require high throughput, clear separation of concerns, and robust error boundaries.",
+                f"# Core architectural pattern for {title_tech}\n# Initialize runtime components with defensive configuration\nconfig = {{\n    'timeout_ms': 5000,\n    'max_retries': 3,\n    'environment': 'production'\n}}",
+                f"Adopted {title_tech} in {role} microservices, establishing standardized design patterns that improved system availability to 99.99%.",
+                f"Always begin your answer by clearly stating the exact architectural problem {title_tech} solves before diving into internal implementation details.",
+            ],
+            [
+                "Architecture",
+                f"Internals, Memory Management & Lifecycle in {title_tech}",
+                f"Under the hood, {title_tech} operates on modular execution primitives that isolate state handling, connection lifecycles, and resource pooling. It minimizes operational overhead by leveraging efficient communication protocols and deterministic garbage collection or allocation lifecycles.",
+                f"# Diagnostic inspection\nimport logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger('{title_tech.lower()}')\nlogger.info('Initialized {title_tech} runtime subsystem')",
+                f"Profiled memory utilization in {title_tech} production workers, eliminating object allocation leaks and decreasing memory footprints by 35%.",
+                "Interviewers want to hear about architectural trade-offs: what {title_tech} excels at versus scenarios where another tool would be more appropriate.",
+            ],
+            [
+                "Concurrency",
+                f"Concurrency, Async I/O & Thread Safety in {title_tech}",
+                f"Handling high concurrency in {title_tech} requires non-blocking asynchronous I/O loops or thread-safe synchronization locks. Isolating mutable shared state and using thread-safe queues prevents race conditions under heavy load.",
+                f"# Async execution pattern\nimport asyncio\nasync def process_task(task_id: int):\n    # Non-blocking async execution\n    await asyncio.sleep(0.01)\n    return f'Task {{task_id}} completed'",
+                f"Migrated blocking I/O calls to non-blocking async handlers in {title_tech}, scaling concurrent request throughput by 4x without additional CPU overhead.",
+                "Distinguish between CPU-bound parallelism (multiprocessing/worker processes) and I/O-bound concurrency (event loop/coroutines).",
+            ],
+            [
+                "Performance",
+                f"Performance Optimization & Bottleneck Elimination in {title_tech}",
+                f"To optimize {title_tech} in production, I focus on connection pooling, payload serialization efficiency, and eliminating redundant I/O round trips. When latency spikes occur, we profile p99 tail latency and CPU instruction cycles to isolate bottlenecks.",
+                f"# Optimization checklist\n# 1. Reuse persistent connection pools\n# 2. Minimize serialization/deserialization overhead\n# 3. Cache frequent read-heavy responses",
+                f"Profiled critical execution paths in {title_tech}, reducing p99 API latency from 450ms to 85ms across high-volume production endpoints.",
+                "Quantify your interview answers: explain how profiling {title_tech} reduced latency by 30-50% in prior production deployments.",
+            ],
+            [
+                "Reliability",
+                f"Failure Handling, Retries & Circuit Breaking in {title_tech}",
+                f"Resilience in {title_tech} requires defensive timeouts on every network call, retries with exponential backoff and jitter, and circuit breakers that fail fast to prevent cascading system failures.",
+                f"# Defensive retry pattern with exponential backoff\nimport time, random\ndef execute_with_retry(fn, max_attempts=3):\n    for attempt in range(max_attempts):\n        try:\n            return fn()\n        except Exception as e:\n            if attempt == max_attempts - 1:\n                raise e\n            time.sleep((2 ** attempt) + random.uniform(0, 0.5))",
+                f"Built automated circuit-breaking and retry backoff policies for {title_tech} integrations, eliminating cascading downtime during downstream outages.",
+                "Always pair retries with exponential backoff AND jitter to avoid the 'thundering herd' problem against degraded backend systems.",
+            ],
+            [
+                "Security",
+                f"Security Best Practices & Vulnerability Prevention with {title_tech}",
+                f"Security in {title_tech} requires strict adherence to the principle of least privilege, input sanitization to prevent injection attacks, secure credential rotation via environment variables or secret managers, and automated dependency scanning.",
+                f"# Secure configuration loading\nimport os\nAPI_KEY = os.environ.get('SECRET_API_KEY')\nif not API_KEY:\n    raise ValueError('SECRET_API_KEY environment variable is mandatory')",
+                f"Enforced secret rotation and zero-trust authentication policies across {title_tech} deployments, maintaining complete SOC2 compliance.",
+                "Never hardcode tokens or credentials in source code; mention secrets managers like AWS Secrets Manager or HashiCorp Vault.",
+            ],
+            [
+                "Q&A",
+                f"Common Production Gotchas & Edge Cases in {title_tech}",
+                f"A common production trap with {title_tech} is failing to account for unhandled edge cases, connection leaks, or missing timeout thresholds. In production, every resource allocation must carry explicit timeouts and automated cleanup.",
+                f"# Resource lifecycle protection\ntry:\n    resource = acquire_resource()\n    do_work(resource)\nfinally:\n    resource.release()",
+                f"Resolved a production connection exhaustion bug in {title_tech} by enforcing context managers and automatic connection recycling.",
+                "Admitting a past bug or gotcha you personally diagnosed and resolved with {title_tech} demonstrates senior-level engineering maturity and hands-on depth.",
+            ],
+        ]
+
 
 # ---------------------------------------------------------------------------
 # Tailoring Cards with Resume Context & Project Bullet Points
@@ -585,14 +894,25 @@ def extract_project_talking_points_for_tech(resume_context: str, tech_name: str)
     """
     Extracts candidate projects, work experiences, metrics, and bullet points from
     the resume that utilize or relate to the given technology.
+    Completely dynamic - zero hardcoded company or project names.
     """
     if not resume_context or not tech_name:
         return []
 
     tech_lower = tech_name.lower().strip()
-    clean_text = resume_context.replace(r"\textbf{", "").replace("}", "").replace(r"\resumeItem{", "")
-    clean_text = clean_text.replace(r"\textit{", "").replace(r"\noindent", "").replace(r"\section*{", "")
-    clean_text = clean_text.replace(r"\small", "").replace(r"\\", "\n")
+    norm_key = re.sub(r"[^a-zA-Z0-9]+", "", tech_lower)
+    aliases = [tech_lower]
+    for k, meta in TECH_REGISTRY.items():
+        if norm_key == k or norm_key in [re.sub(r"[^a-zA-Z0-9]+", "", a) for a in meta.get("aliases", [])]:
+            aliases.extend([a.lower() for a in meta.get("aliases", [])])
+            break
+
+    # Clean LaTeX / Markdown formatting
+    clean_text = resume_context
+    clean_text = re.sub(r"\\resumeSubheading\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}", r"\n### \1 - \3\n", clean_text)
+    clean_text = re.sub(r"\\resumeProjectHeading\{([^}]+)\}\{([^}]+)\}", r"\n### \1\n", clean_text)
+    clean_text = re.sub(r"\\[a-zA-Z]+\*?\{?", " ", clean_text)
+    clean_text = clean_text.replace("}", " ").replace(r"\\", "\n")
 
     lines = [ln.strip() for ln in clean_text.splitlines() if ln.strip()]
     matches = []
@@ -601,32 +921,35 @@ def extract_project_talking_points_for_tech(resume_context: str, tech_name: str)
     in_skills_section = False
     for line in lines:
         lower = line.lower()
-        if "technical skills" in lower or ("skills" in lower and len(line) < 30):
+        if "technical skills" in lower or ("skills" in lower and len(line) < 35 and ":" in line):
             in_skills_section = True
             continue
-        if any(sec in lower for sec in ["professional experience", "experience", "key projects", "projects", "employment"]):
+        if any(sec in lower for sec in ["experience", "employment", "work history", "projects", "key initiatives"]) and len(line) < 40:
             in_skills_section = False
+            continue
 
         if in_skills_section:
             continue
 
-        if any(term in lower for term in ["capgemini", "associate consultant"]):
-            current_context = "Capgemini Data Engineering"
-        elif "tech solutions lab" in lower:
-            current_context = "Tech Solutions Lab"
-        elif "careerai" in lower or "career intelligence" in lower:
-            current_context = "CareerAI Platform Project"
-        elif "lakehouse" in lower or "streaming pipeline" in lower:
-            current_context = "Enterprise Lakehouse Pipeline"
-        elif line.startswith(("#", "**", "Project:", "Role:")) or (" – " in line and len(line) < 80 and not line.startswith("-")):
-            current_context = re.sub(r"[\#\*\\]", "", line).strip()[:50]
+        # Detect dynamic project or company headings
+        if (
+            line.startswith(("#", "**", "Project:", "Role:", "Company:"))
+            or (" | " in line and len(line) < 80)
+            or (" – " in line and len(line) < 80 and not line.startswith("-"))
+            or (" - " in line and len(line) < 80 and not line.startswith("-"))
+        ):
+            cleaned_heading = re.sub(r"[\#\*\_\:]", "", line).strip()
+            cleaned_heading = re.split(r"\||–|-|,", cleaned_heading)[0].strip()
+            if len(cleaned_heading) >= 3 and len(cleaned_heading) <= 45 and not any(h in cleaned_heading.lower() for h in ["skills", "education", "summary", "languages", "tools"]):
+                current_context = cleaned_heading
 
-        if tech_lower in lower:
-            clean_line = re.sub(r"\\[a-zA-Z]+\*?|\{|\}", "", line)
-            clean_line = clean_line.strip(" *#-\t\n\r")
+        # Check for tech mention
+        if any(re.search(r"(?:\b|_)" + re.escape(alias) + r"(?:\b|_)", lower) for alias in set(aliases)):
+            clean_line = re.sub(r"[\#\*\-\t\r]", "", line).strip()
             words = clean_line.split()
-            if len(words) >= 5 and not any(h in lower for h in ["languages:", "frameworks:", "tools:", "platforms:"]):
-                matches.append({"context": current_context or "Resume Project", "point": clean_line})
+            if len(words) >= 5 and not any(h in lower for h in ["languages:", "frameworks:", "tools:", "platforms:", "libraries:"]):
+                ctx = current_context or "Production Architecture"
+                matches.append({"context": ctx, "point": clean_line})
 
     seen = set()
     deduped = []
@@ -687,6 +1010,7 @@ def tailor_cheatsheet_for_resume(
 
     return tailored_cards
 
+
 # ---------------------------------------------------------------------------
 # Main API: Get or Generate Cheatsheet
 # ---------------------------------------------------------------------------
@@ -694,10 +1018,13 @@ def get_cheatsheet_for_technology(
     tech_name: str,
     resume_text: str = "",
     target_role: str = "",
+    force_ai: bool = False,
 ) -> Dict[str, Any]:
     """
-    Returns full cheat sheet payload for a technology, incorporating
-    curated high-yield cards or dynamic AI generation with resume tailoring.
+    Returns full cheat sheet payload for a technology.
+    Dynamically generates via AI for any technology when AI providers are available.
+    Falls back gracefully to curated decks or domain-aware deterministic cards
+    when running offline or in test environments.
     """
     norm_key = re.sub(r"[^a-zA-Z0-9]+", "", tech_name.lower().strip())
     canonical_name = tech_name.strip()
@@ -709,12 +1036,25 @@ def get_cheatsheet_for_technology(
             norm_key = k
             break
 
-    # Load curated deck if available
-    if norm_key in CURATED_DECKS:
-        raw_cards = [list(c) for c in CURATED_DECKS[norm_key]]
-    else:
-        # Dynamically generate
-        raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text)
+    raw_cards: List[List[str]] = []
+
+    # Check if AI provider is present
+    providers = get_ai_providers()
+    is_curated = norm_key in CURATED_DECKS
+
+    # If AI is active and requested or custom technology:
+    if providers and (force_ai or not is_curated or (resume_text and len(resume_text) > 100)):
+        try:
+            raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text)
+        except Exception:
+            raw_cards = []
+
+    # Fallback to curated deck if available, else domain-aware deterministic
+    if not raw_cards or len(raw_cards) < 4:
+        if is_curated:
+            raw_cards = [list(c) for c in CURATED_DECKS[norm_key]]
+        else:
+            raw_cards = _generate_deterministic_cards(canonical_name, target_role)
 
     # Apply tailoring
     tailored_cards = tailor_cheatsheet_for_resume(raw_cards, resume_text, target_role, canonical_name)

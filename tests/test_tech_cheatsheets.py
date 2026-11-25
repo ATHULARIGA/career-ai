@@ -336,3 +336,64 @@ def test_interview_page_javascript_syntax_valid(client):
     assert result.returncode == 0, f"JavaScript syntax error in interview.html: {result.stderr}"
 
 
+def test_detect_technology_domain_and_deterministic_cards():
+    from services.interview.cheatsheet_generator import (
+        _detect_technology_domain,
+        _generate_deterministic_cards,
+    )
+
+    assert _detect_technology_domain("PostgreSQL") == "database"
+    assert _detect_technology_domain("MongoDB") == "database"
+    assert _detect_technology_domain("Apache Kafka") == "streaming"
+    assert _detect_technology_domain("Docker") == "devops"
+    assert _detect_technology_domain("Kubernetes") == "devops"
+    assert _detect_technology_domain("React") == "frontend"
+    assert _detect_technology_domain("FastAPI") == "framework"
+    assert _detect_technology_domain("Python") == "language"
+
+    # Verify deterministic cards have real code snippets, not dummy setup = True
+    db_cards = _generate_deterministic_cards("PostgreSQL", "Database Engineer")
+    assert len(db_cards) >= 6
+    assert any("CREATE INDEX" in c[3] or "shared_buffers" in c[3] for c in db_cards)
+
+    kafka_cards = _generate_deterministic_cards("Kafka", "Streaming Engineer")
+    assert len(kafka_cards) >= 6
+    assert any("acks" in c[3] or "kafka-consumer-groups" in c[3] for c in kafka_cards)
+
+
+def test_extract_project_talking_points_dynamic():
+    from services.interview.cheatsheet_generator import extract_project_talking_points_for_tech
+
+    sample_resume = """
+    # Experience
+    ### Acme Corp - Senior Infrastructure Engineer
+    - Architected Kubernetes clusters across 3 regions serving 40k req/sec with sub-second response times.
+    - Automated Docker container deployments using GitHub Actions pipelines.
+
+    ### Beta Labs - Distributed Systems Architect
+    - Built real-time Apache Kafka streaming ingestion pipelines processing 500GB daily.
+    """
+    pts = extract_project_talking_points_for_tech(sample_resume, "Kubernetes")
+    assert len(pts) >= 1
+    assert "Acme Corp" in pts[0]["context"]
+    assert "Kubernetes clusters" in pts[0]["point"]
+
+    kafka_pts = extract_project_talking_points_for_tech(sample_resume, "Kafka")
+    assert len(kafka_pts) >= 1
+    assert "Beta Labs" in kafka_pts[0]["context"]
+    assert "Apache Kafka" in kafka_pts[0]["point"]
+
+
+def test_interview_page_tab_accessibility_attributes(client):
+    res = client.get("/interview")
+    assert res.status_code == 200
+    html = res.text
+    # Tabs have tabindex and aria-controls
+    assert 'id="tabBtnSimulator" role="tab" aria-selected="true" aria-controls="viewSimulator" tabindex="0"' in html
+    assert 'id="tabBtnCheatsheet" role="tab" aria-selected="false" aria-controls="viewCheatsheet" tabindex="-1"' in html
+    # Tabpanels have role="tabpanel" and tabindex="0"
+    assert 'id="viewSimulator" class="iv-view-pane active" role="tabpanel" aria-labelledby="tabBtnSimulator" tabindex="0"' in html
+    assert 'id="viewCheatsheet" class="iv-view-pane" role="tabpanel" aria-labelledby="tabBtnCheatsheet" tabindex="0"' in html
+
+
+

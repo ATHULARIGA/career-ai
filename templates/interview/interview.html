@@ -1245,11 +1245,11 @@
 
     <!-- ── Main Navigation Tabs ─────────────────── -->
     <div class="iv-tab-nav" role="tablist" aria-label="Mock Interview Views">
-      <button type="button" class="iv-tab-nav-btn active" id="tabBtnSimulator" role="tab" aria-selected="true" aria-controls="viewSimulator" onclick="switchMainTab('simulator')">
+      <button type="button" class="iv-tab-nav-btn active" id="tabBtnSimulator" role="tab" aria-selected="true" aria-controls="viewSimulator" tabindex="0" onclick="switchMainTab('simulator')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         <span>AI Mock Simulator</span>
       </button>
-      <button type="button" class="iv-tab-nav-btn" id="tabBtnCheatsheet" role="tab" aria-selected="false" aria-controls="viewCheatsheet" onclick="switchMainTab('cheatsheet')">
+      <button type="button" class="iv-tab-nav-btn" id="tabBtnCheatsheet" role="tab" aria-selected="false" aria-controls="viewCheatsheet" tabindex="-1" onclick="switchMainTab('cheatsheet')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         <span>Technology Cheat Sheets</span>
         <span class="iv-tab-badge">Tailored for Resume</span>
@@ -1257,7 +1257,7 @@
     </div>
 
     <!-- ── View Pane 1: Simulator (Setup, Chat, Verdict) ─────────────────── -->
-    <div id="viewSimulator" class="iv-view-pane active" role="tabpanel" aria-labelledby="tabBtnSimulator">
+    <div id="viewSimulator" class="iv-view-pane active" role="tabpanel" aria-labelledby="tabBtnSimulator" tabindex="0">
 
     <!-- ── Setup Form ─────────────────────────────── -->
     <div class="iv-setup rr-form" id="ivSetup">
@@ -1394,7 +1394,7 @@
   </div> <!-- #viewSimulator -->
 
   <!-- ── View Pane 2: Technology Cheat Sheets ─────────────── -->
-  <div id="viewCheatsheet" class="iv-view-pane" role="tabpanel" aria-labelledby="tabBtnCheatsheet" style="display: none;">
+  <div id="viewCheatsheet" class="iv-view-pane" role="tabpanel" aria-labelledby="tabBtnCheatsheet" tabindex="0" hidden style="display: none;">
     <div class="cs-wrap">
       
       <!-- Resume Tailoring Selector -->
@@ -2068,9 +2068,13 @@ function switchMainTab(tab) {
   if (tab === 'cheatsheet') {
     btnSim.classList.remove('active');
     btnSim.setAttribute('aria-selected', 'false');
+    btnSim.setAttribute('tabindex', '-1');
     btnCs.classList.add('active');
     btnCs.setAttribute('aria-selected', 'true');
+    btnCs.setAttribute('tabindex', '0');
+    viewSim.hidden = true;
     viewSim.style.display = 'none';
+    viewCs.hidden = false;
     viewCs.style.display = 'block';
     window.location.hash = 'cheatsheet';
 
@@ -2082,9 +2086,13 @@ function switchMainTab(tab) {
   } else {
     btnCs.classList.remove('active');
     btnCs.setAttribute('aria-selected', 'false');
+    btnCs.setAttribute('tabindex', '-1');
     btnSim.classList.add('active');
     btnSim.setAttribute('aria-selected', 'true');
+    btnSim.setAttribute('tabindex', '0');
+    viewCs.hidden = true;
     viewCs.style.display = 'none';
+    viewSim.hidden = false;
     viewSim.style.display = 'block';
     if (window.location.hash === '#cheatsheet') {
       history.pushState(null, null, ' ');
