@@ -316,3 +316,23 @@ def test_global_exception_handler_returns_json_for_api_endpoints(client, monkeyp
     assert "error" in data
     assert "Simulated internal backend error" in data["error"] or "Failed to load" in data["error"]
 
+
+def test_interview_page_javascript_syntax_valid(client):
+    import re
+    import subprocess
+    import tempfile
+
+    res = client.get("/interview")
+    assert res.status_code == 200
+    script_match = re.search(r"<script>(.*?)</script>", res.text, re.DOTALL)
+    assert script_match, "Inline script tag not found"
+    js_code = script_match.group(1)
+
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as tf:
+        tf.write(js_code)
+        tf_path = tf.name
+
+    result = subprocess.run(["node", "-c", tf_path], capture_output=True, text=True)
+    assert result.returncode == 0, f"JavaScript syntax error in interview.html: {result.stderr}"
+
+
