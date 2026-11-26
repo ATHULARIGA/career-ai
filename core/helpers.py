@@ -89,7 +89,7 @@ def scrape_job_link(url: str) -> dict:
         }
         # 3. Hard timeout ceiling (8s) and disable blind redirects to internal hosts
         response = requests.get(url, headers=headers, timeout=8, allow_redirects=False)
-        if response.is_redirect or response.is_permanent_redirect:
+        if getattr(response, "is_redirect", False) or getattr(response, "is_permanent_redirect", False):
             loc = response.headers.get("location", "")
             ok_redir, redir_err = _is_safe_public_url(loc)
             if not ok_redir:

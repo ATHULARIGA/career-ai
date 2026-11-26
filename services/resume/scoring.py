@@ -393,7 +393,7 @@ def extract_links_from_text(text: str) -> list[str]:
     pattern = re.compile(
         r"(https?://[^\s)>\]\}]+|www\.[^\s)>\]\}]+|github\.com/[^\s)>\]\}]+|linkedin\.com/[^\s)>\]\}]+)"
     )
-    matches = pattern.findall(text or "")
+    matches = pattern.findall((text or "")[:50000])
     unique: list[str] = []
     seen: set[str] = set()
     for match in matches:

@@ -16,10 +16,19 @@ def test_scrape_unsupported():
     print("Passed - unsupported domains blocked")
 
 def test_scrape_timeout():
-    print("Testing timeout handler (using unreachable IP)...")
-    res = scrape_job_link("http://10.255.255.1")
-    assert "error" in res
-    assert "Request timed out" in res["error"] or "Scraping failed" in res["error"]
+    print("Testing timeout handler...")
+    original_get = requests.get
+
+    def timeout_get(url, **kwargs):
+        raise requests.Timeout("Simulated timeout")
+
+    requests.get = timeout_get
+    try:
+        res = scrape_job_link("https://example.com/jobs/123")
+        assert "error" in res
+        assert "Request timed out" in res["error"] or "Scraping failed" in res["error"]
+    finally:
+        requests.get = original_get
     print("Passed - timeout handled")
 
 def test_scrape_404():
