@@ -69,6 +69,14 @@ def _is_safe_public_url(url: str) -> tuple[bool, str]:
     return True, ""
 
 
+def normalize_role_title(raw_role: str) -> str:
+    """Normalizes role titles and removes accidental duplicated role suffixes."""
+    cleaned = (raw_role or "").strip()
+    if not cleaned:
+        return ""
+    return re.sub(r"(Developer|Engineer|Architect|Designer|Manager)\1+", r"\1", cleaned, flags=re.IGNORECASE)
+
+
 def scrape_job_link(url: str) -> dict:
     if not url:
         return {"text": "", "error": "No URL provided."}

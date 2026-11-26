@@ -1,13 +1,9 @@
 import json
-import os
 from typing import Any, Optional
 
-from openai import OpenAI
+from services.ai.provider import get_openrouter_client
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY") or "dummy",
-)
+client = get_openrouter_client()
 
 # ---------------------------------------------------------------------------
 # Per-Persona System Prompts — define full behavioral personality, not just tone

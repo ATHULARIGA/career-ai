@@ -1,12 +1,8 @@
 import json
-import os
 
-from openai import OpenAI
+from services.ai.provider import get_openrouter_client
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY") or "dummy",
-)
+client = get_openrouter_client()
 
 
 def _parse_json(raw: str) -> dict:

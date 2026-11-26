@@ -1520,28 +1520,24 @@
 </div>
 
 <!-- Accessible Toast Notifications -->
-<div id="ivToast" class="iv-toast" role="status" aria-live="polite"></div>
+{% include "components/toast.html" %}
 
+<script src="/static/js/store.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/ui.js"></script>
 <script>
 (function() {
-// ── Toast Utility ──────────────────────────────────────────────
+// ── Shared Utilities (delegating to static/js modules) ─────────
 function showToast(message, type = 'error', duration = 4500) {
-  let toast = document.getElementById('ivToast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'ivToast';
-    toast.className = 'iv-toast';
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-    document.body.appendChild(toast);
+  if (window.ResuMateUI && typeof window.ResuMateUI.showToast === 'function') {
+    window.ResuMateUI.showToast(message, type, duration);
+    return;
   }
-  toast.className = `iv-toast ${type} show`;
-  toast.textContent = message;
-  clearTimeout(window._ivToastTimeout);
-  window._ivToastTimeout = setTimeout(() => {
-    toast.classList.remove('show');
-  }, duration);
 }
+
+const ivStore = (window.ResuMateStore && window.ResuMateStore.createStore)
+  ? window.ResuMateStore.createStore({ phase: 'warmup', history: [] })
+  : null;
 
 // ── State ──────────────────────────────────────────────────────
 let conversationHistory = [];

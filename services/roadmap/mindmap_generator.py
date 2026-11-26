@@ -332,9 +332,8 @@ def get_curated_fallback(role_clean: str) -> dict:
 
 
 def generate_mindmap(role: str) -> dict:
-    clean_role = (role or "Software Engineer").strip()
-    # Deduplicate repetitive strings e.g. "DeveloperDeveloper"
-    clean_role = re.sub(r'(Developer|Engineer|Architect|Designer|Manager)\1+', r'\1', clean_role, flags=re.IGNORECASE)
+    from core.helpers import normalize_role_title
+    clean_role = normalize_role_title(role or "Software Engineer") or "Software Engineer"
 
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:

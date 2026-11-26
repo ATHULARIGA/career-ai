@@ -6,11 +6,8 @@ interview tips, and revision tracking.
 """
 
 import json
-import os
 import re
 from typing import Any, Optional
-
-from openai import OpenAI
 
 from services.interview.cheatsheet_decks import (
     EXTRA_CURATED_DECKS,
@@ -384,73 +381,10 @@ def extract_technologies_from_resume(resume_text: str, report: Optional[dict[str
 # Dynamic AI Generator for All Technologies
 # ---------------------------------------------------------------------------
 def get_ai_providers() -> list[tuple[Any, list[str], str]]:
-    """
-    Returns ordered list of configured AI provider clients, models, and provider labels:
-    1. Google Gemini (via OpenAI-compatible endpoint)
-    2. OpenRouter (Free models + BYOK fallbacks)
-    3. Groq (if configured)
-    """
-    providers: list[tuple[Any, list[str], str]] = []
+    """Delegates to centralized AI provider factory."""
+    from services.ai.provider import get_ai_providers as _shared_get_ai_providers
 
-    # 1. Google Gemini (via Google AI Studio OpenAI-compatible endpoint)
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if gemini_key and gemini_key not in ("dummy", "ci-mock-key"):
-        try:
-            client = OpenAI(
-                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                api_key=gemini_key,
-                timeout=25,
-                max_retries=0,
-            )
-            providers.append((
-                client,
-                ["gemini-3-flash-preview", "gemini-3.5-flash", "gemini-3.6-flash"],
-                "Gemini",
-            ))
-        except Exception:
-            pass
-
-    # 2. OpenRouter
-    openrouter_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if openrouter_key and openrouter_key not in ("dummy", "ci-mock-key"):
-        try:
-            client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=openrouter_key,
-                timeout=25,
-                max_retries=0,
-            )
-            providers.append((
-                client,
-                [
-                    "openai/gpt-4o-mini",
-                    "meta-llama/llama-3.3-70b-instruct",
-                    "google/gemma-4-26b-a4b-it:free",
-                ],
-                "OpenRouter",
-            ))
-        except Exception:
-            pass
-
-    # 3. Groq
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
-    if groq_key and groq_key not in ("dummy", "ci-mock-key"):
-        try:
-            client = OpenAI(
-                base_url="https://api.groq.com/openai/v1",
-                api_key=groq_key,
-                timeout=10,
-                max_retries=0,
-            )
-            providers.append((
-                client,
-                ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
-                "Groq",
-            ))
-        except Exception:
-            pass
-
-    return providers
+    return _shared_get_ai_providers(timeout=25)
 
 
 def _invoke_json_llm(
@@ -458,33 +392,10 @@ def _invoke_json_llm(
     prompt: str,
     max_tokens: int = 4000,
 ) -> Optional[dict[str, Any]]:
-    """
-    Calls configured AI providers in order and parses a JSON object response.
-    Shared helper used by both interview-topic discovery and card generation.
-    """
-    for client, models, _provider_name in providers:
-        for model in models:
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=max_tokens,
-                )
-                content = (response.choices[0].message.content or "").strip()
-                if not content:
-                    continue
-                if "```json" in content:
-                    content = content.replace("```json", "").replace("```", "").strip()
-                if "{" in content and "}" in content:
-                    content = content[content.find("{") : content.rfind("}") + 1]
-                data = json.loads(content)
-                if isinstance(data, dict):
-                    return data
-            except Exception:
-                continue
-    return None
+    """Delegates to centralized JSON LLM invocation helper."""
+    from services.ai.provider import invoke_json_llm
+
+    return invoke_json_llm(providers, prompt, max_tokens=max_tokens)
 
 
 def _discover_interview_topics_via_ai(

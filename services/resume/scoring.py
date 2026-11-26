@@ -1001,8 +1001,7 @@ Return JSON ONLY with EXACTLY this structure:
 def build_fallback_modern_latex(resume_text: str, target_role: str = "") -> str:
     """Deterministic fallback producing a compact, single-page, ATS-optimized LaTeX resume."""
     first_line = resume_text.strip().splitlines()[0] if resume_text.strip() else "ATHUL ANANTH ARIGA"
-    name = first_line[:50].strip() or "ATHUL ANANTH ARIGA"
-    role = target_role or "Data Engineer & Python Developer"
+    _ = first_line[:50].strip() or "ATHUL ANANTH ARIGA"
 
     def esc(s: str) -> str:
         replacements = [('&', r'\&'), ('%', r'\%'), ('$', r'\$'), ('#', r'\#'), ('_', r'\_')]

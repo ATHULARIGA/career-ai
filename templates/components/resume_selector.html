@@ -1,0 +1,16 @@
+{% macro resume_selector(select_id, resumes, selected_id, on_change, upload_fn) %}
+<div class="cs-resume-controls">
+  <select id="{{ select_id }}" class="cs-resume-select" onchange="{{ on_change }}" aria-label="Select Resume for Tailoring">
+    {% for r in (resumes or []) %}
+    <option value="{{ r.id }}" {% if r.id == selected_id %}selected{% endif %}>
+      {{ r.title }}
+    </option>
+    {% endfor %}
+    <option value="__upload__">+ Upload New Resume...</option>
+  </select>
+  <button type="button" class="cs-action-btn" onclick="{{ upload_fn }}" aria-label="+ Upload Resume">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+    <span>+ Upload Resume</span>
+  </button>
+</div>
+{% endmacro %}
