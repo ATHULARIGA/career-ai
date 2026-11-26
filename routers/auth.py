@@ -1,12 +1,17 @@
+import logging
 import os
 import secrets
-import urllib.parse
 import time
-import requests
-import logging
 import traceback
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+import urllib.parse
+
+import requests
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse,
+)
+
 from core import *
 
 _log = logging.getLogger(__name__)
@@ -154,7 +159,7 @@ def google_auth_callback(request: Request):
             user_id = int((created_row or [0])[0] or 0)
             role = "user"
             plan = "free"
-    except Exception as e:
+    except Exception:
         _log.error("Google user database sync failed: %s", traceback.format_exc())
         conn.close()
         return RedirectResponse("/login?error=Account+creation+failed.+Please+try+again.", status_code=303)
@@ -215,7 +220,7 @@ def signup(
         db.execute(cur, "SELECT id FROM users WHERE email=?", (email,))
         row = cur.fetchone()
         user_id = int((row or [0])[0] or 0)
-    except Exception as e:
+    except Exception:
         err_detail = traceback.format_exc()
         _log.error("Signup error: %s", err_detail)
         try:
@@ -257,11 +262,14 @@ def login(
         (admin_username and identity.lower() == admin_username.lower())
         or (admin_email and email == admin_email.lower())
     )
-    if admin_password and is_admin_identity and password == admin_password:
+    if (
+        admin_password
+        and is_admin_identity
+        and hmac.compare_digest(password.encode("utf-8"), admin_password.encode("utf-8"))
+    ):
         # Log admin in as a regular session for site access.
         # admin=True is NOT set here — go to /admin-login for admin panel.
-        request.session.pop("admin", None)
-        request.session.pop("admin_user", None)
+        request.session.clear()
         request.session["user_id"] = -1
         request.session["user_name"] = "Admin"
         request.session["user_email"] = admin_email or admin_username
@@ -288,13 +296,12 @@ def login(
     conn.close()
     record_auth_success(request, "login", identity=email)
 
+    request.session.clear()
     request.session["user_id"] = int(row[0])
     request.session["user_name"] = row[1]
     request.session["user_email"] = row[2]
     request.session["user_role"] = row[4] or "user"
     request.session["user_plan"] = (row[5] or "free")
-    request.session.pop("admin", None)
-    request.session.pop("admin_user", None)
     return RedirectResponse("/", status_code=303)
 
 

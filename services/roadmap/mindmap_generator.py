@@ -1,6 +1,7 @@
-import os
 import json
+import os
 import re
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -435,7 +436,7 @@ def get_skill_info(skill: str) -> dict:
         "description": f"Mastery of {clean_skill} is essential for industry-standard development, system design, and production engineering workflows.",
         "resources": [
             {"label": f"{clean_skill} Official Docs & Guides", "url": f"https://www.google.com/search?q={encoded}+official+documentation"},
-            {"label": f"{clean_skill} Deep-Dive on Roadmap.sh", "url": f"https://roadmap.sh"},
+            {"label": f"{clean_skill} Deep-Dive on Roadmap.sh", "url": "https://roadmap.sh"},
             {"label": f"{clean_skill} FreeCodeCamp & Tutorials", "url": f"https://www.freecodecamp.org/news/search/?query={encoded}"}
         ]
     }

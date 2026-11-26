@@ -1,6 +1,15 @@
+
 from typing import Optional
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
+
+from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    Response,
+)
+
 from core import *
 from services.resume.scoring import clean_scraped_jd
 
@@ -377,7 +386,10 @@ async def fix_resume_endpoint(request: Request, report_id: int, custom_jd: str =
     if custom_jd.strip():
         report["jd_text"] = custom_jd.strip()
         
-    from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
+    from services.resume.scoring import (
+        generate_resume_rewrite,
+        generate_tailored_latex_resume,
+    )
     jd_text = report.get("jd_text", "")
     if not report.get("original_latex") and report.get("latex_code"):
         report["original_latex"] = report.get("latex_code")
@@ -427,7 +439,10 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
         report["resume_text"] = text
         report.pop("fixed_resume_error", None)
 
-        from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
+        from services.resume.scoring import (
+            generate_resume_rewrite,
+            generate_tailored_latex_resume,
+        )
         jd_text = report.get("jd_text", "")
         tailored_result = generate_tailored_latex_resume(text, report, jd_text)
         fixed_md = generate_resume_rewrite(text, report)
@@ -439,7 +454,7 @@ async def fix_resume_with_upload(request: Request, report_id: int, file: UploadF
         update_resume_report_json(report_id, user_email, report)
 
     except Exception as e:
-        report["fixed_resume_error"] = f"Failed to process upload: {str(e)}"
+        report["fixed_resume_error"] = f"Failed to process upload: {e!s}"
         update_resume_report_json(report_id, user_email, report)
 
     return RedirectResponse(f"/resume/{report_id}/fix", status_code=303)
@@ -605,7 +620,10 @@ async def view_fixed_resume_endpoint(request: Request, report_id: str = "1"):
     # Automatically generate tailored resume if missing or if only legacy 1-change fallback exists
     if (not diff_changes or len(diff_changes) <= 1) and report.get("resume_text"):
         try:
-            from services.resume.scoring import generate_tailored_latex_resume, generate_resume_rewrite
+            from services.resume.scoring import (
+                generate_resume_rewrite,
+                generate_tailored_latex_resume,
+            )
             resume_text = report.get("resume_text", "")
             if not report.get("original_latex") and report.get("latex_code"):
                 report["original_latex"] = report.get("latex_code")
@@ -771,7 +789,7 @@ def compare_resumes(request: Request, current_id: Optional[int] = None, previous
     tier_a = current_report.get("company_tier", "General") or "General"
     tier_b = previous_report.get("company_tier", "General") or "General"
     if tier_a != tier_b:
-        tier_warning = "Company Tiers differ ({} vs {}). Evaluation weights are calibrated to different bars.".format(tier_a, tier_b)
+        tier_warning = f"Company Tiers differ ({tier_a} vs {tier_b}). Evaluation weights are calibrated to different bars."
         warning = (warning + " " + tier_warning) if warning else tier_warning
 
     return templates.TemplateResponse(

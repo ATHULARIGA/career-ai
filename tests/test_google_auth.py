@@ -1,7 +1,9 @@
 import os
 import urllib.parse
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from fastapi.testclient import TestClient
+
 import db.backend as db
 from main import app
 

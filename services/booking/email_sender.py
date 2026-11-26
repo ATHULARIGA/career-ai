@@ -1,10 +1,12 @@
-import smtplib
-import os
 import json
-import urllib.request
+import os
+import smtplib
 import urllib.error
+import urllib.request
 from email.mime.text import MIMEText
+
 from dotenv import load_dotenv
+
 
 def send_mail(to, link=None, subject=None, body=None):
     load_dotenv(override=True)

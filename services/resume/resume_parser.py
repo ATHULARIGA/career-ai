@@ -1,5 +1,7 @@
-import pypdf
 import io
+
+import pypdf
+
 
 def extract_text(filename, content):
     filename = (filename or "").lower()

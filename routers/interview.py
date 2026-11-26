@@ -1,9 +1,27 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
-import uuid
 import asyncio
 import json
+import uuid
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+)
+
 from core import *
+from core.database import (
+    delete_user_cheatsheet,
+    get_user_cheatsheets,
+    save_user_cheatsheet,
+    update_cheatsheet_revised,
+)
+from services.interview.cheatsheet_generator import (
+    build_standalone_cheatsheet_html,
+    extract_technologies_from_resume,
+    get_cheatsheet_for_technology,
+)
 from services.interview.ideal_generator import generate_ideal_answer
 from services.interview.interview_engine import (
     generate_interviewer_response,
@@ -11,17 +29,6 @@ from services.interview.interview_engine import (
     score_candidate_questions,
 )
 from services.interview.interview_feedback import analyze_answer, hiring_decision
-from services.interview.cheatsheet_generator import (
-    extract_technologies_from_resume,
-    get_cheatsheet_for_technology,
-    build_standalone_cheatsheet_html,
-)
-from core.database import (
-    get_user_cheatsheets,
-    save_user_cheatsheet,
-    update_cheatsheet_revised,
-    delete_user_cheatsheet,
-)
 
 router = APIRouter()
 
@@ -116,7 +123,7 @@ def interview_start(request: Request):
 # ---------------------------------------------------------------------------
 # Gap 2: helper — truncate history to opener + last N turns
 # ---------------------------------------------------------------------------
-def _trim_history(history: list, keep_recent: int = 9) -> list:
+def _trim_history(history: list[Any], keep_recent: int = 9) -> list[Any]:
     """Always keep the opener (turn 0) + the most recent keep_recent turns."""
     if len(history) <= keep_recent + 1:
         return history
@@ -959,7 +966,7 @@ async def api_interview_select_resume(request: Request):
         })
     except Exception as e:
         logger.exception("api_interview_select_resume failed: %s", e)
-        return JSONResponse({"error": f"Failed to switch resume: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to switch resume: {e!s}"}, status_code=500)
 
 
 @router.post("/api/interview/upload-resume", response_class=JSONResponse)
@@ -985,7 +992,7 @@ async def api_interview_upload_resume(
                 from services.resume.resume_parser import extract_text
                 text = extract_text(filename, content)
             except Exception as e:
-                return JSONResponse({"error": f"Failed to parse PDF resume: {str(e)}"}, status_code=400)
+                return JSONResponse({"error": f"Failed to parse PDF resume: {e!s}"}, status_code=400)
         elif lower_name.endswith((".tex", ".latex")):
             resume_type = "latex"
             try:
@@ -1064,7 +1071,7 @@ async def api_interview_upload_resume(
         })
     except Exception as e:
         logger.exception("api_interview_upload_resume failed: %s", e)
-        return JSONResponse({"error": f"Failed to upload resume: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to upload resume: {e!s}"}, status_code=500)
 
 
 @router.get("/api/interview/technologies", response_class=JSONResponse)
@@ -1158,13 +1165,26 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
         return JSONResponse(payload)
     except Exception as e:
         logger.exception("api_interview_cheatsheet failed: %s", e)
-        return JSONResponse({"error": f"Failed to load cheat sheet: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to load cheat sheet: {e!s}"}, status_code=500)
 
 
 @router.post("/api/interview/cheatsheet/add", response_class=JSONResponse)
 async def api_interview_cheatsheet_add(request: Request):
     """Adds a custom technology and generates its cheat sheet tailored to the candidate."""
     try:
+        user_email = (request.session.get("user_email") or "").strip().lower()
+        blocked, retry = is_rate_limited(
+            request,
+            "cheatsheet_add",
+            identity=user_email or "anon",
+            max_attempts=25,
+            window_sec=300,
+            block_sec=300,
+        )
+        if blocked:
+            return JSONResponse({"error": f"Rate limit exceeded. Try again in {retry}s."}, status_code=429)
+        record_auth_failure(request, "cheatsheet_add", identity=user_email or "anon", window_sec=300)
+
         try:
             body = await request.json()
         except Exception:
@@ -1207,7 +1227,7 @@ async def api_interview_cheatsheet_add(request: Request):
         return JSONResponse(payload)
     except Exception as e:
         logger.exception("api_interview_cheatsheet_add failed: %s", e)
-        return JSONResponse({"error": f"Failed to generate cheat sheet: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to generate cheat sheet: {e!s}"}, status_code=500)
 
 
 @router.post("/api/interview/cheatsheet/revise", response_class=JSONResponse)
@@ -1267,7 +1287,7 @@ async def api_interview_cheatsheet_revise(request: Request):
         return JSONResponse({"success": True, "tech": tech_name, "revised_indices": curr_indices})
     except Exception as e:
         logger.exception("api_interview_cheatsheet_revise failed: %s", e)
-        return JSONResponse({"error": f"Failed to update revision status: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to update revision status: {e!s}"}, status_code=500)
 
 
 @router.delete("/api/interview/cheatsheet", response_class=JSONResponse)
@@ -1294,7 +1314,7 @@ def api_interview_cheatsheet_delete(request: Request, tech: str = ""):
         return JSONResponse({"success": True, "deleted": tech_name})
     except Exception as e:
         logger.exception("api_interview_cheatsheet_delete failed: %s", e)
-        return JSONResponse({"error": f"Failed to delete technology: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": f"Failed to delete technology: {e!s}"}, status_code=500)
 
 
 @router.get("/interview/cheatsheet/export", response_class=HTMLResponse)
@@ -1318,4 +1338,4 @@ def interview_cheatsheet_export(request: Request, tech: str = "FastAPI"):
         return HTMLResponse(content=html_content, headers=headers)
     except Exception as e:
         logger.exception("interview_cheatsheet_export failed: %s", e)
-        return HTMLResponse(content=f"<html><body><h1>Export Error</h1><p>{str(e)}</p></body></html>", status_code=500)
+        return HTMLResponse(content=f"<html><body><h1>Export Error</h1><p>{e!s}</p></body></html>", status_code=500)

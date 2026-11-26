@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 from openai import OpenAI
 
 client = OpenAI(
@@ -30,7 +31,7 @@ Resume:
         ]
     )
 
-    raw = response.choices[0].message.content
+    raw = response.choices[0].message.content or ""
     cleaned = raw.replace("```json", "").replace("```", "").strip()
 
     # ensure JSON only
@@ -40,5 +41,5 @@ Resume:
     try:
         data = json.loads(cleaned)
         return data.get("skills", [])
-    except:
+    except Exception:
         return []

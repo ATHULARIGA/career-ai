@@ -1,5 +1,5 @@
 from core import app
-from routers import auth, resume, interview, coding, admin, pages
+from routers import admin, auth, coding, interview, pages, resume
 
 app.include_router(auth.router)
 app.include_router(resume.router)
@@ -9,22 +9,26 @@ app.include_router(admin.router)
 app.include_router(pages.router)
 
 from fastapi import Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from core import templates, logger
+from fastapi.responses import JSONResponse
+
+from core import APP_ENV, logger, templates
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     req_id = getattr(request.state, "request_id", "n/a")
-    import traceback
-    traceback.print_exc()
     logger.exception("unhandled_error request_id=%s path=%s", req_id, request.url.path)
+
+    is_prod = APP_ENV == "production"
+    safe_msg = "An unexpected error occurred. Please try again." if is_prod else (str(exc) or "An unexpected error occurred. Please try again.")
+    safe_html_msg = "An unexpected error occurred. Please try again." if is_prod else f"{type(exc).__name__}: {exc!s}"
 
     # Return clean JSON errors for API routes or JSON requests so clients can handle them properly
     accept_header = request.headers.get("accept", "")
     if request.url.path.startswith("/api/") or "application/json" in accept_header:
         return JSONResponse(
             {
-                "error": str(exc) if str(exc) else "An unexpected error occurred. Please try again.",
+                "error": safe_msg,
                 "request_id": req_id,
             },
             status_code=500,
@@ -33,7 +37,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     return templates.TemplateResponse(
         request=request,
         name="error.html",
-        context={"request": request, "request_id": req_id, "message": f"{type(exc).__name__}: {str(exc)}"},
+        context={"request": request, "request_id": req_id, "message": safe_html_msg},
         status_code=500,
     )
 

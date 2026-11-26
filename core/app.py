@@ -1,20 +1,21 @@
 import os
+
 from fastapi import FastAPI
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from core.config import (
-    BASE_DIR,
     APP_ENV,
-    TRUSTED_HOSTS,
+    BASE_DIR,
     ENABLE_HTTPS_REDIRECT,
+    TRUSTED_HOSTS,
     session_secret,
 )
 from core.middleware import (
-    RequestGuardMiddleware,
     AuthGateMiddleware,
     CachedStaticFiles,
+    RequestGuardMiddleware,
 )
 from db.schema import init_all_schemas
 

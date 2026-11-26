@@ -1,13 +1,15 @@
-import sys
-import os
 import json
-import uuid
+import os
+import sys
 import time
+import uuid
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import core
 import db.backend as db
 from routers.pages import api_interview_progress
+
 
 class MockSessionRequest:
     def __init__(self, email):

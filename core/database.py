@@ -1,10 +1,12 @@
 import json
-import logging
 import re
 import time
+from typing import Any, Optional
+
 from fastapi import Request
+
 import db.backend as db
-from core.config import logger, FREE_RESUME_DAILY_LIMIT
+from core.config import FREE_RESUME_DAILY_LIMIT, logger
 from core.security import current_user_plan
 from services.coding.coding_platform import submission_ts_column
 
@@ -433,7 +435,7 @@ def get_user_cheatsheets(user_email: str) -> list:
     return results
 
 
-def save_user_cheatsheet(user_email: str, tech_name: str, cheatsheet_data: dict, is_custom: bool = False, revised_indices: list = None) -> None:
+def save_user_cheatsheet(user_email: str, tech_name: str, cheatsheet_data: dict[str, Any], is_custom: bool = False, revised_indices: Optional[list[int]] = None) -> None:
     email = (user_email or "").strip().lower()
     t_name = (tech_name or "").strip()
     if not email or not t_name:
@@ -746,7 +748,7 @@ def get_user_saved_resumes(user_email: str) -> list:
     return res
 
 
-def get_saved_resume_by_id(resume_id: int, user_email: str) -> dict:
+def get_saved_resume_by_id(resume_id: int, user_email: str) -> Optional[dict[str, Any]]:
     email = (user_email or "").strip().lower()
     conn = db.get_conn()
     cur = conn.cursor()

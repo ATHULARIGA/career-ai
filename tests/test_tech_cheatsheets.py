@@ -7,18 +7,19 @@ and WCAG contrast standards.
 
 import pytest
 from starlette.testclient import TestClient
+
+from core.database import (
+    delete_user_cheatsheet,
+    get_user_cheatsheets,
+    save_user_cheatsheet,
+    update_cheatsheet_revised,
+)
 from main import app
 from services.interview.cheatsheet_generator import (
+    build_standalone_cheatsheet_html,
     extract_technologies_from_resume,
     get_cheatsheet_for_technology,
-    build_standalone_cheatsheet_html,
     tailor_cheatsheet_for_resume,
-)
-from core.database import (
-    save_user_cheatsheet,
-    get_user_cheatsheets,
-    update_cheatsheet_revised,
-    delete_user_cheatsheet,
 )
 
 
@@ -344,7 +345,7 @@ def test_interview_page_javascript_syntax_valid(client):
         tf.write(js_code)
         tf_path = tf.name
 
-    result = subprocess.run(["node", "-c", tf_path], capture_output=True, text=True)
+    result = subprocess.run(["node", "-c", tf_path], check=False, capture_output=True, text=True)
     assert result.returncode == 0, f"JavaScript syntax error in interview.html: {result.stderr}"
 
 
@@ -400,7 +401,9 @@ def test_curated_decks_comprehensive_coverage():
 
 
 def test_extract_project_talking_points_dynamic():
-    from services.interview.cheatsheet_generator import extract_project_talking_points_for_tech
+    from services.interview.cheatsheet_generator import (
+        extract_project_talking_points_for_tech,
+    )
 
     sample_resume = """
     # Experience

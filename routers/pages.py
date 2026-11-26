@@ -1,6 +1,12 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse, Response
-from typing import Optional
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    Response,
+)
+
 from core import *
 
 router = APIRouter()
@@ -23,7 +29,7 @@ def healthz():
         conn.close()
     except Exception as exc:
         payload["db_connected"] = False
-        payload["db_error"] = f"{type(exc).__name__}: {str(exc)}"
+        payload["db_error"] = f"{type(exc).__name__}: {exc!s}"
     return payload
 
 
@@ -961,6 +967,7 @@ def admin_logout(request: Request):
 
 
 import os
+
 import uvicorn
 
 if __name__ == "__main__":

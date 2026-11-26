@@ -1,10 +1,11 @@
-import sys
 import os
+import sys
 
 # Ensure the app root is in PYTHONPATH
 sys.path.append(os.getcwd())
 
-from services.resume.scoring import call_ai_with_fallback, SYSTEM_PROMPT
+from services.resume.scoring import SYSTEM_PROMPT, call_ai_with_fallback
+
 
 def check_ai_health():
     print("🤖 ResuMate AI Connection Health Check")

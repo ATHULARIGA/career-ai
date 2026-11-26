@@ -1,15 +1,16 @@
+import csv
+import hashlib
+import io
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import csv
-import io
-import hashlib
-import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
+
 import db.backend as db
 
 DB_PATH = "bookings.db"
@@ -28,7 +29,7 @@ GENERIC_STARTERS = {
 }
 
 
-DEFAULT_PROBLEMS: List[Dict[str, Any]] = [
+DEFAULT_PROBLEMS: list[dict[str, Any]] = [
     {
         "id": "fizzbuzz",
         "title": "FizzBuzz Stream",
@@ -615,7 +616,7 @@ def init_coding_tables() -> None:
     reset_submission_ts_cache()
 
 
-def get_all_problems(query: str = "", difficulty: str = "") -> List[Dict[str, Any]]:
+def get_all_problems(query: str = "", difficulty: str = "") -> list[dict[str, Any]]:
     problems = list(DEFAULT_PROBLEMS)
     conn = _conn()
     cur = conn.cursor()
@@ -669,11 +670,11 @@ def get_all_problems(query: str = "", difficulty: str = "") -> List[Dict[str, An
     return problems
 
 
-def get_custom_problems() -> List[Dict[str, Any]]:
+def get_custom_problems() -> list[dict[str, Any]]:
     return [p for p in get_all_problems() if p.get("custom")]
 
 
-def get_problem(problem_id: str) -> Dict[str, Any]:
+def get_problem(problem_id: str) -> dict[str, Any]:
     all_problems = get_all_problems()
     for p in all_problems:
         if p["id"] == problem_id:
@@ -681,7 +682,7 @@ def get_problem(problem_id: str) -> Dict[str, Any]:
     return all_problems[0]
 
 
-def parse_test_lines(raw: str) -> List[Dict[str, str]]:
+def parse_test_lines(raw: str) -> list[dict[str, str]]:
     tests = []
     for line in (raw or "").splitlines():
         row = line.strip()
@@ -692,7 +693,7 @@ def parse_test_lines(raw: str) -> List[Dict[str, str]]:
     return tests
 
 
-def _starter_defaults() -> Dict[str, str]:
+def _starter_defaults() -> dict[str, str]:
     return {
         "python": "def solve(input_data: str) -> str:\n    # Write your solution here\n    return \"\"\n",
         "javascript": "function solve(inputData) {\n  // Write your solution here\n  return \"\";\n}\n",
@@ -705,11 +706,11 @@ def add_custom_problem(
     title: str,
     difficulty: str,
     description: str,
-    tags: List[str],
-    constraints: List[str],
-    examples: List[Dict[str, str]],
-    sample_tests: List[Dict[str, str]],
-    hidden_tests: List[Dict[str, str]],
+    tags: list[str],
+    constraints: list[str],
+    examples: list[dict[str, str]],
+    sample_tests: list[dict[str, str]],
+    hidden_tests: list[dict[str, str]],
     starter_py: str,
     starter_js: str,
     starter_java: str,
@@ -754,11 +755,11 @@ def update_custom_problem(
     title: str,
     difficulty: str,
     description: str,
-    tags: List[str],
-    constraints: List[str],
-    examples: List[Dict[str, str]],
-    sample_tests: List[Dict[str, str]],
-    hidden_tests: List[Dict[str, str]],
+    tags: list[str],
+    constraints: list[str],
+    examples: list[dict[str, str]],
+    sample_tests: list[dict[str, str]],
+    hidden_tests: list[dict[str, str]],
     starter_py: str,
     starter_js: str,
     starter_java: str,
@@ -851,7 +852,7 @@ def save_submission(
 
 def _normalize_code_for_hash(code: str) -> str:
     src = str(code or "")
-    src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    src = re.sub(r"/\*.*?\*/", "", src, flags=re.DOTALL)
     src = re.sub(r"//.*", "", src)
     src = re.sub(r"#.*", "", src)
     src = re.sub(r"\s+", "", src)
@@ -883,7 +884,7 @@ def save_attempt_timeline(
     code: str = "",
     user_email: str = "",
     explanation: str = "",
-    result: Dict[str, Any] = None,
+    result: dict[str, Any] = None,
 ) -> None:
     email = (user_email or "").strip().lower()
     if not email:
@@ -925,7 +926,7 @@ def save_attempt_timeline(
     conn.close()
 
 
-def get_problem_timeline(user_email: str, problem_id: str, limit: int = 12) -> List[Dict[str, Any]]:
+def get_problem_timeline(user_email: str, problem_id: str, limit: int = 12) -> list[dict[str, Any]]:
     email = (user_email or "").strip().lower()
     if not email:
         return []
@@ -1011,7 +1012,7 @@ def enqueue_judge_job(
     return job_id
 
 
-def get_judge_job(job_id: str, user_email: str = "") -> Dict[str, Any]:
+def get_judge_job(job_id: str, user_email: str = "") -> dict[str, Any]:
     job = (job_id or "").strip()
     if not job:
         return {}
@@ -1064,7 +1065,7 @@ def get_judge_job(job_id: str, user_email: str = "") -> Dict[str, Any]:
     }
 
 
-def _set_judge_job_state(job_id: str, status: str, result: Dict[str, Any] = None, error_text: str = "") -> None:
+def _set_judge_job_state(job_id: str, status: str, result: dict[str, Any] = None, error_text: str = "") -> None:
     conn = _conn()
     cur = conn.cursor()
     db.execute(
@@ -1086,7 +1087,7 @@ def _set_judge_job_state(job_id: str, status: str, result: Dict[str, Any] = None
     conn.close()
 
 
-def process_judge_job(job_id: str) -> Dict[str, Any]:
+def process_judge_job(job_id: str) -> dict[str, Any]:
     job = get_judge_job(job_id)
     if not job:
         return {"ok": False, "error": "job_not_found"}
@@ -1153,7 +1154,7 @@ def process_judge_job(job_id: str) -> Dict[str, Any]:
         return {"ok": False, "status": "failed", "error": str(exc)}
 
 
-def get_submission_stats(limit: int = 200) -> Dict[str, Any]:
+def get_submission_stats(limit: int = 200) -> dict[str, Any]:
     conn = _conn()
     cur = conn.cursor()
 
@@ -1191,7 +1192,7 @@ def get_submission_stats(limit: int = 200) -> Dict[str, Any]:
     }
 
 
-def get_submission_stats_extended(limit: int = 200) -> Dict[str, Any]:
+def get_submission_stats_extended(limit: int = 200) -> dict[str, Any]:
     base = get_submission_stats(limit=limit)
     conn = _conn()
     cur = conn.cursor()
@@ -1240,7 +1241,7 @@ def get_submission_stats_extended(limit: int = 200) -> Dict[str, Any]:
     return base
 
 
-def get_user_submission_summary(user_email: str, limit: int = 20) -> Dict[str, Any]:
+def get_user_submission_summary(user_email: str, limit: int = 20) -> dict[str, Any]:
     email = (user_email or "").strip().lower()
     if not email:
         return {
@@ -1368,7 +1369,7 @@ def first_diff_index(expected: str, actual: str) -> int:
     return -1
 
 
-def classify_failure_reason(result: Dict[str, Any]) -> str:
+def classify_failure_reason(result: dict[str, Any]) -> str:
     status = str(result.get("status", "")).lower()
     cases = result.get("cases", []) or []
     if "accepted" in status:
@@ -1391,10 +1392,9 @@ def classify_failure_reason(result: Dict[str, Any]) -> str:
     return "wrong_answer"
 
 
-def _slice_with_cursor(text: str, idx: int, radius: int = 24) -> Dict[str, Any]:
+def _slice_with_cursor(text: str, idx: int, radius: int = 24) -> dict[str, Any]:
     src = str(text or "")
-    if idx < 0:
-        idx = 0
+    idx = max(idx, 0)
     start = max(0, idx - radius)
     end = min(len(src), idx + radius)
     return {
@@ -1405,7 +1405,7 @@ def _slice_with_cursor(text: str, idx: int, radius: int = 24) -> Dict[str, Any]:
     }
 
 
-def build_failure_debug(result: Dict[str, Any]) -> Dict[str, Any]:
+def build_failure_debug(result: dict[str, Any]) -> dict[str, Any]:
     payload = dict(result or {})
     if str(payload.get("status", "")).lower() == "accepted":
         return {}
@@ -1437,15 +1437,13 @@ def build_failure_debug(result: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def estimate_complexity(code: str, language: str, constraints: List[str]) -> Dict[str, str]:
+def estimate_complexity(code: str, language: str, constraints: list[str]) -> dict[str, str]:
     src = (code or "").lower()
     loops = src.count("for ") + src.count("while ")
     nested = src.count("for ") >= 2 or ("for " in src and "while " in src)
     recursion = ("def " in src and "return" in src and "solve(" in src and "solve(" in src[src.find("solve(") + 1:]) or ("solve(" in src and "solve(" in src[src.find("solve(") + 1:])
     big_o = "O(n)"
-    if nested:
-        big_o = "O(n^2)"
-    elif loops >= 2:
+    if nested or loops >= 2:
         big_o = "O(n^2)"
     elif recursion:
         big_o = "O(2^n)"
@@ -1459,7 +1457,7 @@ def estimate_complexity(code: str, language: str, constraints: List[str]) -> Dic
     return {"estimated": big_o, "expected": expected, "verdict": verdict}
 
 
-def _problem_payload(problem: Dict[str, Any]) -> Dict[str, Any]:
+def _problem_payload(problem: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": problem.get("id"),
         "title": problem.get("title"),
@@ -1503,7 +1501,7 @@ def save_problem_version(problem_id: str) -> None:
     conn.close()
 
 
-def coverage_report(problem: Dict[str, Any]) -> Dict[str, Any]:
+def coverage_report(problem: dict[str, Any]) -> dict[str, Any]:
     sample = len(problem.get("sample_tests", []) or [])
     hidden = len(problem.get("hidden_tests", []) or [])
     tags = len(problem.get("tags", []) or [])
@@ -1551,7 +1549,7 @@ def export_problems_csv() -> str:
     return out.getvalue()
 
 
-def import_problems_from_json(raw: str) -> Dict[str, int]:
+def import_problems_from_json(raw: str) -> dict[str, int]:
     created = 0
     updated = 0
     failed = 0
@@ -1618,7 +1616,7 @@ def import_problems_from_json(raw: str) -> Dict[str, int]:
     return {"created": created, "updated": updated, "failed": failed}
 
 
-def fetch_idempotent_response(idem_key: str) -> Dict[str, Any]:
+def fetch_idempotent_response(idem_key: str) -> dict[str, Any]:
     key = (idem_key or "").strip()
     if not key:
         return {}
@@ -1641,7 +1639,7 @@ def store_idempotent_response(
     problem_id: str,
     language: str,
     mode: str,
-    response: Dict[str, Any],
+    response: dict[str, Any],
 ) -> None:
     key = (idem_key or "").strip()[:120]
     if not key:
@@ -1671,7 +1669,7 @@ def store_idempotent_response(
     conn.close()
 
 
-def hint_ladder(problem: Dict[str, Any], code: str, result: Dict[str, Any], level: int = 1) -> Dict[str, str]:
+def hint_ladder(problem: dict[str, Any], code: str, result: dict[str, Any], level: int = 1) -> dict[str, str]:
     lvl = max(1, min(3, int(level or 1)))
     tags = ", ".join(problem.get("tags", [])[:3]) or "problem decomposition"
     fail = classify_failure_reason(result or {})
@@ -1692,7 +1690,7 @@ def hint_ladder(problem: Dict[str, Any], code: str, result: Dict[str, Any], leve
     return {"level": str(lvl), "hint": text}
 
 
-def coding_followup_questions(problem: Dict[str, Any], code: str, language: str = "python") -> List[str]:
+def coding_followup_questions(problem: dict[str, Any], code: str, language: str = "python") -> list[str]:
     title = str(problem.get("title", "this problem"))
     return [
         f"What is the time and space complexity of your solution for {title}?",
@@ -1701,7 +1699,7 @@ def coding_followup_questions(problem: Dict[str, Any], code: str, language: str 
     ]
 
 
-def review_code_heuristic(problem: Dict[str, Any], code: str, result: Dict[str, Any], language: str = "python") -> Dict[str, Any]:
+def review_code_heuristic(problem: dict[str, Any], code: str, result: dict[str, Any], language: str = "python") -> dict[str, Any]:
     src = code or ""
     lines = [ln for ln in src.splitlines() if ln.strip()]
     comments = sum(1 for ln in lines if ln.strip().startswith(("#", "//", "/*", "*")))
@@ -1725,7 +1723,7 @@ def review_code_heuristic(problem: Dict[str, Any], code: str, result: Dict[str, 
     }
 
 
-def weak_tags_for_user(user_email: str, window_days: int = 30) -> List[Dict[str, Any]]:
+def weak_tags_for_user(user_email: str, window_days: int = 30) -> list[dict[str, Any]]:
     email = (user_email or "").strip().lower()
     if not email:
         return []
@@ -1750,7 +1748,7 @@ def weak_tags_for_user(user_email: str, window_days: int = 30) -> List[Dict[str,
         rows = []
     conn.close()
     problems = {p["id"]: p for p in get_all_problems()}
-    tag_stats: Dict[str, Dict[str, int]] = {}
+    tag_stats: dict[str, dict[str, int]] = {}
     for pid, status in rows:
         tags = (problems.get(pid, {}) or {}).get("tags", []) or []
         for t in tags:
@@ -1769,7 +1767,7 @@ def weak_tags_for_user(user_email: str, window_days: int = 30) -> List[Dict[str,
     return ranked[:6]
 
 
-def recommend_next_problem(user_email: str, exclude_problem_id: str = "") -> Dict[str, Any]:
+def recommend_next_problem(user_email: str, exclude_problem_id: str = "") -> dict[str, Any]:
     weak = weak_tags_for_user(user_email)
     weak_tag = weak[0]["tag"] if weak else ""
     problems = get_all_problems()
@@ -1785,7 +1783,7 @@ def recommend_next_problem(user_email: str, exclude_problem_id: str = "") -> Dic
     return {}
 
 
-def study_plan(user_email: str, days: int = 7) -> List[str]:
+def study_plan(user_email: str, days: int = 7) -> list[str]:
     weak = weak_tags_for_user(user_email)
     focus = [w["tag"] for w in weak[:3]] or ["Arrays", "Hash Map", "DP"]
     if days <= 7:
@@ -1803,7 +1801,7 @@ def study_plan(user_email: str, days: int = 7) -> List[str]:
     ]
 
 
-def interview_readiness_score(user_email: str) -> Dict[str, Any]:
+def interview_readiness_score(user_email: str) -> dict[str, Any]:
     summary = get_user_submission_summary(user_email, limit=100)
     total = _safe_int(summary.get("total"))
     accept = _safe_float(summary.get("accept_rate"))
@@ -1820,7 +1818,7 @@ def _day_start(ts: int) -> int:
     return int(time.mktime((t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, t.tm_wday, t.tm_yday, t.tm_isdst)))
 
 
-def topic_mastery_report(user_email: str, window_days: int = 45) -> List[Dict[str, Any]]:
+def topic_mastery_report(user_email: str, window_days: int = 45) -> list[dict[str, Any]]:
     email = (user_email or "").strip().lower()
     if not email:
         return []
@@ -1845,7 +1843,7 @@ def topic_mastery_report(user_email: str, window_days: int = 45) -> List[Dict[st
     rows = cur.fetchall()
     conn.close()
     problems = {p["id"]: p for p in get_all_problems()}
-    by_tag: Dict[str, Dict[str, float]] = {}
+    by_tag: dict[str, dict[str, float]] = {}
     for pid, mode, status in rows:
         tags = (problems.get(str(pid), {}) or {}).get("tags", []) or []
         for tag in tags:
@@ -1888,7 +1886,7 @@ def daily_goal_progress(
     goal_accepted: int = 1,
     goal_review: int = 1,
     lookback_days: int = 30,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     email = (user_email or "").strip().lower()
     if not email:
         return {
@@ -1931,7 +1929,7 @@ def daily_goal_progress(
             rows = cur.fetchall()
     conn.close()
 
-    per_day: Dict[str, Dict[str, int]] = {}
+    per_day: dict[str, dict[str, int]] = {}
     for mode, status, ts in rows:
         day = time.strftime("%Y-%m-%d", time.localtime(int(ts or 0)))
         bucket = per_day.setdefault(day, {"accepted": 0, "review": 0})
@@ -1981,7 +1979,7 @@ def daily_goal_progress(
     }
 
 
-def personalized_practice_queue(user_email: str, current_problem_id: str = "", limit: int = 5) -> List[Dict[str, Any]]:
+def personalized_practice_queue(user_email: str, current_problem_id: str = "", limit: int = 5) -> list[dict[str, Any]]:
     problems = get_all_problems()
     if not problems:
         return []
@@ -2041,7 +2039,7 @@ def personalized_practice_queue(user_email: str, current_problem_id: str = "", l
     return ranked[: max(1, int(limit))]
 
 
-def editorial_bundle(problem: Dict[str, Any], result: Dict[str, Any], code: str = "", language: str = "python") -> Dict[str, Any]:
+def editorial_bundle(problem: dict[str, Any], result: dict[str, Any], code: str = "", language: str = "python") -> dict[str, Any]:
     p = dict(problem or {})
     r = dict(result or {})
     difficulty = str(p.get("difficulty") or "Easy")
@@ -2079,7 +2077,7 @@ def editorial_bundle(problem: Dict[str, Any], result: Dict[str, Any], code: str 
     }
 
 
-def weekly_contest_set(reference_ts: int = 0) -> Dict[str, Any]:
+def weekly_contest_set(reference_ts: int = 0) -> dict[str, Any]:
     now = int(reference_ts or time.time())
     t = time.localtime(now)
     week = int(time.strftime("%W", t))
@@ -2091,7 +2089,7 @@ def weekly_contest_set(reference_ts: int = 0) -> Dict[str, Any]:
     hards = [p for p in all_probs if str(p.get("difficulty")) == "Hard"]
     seed = year * 100 + week
 
-    def _pick(rows: List[Dict[str, Any]], offset: int) -> Dict[str, Any]:
+    def _pick(rows: list[dict[str, Any]], offset: int) -> dict[str, Any]:
         if not rows:
             return {}
         idx = abs(seed + offset) % len(rows)
@@ -2117,7 +2115,7 @@ def weekly_contest_set(reference_ts: int = 0) -> Dict[str, Any]:
     }
 
 
-def contest_snapshot(user_email: str = "", limit: int = 10) -> Dict[str, Any]:
+def contest_snapshot(user_email: str = "", limit: int = 10) -> dict[str, Any]:
     contest = weekly_contest_set()
     pids = list(contest.get("problem_ids") or [])
     if not pids:
@@ -2129,7 +2127,7 @@ def contest_snapshot(user_email: str = "", limit: int = 10) -> Dict[str, Any]:
         conn.close()
         return {"contest": contest, "leaderboard": [], "user_rank": 0, "user_percentile": 0.0}
     placeholders = ",".join(["?"] * len(pids))
-    params: List[Any] = list(pids)
+    params: list[Any] = list(pids)
     params.extend([int(contest.get("start_ts") or 0), int(contest.get("end_ts") or 0)])
     db.execute(
         cur,
@@ -2145,7 +2143,7 @@ def contest_snapshot(user_email: str = "", limit: int = 10) -> Dict[str, Any]:
     rows = cur.fetchall()
     conn.close()
 
-    board: Dict[str, Dict[str, Any]] = {}
+    board: dict[str, dict[str, Any]] = {}
     for user_email_row, pid, status, runtime_ms, ts in rows:
         user = str(user_email_row or "").strip().lower()
         if not user:
@@ -2201,7 +2199,7 @@ def contest_snapshot(user_email: str = "", limit: int = 10) -> Dict[str, Any]:
     }
 
 
-def plagiarism_alerts(limit: int = 20) -> List[Dict[str, Any]]:
+def plagiarism_alerts(limit: int = 20) -> list[dict[str, Any]]:
     conn = _conn()
     cur = conn.cursor()
     db.execute(
@@ -2286,7 +2284,7 @@ try {{
 """
 
 
-def _runner_script_java(user_code: str) -> Tuple[str, str]:
+def _runner_script_java(user_code: str) -> tuple[str, str]:
     runner = """
 import java.io.*;
 
@@ -2328,7 +2326,7 @@ def run_code_once(
     input_data: str,
     language: str = "python",
     timeout_sec: float = 2.0,
-) -> Tuple[bool, str, str, float]:
+) -> tuple[bool, str, str, float]:
     language = (language or "python").lower()
     start = time.time()
     temp_dir = None
@@ -2420,12 +2418,12 @@ def run_code_once(
 
 
 def evaluate_submission(
-    problem: Dict[str, Any],
+    problem: dict[str, Any],
     code: str,
     language: str = "python",
     mode: str = "run",
     custom_input: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     language = (language or "python").lower()
     if language not in SUPPORTED_LANGUAGES:
         language = "python"
@@ -2504,7 +2502,7 @@ def evaluate_submission(
     return result
 
 
-def starter_for_language(problem: Dict[str, Any], language: str) -> str:
+def starter_for_language(problem: dict[str, Any], language: str) -> str:
     language = (language or "python").lower()
     starters = problem.get("starter_codes", {})
     if language in starters:
@@ -2520,11 +2518,11 @@ COMPANY_SETS = {
 }
 
 
-def company_sets() -> Dict[str, List[str]]:
+def company_sets() -> dict[str, list[str]]:
     return dict(COMPANY_SETS)
 
 
-def get_company_problems(company: str) -> List[Dict[str, Any]]:
+def get_company_problems(company: str) -> list[dict[str, Any]]:
     name = (company or "").strip()
     if not name:
         return []

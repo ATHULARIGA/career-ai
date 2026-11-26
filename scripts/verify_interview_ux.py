@@ -1,5 +1,4 @@
 import os
-import re
 
 TEMPLATE_PATH = "templates/interview.html"
 

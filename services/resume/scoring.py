@@ -665,14 +665,14 @@ def score_resume_heuristically(
     # 12. Interview Questions
     interview_qs = [
         f"Can you walk us through the system architecture where you applied {matched_skills[0].title() if matched_skills else 'Python'} in production?",
-        f"How did you handle error recovery, idempotency, and monitoring across your pipelines?",
+        "How did you handle error recovery, idempotency, and monitoring across your pipelines?",
         f"In your target role of {role_norm}, how do you evaluate technical trade-offs between delivery speed and system maintainability?",
         f"Describe a challenging production bottleneck you diagnosed and resolved using {matched_skills[1].title() if len(matched_skills) > 1 else 'SQL'}."
     ]
 
     # 13. Critical Changes Required
     critical_changes = [
-        f"Quantify unmeasured bullet points using the Google X-Y-Z formula (Accomplished [X], measured by [Y], by doing [Z]).",
+        "Quantify unmeasured bullet points using the Google X-Y-Z formula (Accomplished [X], measured by [Y], by doing [Z]).",
         f"Incorporate target technical keywords ({', '.join(missing_expected[:3]) if missing_expected else 'cloud orchestration tools'}) into project bullets.",
         f"Ensure executive summary immediately establishes years of production experience in {role_norm}."
     ]
@@ -971,14 +971,15 @@ Return JSON ONLY with EXACTLY this structure:
     for client_instance, models in providers:
         for model in models:
             try:
-                import json, re
+                import json
+                import re
                 response = client_instance.chat.completions.create(
                     model=model,
                     temperature=0.1, # strict analysis
                     messages=[{"role": "system", "content": system}, {"role": "user", "content": user_prompt}],
                     max_tokens=250
                 )
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content or ""
                 # JSON extraction
                 match = re.search(r'\{.*\}', content, re.DOTALL)
                 if match:
@@ -1309,7 +1310,8 @@ Candidate's Original Resume Text:
     for client_instance, models in providers:
         for model in models:
             try:
-                import json, re
+                import json
+                import re
                 response = client_instance.chat.completions.create(
                     model=model,
                     temperature=0.1,

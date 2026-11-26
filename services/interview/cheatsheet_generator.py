@@ -5,11 +5,13 @@ with category filters, answers, code snippets, real-world use cases,
 interview tips, and revision tracking.
 """
 
-import re
 import json
 import os
-from typing import Any, Dict, List, Optional, Tuple
+import re
+from typing import Any, Optional
+
 from openai import OpenAI
+
 from services.interview.cheatsheet_decks import (
     EXTRA_CURATED_DECKS,
     build_domain_deterministic_cards,
@@ -18,7 +20,7 @@ from services.interview.cheatsheet_decks import (
 # ---------------------------------------------------------------------------
 # Canonical Technology Knowledge Base
 # ---------------------------------------------------------------------------
-TECH_REGISTRY: Dict[str, Dict[str, Any]] = {
+TECH_REGISTRY: dict[str, dict[str, Any]] = {
     "fastapi": {
         "canonical": "FastAPI",
         "category": "Backend Framework",
@@ -109,7 +111,7 @@ TECH_REGISTRY: Dict[str, Dict[str, Any]] = {
 # ---------------------------------------------------------------------------
 # High-Quality Curated Card Decks
 # ---------------------------------------------------------------------------
-CURATED_DECKS: Dict[str, List[List[str]]] = {
+CURATED_DECKS: dict[str, list[list[str]]] = {
     "fastapi": [
         [
             "Basics",
@@ -254,7 +256,7 @@ CURATED_DECKS.update(EXTRA_CURATED_DECKS)
 # ---------------------------------------------------------------------------
 # Technology Extraction from Resume
 # ---------------------------------------------------------------------------
-EXTENDED_TECH_ALIASES: Dict[str, List[str]] = {
+EXTENDED_TECH_ALIASES: dict[str, list[str]] = {
     "Apache Spark": ["apache spark", "pyspark", "spark"],
     "Apache Airflow": ["apache airflow", "airflow"],
     "Snowflake": ["snowflake"],
@@ -311,13 +313,13 @@ def _clean_skill_token(raw: str) -> str:
     return tok
 
 
-def extract_technologies_from_resume(resume_text: str, report: Optional[Dict[str, Any]] = None) -> List[str]:
+def extract_technologies_from_resume(resume_text: str, report: Optional[dict[str, Any]] = None) -> list[str]:
     """
     Extracts all recognized and listed technologies from the candidate's resume text and report.
     Combines canonical registry matching, extended tech aliases, and dynamic skills-line parsing
     so users can select any technology from their resume.
     """
-    detected: List[str] = []
+    detected: list[str] = []
     seen_lower = set()
 
     def _add(name: str) -> None:
@@ -381,14 +383,14 @@ def extract_technologies_from_resume(resume_text: str, report: Optional[Dict[str
 # ---------------------------------------------------------------------------
 # Dynamic AI Generator for All Technologies
 # ---------------------------------------------------------------------------
-def get_ai_providers() -> List[Tuple[Any, List[str], str]]:
+def get_ai_providers() -> list[tuple[Any, list[str], str]]:
     """
     Returns ordered list of configured AI provider clients, models, and provider labels:
     1. Google Gemini (via OpenAI-compatible endpoint)
     2. OpenRouter (Free models + BYOK fallbacks)
     3. Groq (if configured)
     """
-    providers: List[Tuple[Any, List[str], str]] = []
+    providers: list[tuple[Any, list[str], str]] = []
 
     # 1. Google Gemini (via Google AI Studio OpenAI-compatible endpoint)
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
@@ -452,10 +454,10 @@ def get_ai_providers() -> List[Tuple[Any, List[str], str]]:
 
 
 def _invoke_json_llm(
-    providers: List[Tuple[Any, List[str], str]],
+    providers: list[tuple[Any, list[str], str]],
     prompt: str,
     max_tokens: int = 4000,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[dict[str, Any]]:
     """
     Calls configured AI providers in order and parses a JSON object response.
     Shared helper used by both interview-topic discovery and card generation.
@@ -488,8 +490,8 @@ def _invoke_json_llm(
 def _discover_interview_topics_via_ai(
     tech_name: str,
     role_name: str,
-    providers: List[Tuple[Any, List[str], str]],
-) -> List[Dict[str, str]]:
+    providers: list[tuple[Any, list[str], str]],
+) -> list[dict[str, str]]:
     """
     Stage 1 Prompt: Identifies the exact high-signal interview topics and tricky
     real-world questions specifically tested for `tech_name` in `role_name` interviews.
@@ -527,7 +529,7 @@ No emojis."""
     raw_topics = data.get("topics", [])
     if not isinstance(raw_topics, list):
         return []
-    cleaned: List[Dict[str, str]] = []
+    cleaned: list[dict[str, str]] = []
     for item in raw_topics:
         if isinstance(item, dict) and str(item.get("topic", "")).strip():
             cleaned.append({
@@ -542,8 +544,8 @@ def _generate_custom_cards_via_ai(
     tech_name: str,
     target_role: str = "",
     resume_context: str = "",
-    usage_info: Optional[Dict[str, Any]] = None,
-) -> List[List[str]]:
+    usage_info: Optional[dict[str, Any]] = None,
+) -> list[list[str]]:
     """
     Two-stage multi-provider LLM pipeline:
     1) Discovers the exact high-signal interview topics for `tech_name`.
@@ -690,7 +692,7 @@ def _detect_technology_domain(tech_name: str) -> str:
     return "general"
 
 
-def _generate_deterministic_cards(tech_name: str, target_role: str = "") -> List[List[str]]:
+def _generate_deterministic_cards(tech_name: str, target_role: str = "") -> list[list[str]]:
     """
     Deterministic domain-aware offline fallback generator for any technology.
     Produces 12-14 rich, structured cards covering all critical interview pillars
@@ -703,7 +705,7 @@ def _generate_deterministic_cards(tech_name: str, target_role: str = "") -> List
 # ---------------------------------------------------------------------------
 # Tailoring Cards with Resume Context & Project Bullet Points
 # ---------------------------------------------------------------------------
-def extract_project_talking_points_for_tech(resume_context: str, tech_name: str) -> List[Dict[str, str]]:
+def extract_project_talking_points_for_tech(resume_context: str, tech_name: str) -> list[dict[str, str]]:
     """
     Extracts candidate projects, work experiences, metrics, and bullet points from
     the resume that utilize or relate to the given technology.
@@ -774,7 +776,7 @@ def extract_project_talking_points_for_tech(resume_context: str, tech_name: str)
     return deduped
 
 
-def check_tech_used_in_resume(resume_context: str, tech_name: str) -> Dict[str, Any]:
+def check_tech_used_in_resume(resume_context: str, tech_name: str) -> dict[str, Any]:
     """
     Parses the candidate's resume to determine whether `tech_name` was used in their
     experience/projects, listed in skills only, or not present on the resume.
@@ -834,12 +836,12 @@ def check_tech_used_in_resume(resume_context: str, tech_name: str) -> Dict[str, 
 
 
 def tailor_cheatsheet_for_resume(
-    cards: List[List[str]],
+    cards: list[list[str]],
     resume_context: str = "",
     target_role: str = "",
     tech_name: str = "",
-    usage_info: Optional[Dict[str, Any]] = None,
-) -> List[List[str]]:
+    usage_info: Optional[dict[str, Any]] = None,
+) -> list[list[str]]:
     """
     Enriches cheat sheet cards with personalized candidate talking points
     tailored to whether and how the technology was used in the user's resume.
@@ -909,7 +911,7 @@ def get_cheatsheet_for_technology(
     resume_text: str = "",
     target_role: str = "",
     force_ai: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Returns full cheat sheet payload for a technology.
     Dynamically generates via AI for any technology when AI providers are available.
@@ -926,7 +928,7 @@ def get_cheatsheet_for_technology(
             norm_key = k
             break
 
-    raw_cards: List[List[str]] = []
+    raw_cards: list[list[str]] = []
 
     # Check if AI provider is present
     providers = get_ai_providers()
@@ -983,7 +985,7 @@ def get_cheatsheet_for_technology(
 # ---------------------------------------------------------------------------
 def build_standalone_cheatsheet_html(
     tech_name: str,
-    cards: List[List[str]],
+    cards: list[list[str]],
     target_role: str = "",
 ) -> str:
     """

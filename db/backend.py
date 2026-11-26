@@ -3,7 +3,6 @@ import queue
 import shutil
 import sqlite3
 import sys
-from typing import List
 
 _USE_SQLITE_FALLBACK = False
 _pg_pool: queue.LifoQueue = queue.LifoQueue(maxsize=15)
@@ -155,7 +154,7 @@ def id_pk_col() -> str:
     return "INTEGER PRIMARY KEY AUTOINCREMENT"
 
 
-def list_columns(conn, table: str) -> List[str]:
+def list_columns(conn, table: str) -> list[str]:
     if is_postgres():
         with conn.cursor() as cur:
             cur.execute(

@@ -4,8 +4,10 @@ import os
 import secrets
 import time
 from urllib.parse import urlparse
+
 from dotenv import load_dotenv
 from fastapi import Request
+
 import db.backend as db
 from core.config import APP_ENV, CSRF_STRICT
 
@@ -67,6 +69,11 @@ def get_client_ip(request: Request) -> str:
     if not request:
         return "127.0.0.1"
     headers = getattr(request, "headers", None) or {}
+    vercel_ip = headers.get("x-vercel-forwarded-for")
+    if vercel_ip:
+        parts = [p.strip() for p in vercel_ip.split(",") if p.strip()]
+        if parts:
+            return parts[0]
     forwarded = headers.get("x-forwarded-for")
     if forwarded:
         parts = [p.strip() for p in forwarded.split(",") if p.strip()]
@@ -211,7 +218,7 @@ def user_plan_for_email(user_email: str) -> str:
     conn.close()
     if not row:
         return "free"
-    plan = str((row[0] or "free")).strip().lower()
+    plan = str(row[0] or "free").strip().lower()
     return plan if plan else "free"
 
 

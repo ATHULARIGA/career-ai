@@ -1,14 +1,14 @@
 import os
 import sqlite3
 from pathlib import Path
-import pytest
 
+import pytest
 from fastapi.testclient import TestClient
 
-import db.backend as db
-from services.coding import coding_platform
 import core
+import db.backend as db
 import main
+from services.coding import coding_platform
 
 
 @pytest.fixture(autouse=True)

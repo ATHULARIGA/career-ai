@@ -1,17 +1,18 @@
 import json
-import pytest
+
 from starlette.requests import Request
 from starlette.testclient import TestClient
-from core.security import get_client_ip, get_client_geo
+
+from core import app
+from core.security import get_client_geo, get_client_ip
+from routers.admin import admin_traffic_export, admin_traffic_page
 from services.analytics.admin_analytics import (
-    record_visitor_traffic,
-    get_visitor_traffic_analytics,
     export_visitor_traffic_csv,
     export_visitor_traffic_json,
+    get_visitor_traffic_analytics,
     init_admin_tables,
+    record_visitor_traffic,
 )
-from routers.admin import admin_traffic_page, admin_traffic_export
-from core import app
 
 
 def test_get_client_ip_forwarded_for():

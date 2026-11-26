@@ -1,5 +1,6 @@
+
 import requests
-import sys
+
 
 def test_linkedin_scraping():
     # Use a real public LinkedIn job URL if possible, otherwise a generic one to test response headers

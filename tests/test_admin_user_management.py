@@ -1,12 +1,10 @@
-import pytest
-from starlette.requests import Request
+import db.backend as db
 from core.security import is_admin_session
 from services.analytics.admin_analytics import (
+    dashboard_payload,
     get_admin_users_list,
     update_user_role,
-    dashboard_payload,
 )
-import db.backend as db
 
 
 def test_is_admin_session():

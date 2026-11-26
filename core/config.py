@@ -1,6 +1,7 @@
+import logging
 import os
 import secrets
-import logging
+
 from dotenv import load_dotenv
 from fastapi.templating import Jinja2Templates
 
@@ -13,7 +14,8 @@ if not logger.handlers:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 APP_ENV = (os.getenv("APP_ENV") or "development").strip().lower()
-CSRF_STRICT = (os.getenv("CSRF_STRICT") or "false").strip().lower() in ("1", "true", "yes", "on")
+_csrf_default = "true" if (APP_ENV == "production" or os.getenv("VERCEL")) else "false"
+CSRF_STRICT = (os.getenv("CSRF_STRICT") or _csrf_default).strip().lower() in ("1", "true", "yes", "on")
 REQUESTS_PER_MINUTE = int(os.getenv("REQUESTS_PER_MINUTE") or 120)
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES") or 5_000_000)
 FREE_RESUME_DAILY_LIMIT = max(1, int(os.getenv("FREE_RESUME_DAILY_LIMIT") or 3))

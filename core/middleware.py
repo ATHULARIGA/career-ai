@@ -1,12 +1,14 @@
 import time
 import uuid
 from collections import defaultdict, deque
+
 from fastapi import Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from core.config import APP_ENV, REQUESTS_PER_MINUTE, logger
-from core.security import is_admin_session, _same_origin, get_client_ip, get_client_geo
+from core.security import _same_origin, get_client_geo, get_client_ip, is_admin_session
 from services.analytics.admin_analytics import record_visitor_traffic
 
 PUBLIC_PATHS = {

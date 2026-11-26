@@ -1,14 +1,15 @@
 import csv
 import io
 import json
-import db.backend as db
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any
+
+import db.backend as db
 
 DB_PATH = "bookings.db"
-_last_dashboard_cache: Dict[str, Any] = {"ts": 0, "payload": None}
+_last_dashboard_cache: dict[str, Any] = {"ts": 0, "payload": None}
 
 
 def _conn():
@@ -249,7 +250,7 @@ def log_event(
     cohort: str = "general",
     region: str = "US",
     role: str = "",
-    metadata: Dict[str, Any] = None,
+    metadata: dict[str, Any] = None,
 ) -> None:
     meta_str = json.dumps(metadata or {})
     # In pytest/test runs, execute synchronously so test assertions work deterministically
@@ -396,7 +397,7 @@ def log_mentor_metric(metric_name: str, metric_value: float, note: str = "") -> 
     conn.close()
 
 
-def _fetchall(query: str, params: tuple = ()) -> List[tuple]:
+def _fetchall(query: str, params: tuple = ()) -> list[tuple]:
     conn = _conn()
     cur = conn.cursor()
     db.execute(cur, query, params)
@@ -413,7 +414,7 @@ def _scalar(query: str, params: tuple = ()) -> int:
     return int(val or 0)
 
 
-def dashboard_payload(bookings: List[tuple]) -> Dict[str, Any]:
+def dashboard_payload(bookings: list[tuple]) -> dict[str, Any]:
     now = time.time()
     # In production, cache the analytics payload for 15 seconds to make sub-navigation instantaneous
     if not db.is_testing() and _last_dashboard_cache["payload"] and (now - _last_dashboard_cache["ts"]) < 15:
@@ -653,7 +654,7 @@ def dashboard_payload(bookings: List[tuple]) -> Dict[str, Any]:
     return result
 
 
-def get_admin_users_list(search: str = "", role_filter: str = "", limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+def get_admin_users_list(search: str = "", role_filter: str = "", limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
     """Retrieves registered users for the admin user management interface."""
     query = "SELECT id, full_name, email, role, plan, created_ts, premium_since, premium_expires_ts FROM users WHERE 1=1"
     params = []
@@ -685,7 +686,7 @@ def get_admin_users_list(search: str = "", role_filter: str = "", limit: int = 1
     return users
 
 
-def update_user_role(user_id: int, new_role: str, actor: str) -> Tuple[bool, str]:
+def update_user_role(user_id: int, new_role: str, actor: str) -> tuple[bool, str]:
     """Promotes or demotes a user's role and logs an audit trail event."""
     if new_role not in ("admin", "user", "mentor"):
         return False, "Invalid role specified."
@@ -709,12 +710,12 @@ def update_user_role(user_id: int, new_role: str, actor: str) -> Tuple[bool, str
     return True, f"Successfully updated role of {target_email} from {old_role} to {new_role}."
 
 
-def export_all_json(bookings: List[tuple]) -> str:
+def export_all_json(bookings: list[tuple]) -> str:
     payload = dashboard_payload(bookings)
     return json.dumps(payload, indent=2)
 
 
-def export_all_csv(bookings: List[tuple]) -> str:
+def export_all_csv(bookings: list[tuple]) -> str:
     out = io.StringIO()
     writer = csv.writer(out)
     writer.writerow(["booking_id", "name", "email", "topic", "datetime", "link"])
@@ -752,7 +753,7 @@ def get_setting(key: str, default: str = "") -> str:
     return str(rows[0][0] or default)
 
 
-def get_periodic_report(period: str = "daily") -> Dict[str, Any]:
+def get_periodic_report(period: str = "daily") -> dict[str, Any]:
     """Generates time-aggregated metrics partitioned by daily, monthly, or yearly intervals."""
     period = (period or "daily").lower().strip()
     if period not in ("daily", "monthly", "yearly"):
@@ -998,10 +999,10 @@ def record_visitor_traffic(
     t.start()
 
 
-_visitor_analytics_cache: Dict[str, Any] = {}
+_visitor_analytics_cache: dict[str, Any] = {}
 
 
-def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[str, Any]:
+def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> dict[str, Any]:
     """
     Aggregates visitor traffic, unique visitor IPs, top countries/cities, and granular access log.
     """
@@ -1106,7 +1107,7 @@ def get_visitor_traffic_analytics(search_ip: str = "", limit: int = 50) -> Dict[
     recent_visitors = []
     for r in cur.fetchall():
         import datetime
-        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
         recent_visitors.append({
             "ts": int(r[0]),
             "ts_str": dt_str,
@@ -1160,14 +1161,14 @@ def export_visitor_traffic_csv(limit: int = 1000) -> str:
     conn.close()
 
     import csv
-    import io
     import datetime
+    import io
 
     out = io.StringIO()
     writer = csv.writer(out)
     writer.writerow(["Timestamp_UTC", "IP", "Country", "Region", "City", "Path", "Method", "Status_Code", "User_Agent", "User_ID"])
     for r in rows:
-        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.UTC).strftime("%Y-%m-%d %H:%M:%S")
         writer.writerow([dt_str, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]])
     return out.getvalue()
 
@@ -1194,7 +1195,7 @@ def export_visitor_traffic_json(limit: int = 1000) -> str:
 
     records = []
     for r in rows:
-        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        dt_str = datetime.datetime.fromtimestamp(int(r[0]), tz=datetime.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
         records.append({
             "timestamp": dt_str,
             "ts": int(r[0]),

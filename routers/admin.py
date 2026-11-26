@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+
 from core import *
 
 router = APIRouter()
@@ -335,8 +336,16 @@ def admin_login(
         )
 
     # 1. Master admin credentials from environment
+    import hmac
+
     admin_username, admin_password, admin_email = get_admin_settings()
-    if admin_username and admin_password and username == admin_username and password == admin_password:
+    if (
+        admin_username
+        and admin_password
+        and hmac.compare_digest(username.encode("utf-8"), admin_username.encode("utf-8"))
+        and hmac.compare_digest(password.encode("utf-8"), admin_password.encode("utf-8"))
+    ):
+        request.session.clear()
         request.session["admin"] = True
         request.session["admin_user"] = admin_username
         request.session["user_role"] = "admin"

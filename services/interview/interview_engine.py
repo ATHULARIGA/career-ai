@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from openai import OpenAI
 
@@ -228,7 +228,7 @@ def generate_questions(
     round_type: str = "technical",
     difficulty: str = "intermediate",
     persona: str = "Neutral",
-    skill_gaps: Optional[List[str]] = None,
+    skill_gaps: Optional[list[str]] = None,
     num_questions: int = 1,
     resume_context: str = "",
 ) -> list[str]:

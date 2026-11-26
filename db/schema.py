@@ -5,6 +5,7 @@ across PostgreSQL (production) and SQLite (testing).
 """
 
 import logging
+
 import db.backend as db
 
 logger = logging.getLogger("resumate")
@@ -50,16 +51,16 @@ def ensure_performance_indexes(conn) -> None:
 def init_all_schemas(run_seed: bool = True) -> None:
     """Initializes all domain tables, ensures columns, and applies performance indexes."""
     try:
-        from services.analytics.admin_analytics import init_admin_tables
-        from services.coding.coding_platform import init_coding_tables
-        from services.booking.booking_db import init_booking_tables
         from core.database import (
-            init_user_tables,
             _ensure_auth_tables,
-            init_resume_tables,
             _ensure_interview_tables,
+            init_resume_tables,
+            init_user_tables,
             seed_default_sample_resume,
         )
+        from services.analytics.admin_analytics import init_admin_tables
+        from services.booking.booking_db import init_booking_tables
+        from services.coding.coding_platform import init_coding_tables
 
         init_admin_tables()
         init_coding_tables()

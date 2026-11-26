@@ -1,4 +1,5 @@
 import time
+
 import db.backend as db
 
 _bookings_cache = {"ts": 0.0, "data": []}

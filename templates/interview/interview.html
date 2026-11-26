@@ -2417,12 +2417,13 @@ async function addCustomTechnology(e) {
         const wrap = document.createElement('div');
         wrap.className = 'cs-tech-pill-wrap';
         const pillTag = data.used_in_resume ? 'Resume' : 'Custom';
+        const safeTech = escapeHtml(data.tech_name);
         wrap.innerHTML = `
-          <button type="button" class="cs-tech-pill active" aria-pressed="true" data-tech="${data.tech_name}">
-            <span>${data.tech_name}</span>
+          <button type="button" class="cs-tech-pill active" aria-pressed="true" data-tech="${safeTech}">
+            <span>${safeTech}</span>
             <span class="cs-tech-tag">${pillTag}</span>
           </button>
-          <button type="button" class="cs-tech-remove" title="Remove ${data.tech_name}" aria-label="Remove ${data.tech_name}">&times;</button>
+          <button type="button" class="cs-tech-remove" title="Remove ${safeTech}" aria-label="Remove ${safeTech}">&times;</button>
         `;
         const pillBtn = wrap.querySelector('.cs-tech-pill');
         pillBtn.onclick = () => selectTechnology(data.tech_name, pillBtn);
@@ -2631,7 +2632,7 @@ async function handleResumeFileSelected(input) {
         pill.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
         pill.setAttribute('data-tech', t);
         pill.onclick = () => selectTechnology(t, pill);
-        pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+        pill.innerHTML = `<span>${escapeHtml(t)}</span><span class="cs-tech-tag">Resume</span>`;
         nav.appendChild(pill);
       });
       customWraps.forEach(w => nav.appendChild(w));
@@ -2704,7 +2705,7 @@ async function switchCheatsheetResume(resumeId) {
           pill.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
           pill.setAttribute('data-tech', t);
           pill.onclick = () => selectTechnology(t, pill);
-          pill.innerHTML = `<span>${t}</span><span class="cs-tech-tag">Resume</span>`;
+          pill.innerHTML = `<span>${escapeHtml(t)}</span><span class="cs-tech-tag">Resume</span>`;
           nav.appendChild(pill);
         });
         customWraps.forEach(w => nav.appendChild(w));

@@ -2,7 +2,6 @@
 import argparse
 import os
 import sqlite3
-from typing import Dict, List, Tuple
 
 
 def map_sqlite_type_to_pg(sqlite_type: str) -> str:
@@ -26,13 +25,13 @@ def normalize_default(default_val: str) -> str:
     return f" DEFAULT {raw}"
 
 
-def table_columns(sqlite_conn: sqlite3.Connection, table: str) -> List[Tuple]:
+def table_columns(sqlite_conn: sqlite3.Connection, table: str) -> list[tuple]:
     cur = sqlite_conn.cursor()
     cur.execute(f"PRAGMA table_info({table})")
     return cur.fetchall()
 
 
-def sqlite_tables(sqlite_conn: sqlite3.Connection) -> List[str]:
+def sqlite_tables(sqlite_conn: sqlite3.Connection) -> list[str]:
     cur = sqlite_conn.cursor()
     cur.execute(
         """
@@ -45,7 +44,7 @@ def sqlite_tables(sqlite_conn: sqlite3.Connection) -> List[str]:
     return [r[0] for r in cur.fetchall()]
 
 
-def create_pg_table(pg_conn, table: str, cols: List[Tuple]) -> None:
+def create_pg_table(pg_conn, table: str, cols: list[tuple]) -> None:
     # PRAGMA table_info tuple:
     # (cid, name, type, notnull, dflt_value, pk)
     col_defs = []
@@ -72,7 +71,7 @@ def create_pg_table(pg_conn, table: str, cols: List[Tuple]) -> None:
     pg_conn.commit()
 
 
-def copy_table(sqlite_conn: sqlite3.Connection, pg_conn, table: str, cols: List[Tuple]) -> int:
+def copy_table(sqlite_conn: sqlite3.Connection, pg_conn, table: str, cols: list[tuple]) -> int:
     col_names = [c[1] for c in cols]
     if not col_names:
         return 0

@@ -1,14 +1,15 @@
 import json
-import pytest
+
 from starlette.requests import Request
 from starlette.testclient import TestClient
+
+from core import app
+from routers.admin import admin_reports_export, admin_reports_page
 from services.analytics.admin_analytics import (
-    get_periodic_report,
     export_periodic_report_csv,
     export_periodic_report_json,
+    get_periodic_report,
 )
-from routers.admin import admin_reports_page, admin_reports_export
-from core import app
 
 
 def test_periodic_report_daily():

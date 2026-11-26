@@ -1,12 +1,13 @@
 import json
-import logging
 import re
 import time
 import uuid
-from typing import Any, Dict
+from typing import Any
+
 import requests
 from bs4 import BeautifulSoup
 from fastapi import Request
+
 import db.backend as db
 from core.config import (
     CODING_DEEP_INSIGHTS,
@@ -14,35 +15,70 @@ from core.config import (
 )
 from core.database import get_user_memory
 from core.security import current_user_plan
-from services.booking.booking_db import get_bookings
 from services.analytics.admin_analytics import dashboard_payload
+from services.booking.booking_db import get_bookings
 from services.coding.coding_platform import (
     DEFAULT_PROBLEMS,
     SUPPORTED_LANGUAGES,
-    get_all_problems,
-    get_custom_problems,
-    get_submission_stats_extended,
-    get_user_submission_summary,
-    get_problem_timeline,
-    weak_tags_for_user,
-    interview_readiness_score,
-    study_plan,
-    recommend_next_problem,
-    personalized_practice_queue,
-    topic_mastery_report,
-    daily_goal_progress,
     contest_snapshot,
     coverage_report,
-    starter_for_language,
+    daily_goal_progress,
+    get_all_problems,
+    get_custom_problems,
+    get_problem_timeline,
+    get_submission_stats_extended,
+    get_user_submission_summary,
+    interview_readiness_score,
     parse_test_lines,
+    personalized_practice_queue,
+    recommend_next_problem,
+    starter_for_language,
+    study_plan,
+    topic_mastery_report,
+    weak_tags_for_user,
 )
+
+
+def _is_safe_public_url(url: str) -> tuple[bool, str]:
+    """Validates that a URL uses http/https and resolves only to public IP addresses (anti-SSRF)."""
+    import ipaddress
+    import socket
+    from urllib.parse import urlparse
+
+    try:
+        parsed = urlparse((url or "").strip())
+    except Exception:
+        return False, "Invalid URL format."
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False, "Only http and https URLs are supported."
+    host = parsed.hostname.strip().lower()
+    if host in ("localhost", "127.0.0.1", "::1", "0.0.0.0") or host.endswith(".local") or host.endswith(".internal"):
+        return False, "Blocked internal or loopback host."
+    try:
+        addr_infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)
+    except Exception:
+        return False, "Could not resolve target hostname."
+    for info in addr_infos:
+        ip_str = info[4][0]
+        try:
+            ip_obj = ipaddress.ip_address(ip_str)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_multicast or ip_obj.is_reserved or ip_obj.is_unspecified:
+                return False, "Blocked non-public IP address."
+        except ValueError:
+            return False, "Invalid resolved IP address."
+    return True, ""
 
 
 def scrape_job_link(url: str) -> dict:
     if not url:
         return {"text": "", "error": "No URL provided."}
-    
-    # 1. Block List for Unsupported Login-Wall domains
+
+    # 1. SSRF guard: allow only public http(s) destinations
+    is_safe, err_msg = _is_safe_public_url(url)
+    if not is_safe:
+        return {"text": "", "error": err_msg}
+
+    # 2. Block List for Unsupported Login-Wall domains
     UNSUPPORTED_DOMAINS = ["linkedin.com", "indeed.com", "glassdoor.com"]
     if any(d in url.lower() for d in UNSUPPORTED_DOMAINS):
         return {"text": "", "error": "LinkedIn/Indeed/Glassdoor require login — please paste the JD text directly."}
@@ -51,8 +87,14 @@ def scrape_job_link(url: str) -> dict:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         }
-        # 2. Hard timeout ceiling (8s)
-        response = requests.get(url, headers=headers, timeout=8)
+        # 3. Hard timeout ceiling (8s) and disable blind redirects to internal hosts
+        response = requests.get(url, headers=headers, timeout=8, allow_redirects=False)
+        if response.is_redirect or response.is_permanent_redirect:
+            loc = response.headers.get("location", "")
+            ok_redir, redir_err = _is_safe_public_url(loc)
+            if not ok_redir:
+                return {"text": "", "error": redir_err or "Blocked unsafe redirect."}
+            response = requests.get(loc, headers=headers, timeout=8, allow_redirects=False)
         
         if response.status_code >= 400:
             return {"text": "", "error": f"Could not access URL (Status {response.status_code})."}
@@ -87,7 +129,7 @@ def scrape_job_link(url: str) -> dict:
         return {"text": "", "error": "Request timed out (8s limit). Page took too long to load."}
     except Exception as e:
         logger.warning("Scraping failed for %s: %s", url, e)
-        return {"text": "", "error": f"Scraping failed: {str(e)}"}
+        return {"text": "", "error": f"Scraping failed: {e!s}"}
 
 
 def normalize_question(q):
@@ -187,7 +229,11 @@ def get_selectable_resumes_for_user(user_email: str, request: Request = None) ->
     items = []
     seen_ids = set()
 
-    from core.database import get_user_saved_resumes, seed_default_sample_resume, get_saved_resume_by_id
+    from core.database import (
+        get_saved_resume_by_id,
+        get_user_saved_resumes,
+        seed_default_sample_resume,
+    )
 
     # 1. Any resume uploaded in the active session
     if request:
@@ -278,7 +324,7 @@ def resolve_resume_context(selected_id: str, user_email: str, request: Request =
             pass
 
     if not resume_text:
-        from core.database import seed_default_sample_resume, DEFAULT_ATHUL_RESUME
+        from core.database import DEFAULT_ATHUL_RESUME, seed_default_sample_resume
         try:
             sample_id = seed_default_sample_resume()
             saved = get_saved_resume_by_id(sample_id, email)
@@ -307,7 +353,10 @@ def interview_context_payload(request: Request, **extra):
     config = request.session.get("interview_config", {}) or {}
 
     from core.database import get_user_cheatsheets
-    from services.interview.cheatsheet_generator import extract_technologies_from_resume, get_cheatsheet_for_technology
+    from services.interview.cheatsheet_generator import (
+        extract_technologies_from_resume,
+        get_cheatsheet_for_technology,
+    )
 
     selectable_resumes = get_selectable_resumes_for_user(user_email, request)
     available_ids = [r["id"] for r in selectable_resumes]
@@ -376,7 +425,7 @@ def _clear_timed_mode(request: Request, problem_id: str) -> None:
     request.session.pop(_timed_session_key(problem_id), None)
 
 
-def _apply_timed_mode_selection(request: Request, problem_id: str, timed_mode: str) -> Dict[str, Any]:
+def _apply_timed_mode_selection(request: Request, problem_id: str, timed_mode: str) -> dict[str, Any]:
     mode = str(timed_mode or "").strip()
     key = _timed_session_key(problem_id)
     now = int(time.time())
@@ -395,7 +444,7 @@ def _apply_timed_mode_selection(request: Request, problem_id: str, timed_mode: s
     return _timed_mode_state(request, problem_id)
 
 
-def _timed_mode_state(request: Request, problem_id: str) -> Dict[str, Any]:
+def _timed_mode_state(request: Request, problem_id: str) -> dict[str, Any]:
     state = request.session.get(_timed_session_key(problem_id)) or {}
     if not state:
         return {
@@ -477,7 +526,7 @@ def _select_problem(problems, problem_id: str):
     return dict(DEFAULT_PROBLEMS[0])
 
 
-def _readiness_from_summary(summary: Dict[str, Any]) -> Dict[str, Any]:
+def _readiness_from_summary(summary: dict[str, Any]) -> dict[str, Any]:
     total = int((summary or {}).get("total") or 0)
     accept = float((summary or {}).get("accept_rate") or 0.0)
     speed = float((summary or {}).get("avg_runtime_ms") or 0.0)
@@ -494,7 +543,7 @@ def _readiness_from_summary(summary: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _daily_goal_from_attempts(attempts: list, goal_accepted: int = 1, goal_review: int = 1) -> Dict[str, Any]:
+def _daily_goal_from_attempts(attempts: list, goal_accepted: int = 1, goal_review: int = 1) -> dict[str, Any]:
     now = int(time.time())
     today = time.strftime("%Y-%m-%d", time.localtime(now))
     bucket = {"accepted": 0, "review": 0}
@@ -550,7 +599,7 @@ def _daily_goal_from_attempts(attempts: list, goal_accepted: int = 1, goal_revie
     }
 
 
-def _recommended_from_problems(problems: list, selected_id: str, attempts: list) -> Dict[str, Any]:
+def _recommended_from_problems(problems: list, selected_id: str, attempts: list) -> dict[str, Any]:
     solved = set(
         str(a.get("problem_id") or "")
         for a in attempts
@@ -595,7 +644,7 @@ def _practice_queue_from_problems(problems: list, selected_id: str, attempts: li
     return queue
 
 
-def _light_contest_snapshot(problems: list) -> Dict[str, Any]:
+def _light_contest_snapshot(problems: list) -> dict[str, Any]:
     chosen = []
     for d in ("Easy", "Medium", "Hard"):
         for p in problems:

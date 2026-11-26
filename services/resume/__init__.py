@@ -1,4 +1,4 @@
 """Resume and ATS Scoring Services."""
-from .scoring import *
 from .resume_parser import *
+from .scoring import *
 from .skill_extractor import *

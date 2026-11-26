@@ -1,11 +1,14 @@
-import sys
 import json
+import sys
 import time
+
 from fastapi.testclient import TestClient
+
 import db.backend as db
 
+
 def _setup_tables():
-    from core import app, hash_password, init_resume_tables
+    from core import hash_password, init_resume_tables
     conn = db.get_conn()
     cur = conn.cursor()
     id_col = db.id_pk_col()
@@ -25,6 +28,7 @@ def _setup_tables():
 _setup_tables()
 
 from main import app
+
 client = TestClient(app)
 
 def get_auth_client(email="cl_owner@example.com"):
