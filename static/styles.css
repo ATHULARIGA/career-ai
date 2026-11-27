@@ -8821,3 +8821,47 @@ html.theme-dark .adm-table-total-row,
   color: #f8fafc !important;
   border: 1px solid #334155;
 }
+
+.telemetry-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2563eb;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+
+.theme-dark .telemetry-live-dot {
+  background: #60a5fa;
+}
+
+.hero-stagger-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.theme-dark .hero-stagger-grid {
+  border-color: #1e293b;
+  background: #090d16;
+}
+
+.hero-grid-dot {
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: 3px;
+  background: #2563eb;
+  opacity: 0.65;
+  will-change: transform, opacity;
+}
+
+.theme-dark .hero-grid-dot {
+  background: #60a5fa;
+}
