@@ -8916,3 +8916,26 @@ html.theme-dark .adm-table-total-row,
     padding: 14px;
   }
 }
+
+/* ── Whole-Landing-Page 3D Scroll Fold/Unfold Perspective ── */
+.content-container,
+.skill-pills-wrap,
+.capabilities-grid-3,
+.capabilities-grid-2,
+.feature-grid-3,
+.step-list-clean,
+.faq-list {
+  perspective: 1100px;
+}
+
+.skill-pills-wrap,
+.capabilities-heading-wrap,
+.clean-card,
+.feature-card-detailed,
+.how-heading-col,
+.step-row-item,
+.faq-item,
+.clean-banner {
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
