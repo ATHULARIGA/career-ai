@@ -19,6 +19,7 @@ from core.database import (
 )
 from services.interview.cheatsheet_generator import (
     build_standalone_cheatsheet_html,
+    compute_resume_hash,
     extract_technologies_from_resume,
     get_cheatsheet_for_technology,
 )
@@ -1114,6 +1115,7 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
         saved_records = get_user_cheatsheets(user_email) if user_email else request.session.get("session_custom_cheatsheets", [])
         revised_indices = []
         cached_payload = None
+        current_resume_hash = compute_resume_hash(resume_text) if resume_text else ""
 
         for rec in saved_records:
             if rec.get("tech_name", "").lower() == tech_name.lower():
@@ -1122,9 +1124,9 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
                 if (
                     isinstance(cs_obj, dict)
                     and cs_obj.get("cards")
-                    and cs_obj.get("deck_version", 1) >= 2
+                    and cs_obj.get("deck_version", 1) >= 3
                     and len(cs_obj.get("cards", [])) >= 12
-                    and cs_obj.get("selected_resume_id", "") == selected_id
+                    and cs_obj.get("resume_hash", "") == current_resume_hash
                 ):
                     cached_payload = dict(cs_obj)
                 break
@@ -1139,15 +1141,8 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
             if user_email:
                 save_user_cheatsheet(user_email, payload["tech_name"], payload, is_custom=False, revised_indices=revised_indices)
             else:
-                session_custom = request.session.get("session_custom_cheatsheets", [])
-                filtered = [c for c in session_custom if c.get("tech_name", "").lower() != payload["tech_name"].lower()]
-                filtered.append({
-                    "tech_name": payload["tech_name"],
-                    "is_custom": False,
-                    "revised_indices": revised_indices,
-                    "cheatsheet": payload
-                })
-                request.session["session_custom_cheatsheets"] = filtered
+                # Keep session cookie compact: store only lightweight metadata, not the full deck
+                request.session[f"revised_{payload['tech_name'].lower()}"] = revised_indices
 
         payload["revised_indices"] = revised_indices
         payload["selected_resume_id"] = selected_id
@@ -1172,7 +1167,6 @@ async def api_interview_cheatsheet_add(request: Request):
         )
         if blocked:
             return JSONResponse({"error": f"Rate limit exceeded. Try again in {retry}s."}, status_code=429)
-        record_auth_failure(request, "cheatsheet_add", identity=user_email or "anon", window_sec=300)
 
         try:
             body = await request.json()
@@ -1208,8 +1202,6 @@ async def api_interview_cheatsheet_add(request: Request):
             filtered.append({
                 "tech_name": payload["tech_name"],
                 "is_custom": True,
-                "revised_indices": [],
-                "cheatsheet": payload,
             })
             request.session["session_custom_cheatsheets"] = filtered
 
@@ -1307,14 +1299,14 @@ def api_interview_cheatsheet_delete(request: Request, tech: str = ""):
 
 
 @router.get("/interview/cheatsheet/export", response_class=HTMLResponse)
-def interview_cheatsheet_export(request: Request, tech: str = "FastAPI"):
+def interview_cheatsheet_export(request: Request, tech: str = "FastAPI", resume_id: str = ""):
     """Downloads a standalone, fully offline-compatible HTML cheat sheet matching the user specification."""
     try:
         tech_name = tech.strip() or "FastAPI"
         user_email = (request.session.get("user_email") or "").strip().lower()
-        resume_report = get_latest_resume_report_for_user(user_email) if user_email else request.session.get("last_resume_report", {})
-        resume_text = (resume_report or {}).get("resume_text", "") or (resume_report or {}).get("fixed_resume_md", "")
-        target_role = (resume_report or {}).get("target_role", "") or (get_user_memory(user_email) if user_email else {}).get("target_role", "") or "Software Engineer"
+        selected_id = resume_id.strip() or request.session.get("selected_resume_id", "")
+        _resume_report, resume_text, target_role = resolve_resume_context(selected_id, user_email, request)
+        target_role = target_role or "Software Engineer"
 
         cheatsheet = get_cheatsheet_for_technology(tech_name, resume_text=resume_text, target_role=target_role)
         html_content = build_standalone_cheatsheet_html(
@@ -1326,5 +1318,6 @@ def interview_cheatsheet_export(request: Request, tech: str = "FastAPI"):
         headers = {"Content-Disposition": f'attachment; filename="{slug}_interview_cheatsheet.html"'}
         return HTMLResponse(content=html_content, headers=headers)
     except Exception as e:
+        import html as _html
         logger.exception("interview_cheatsheet_export failed: %s", e)
-        return HTMLResponse(content=f"<html><body><h1>Export Error</h1><p>{e!s}</p></body></html>", status_code=500)
+        return HTMLResponse(content=f"<html><body><h1>Export Error</h1><p>{_html.escape(str(e))}</p></body></html>", status_code=500)

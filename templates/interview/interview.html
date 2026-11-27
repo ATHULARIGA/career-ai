@@ -1427,7 +1427,7 @@
       <!-- Technology Selector Row -->
       <div class="cs-tech-nav" id="csTechNav" role="group" aria-label="Available Technologies" style="display: none;">
         {% for t in (resume_technologies or ['FastAPI', 'Python', 'PostgreSQL', 'Docker', 'React']) %}
-        <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology('{{ t }}', this)" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
+        <button type="button" class="cs-tech-pill {% if loop.first %}active{% endif %}" onclick="selectTechnology(this.dataset.tech, this)" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}" data-tech="{{ t }}">
           <span>{{ t }}</span>
           <span class="cs-tech-tag">Resume</span>
         </button>
@@ -1435,11 +1435,11 @@
 
         {% for ct in (custom_technologies or []) %}
         <div class="cs-tech-pill-wrap">
-          <button type="button" class="cs-tech-pill" onclick="selectTechnology('{{ ct }}', this)" aria-pressed="false" data-tech="{{ ct }}">
+          <button type="button" class="cs-tech-pill" onclick="selectTechnology(this.dataset.tech, this)" aria-pressed="false" data-tech="{{ ct }}">
             <span>{{ ct }}</span>
             <span class="cs-tech-tag">Custom</span>
           </button>
-          <button type="button" class="cs-tech-remove" onclick="removeTechnology(event, '{{ ct }}', this)" title="Remove {{ ct }}" aria-label="Remove {{ ct }}">&times;</button>
+          <button type="button" class="cs-tech-remove" onclick="removeTechnology(event, this.dataset.tech, this)" data-tech="{{ ct }}" title="Remove {{ ct }}" aria-label="Remove {{ ct }}">&times;</button>
         </div>
         {% endfor %}
 
@@ -2128,12 +2128,12 @@ function renderCards() {
           <p class="cs-sec-p">${standardDef}</p>
         </div>
 
-        <!-- How I Used This in My Work Experience / Personal Project -->
+        <!-- Typical Production Use / Resume Framing -->
         ${projectExp ? `
         <div class="cs-sec cs-sec-project">
           <div class="cs-sec-label cs-label-project">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            How I Used This in My Work Experience / Personal Project
+            ${(projectExp.startsWith('In ') || projectExp.startsWith('Listed in') || projectExp.startsWith('Not listed')) ? 'My Resume &amp; Framing' : 'Typical Production Use'}
           </div>
           <p class="cs-sec-p">${projectExp}</p>
         </div>` : ''}
@@ -2305,11 +2305,14 @@ let currentSelectedResumeId = '{{ selected_resume_id or "latest" }}';
 function renderCheatsheetError(tech, errorMsg) {
   const grid = document.getElementById('csGrid');
   if (!grid) return;
+  const safeTech = escapeHtml(tech || '');
+  const safeAttrTech = safeTech.replace(/"/g, '&quot;');
+  const safeErr = escapeHtml(errorMsg || '');
   grid.innerHTML = `
     <div class="cs-error-card">
-      <div class="cs-error-title">Could not load ${tech} cheat sheet</div>
-      <div class="cs-error-desc">${errorMsg}</div>
-      <button type="button" class="cs-action-btn" onclick="selectTechnology('${tech}', null)">
+      <div class="cs-error-title">Could not load ${safeTech} cheat sheet</div>
+      <div class="cs-error-desc">${safeErr}</div>
+      <button type="button" class="cs-action-btn" data-tech="${safeAttrTech}" onclick="selectTechnology(this.dataset.tech, null)">
         Retry
       </button>
     </div>
@@ -2505,7 +2508,7 @@ async function removeTechnology(e, tech, removeBtn) {
 }
 
 function exportCurrentCheatsheet() {
-  window.location.href = `/interview/cheatsheet/export?tech=${encodeURIComponent(currentTech)}`;
+  window.location.href = `/interview/cheatsheet/export?tech=${encodeURIComponent(currentTech)}&resume_id=${encodeURIComponent(currentSelectedResumeId || '')}`;
 }
 
 async function copySnippet(btn) {

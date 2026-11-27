@@ -19,7 +19,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
             "Concurrency",
             "Asyncio Event Loop & Coroutines",
             "Asyncio enables cooperative single-threaded concurrency using an event loop that schedules coroutines when they yield control at await points. It excels at high-concurrency I/O-bound workloads like HTTP clients, WebSockets, and async DB drivers.",
-            "import asyncio\n\nasync def fetch_all(urls):\n    async with asyncio.Semaphore(10):\n        tasks = [fetch_one(u) for u in urls]\n        return await asyncio.gather(*tasks, return_exceptions=True)",
+            "import asyncio\n\nasync def fetch_all(urls):\n    sem = asyncio.Semaphore(10)\n    async def bounded_fetch(u):\n        async with sem:\n            return await fetch_one(u)\n    tasks = [bounded_fetch(u) for u in urls]\n    return await asyncio.gather(*tasks, return_exceptions=True)",
             "Handling thousands of concurrent API or database calls without thread-pool overhead.",
             "Never call blocking synchronous functions (like time.sleep or requests.get) inside an async def coroutine; use asyncio.to_thread() to offload them.",
         ],
@@ -668,7 +668,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
         [
             "Performance",
             "Indexing, SARGable Queries & Covering Indexes",
-            "A query is SARGable (Search ARGument-able) when the planner can use an index. Wrapping an indexed column in a function (`WHERE YEAR(created_at) = 2026`) disables the index; rewrite as a range (`created_at >= '2026-01-01'`). Covering indexes (`INCLUDE`) satisfy queries directly from the index without heap lookups.",
+            "A query is SARGable (Search ARGument-able) when the planner can use an index. Wrapping an indexed column in a function (e.g. `EXTRACT(YEAR FROM created_at) = 2026` in PostgreSQL or `YEAR(created_at) = 2026` in MySQL) disables the index; rewrite as a range (`created_at >= '2026-01-01'`). Covering indexes (`INCLUDE` in PostgreSQL) satisfy queries directly from the index without heap lookups.",
             "-- SARGable range filter + covering index\nCREATE INDEX idx_orders_date_cov ON orders (created_at) INCLUDE (total, status);\nSELECT total, status FROM orders WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01';",
             "Eliminating full table scans and achieving fast Index-Only Scans.",
             "Avoid leading wildcards `LIKE '%term'` on B-Tree indexes—use full-text search or trigram GIN indexes instead.",
@@ -717,7 +717,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
             "Q&A",
             "Q: What is the difference between DELETE, TRUNCATE, and DROP?",
             "A: DELETE removes specific rows via WHERE, logs every row deletion, fires triggers, and can be rolled back. TRUNCATE deallocates all table pages/data in O(1) without scanning rows (resetting identity sequences if requested). DROP removes both data and table schema/indexes completely.",
-            "TRUNCATE TABLE temp_staging RESTART IDENTITY;",
+            "-- PostgreSQL: resets sequences atomically\nTRUNCATE TABLE temp_staging RESTART IDENTITY;",
             "Clearing large staging tables safely without bloating transaction logs.",
             "Note that in PostgreSQL, even TRUNCATE and DROP are transactional and can be rolled back inside a BEGIN/ROLLBACK block.",
         ],
@@ -733,7 +733,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
             "Q&A",
             "Q: How do you optimize a slow SQL query step by step?",
             "A: 1) Run EXPLAIN ANALYZE to locate full table scans, high-cost nested loops, or bad row estimates. 2) Add missing composite/covering indexes matching WHERE/JOIN/ORDER BY. 3) Make predicates SARGable and avoid SELECT *. 4) Replace deep OFFSET with keyset pagination. 5) Pre-aggregate or partition massive tables.",
-            "EXPLAIN ANALYZE SELECT id FROM events WHERE user_id = 12 AND created_at > NOW() - INTERVAL '7 days';",
+            "-- PostgreSQL syntax\nEXPLAIN ANALYZE SELECT id FROM events WHERE user_id = 12 AND created_at > NOW() - INTERVAL '7 days';",
             "End-to-end query optimization walkthrough.",
             "Always mention checking index selectivity and avoiding unnecessary `DISTINCT` or `ORDER BY` on huge intermediate sets.",
         ],
@@ -751,7 +751,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
             "Architecture",
             "Control Plane vs Worker Node Components",
             "The Control Plane manages cluster state: API Server (REST gateway), etcd (distributed key-value store for cluster state), Scheduler (assigns Pods to nodes), and Controller Manager (reconciliation loops). Worker nodes run kubelet (node agent), kube-proxy (Service networking), and a CRI container runtime (containerd).",
-            "kubectl get componentstatuses\nkubectl get nodes -o wide",
+            "kubectl get --raw='/readyz?verbose'\nkubectl get nodes -o wide",
             "Explaining how Kubernetes declarative reconciliation works end-to-end.",
             "Every component talks only to the API Server—nothing talks directly to etcd except the API Server.",
         ],
@@ -1443,7 +1443,7 @@ EXTRA_CURATED_DECKS: dict[str, list[list[str]]] = {
             "A: `Buffer` represents a fixed-size chunk of raw binary memory allocated outside V8's garbage-collected JS heap (in C++ slab allocators). JS strings are UTF-16 encoded and immutable, which would corrupt arbitrary binary bytes and waste 2x memory.",
             "const buf = Buffer.from('hello', 'utf8');\nconst b64 = buf.toString('base64');",
             "Working with file streams, crypto, TCP sockets, and binary protocols.",
-            "Always use `Buffer.alloc(size)` (zero-filled) instead of deprecated `Buffer.allocUnsafe()` unless immediately overwriting all bytes (to avoid leaking old RAM).",
+            "Always use `Buffer.alloc(size)` (zero-filled) instead of the deprecated `new Buffer()` constructor; use `Buffer.allocUnsafe(size)` only when immediately overwriting all bytes (to avoid leaking old RAM).",
         ],
         [
             "Q&A",
@@ -1937,7 +1937,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"{title_tech} Core Storage & ACID/BASE Model",
                 f"{title_tech} manages persistent state using structured storage engines, buffer pools, and write-ahead logs (WAL) or append-only journals to guarantee durability and predictable recovery after crashes.",
                 f"-- Inspect connection & buffer pool settings for {title_tech}\nmax_connections = 100\nshared_buffers = '4GB'\nstatement_timeout = '5000ms'",
-                f"Configured {title_tech} storage and pool limits in {role} services, cutting p99 query latency from 320ms to 42ms.",
+                f"Tuning {title_tech} storage and pool limits in {role} services to keep p99 query latency predictable under load.",
                 "Clarify whether the workload demands strict ACID consistency or eventual consistency with higher write availability.",
             ],
             [
@@ -1945,7 +1945,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Indexing Internals & Query Execution Plans in {title_tech}",
                 f"{title_tech} uses B-Tree, Hash, or inverted indexes to turn O(N) full scans into O(log N) lookups. Composite indexes follow the leftmost-prefix / Equality-Sort-Range rule to accelerate multi-column predicates and sorting.",
                 "-- Composite index covering filter + sort\nCREATE INDEX idx_orders_cust_created ON orders (customer_id, created_at DESC);",
-                f"Used execution-plan profiling in {title_tech} to eliminate sequential scans across 45M+ rows.",
+                f"Using execution-plan profiling in {title_tech} to replace sequential scans on large tables with targeted indexes.",
                 "Always inspect actual vs estimated rows in query plans; stale statistics cause bad join strategies.",
             ],
             [
@@ -1953,7 +1953,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Isolation Levels, MVCC & Lock Contention in {title_tech}",
                 f"High-concurrency writes in {title_tech} rely on MVCC snapshots or optimistic/pessimistic locking. Explicit row locks or atomic conditional updates prevent lost updates and race conditions under burst traffic.",
                 "BEGIN;\nSELECT balance FROM accounts WHERE id = 42 FOR UPDATE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 42 AND balance >= 100;\nCOMMIT;",
-                f"Prevented double-spend race conditions in {title_tech} using atomic conditional updates and short transactions.",
+                f"Preventing double-spend race conditions in {title_tech} with atomic conditional updates and short transactions.",
                 "Explain Dirty Reads, Non-Repeatable Reads, and Phantom Reads and which isolation level stops each.",
             ],
             [
@@ -1961,7 +1961,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Connection Pooling & Query Optimization in {title_tech}",
                 "Opening unbounded connections exhausts memory and CPU context switches. Connection pools multiplex thousands of application requests over a bounded set of persistent database connections.",
                 "pool_size = 20\nmax_overflow = 10\npool_timeout = 30\npool_recycle = 1800",
-                f"Deployed connection pooling for {title_tech} across microservice pods, eliminating connection exhaustion errors.",
+                f"Applying connection pooling for {title_tech} across service instances to prevent connection exhaustion.",
                 "Combine pooling with keyset pagination instead of deep OFFSET queries on large tables.",
             ],
             [
@@ -1969,7 +1969,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Replication, Backups & Automated Failover in {title_tech}",
                 f"Production {title_tech} runs primary-replica replication across Availability Zones for high availability and read scaling, paired with automated point-in-time recovery (PITR) backups regularly tested via restore drills.",
                 "-- Verify replication lag\nSELECT client_addr, state, sync_state FROM pg_stat_replication;",
-                f"Architected multi-AZ {title_tech} clusters with sub-second replication lag and automated failover.",
+                f"Running multi-AZ {title_tech} clusters with low replication lag and automated failover.",
                 "Address read-after-write consistency: route critical post-write reads to the primary.",
             ],
             [
@@ -1977,7 +1977,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Encryption, Least Privilege & Injection Prevention in {title_tech}",
                 f"Securing {title_tech} requires parameterized queries (never string concatenation), TLS in transit, encryption at rest, least-privilege service roles, and secrets stored in vault/secret managers.",
                 "-- Always bind parameters instead of formatting SQL strings\nSELECT id, email FROM users WHERE id = $1;",
-                f"Hardened {title_tech} access with role-based permissions and TLS verification for compliance audits.",
+                f"Enforcing role-based permissions, parameterized queries, and TLS verification for {title_tech} access.",
                 "Mention network isolation in private VPC subnets with no public internet exposure.",
             ],
             [
@@ -1993,7 +1993,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Q: How do you diagnose and fix a sudden slow query in {title_tech}?",
                 "A: Capture the slow query from logs, inspect its execution plan (EXPLAIN/explain), check for missing indexes or non-SARGable predicates, verify table statistics/bloat, check lock contention, and add a covering index or rewrite the query.",
                 "EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM events WHERE user_id = 42 ORDER BY created_at DESC LIMIT 20;",
-                f"Cut p99 endpoint latency by 80% after diagnosing an unindexed sort in {title_tech}.",
+                f"Diagnosing unindexed sorts and slow query plans in {title_tech} to reduce endpoint tail latency.",
                 "Always measure before and after adding an index—indexes speed up reads but add write overhead.",
             ],
             [
@@ -2001,7 +2001,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Q: How do you prevent and resolve deadlocks in {title_tech}?",
                 "A: Deadlocks happen when concurrent transactions acquire locks in opposite orders. Prevent them by sorting resource IDs consistently before locking, keeping transactions short, and configuring lock_timeout and statement_timeout.",
                 "SET lock_timeout = '2000ms';\nSET statement_timeout = '5000ms';",
-                "Eliminated cascading transaction pileups by enforcing strict lock and statement timeouts.",
+                "Enforcing strict lock and statement timeouts to prevent cascading transaction pileups.",
                 "Retry deadlock-aborted transactions with jittered exponential backoff.",
             ],
             [
@@ -2053,7 +2053,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 "Delivery Semantics: At-Most-Once, At-Least-Once & Idempotency",
                 "Because network acks can be lost, distributed streaming defaults to at-least-once delivery. Consumers must be idempotent (deduplicating via event_id or DB upserts) so redeliveries never corrupt state.",
                 "INSERT INTO processed_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING;",
-                f"Implemented idempotent consumers for {title_tech} so duplicate deliveries never caused double charges.",
+                f"Using idempotent consumers in {title_tech} so duplicate deliveries never cause double charges.",
                 "Clarify that true end-to-end exactly-once across external DBs requires idempotent sinks or the Outbox pattern.",
             ],
             [
@@ -2069,7 +2069,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Dead Letter Queues (DLQ), Backpressure & Retries in {title_tech}",
                 "Poison-pill messages must not block a partition indefinitely. Route transient errors to exponential-backoff retries and permanent failures to a Dead Letter Queue (DLQ) with error metadata before committing offsets.",
                 "try:\n    handle(msg)\nexcept TransientError:\n    retry_queue.publish(msg)\nexcept PermanentError:\n    dlq.publish(msg)\nconsumer.commit()",
-                f"Built DLQ and backoff pipelines for {title_tech}, preventing consumer stalls during upstream schema bugs.",
+                f"Using DLQ and backoff pipelines in {title_tech} to prevent consumer stalls during upstream schema issues.",
                 "Always include original headers, offset, and failure reason on DLQ messages for safe replay.",
             ],
             [
@@ -2085,7 +2085,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Outbox Pattern & Schema Evolution in {title_tech}",
                 "Avoid dual-write inconsistency (DB commit succeeds, broker publish fails) by writing domain state + outbox row in one DB transaction and streaming via CDC. Use Schema Registry for backward-compatible evolution.",
                 f"# Atomic DB + Outbox -> CDC -> {title_tech} -> Idempotent Consumers",
-                "Eliminated lost domain events by adopting the transactional Outbox pattern.",
+                "Adopting the transactional Outbox pattern to prevent lost domain events.",
                 "Explain backward vs forward schema compatibility when deploying producers and consumers independently.",
             ],
             [
@@ -2153,7 +2153,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Resource Requests, Limits & OOM Protection in {title_tech}",
                 "Explicit CPU/memory limits protect host stability against runaway processes. Memory limits trigger OOMKill (exit 137) on leaks, while CPU requests guarantee scheduling capacity.",
                 "resources:\n  requests: { memory: '256Mi', cpu: '250m' }\n  limits: { memory: '512Mi', cpu: '1000m' }",
-                "Eliminated noisy-neighbor node crashes across 40+ containerized services.",
+                "Setting CPU/memory limits to prevent noisy-neighbor node crashes in containerized services.",
                 "Know the difference between requests (scheduler reservation) and limits (hard cgroup ceiling).",
             ],
             [
@@ -2161,7 +2161,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 f"Health Probes & Graceful SIGTERM Shutdown in {title_tech}",
                 "Readiness probes control load-balancer traffic; liveness probes restart stuck processes. Apps must handle SIGTERM cleanly—draining in-flight requests and closing DB pools before SIGKILL arrives.",
                 "import signal, sys\nsignal.signal(signal.SIGTERM, lambda *_: (server.stop(), sys.exit(0)))",
-                "Eliminated 502 Bad Gateway errors during rolling deployments via graceful SIGTERM draining.",
+                "Using graceful SIGTERM draining to prevent 502 Bad Gateway errors during rolling deployments.",
                 "Never check external databases inside a liveness probe—a DB hiccup would restart every app container.",
             ],
             [
@@ -2177,7 +2177,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 "CI/CD Pipelines, Immutable Tags & Rollback Strategy",
                 "Tag images with immutable Git SHAs (never `:latest` in prod), promote the exact tested artifact from staging to production, and automate canary/rolling updates with instant rollback on 5xx spikes.",
                 "# Immutable artifact promotion: build sha-a1b2c3 once -> deploy staging -> deploy prod",
-                "Reduced deployment rollback time to under 30 seconds using immutable SHA-tagged releases.",
+                "Using immutable SHA-tagged releases for fast, reliable deployment rollbacks.",
                 "Build once, deploy everywhere—never rebuild different binaries per environment.",
             ],
             [
@@ -2217,7 +2217,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
                 "Q: How do you shrink a bloated 1.5GB container image down to ~100MB?",
                 "A: Switch to slim/distroless base images, use multi-stage builds to exclude compilers, combine package installs + cache cleanup in one RUN, use `--no-cache-dir`, and exclude `.git`/tests via `.dockerignore`.",
                 "RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*",
-                "Cut container pull times by 75% during autoscaling events.",
+                "Using multi-stage builds and slim base images to speed up container pulls during autoscaling.",
                 "Smaller images also dramatically reduce CVE attack surface.",
             ],
             [
@@ -2325,7 +2325,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
             f"Integrating {title_tech} into Scalable Distributed Architectures",
             f"In large-scale system design, {title_tech} operates alongside load balancers, distributed caches, durable queues, and observability pipelines. Clarify bottlenecks, failure blast radius, and horizontal scaling limits.",
             f"# Client -> CDN/LB -> {title_tech} Service Tier (Stateless) -> Cache + Primary DB + Async Queue",
-            f"Architected {title_tech} within multi-AZ microservice deployments serving high-throughput production traffic.",
+            f"Integrating {title_tech} within multi-AZ microservice deployments serving production traffic.",
             "Always discuss trade-offs: consistency vs latency, operational complexity vs developer velocity.",
         ],
         [
@@ -2341,7 +2341,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
             f"Q: How do you debug a slow or failing {title_tech} service in production?",
             "A: Follow a structured triage: 1) Check error rates, p99 latency, and recent deploys/config changes. 2) Correlate structured logs and distributed traces by request ID. 3) Profile CPU/memory/I/O saturation. 4) Roll back or shed load to restore SLA, then write a regression test.",
             "# Triage order: Metrics/Alerts -> Recent Deploys -> Traces/Logs -> Profiler -> Mitigate",
-            "Cut mean-time-to-recovery (MTTR) by 60% using structured correlation IDs and automated rollback runbooks.",
+            "Speeding up incident recovery using structured correlation IDs and automated rollback runbooks.",
             "Interviewers love systematic debugging frameworks over random guessing.",
         ],
         [
@@ -2349,7 +2349,7 @@ def build_domain_deterministic_cards(tech_name: str, target_role: str, domain: s
             f"Q: How do you test {title_tech} effectively (unit vs integration vs load tests)?",
             "A: Keep unit tests fast and deterministic by mocking external I/O boundaries; use integration tests against realistic containers/fixtures to verify contracts and edge cases; run load tests on critical paths before major releases.",
             "# Unit (mocked I/O) -> Integration (real contracts) -> Load/Chaos verification",
-            f"Built automated CI test suites for {title_tech} catching contract regressions before merge.",
+            f"Writing automated CI test suites for {title_tech} to catch contract regressions before merge.",
             "Test failure modes (timeouts, 429s, malformed inputs), not just happy paths.",
         ],
         [

@@ -5,6 +5,8 @@ with category filters, answers, code snippets, real-world use cases,
 interview tips, and revision tracking.
 """
 
+import hashlib
+import html
 import json
 import re
 from typing import Any, Optional
@@ -327,7 +329,14 @@ def extract_technologies_from_resume(resume_text: str, report: Optional[dict[str
 
     full_corpus = (resume_text or "").lower()
     if report and isinstance(report, dict):
-        full_corpus += " " + json.dumps(report).lower()
+        # Only scan positive skill/summary fields — never keyword_gaps (missing skills)
+        positive_parts = []
+        for field_key in ("skills", "matched_skills", "extracted_skills", "technologies", "summary"):
+            val = report.get(field_key)
+            if val:
+                positive_parts.append(json.dumps(val))
+        if positive_parts:
+            full_corpus += " " + " ".join(positive_parts).lower()
 
     # 1. Match against canonical registry
     for tech_id, meta in TECH_REGISTRY.items():
@@ -746,6 +755,57 @@ def check_tech_used_in_resume(resume_context: str, tech_name: str) -> dict[str, 
     }
 
 
+_STOP_WORDS = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "using",
+    "used", "use", "built", "build", "over", "when", "what", "how", "why",
+    "can", "are", "was", "were", "have", "has", "had", "not", "but", "all",
+}
+
+
+def compute_card_id(category: str, title: str) -> str:
+    """Stable short identifier for a card based on its category and title."""
+    raw = f"{(category or '').strip().lower()}::{(title or '').strip().lower()}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
+
+
+def compute_resume_hash(resume_text: str) -> str:
+    """Short content hash of resume text for cache invalidation."""
+    return hashlib.sha256((resume_text or "").strip().encode("utf-8")).hexdigest()[:12]
+
+
+def _score_bullet_relevance(bullet: str, title: str, definition: str, tech_name: str = "") -> int:
+    """Scores keyword overlap between a resume bullet and a cheat sheet card."""
+    card_tokens = set(re.findall(r"[a-z0-9\+\#\.]{3,}", f"{title} {definition}".lower())) - _STOP_WORDS
+    bullet_tokens = set(re.findall(r"[a-z0-9\+\#\.]{3,}", (bullet or "").lower())) - _STOP_WORDS
+    if tech_name:
+        tech_tok = tech_name.strip().lower()
+        card_tokens.discard(tech_tok)
+    return len(card_tokens & bullet_tokens)
+
+
+def extract_gap_technologies_from_report(
+    report: Optional[dict[str, Any]],
+    detected_techs: Optional[list[str]] = None,
+) -> list[str]:
+    """Extracts missing/gap technologies from resume report keyword_gaps."""
+    if not report or not isinstance(report, dict):
+        return []
+    detected_keys = {re.sub(r"[^a-zA-Z0-9\+\#\.]+", "", t.lower()) for t in (detected_techs or [])}
+    gaps_raw = report.get("keyword_gaps") or []
+    gap_techs: list[str] = []
+    seen_keys: set[str] = set()
+    for item in gaps_raw:
+        kw = item.get("keyword") if isinstance(item, dict) else str(item)
+        tok = _clean_skill_token(str(kw or ""))
+        if not tok:
+            continue
+        key = re.sub(r"[^a-zA-Z0-9\+\#\.]+", "", tok.lower())
+        if key and key not in detected_keys and key not in seen_keys:
+            seen_keys.add(key)
+            gap_techs.append(tok)
+    return gap_techs
+
+
 def tailor_cheatsheet_for_resume(
     cards: list[list[str]],
     resume_context: str = "",
@@ -755,7 +815,7 @@ def tailor_cheatsheet_for_resume(
 ) -> list[list[str]]:
     """
     Enriches cheat sheet cards with personalized candidate talking points
-    tailored to whether and how the technology was used in the user's resume.
+    only when a resume bullet actually matches the card's topic.
     """
     if not resume_context and not target_role:
         return cards
@@ -775,39 +835,49 @@ def tailor_cheatsheet_for_resume(
     role_mention = target_role or "Software Engineer"
     tailored_cards = []
 
-    point_idx = 0
-    num_points = len(project_points)
-
     for idx, card in enumerate(cards):
         c_cat, c_title, c_say, c_code, c_use, c_tip = card
 
         if project_points:
-            active_pt = project_points[point_idx % num_points]
-            point_idx += 1
-            ctx_name = active_pt["context"]
-            pt_text = active_pt["point"]
+            best_pt = None
+            best_score = 0
+            for pt in project_points:
+                score = _score_bullet_relevance(pt.get("point", ""), c_title, c_say, tech_name)
+                if score > best_score:
+                    best_score = score
+                    best_pt = pt
 
-            c_use = f"In {ctx_name}: {pt_text}"
-            if idx == 0:
-                c_tip = f"Resume anchor ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
+            if best_pt and best_score >= 1:
+                ctx_name = best_pt["context"]
+                pt_text = best_pt["point"]
+                c_use = f"In {ctx_name}: {pt_text}"
+                if idx == 0:
+                    c_tip = f"Resume anchor ({ctx_name}): Mention your experience: '{pt_text}'. Lead with this concrete project outcome when answering! " + c_tip
+                elif c_cat == "Q&A":
+                    c_tip = f"Project talking point ({ctx_name}): Connect this question to: '{pt_text}'. " + c_tip
+            elif idx == 0:
+                lead_pt = project_points[0]
+                ctx_name = lead_pt["context"]
+                pt_text = lead_pt["point"]
+                c_use = f"In {ctx_name}: {pt_text}"
+                c_tip = f"Resume anchor ({ctx_name}): Lead with your concrete project work: '{pt_text}'. " + c_tip
             elif c_cat == "Q&A":
+                lead_pt = project_points[0]
+                ctx_name = lead_pt["context"]
+                pt_text = lead_pt["point"]
                 c_tip = f"Project talking point ({ctx_name}): Connect this question to: '{pt_text}'. " + c_tip
         elif in_skills_only:
-            c_use = f"Listed in your {role_mention} resume skills: Be ready to walk through how you applied {c_title} in production (or a hands-on project) with concrete latency/reliability metrics."
-            if idx == 0 and target_role:
+            if idx == 0:
+                c_use = f"Listed in your {role_mention} resume skills: Prepare one concrete project example showing how you applied {tech_name or c_title} in practice."
                 c_tip = f"Resume check: {tech_name or 'This tech'} appears in your skills section without a detailed experience bullet—prepare one crisp 30-second production story. " + c_tip
             elif c_cat == "Q&A":
-                c_tip = f"Resume anchor: Connect this {tech_name or 'topic'} question to the closest production project on your resume. " + c_tip
+                c_tip = f"Resume anchor: Connect this {tech_name or 'topic'} question to the closest project on your resume. " + c_tip
         elif resume_context and not used_in_resume:
-            c_use = f"Not listed on your selected resume yet — Recommended {role_mention} framing: Bridge from your existing resume stack and explain how you would apply {c_title} in production."
             if idx == 0:
-                c_tip = f"Honest interview framing: {tech_name or 'This technology'} is not on your selected resume. State your transferable foundation from your current stack rather than claiming prior production ownership. " + c_tip
+                c_use = f"Not listed on your selected resume yet — Recommended {role_mention} framing: Bridge from your existing stack and explain how you would apply {c_title}."
+                c_tip = f"Honest interview framing: {tech_name or 'This technology'} is not on your selected resume. State your transferable foundation rather than claiming prior production ownership. " + c_tip
             elif c_cat == "Q&A":
                 c_tip = f"Transferable angle: Relate {c_title} to analogous patterns you built in your resume projects. " + c_tip
-        elif target_role:
-            c_use = f"Recommended application for {role_mention}: Apply {c_title} in production services to eliminate single points of failure and streamline operations."
-            if idx == 0:
-                c_tip = f"Tailored for your {role_mention} interviews: Lead with measurable outcomes from your projects when explaining this concept. " + c_tip
 
         tailored_cards.append([c_cat, c_title, c_say, c_code, c_use, c_tip])
 
@@ -854,8 +924,8 @@ def get_cheatsheet_for_technology(
         "resume_match_status": "not_found",
     }
 
-    # If AI is active and requested or custom technology:
-    if providers and (force_ai or not is_curated or (resume_text and len(resume_text) > 100)):
+    # If AI is active and requested or custom (non-curated) technology:
+    if providers and (force_ai or not is_curated):
         try:
             raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text, usage_info=usage_info)
         except Exception:
@@ -878,17 +948,20 @@ def get_cheatsheet_for_technology(
     )
 
     categories = ["All"] + list(dict.fromkeys(c[0] for c in tailored_cards if c[0]))
+    card_ids = [compute_card_id(c[0], c[1]) for c in tailored_cards]
 
     return {
         "tech_name": canonical_name,
         "cards": tailored_cards,
+        "card_ids": card_ids,
         "categories": categories,
         "total_cards": len(tailored_cards),
         "target_role": target_role or "Software Engineer",
         "has_resume_tailoring": bool(resume_text or target_role),
         "used_in_resume": bool(usage_info.get("used_in_resume")),
         "resume_match_status": usage_info.get("resume_match_status", "not_found"),
-        "deck_version": 2,
+        "resume_hash": compute_resume_hash(resume_text) if resume_text else "",
+        "deck_version": 3,
     }
 
 # ---------------------------------------------------------------------------
@@ -903,12 +976,13 @@ def build_standalone_cheatsheet_html(
     Produces a self-contained, offline-compatible HTML interview cheat sheet
     identical to the user's provided example file with WCAG AAA accessibility.
     """
-    cards_json = json.dumps(cards)
-    role_sub = f"Tailored for {target_role} interviews." if target_role else ""
+    cards_json = json.dumps(cards).replace("</", "<\\/")
+    safe_tech = html.escape(tech_name or "", quote=True)
+    role_sub = html.escape(f"Tailored for {target_role} interviews." if target_role else "", quote=True)
 
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{tech_name} interview cheatsheet</title>
+<title>{safe_tech} interview cheatsheet</title>
 <style>
 :root{{--bg:#f8fafc;--card:#ffffff;--ink:#0f172a;--mute:#334155;--line:#e2e8f0;--ac:#0f172a;--onac:#f8fafc;--acs:#f1f5f9;--cb:#0f172a;--cf:#f8fafc;--tip:#f1f5f9;--tl:#334155;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
 @media(prefers-color-scheme:dark){{:root:not([data-theme="light"]){{--bg:#090d16;--card:#0f172a;--ink:#f8fafc;--mute:#cbd5e1;--line:#1e293b;--ac:#f8fafc;--onac:#090d16;--acs:#141d2e;--cb:#050811;--cf:#e2e8f0;--tip:#141d2e;--tl:#cbd5e1}}}}
@@ -950,7 +1024,7 @@ pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8p
 @media(prefers-reduced-motion:reduce){{*{{transition:none!important}}}}
 </style></head><body>
 <header><div class="w">
-<h1>{tech_name} interview cheatsheet</h1>
+<h1>{safe_tech} interview cheatsheet</h1>
 <p class="sub" id="sub">{role_sub}</p>
 <div class="row"><input id="S" type="search" placeholder="Search topics, e.g. architecture, scaling (press /)" aria-label="Search">
 <button id="ea">Expand all</button><button id="ca">Collapse all</button><button id="rn">Random card</button><button id="th">Theme</button></div>
@@ -959,10 +1033,11 @@ pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8p
 <main><div class="w"><div id="g"></div><p id="E" hidden>No match. Try another keyword or clear the filter.</p></div></main>
 <script>
 const D={cards_json};
-const $=id=>document.getElementById(id),esc=s=>(s||'').replace(/[&<>]/g,m=>({{'&':'&amp;','<':'&lt;','>':'&gt;'}}[m]));
+const $=id=>document.getElementById(id),esc=s=>(s||'').replace(/[&<>\"']/g,m=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[m]));
 const g=$('g');let cat='All',q='';
 $('sub').textContent=D.length+' cards. ' + ($('sub').textContent || 'Tap a card to open it: interview answer, example, use case and tip.');
-g.innerHTML=D.map(r=>`<details class="card" data-c="${{esc(r[0])}}"><summary><span class="tg">${{esc(r[0])}}</span><b>${{esc(r[1])}}</b></summary><div class="bd">${{r[2]?`<div class="sec sec-def"><span class="sec-lbl lbl-def">Standard Definition</span>${{esc(r[2])}}</div>`:''}}${{r[4]?`<div class="sec sec-project"><span class="sec-lbl lbl-project">How I Used This In My Work Experience / Personal Project</span>${{esc(r[4])}}</div>`:''}}${{r[3]?`<div class="cw"><span class="sec-lbl" style="color:var(--mute);margin:0 0 6px 2px;">Production Code &amp; Syntax Example</span><button class="cp">Copy</button><pre><code>${{esc(r[3])}}</code></pre></div>`:''}}${{r[5]?`<div class="tip"><span class="sec-lbl lbl-tip">Interview Pro Tip &amp; Gotchas</span>${{esc(r[5])}}</div>`:''}}<button class="dn">Mark as revised</button></div></details>`).join('');
+const useLabel=u=>(u||'').startsWith('In ')||u.startsWith('Listed in')||u.startsWith('Not listed')?'My Resume & Framing':'Typical Production Use';
+g.innerHTML=D.map(r=>`<details class="card" data-c="${{esc(r[0])}}"><summary><span class="tg">${{esc(r[0])}}</span><b>${{esc(r[1])}}</b></summary><div class="bd">${{r[2]?`<div class="sec sec-def"><span class="sec-lbl lbl-def">Standard Definition</span>${{esc(r[2])}}</div>`:''}}${{r[4]?`<div class="sec sec-project"><span class="sec-lbl lbl-project">${{useLabel(r[4])}}</span>${{esc(r[4])}}</div>`:''}}${{r[3]?`<div class="cw"><span class="sec-lbl" style="color:var(--mute);margin:0 0 6px 2px;">Production Code &amp; Syntax Example</span><button class="cp">Copy</button><pre><code>${{esc(r[3])}}</code></pre></div>`:''}}${{r[5]?`<div class="tip"><span class="sec-lbl lbl-tip">Interview Pro Tip &amp; Gotchas</span>${{esc(r[5])}}</div>`:''}}<button class="dn">Mark as revised</button></div></details>`).join('');
 const cards=()=>[...document.querySelectorAll('.card')],vis=()=>cards().filter(c=>!c.hidden);
 const C=['All',...new Set(D.map(r=>r[0]))];
 $('chips').innerHTML=C.map((c,i)=>`<button class="ch${{i?'':' on'}}">${{esc(c)}}</button>`).join('');

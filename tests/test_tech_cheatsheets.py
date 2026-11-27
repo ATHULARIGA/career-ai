@@ -314,7 +314,7 @@ def test_interview_page_error_handling_and_toast(client):
     # No aria-label on span tags
     assert '<span class="cs-tech-remove" title=' not in res.text
     # Tech pills use aria-pressed, not role="tab"
-    assert 'class="cs-tech-pill active" onclick="selectTechnology(\'FastAPI\', this)" aria-pressed="true"' in res.text
+    assert 'class="cs-tech-pill active" onclick="selectTechnology(this.dataset.tech, this)" aria-pressed="true" data-tech="FastAPI"' in res.text
 
 
 def test_global_exception_handler_returns_json_for_api_endpoints(client, monkeypatch):
