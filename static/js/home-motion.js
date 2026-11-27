@@ -41,6 +41,8 @@
     let targetHero = 0;
     let currentHero = 0;
     let rafId = null;
+    let lastTime = 0;
+    let needsMeasure = false;
 
     function computeHeroProgress() {
       const maxScroll = window.innerWidth < 768 ? 240 : 320;
@@ -108,9 +110,9 @@
 
     function computeItemTargets() {
       const vh = window.innerHeight || 800;
-      const startY = vh * 0.96;
-      const endY = vh * 0.62;
-      const span = Math.max(120, startY - endY);
+      const startY = vh * 0.98;
+      const endY = vh * 0.48;
+      const span = Math.max(160, startY - endY);
 
       foldItems.forEach((item) => {
         if (!item.visible) return;
@@ -127,21 +129,33 @@
         item.el.style.willChange = 'auto';
         return;
       }
-      const ease = item.current * (2 - item.current);
+      const t = item.current;
+      const ease = t * t * (3 - 2 * t);
       const rot = -14 * (1 - ease);
       const ty = 16 * (1 - ease);
       const sc = 0.97 + 0.03 * ease;
       item.el.style.willChange = item.current !== item.target ? 'transform, opacity' : 'auto';
       item.el.style.transform = `rotateX(${rot.toFixed(2)}deg) translateY(${ty.toFixed(1)}px) scale(${sc.toFixed(3)})`;
-      item.el.style.opacity = (0.4 + 0.6 * ease).toFixed(3);
+      item.el.style.opacity = (0.42 + 0.58 * ease).toFixed(3);
     }
 
-    function tick() {
+    function tick(now) {
+      const dt = lastTime ? Math.min(0.05, Math.max(0.004, (now - lastTime) / 1000)) : 1 / 60;
+      lastTime = now;
+
+      if (needsMeasure) {
+        targetHero = computeHeroProgress();
+        computeItemTargets();
+        needsMeasure = false;
+      }
+
+      const heroAlpha = 1 - Math.exp(-8.5 * dt);
+      const itemAlpha = 1 - Math.exp(-7.5 * dt);
       let moving = false;
 
       if (stage && currentHero !== targetHero) {
-        currentHero += (targetHero - currentHero) * 0.14;
-        if (Math.abs(targetHero - currentHero) < 0.002) {
+        currentHero += (targetHero - currentHero) * heroAlpha;
+        if (Math.abs(targetHero - currentHero) < 0.0015) {
           currentHero = targetHero;
         } else {
           moving = true;
@@ -151,8 +165,8 @@
 
       foldItems.forEach((item) => {
         if (item.current === item.target) return;
-        item.current += (item.target - item.current) * 0.16;
-        if (Math.abs(item.target - item.current) < 0.003) {
+        item.current += (item.target - item.current) * itemAlpha;
+        if (Math.abs(item.target - item.current) < 0.002) {
           item.current = item.target;
         } else {
           moving = true;
@@ -160,17 +174,18 @@
         applyItemFold(item);
       });
 
-      if (moving) {
+      if (moving || needsMeasure) {
         rafId = window.requestAnimationFrame(tick);
       } else {
         rafId = null;
+        lastTime = 0;
       }
     }
 
     function onScroll() {
-      targetHero = computeHeroProgress();
-      computeItemTargets();
+      needsMeasure = true;
       if (!rafId) {
+        lastTime = performance.now();
         rafId = window.requestAnimationFrame(tick);
       }
     }
@@ -180,8 +195,8 @@
     if (stage) applyHeroFold(currentHero);
 
     const vhInit = window.innerHeight || 800;
-    const startInit = vhInit * 0.96;
-    const spanInit = Math.max(120, startInit - vhInit * 0.62);
+    const startInit = vhInit * 0.98;
+    const spanInit = Math.max(160, startInit - vhInit * 0.48);
     foldItems.forEach((item) => {
       const rect = item.el.getBoundingClientRect();
       const raw = (startInit - rect.top) / spanInit - item.staggerOffset;

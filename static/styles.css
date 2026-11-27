@@ -8928,6 +8928,16 @@ html.theme-dark .adm-table-total-row,
   perspective: 1100px;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .skill-pills-wrap,
 .capabilities-heading-wrap,
 .clean-card,
