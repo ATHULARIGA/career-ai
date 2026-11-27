@@ -1016,7 +1016,7 @@ details[open] summary::after{{content:"\\2013"}}
 .sec-def{{border-left:3.5px solid var(--mute)}}.lbl-def{{color:var(--mute)}}
 .sec-project{{background:var(--acs);border:1px solid var(--line);border-left:4px solid var(--ac)}}.lbl-project{{color:var(--ac)}}
 .cw{{position:relative;margin:0}}
-pre{{margin:0;background:var(--cb);color:var(--cf);padding:12px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}}
+pre{{margin:0;background:var(--cb);color:var(--cf);padding:36px 12px 12px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}}
 .cp{{position:absolute;right:6px;top:6px;font-size:.75rem;padding:2px 8px}}
 .tip{{background:var(--tip);border:1px solid var(--line);border-left:4px solid var(--tl);padding:10px 12px;border-radius:8px}}.lbl-tip{{color:var(--tl)}}
 .dn{{margin-top:4px;font-size:.85rem}}.done .dn{{background:var(--acs);color:var(--ac)}}
