@@ -18,7 +18,7 @@
       )
     ).map((el, idx) => ({
       el,
-      staggerOffset: (idx % 3) * 0.05,
+      staggerOffset: (idx % 3) * 0.08,
       current: 0,
       target: 0,
       visible: true,
@@ -131,12 +131,12 @@
       }
       const t = item.current;
       const ease = t * t * (3 - 2 * t);
-      const rot = -14 * (1 - ease);
-      const ty = 16 * (1 - ease);
-      const sc = 0.97 + 0.03 * ease;
+      const rot = -38 * (1 - ease);
+      const ty = 36 * (1 - ease);
+      const sc = 0.91 + 0.09 * ease;
       item.el.style.willChange = item.current !== item.target ? 'transform, opacity' : 'auto';
       item.el.style.transform = `rotateX(${rot.toFixed(2)}deg) translateY(${ty.toFixed(1)}px) scale(${sc.toFixed(3)})`;
-      item.el.style.opacity = (0.42 + 0.58 * ease).toFixed(3);
+      item.el.style.opacity = (0.22 + 0.78 * ease).toFixed(3);
     }
 
     function tick(now) {
