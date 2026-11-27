@@ -144,7 +144,9 @@
       lastTime = now;
 
       if (needsMeasure) {
-        targetHero = computeHeroProgress();
+        if (manualHeroFold === null) {
+          targetHero = computeHeroProgress();
+        }
         computeItemTargets();
         needsMeasure = false;
       }
@@ -182,7 +184,31 @@
       }
     }
 
+    let manualHeroFold = null;
+
+    function toggleHeroStage() {
+      if (!stage) return;
+      manualHeroFold = currentHero < 0.5 ? 1 : 0;
+      targetHero = manualHeroFold;
+      stage.setAttribute('aria-expanded', manualHeroFold === 1 ? 'true' : 'false');
+      if (!rafId) {
+        lastTime = performance.now();
+        rafId = window.requestAnimationFrame(tick);
+      }
+    }
+
+    if (stage) {
+      stage.addEventListener('click', toggleHeroStage);
+      stage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleHeroStage();
+        }
+      });
+    }
+
     function onScroll() {
+      manualHeroFold = null;
       needsMeasure = true;
       if (!rafId) {
         lastTime = performance.now();

@@ -8932,6 +8932,31 @@ html {
   scroll-behavior: smooth;
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 9999;
+  padding: 10px 16px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+.resume-scroll-stage {
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

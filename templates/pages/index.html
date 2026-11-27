@@ -29,14 +29,14 @@
 
             <div class="buttons">
                 <a href="/resume" class="btn-primary">Start for free</a>
-                <a href="/career-map" class="btn-secondary">Explore career roadmaps →</a>
+                <a href="/roadmap" class="btn-secondary">Explore career roadmaps →</a>
             </div>
             <div class="hero-subnote">Your next step, made clearer.</div>
         </div>
 
         <!-- Right Column: Scroll-Driven Foldable Resume Showcase -->
-        <div class="hero-visual" aria-hidden="true">
-            <div class="resume-scroll-stage" id="resumeScrollStage">
+        <div class="hero-visual">
+            <div class="resume-scroll-stage" id="resumeScrollStage" role="button" tabindex="0" aria-expanded="false" aria-label="Toggle resume preview">
                 <div class="resume-folio">
                     <!-- Sheet 1: Top Resume Cover -->
                     <div class="resume-sheet sheet-cover">
@@ -132,7 +132,7 @@
             <span class="card-action">Start a practice round →</span>
         </a>
 
-        <a href="/career-map" class="clean-card">
+        <a href="/roadmap" class="clean-card">
             <div>
                 <div class="card-icon-box icon-purple">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
@@ -309,7 +309,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/animejs/dist/bundles/anime.umd.min.js" defer></script>
 <script src="/static/js/home-motion.js" defer></script>
 
 {% endblock %}
