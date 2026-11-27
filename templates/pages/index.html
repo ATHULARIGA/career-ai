@@ -34,44 +34,55 @@
             <div class="hero-subnote">Your next step, made clearer.</div>
         </div>
 
-        <!-- Right Column: Minimal Telemetry Showcase -->
+        <!-- Right Column: Scroll-Driven Foldable Resume Showcase -->
         <div class="hero-visual" aria-hidden="true">
-            <div class="hero-telemetry">
-                <div class="telemetry-header">
-                    <span class="telemetry-dots"><i></i><i></i><i></i></span>
-                    <span class="telemetry-label">resumate.engine // live</span>
-                </div>
-
-                <div class="telemetry-row">
-                    <div class="telemetry-ring-wrap">
-                        <svg width="52" height="52" viewBox="0 0 36 36" class="circular-chart">
-                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <path class="circle hero-telemetry-ring" stroke-dasharray="100, 100" stroke-dashoffset="8" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <text x="18" y="20.35" class="percentage telemetry-score-num">92%</text>
-                        </svg>
+            <div class="resume-scroll-stage" id="resumeScrollStage">
+                <div class="resume-folio">
+                    <!-- Sheet 1: Top Resume Cover -->
+                    <div class="resume-sheet sheet-cover">
+                        <div class="telemetry-header">
+                            <span class="telemetry-dots"><i></i><i></i><i></i></span>
+                            <span class="telemetry-label">resume.pdf // <span id="resumeFoldState">folded</span></span>
+                        </div>
+                        <div class="telemetry-row">
+                            <div class="telemetry-ring-wrap">
+                                <svg width="52" height="52" viewBox="0 0 36 36" class="circular-chart">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="circle hero-telemetry-ring" stroke-dasharray="100, 100" stroke-dashoffset="45" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <text x="18" y="20.35" class="percentage telemetry-score-num">92%</text>
+                                </svg>
+                            </div>
+                            <div class="telemetry-meta">
+                                <div class="telemetry-title">ATS Resume Score</div>
+                                <div class="telemetry-sub">Senior Software Engineer</div>
+                                <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="92%" style="width:45%"></div></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="telemetry-meta">
-                        <div class="telemetry-title">ATS Resume Alignment</div>
-                        <div class="telemetry-sub">Keywords matched · 9.2 / 10</div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="92%" style="width:92%"></div></div>
-                    </div>
-                </div>
 
-                <div class="telemetry-row">
-                    <div class="telemetry-badge">AI</div>
-                    <div class="telemetry-meta">
-                        <div class="telemetry-title">Mock Interview Signal</div>
-                        <div class="telemetry-sub">Technical depth · Feedback ready</div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="86%" style="width:86%"></div></div>
+                    <!-- Sheet 2: Unfolds on Scroll (Experience & Keywords) -->
+                    <div class="resume-sheet sheet-experience">
+                        <div class="resume-sheet-label">EXPERIENCE &amp; ATS KEYWORDS</div>
+                        <div class="resume-line-block">
+                            <div class="resume-line-title">Distributed API &amp; Data Pipelines</div>
+                            <div class="resume-line-sub">Cut p99 latency by 62% across 40k req/s services</div>
+                        </div>
+                        <div class="resume-kw-row">
+                            <span class="resume-kw">Python</span>
+                            <span class="resume-kw">FastAPI</span>
+                            <span class="resume-kw">PostgreSQL</span>
+                            <span class="resume-kw">Docker</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="telemetry-row">
-                    <div class="telemetry-badge">CS</div>
-                    <div class="telemetry-meta">
-                        <div class="telemetry-title">Interview Cheat Sheets</div>
-                        <div class="telemetry-sub">Tailored to your resume stack</div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="95%" style="width:95%"></div></div>
+                    <!-- Sheet 3: Unfolds Further on Scroll (Interview Readiness) -->
+                    <div class="resume-sheet sheet-verdict">
+                        <div class="resume-sheet-label">INTERVIEW READINESS</div>
+                        <div class="telemetry-meta">
+                            <div class="telemetry-title">Mock Interview &amp; Cheat Sheets</div>
+                            <div class="telemetry-sub">Technical depth · 9.2 / 10</div>
+                            <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="88%" style="width:30%"></div></div>
+                        </div>
                     </div>
                 </div>
             </div>
