@@ -5,13 +5,8 @@
 
 {% block content %}
 
-<!-- HERO SECTION WITH TWO-COLUMN ENGINEERING GRID -->
-<div class="hero">
-    <!-- Moving Ambient Orbs -->
-    <div class="hero-orb orb-a"></div>
-    <div class="hero-orb orb-b"></div>
-    <div class="hero-orb orb-c"></div>
-
+<!-- HERO SECTION (CLEAN ANIME.JS-INSPIRED GRID) -->
+<div class="hero hero-clean">
     <div class="hero-inner">
         <!-- Left Column: Copy & Actions -->
         <div class="hero-content">
@@ -39,44 +34,44 @@
             <div class="hero-subnote">Your next step, made clearer.</div>
         </div>
 
-        <!-- Right Column: Dedicated Visual Frame -->
+        <!-- Right Column: Minimal Telemetry Showcase -->
         <div class="hero-visual" aria-hidden="true">
-            <div class="hero-visual-frame">
-                <!-- Floating Resume Card with Circular Gauge -->
-                <div class="float-card resume-card">
-                    <div class="float-card-top">
-                        <span class="float-card-title">Resume Score</span>
-                        <span class="check-icon-green">
-                            <svg width="18" height="18" viewBox="0 0 20 20" fill="#10b981"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                        </span>
+            <div class="hero-telemetry">
+                <div class="telemetry-header">
+                    <span class="telemetry-dots"><i></i><i></i><i></i></span>
+                    <span class="telemetry-label">resumate.engine // live</span>
+                </div>
+
+                <div class="telemetry-row">
+                    <div class="telemetry-ring-wrap">
+                        <svg width="52" height="52" viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle hero-telemetry-ring" stroke-dasharray="100, 100" stroke-dashoffset="8" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="20.35" class="percentage telemetry-score-num">92%</text>
+                        </svg>
                     </div>
-                    <div class="float-card-body">
-                        <div class="score-ring-wrap">
-                            <svg width="44" height="44" viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                <text x="18" y="20.35" class="percentage">92%</text>
-                            </svg>
-                        </div>
-                        <div class="score-details">
-                            <span class="ats-label">ATS-ready profile</span>
-                            <div class="progress">
-                                <div class="bar"></div>
-                            </div>
-                            <span class="score">9.2 / 10</span>
-                        </div>
+                    <div class="telemetry-meta">
+                        <div class="telemetry-title">ATS Resume Alignment</div>
+                        <div class="telemetry-sub">Keywords matched · 9.2 / 10</div>
+                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="92%" style="width:92%"></div></div>
                     </div>
                 </div>
 
-                <!-- Floating Mock Interview Card -->
-                <div class="float-card interview-card">
-                    <div class="float-card-body">
-                        <div class="icon-sq-ai">AI</div>
-                        <div>
-                            <div class="float-card-title">Mock Interview</div>
-                            <div class="status-ready"><span class="dot-green"></span> Feedback Ready</div>
-                            <div class="tag-success">Strong technical depth</div>
-                        </div>
+                <div class="telemetry-row">
+                    <div class="telemetry-badge">AI</div>
+                    <div class="telemetry-meta">
+                        <div class="telemetry-title">Mock Interview Signal</div>
+                        <div class="telemetry-sub">Technical depth · Feedback ready</div>
+                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="86%" style="width:86%"></div></div>
+                    </div>
+                </div>
+
+                <div class="telemetry-row">
+                    <div class="telemetry-badge">CS</div>
+                    <div class="telemetry-meta">
+                        <div class="telemetry-title">Interview Cheat Sheets</div>
+                        <div class="telemetry-sub">Tailored to your resume stack</div>
+                        <div class="telemetry-bar"><div class="telemetry-bar-fill" data-target="95%" style="width:95%"></div></div>
                     </div>
                 </div>
             </div>
@@ -302,5 +297,8 @@
         <a href="/signup" class="clean-banner-btn">Get started for free →</a>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/animejs/dist/bundles/anime.umd.min.js" defer></script>
+<script src="/static/js/home-motion.js" defer></script>
 
 {% endblock %}

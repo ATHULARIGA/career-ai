@@ -8651,3 +8651,173 @@ html.theme-dark .adm-table-total-row,
 .theme-dark .adm-reviewed-meta {
   color: #f1f5f9 !important;
 }
+
+
+/* ── Anime.js-Inspired Minimalist Hero & 3-Color Card Cohesion ── */
+.hero-clean {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.hero-telemetry {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  width: 100%;
+  max-width: 420px;
+}
+
+.theme-dark .hero-telemetry {
+  background: #0f172a;
+  border-color: #1e293b;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
+}
+
+.telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.theme-dark .telemetry-header {
+  border-bottom-color: #1e293b;
+}
+
+.telemetry-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.telemetry-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  display: block;
+}
+
+.theme-dark .telemetry-dots i {
+  background: #334155;
+}
+
+.telemetry-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  color: #475569;
+  letter-spacing: 0.02em;
+}
+
+.theme-dark .telemetry-label {
+  color: #94a3b8;
+}
+
+.telemetry-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.theme-dark .telemetry-row {
+  border-color: #1e293b;
+  background: #090d16;
+}
+
+.telemetry-ring-wrap,
+.telemetry-badge {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.telemetry-badge {
+  border-radius: 10px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.theme-dark .telemetry-badge {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.telemetry-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.telemetry-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.theme-dark .telemetry-title {
+  color: #f8fafc;
+}
+
+.telemetry-sub {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 2px 0 8px;
+}
+
+.theme-dark .telemetry-sub {
+  color: #94a3b8;
+}
+
+.telemetry-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.theme-dark .telemetry-bar {
+  background: #1e293b;
+}
+
+.telemetry-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.theme-dark .telemetry-bar-fill {
+  background: #60a5fa;
+}
+
+/* Unify multi-colored icon boxes onto clean 3-color palette */
+.card-icon-box.icon-indigo,
+.card-icon-box.icon-emerald,
+.card-icon-box.icon-purple,
+.card-icon-box.icon-blue,
+.card-icon-box.icon-amber {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0;
+}
+
+.theme-dark .card-icon-box.icon-indigo,
+.theme-dark .card-icon-box.icon-emerald,
+.theme-dark .card-icon-box.icon-purple,
+.theme-dark .card-icon-box.icon-blue,
+.theme-dark .card-icon-box.icon-amber {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155;
+}
