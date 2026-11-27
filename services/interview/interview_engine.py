@@ -1,9 +1,40 @@
 import json
 from typing import Any, Optional
 
-from services.ai.provider import get_openrouter_client
+from services.ai.provider import get_ai_providers
 
-client = get_openrouter_client()
+INTERVIEW_OPENROUTER_MODELS = [
+    "openai/gpt-4o-mini",
+    "meta-llama/llama-3.1-8b-instruct",
+]
+
+
+def _chat_completion(
+    messages: list[dict[str, str]],
+    temperature: float = 0.5,
+    max_tokens: int = 400,
+    tag: str = "INTERVIEW",
+) -> Optional[str]:
+    """Call configured AI providers (Gemini -> OpenRouter -> Groq) with a 10s timeout."""
+    providers = get_ai_providers(
+        timeout=10,
+        openrouter_models=INTERVIEW_OPENROUTER_MODELS,
+    )
+    for provider_client, models, provider_name in providers:
+        for model in models:
+            try:
+                response = provider_client.chat.completions.create(
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    messages=messages,
+                )
+                content = (response.choices[0].message.content or "").strip()
+                if content:
+                    return content
+            except Exception as e:
+                print(f"{tag} ERROR using {provider_name}/{model}: {e}")
+    return None
 
 # ---------------------------------------------------------------------------
 # Per-Persona System Prompts — define full behavioral personality, not just tone
@@ -41,14 +72,6 @@ Your behavioral rules:
 }
 
 DEFAULT_PERSONA = PERSONA_SYSTEM_PROMPTS["Neutral"]
-
-INTERVIEW_MODELS = [
-    "meta-llama/llama-3.1-8b-instruct",
-    "meta-llama/llama-3.3-70b-instruct",
-    "meta-llama/llama-3.2-3b-instruct",
-    "deepseek/deepseek-chat",
-    "openai/gpt-4o-mini",
-]
 
 # ---------------------------------------------------------------------------
 # Conversational interview engine
@@ -98,19 +121,9 @@ Important: Keep your response concise and natural. Do NOT number your questions.
         else:
             messages.append({"role": "user", "content": turn["text"]})
 
-    for model in INTERVIEW_MODELS:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.6,
-                max_tokens=300,
-                messages=messages,
-            )
-            reply = (response.choices[0].message.content or "").strip()
-            if reply:
-                return reply
-        except Exception as e:
-            print(f"CHAT GEN ERROR using {model}: {e}")
+    reply = _chat_completion(messages, temperature=0.6, max_tokens=300, tag="CHAT GEN")
+    if reply:
+        return reply
 
     # Fallback
     if phase == "closing":
@@ -176,20 +189,15 @@ Score their response from 0-10 based on:
 Return JSON only:
 {{"score": <int 0-10>, "notes": "<one sentence explanation>"}}
 """
-    for model in INTERVIEW_MODELS:
+    raw = _chat_completion([{"role": "user", "content": prompt}], temperature=0.2, max_tokens=100, tag="QUESTION SCORE")
+    if raw:
         try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.2,
-                max_tokens=100,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            parsed = _parse_json(response.choices[0].message.content)
+            parsed = _parse_json(raw)
             score = int(parsed.get("score", 5))
             notes = str(parsed.get("notes", "")).strip()
             return {"score": score, "notes": notes}
         except Exception as e:
-            print(f"QUESTION SCORE ERROR using {model}: {e}")
+            print(f"QUESTION SCORE PARSE ERROR: {e}")
 
     return {"score": 5, "notes": "Candidate asked questions at the end of the interview."}
 
@@ -251,23 +259,17 @@ Rules:
 - Return JSON only in this exact format:
 {{"questions":["..."]}}
 """
-    models = INTERVIEW_MODELS
-    for model in models:
+    raw = _chat_completion([{"role": "user", "content": prompt}], temperature=0.3, max_tokens=600, tag="QUESTION GEN")
+    if raw:
         try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.3,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=600,
-            )
-            parsed = _parse_json(response.choices[0].message.content)
+            parsed = _parse_json(raw)
             questions = parsed.get("questions", [])
             if isinstance(questions, list):
                 cleaned = [str(q).strip() for q in questions if str(q).strip()]
                 if cleaned:
                     return cleaned[:num_questions]
         except Exception as e:
-            print(f"QUESTION GEN ERROR using {model}: {e}")
+            print(f"QUESTION GEN PARSE ERROR: {e}")
 
     return _fallback_questions(topic, difficulty, persona, num_questions)
 
@@ -292,21 +294,15 @@ Create one high-value follow-up interview question based on:
 Return JSON only:
 {{"follow_up":"..."}}
 """
-    models = INTERVIEW_MODELS
-    for model in models:
+    raw = _chat_completion([{"role": "user", "content": prompt}], temperature=0.2, max_tokens=400, tag="FOLLOW UP")
+    if raw:
         try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.2,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
-            )
-            parsed = _parse_json(response.choices[0].message.content)
+            parsed = _parse_json(raw)
             follow_up = str(parsed.get("follow_up", "")).strip()
             if follow_up:
                 return follow_up
         except Exception as e:
-            print(f"FOLLOW UP ERROR using {model}: {e}")
+            print(f"FOLLOW UP PARSE ERROR: {e}")
 
     if persona == "Pressure Test":
         return "Your answer seems broad. Defend one design choice with concrete metrics and tradeoffs."
@@ -325,21 +321,15 @@ Draft these hints using their resume data if available, or general best practice
 Return JSON only:
 {{"hints": ["Hint 1", "Hint 2", "Hint 3"]}}
 """
-    models = INTERVIEW_MODELS
-    for model in models:
+    raw = _chat_completion([{"role": "user", "content": prompt}], temperature=0.4, max_tokens=400, tag="LIFELINE")
+    if raw:
         try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.4,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
-            )
-            parsed = _parse_json(response.choices[0].message.content)
+            parsed = _parse_json(raw)
             hints = parsed.get("hints", [])
             if isinstance(hints, list) and len(hints) > 0:
                 return [str(h) for h in hints[:3]]
         except Exception as e:
-            print(f"LIFELINE ERROR using {model}: {e}")
+            print(f"LIFELINE PARSE ERROR: {e}")
 
     return [
         "Recall a specific project where you faced a similar challenge.",

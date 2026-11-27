@@ -440,20 +440,9 @@ def generate(
     past_weaknesses = get_user_weaknesses(user_email) if user_email else []
     skill_gaps = list(set(skill_gaps + past_weaknesses))[:5]
 
-    seeded = bank_questions(topic=topic, role=role, round_type=round_type, limit=2)
-    questions = generate_questions(
-        topic=topic,
-        role=role,
-        company=company,
-        round_type=round_type,
-        difficulty=difficulty,
-        persona=persona,
-        skill_gaps=skill_gaps,
-        num_questions=1,
-        resume_context=resume_context[:2000],
-    )
-    questions = [normalize_question(q) for q in questions if str(q).strip()]
-    questions = seeded + questions
+    target_count = max(1, min(3, max_rounds))
+    seeded = bank_questions(topic=topic, role=role, round_type=round_type, limit=target_count)
+    questions = [normalize_question(q) for q in seeded if str(q).strip()]
     deduped = []
     seen = set()
     for q in questions:
@@ -462,7 +451,7 @@ def generate(
             continue
         seen.add(key)
         deduped.append(q)
-    questions = deduped[: max(1, min(3, max_rounds))]
+    questions = deduped[:target_count]
     if not questions:
         questions = [f"Tell me about your approach to {topic}."]
 
