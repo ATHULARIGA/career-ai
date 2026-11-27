@@ -8937,5 +8937,4 @@ html.theme-dark .adm-table-total-row,
 .faq-item,
 .clean-banner {
   transform-origin: top center;
-  will-change: transform, opacity;
 }

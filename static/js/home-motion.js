@@ -18,9 +18,10 @@
       )
     ).map((el, idx) => ({
       el,
-      staggerOffset: (idx % 3) * 0.06,
+      staggerOffset: (idx % 3) * 0.05,
       current: 0,
       target: 0,
+      visible: true,
     }));
 
     const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -81,6 +82,30 @@
       });
     }
 
+    const itemByEl = new Map(foldItems.map((item) => [item.el, item]));
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const item = itemByEl.get(entry.target);
+            if (!item) return;
+            item.visible = entry.isIntersecting;
+            if (!entry.isIntersecting) {
+              item.target = entry.boundingClientRect.top < 0 ? 1 : 0;
+              if (!rafId && item.current !== item.target) {
+                rafId = window.requestAnimationFrame(tick);
+              }
+            }
+          });
+        },
+        { rootMargin: '120px 0px 120px 0px' }
+      );
+      foldItems.forEach((item) => {
+        item.visible = false;
+        io.observe(item.el);
+      });
+    }
+
     function computeItemTargets() {
       const vh = window.innerHeight || 800;
       const startY = vh * 0.96;
@@ -88,6 +113,7 @@
       const span = Math.max(120, startY - endY);
 
       foldItems.forEach((item) => {
+        if (!item.visible) return;
         const rect = item.el.getBoundingClientRect();
         const raw = (startY - rect.top) / span - item.staggerOffset;
         item.target = Math.max(0, Math.min(1, raw));
@@ -95,18 +121,25 @@
     }
 
     function applyItemFold(item) {
+      if (item.current >= 1) {
+        item.el.style.transform = 'none';
+        item.el.style.opacity = '1';
+        item.el.style.willChange = 'auto';
+        return;
+      }
       const ease = item.current * (2 - item.current);
-      const rot = -28 * (1 - ease);
-      const ty = 22 * (1 - ease);
-      const sc = 0.95 + 0.05 * ease;
+      const rot = -14 * (1 - ease);
+      const ty = 16 * (1 - ease);
+      const sc = 0.97 + 0.03 * ease;
+      item.el.style.willChange = item.current !== item.target ? 'transform, opacity' : 'auto';
       item.el.style.transform = `rotateX(${rot.toFixed(2)}deg) translateY(${ty.toFixed(1)}px) scale(${sc.toFixed(3)})`;
-      item.el.style.opacity = (0.35 + 0.65 * ease).toFixed(3);
+      item.el.style.opacity = (0.4 + 0.6 * ease).toFixed(3);
     }
 
     function tick() {
       let moving = false;
 
-      if (stage) {
+      if (stage && currentHero !== targetHero) {
         currentHero += (targetHero - currentHero) * 0.14;
         if (Math.abs(targetHero - currentHero) < 0.002) {
           currentHero = targetHero;
@@ -117,6 +150,7 @@
       }
 
       foldItems.forEach((item) => {
+        if (item.current === item.target) return;
         item.current += (item.target - item.current) * 0.16;
         if (Math.abs(item.target - item.current) < 0.003) {
           item.current = item.target;
@@ -145,8 +179,13 @@
     currentHero = targetHero;
     if (stage) applyHeroFold(currentHero);
 
-    computeItemTargets();
+    const vhInit = window.innerHeight || 800;
+    const startInit = vhInit * 0.96;
+    const spanInit = Math.max(120, startInit - vhInit * 0.62);
     foldItems.forEach((item) => {
+      const rect = item.el.getBoundingClientRect();
+      const raw = (startInit - rect.top) / spanInit - item.staggerOffset;
+      item.target = Math.max(0, Math.min(1, raw));
       item.current = item.target;
       applyItemFold(item);
     });
