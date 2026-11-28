@@ -66,7 +66,7 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
     request.session["interview_config"] = {
         "topic": "Resume Focus",
         "role": "Role-based",
-        "company": "our company",
+        "company": "",
         "round_type": "technical",
         "difficulty": "intermediate",
         "red_team": False,

@@ -158,9 +158,9 @@ def analyze_answer(
 def hiring_decision(session_history: list[dict[str, Any]]) -> dict[str, Any]:
     if not session_history:
         return {
-            "decision": "No Hire",
+            "decision": "Incomplete Session",
             "confidence": "Low",
-            "summary": "Not enough data.",
+            "summary": "Answer at least one question to generate a hiring decision.",
             "panel_notes": [],
         }
 
