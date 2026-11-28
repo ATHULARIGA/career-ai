@@ -5,6 +5,7 @@ with category filters, answers, code snippets, real-world use cases,
 interview tips, and revision tracking.
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import html
 import json
@@ -13,9 +14,12 @@ from typing import Any, Optional
 
 from services.interview.blueprints import (
     card_to_legacy_row,
+    compute_topic_id,
+    infer_tier_level_weight,
     load_blueprint,
     load_deck,
     summarize_blueprint,
+    validate_blueprint_and_deck,
 )
 from services.interview.cheatsheet_decks import (
     EXTRA_CURATED_DECKS,
@@ -521,61 +525,39 @@ def _generate_custom_cards_via_ai(
     else:
         resume_usage_instruction = "Resume Usage Status: No resume provided; tailor for a general senior candidate."
 
-    # Stage 1: Discover technology-specific high-yield interview syllabus
-    discovered_topics = _discover_interview_topics_via_ai(tech_clean, role_name, providers)
-    if discovered_topics:
-        syllabus_lines = "\n".join(
-            f"{idx + 1}. [{t['category']}] {t['topic']} — Focus: {t['focus']}"
-            for idx, t in enumerate(discovered_topics)
-        )
-        coverage_instruction = f"""Cover EVERY SINGLE ONE of these {len(discovered_topics)} high-priority interview topics for {tech_clean} (one dedicated card per topic, do not skip any):
-{syllabus_lines}"""
-    else:
-        coverage_instruction = f"""Generate 22 to 28 comprehensive, production-grade interview revision cards across ALL essential interview pillars for {tech_clean}:
-- Basics (2-3 cards): Core design philosophy, execution/runtime model, fundamental primitives, and when to choose {tech_clean} over alternatives.
-- Architecture (3-4 cards): Deep internals (memory layout, event loop/threading, storage engines, protocols, indexing, scheduling, clustering/partitioning, or rendering pipeline).
-- Concurrency (2-3 cards): Concurrent execution, race conditions, async I/O, locking, idempotency, backpressure, or transaction isolation levels.
-- Performance (2-3 cards): Latency profiling, memory/CPU optimization, query/index tuning, connection pooling, caching strategies, and scaling bottlenecks.
-- Reliability (2-3 cards): Failure modes, retries with exponential backoff and jitter, circuit breaking, graceful shutdown, health checks, observability/debugging, and disaster recovery.
-- Security (2 cards): Authentication, authorization (RBAC/ABAC), secrets management, injection/vulnerability prevention, and encryption at rest and in-transit.
-- System Design (2 cards): How {tech_clean} fits into large-scale distributed systems, trade-offs vs competing technologies, and capacity/operational trade-offs.
-- Q&A (6-8 cards): The most important, frequently asked, and tricky real-world interview questions and model answers for {tech_clean}. Prefix title with "Q: " and start definition with "A: "."""
+    # Stage 2: Generate in 3 parallel category batches to avoid max_tokens truncation
+    batches = [
+        ("Basics & Architecture", "Basics (3 cards) and Architecture (3 cards): core runtime model, internals, and design philosophy."),
+        ("Concurrency & Performance", "Concurrency (3 cards) and Performance (3 cards): async/locking, latency profiling, pooling, and scaling."),
+        ("Reliability, Security & Q&A", "Reliability (2 cards), Security (2 cards), and Q&A (4 cards prefixed with 'Q: ' and answered with 'A: ')."),
+    ]
 
-    prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer at top-tier technology companies.
-Generate an exhaustive, all-in-one interview cheat sheet deck for: "{tech_clean}".
-Target Candidate Role: "{role_name}".
-Candidate Resume Context: "{clean_resume if clean_resume else 'General senior candidate'}".
+    def _run_batch(batch_name: str, batch_spec: str) -> list[list[str]]:
+        batch_prompt = f"""You are a Principal Staff Engineer and Senior Technical Interviewer.
+Generate cards for "{tech_clean}" (Target Role: "{role_name}").
+Focus ONLY on: {batch_spec}
 {resume_usage_instruction}
 
-{coverage_instruction}
-
-Return a valid JSON object with this exact structure:
+Return valid JSON only:
 {{
   "cards": [
     {{
-      "category": "Category Name (Basics, Architecture, Concurrency, Performance, Reliability, Security, System Design, Q&A)",
-      "title": "Concise Technical Topic Title (or 'Q: <Interview Question>' for Q&A)",
-      "definition": "Authoritative technical explanation of how it works under the hood, or 'A: <Complete model answer>' for Q&A (3-5 sentences).",
-      "code": "Syntactically valid, production-ready snippet, CLI command, or config with best practices (no dummy placeholders).",
-      "work_experience": "Concrete real-world production story tailored to the candidate's target role/resume with measurable metrics (e.g. latency, QPS, throughput).",
-      "interview_tip": "Actionable guidance on what interviewers look for, follow-up questions they ask, technical terminology to emphasize, and common traps to avoid."
+      "category": "Basics|Architecture|Concurrency|Performance|Reliability|Security|System Design|Q&A",
+      "title": "Concise topic title (or 'Q: <Question>' for Q&A)",
+      "definition": "Clear 3-4 sentence spoken-length explanation (or 'A: <Model answer>' for Q&A).",
+      "code": "Valid, realistic snippet, CLI command, or config.",
+      "work_experience": "Neutral typical production use case (never invent personal metrics).",
+      "interview_tip": "What interviewers look for, follow-ups, and pitfalls to avoid."
     }}
   ]
 }}
-
-Strict requirements:
-- For Q&A cards, prefix "title" with "Q: " and start "definition" with "A: ".
-- Ensure all string values are properly escaped (newlines as \\n, quotes as \\\").
-- Produce syntactically correct code or configuration for {tech_clean}.
-- Do NOT use emojis anywhere in the output.
-"""
-
-    data = _invoke_json_llm(providers, prompt, max_tokens=6000)
-    if data:
-        raw_items = data.get("cards", []) if isinstance(data, dict) else []
-        parsed_cards = []
-        for item in raw_items:
-            if isinstance(item, dict):
+No emojis. Escape newlines as \\n."""
+        data = _invoke_json_llm(providers, batch_prompt, max_tokens=2400)
+        out: list[list[str]] = []
+        if data and isinstance(data, dict):
+            for item in data.get("cards", []):
+                if not isinstance(item, dict):
+                    continue
                 c_cat = str(item.get("category", "Basics")).strip()
                 c_title = str(item.get("title", "")).strip()
                 c_def = str(item.get("definition", "")).strip()
@@ -583,12 +565,20 @@ Strict requirements:
                 c_work = str(item.get("work_experience", "")).strip()
                 c_tip = str(item.get("interview_tip", "")).strip()
                 if c_title and (c_def or c_work):
-                    parsed_cards.append([c_cat, c_title, c_def, c_code, c_work, c_tip])
-            elif isinstance(item, list) and len(item) >= 6:
-                parsed_cards.append([str(x) for x in item[:6]])
+                    out.append([c_cat, c_title, c_def, c_code, c_work, c_tip])
+        return out
 
-        if len(parsed_cards) >= 5:
-            return parsed_cards
+    parsed_cards: list[list[str]] = []
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = [pool.submit(_run_batch, b_name, b_spec) for b_name, b_spec in batches]
+        for fut in as_completed(futures):
+            try:
+                parsed_cards.extend(fut.result())
+            except Exception:
+                pass
+
+    if len(parsed_cards) >= 4:
+        return parsed_cards
 
     return _generate_deterministic_cards(tech_name, target_role)
 
@@ -923,6 +913,14 @@ def get_cheatsheet_for_technology(
     deck = load_deck(norm_key)
     is_curated = bool(deck and deck.get("cards")) or (norm_key in CURATED_DECKS)
 
+    # Check global shared cache for non-curated technologies
+    if not is_curated and not force_ai:
+        from db.repositories.cheatsheets import get_global_cheatsheet_deck
+        cached_global = get_global_cheatsheet_deck(norm_key)
+        if cached_global and cached_global.get("deck", {}).get("cards"):
+            blueprint = cached_global.get("blueprint")
+            deck = cached_global.get("deck")
+
     # Check whether the user actually used this technology in their resume
     usage_info = check_tech_used_in_resume(resume_text, canonical_name) if resume_text else {
         "used_in_resume": False,
@@ -932,12 +930,55 @@ def get_cheatsheet_for_technology(
         "resume_match_status": "not_found",
     }
 
-    # If AI is active and requested or custom (non-curated) technology:
-    if providers and (force_ai or not is_curated):
+    # If AI is active and requested or uncached custom technology:
+    if providers and (force_ai or (not is_curated and not (deck and deck.get("cards")))):
         try:
             raw_cards = _generate_custom_cards_via_ai(canonical_name, target_role, resume_text, usage_info=usage_info)
         except Exception:
             raw_cards = []
+        if raw_cards and len(raw_cards) >= 4 and not is_curated:
+            areas_map: dict[str, Any] = {}
+            deck_cards: list[dict[str, Any]] = []
+            for idx, row in enumerate(raw_cards):
+                c_cat, c_title, c_def, c_code, c_work, c_tip = (list(row) + [""] * 6)[:6]
+                tid = compute_topic_id(norm_key, c_cat, c_title)
+                tier, level, weight = infer_tier_level_weight(c_cat, c_title, idx)
+                area_id = re.sub(r"[^a-z0-9]+", "-", c_cat.lower()).strip("-") or "core"
+                if area_id not in areas_map:
+                    areas_map[area_id] = {"id": area_id, "name": c_cat, "topics": []}
+                areas_map[area_id]["topics"].append({
+                    "id": tid,
+                    "title": c_title,
+                    "tier": tier,
+                    "level": level,
+                    "weight": weight,
+                    "follow_ups": [],
+                })
+                deck_cards.append({
+                    "id": tid,
+                    "topic_id": tid,
+                    "category": c_cat,
+                    "title": c_title,
+                    "question": c_title if c_title.startswith("Q:") else f"Explain {c_title}",
+                    "answer_30s": c_def,
+                    "deep_dive": "",
+                    "code": {"lang": "text", "body": c_code},
+                    "typical_use": c_work,
+                    "pitfalls": [c_tip] if c_tip else [],
+                    "follow_ups": [],
+                    "tier": tier,
+                    "level": level,
+                    "weight": weight,
+                    "reviewed_on": "",
+                    "status": "ai_unreviewed",
+                })
+            gen_bp = {"tech": norm_key, "version": "ai-v1", "areas": list(areas_map.values())}
+            gen_dk = {"tech": norm_key, "version": "ai-v1", "cards": deck_cards}
+            if not validate_blueprint_and_deck(gen_bp, gen_dk):
+                from db.repositories.cheatsheets import save_global_cheatsheet_deck
+                blueprint = gen_bp
+                deck = gen_dk
+                save_global_cheatsheet_deck(norm_key, canonical_name, gen_bp, gen_dk, status="ai_unreviewed")
 
     base_structured: list[dict[str, Any]] = []
     # Fallback to blueprint JSON deck, curated deck, or domain-aware deterministic

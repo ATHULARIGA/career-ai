@@ -8,6 +8,209 @@ import db.backend as db
 from core.config import logger
 
 _cheatsheet_table_initialized = False
+_global_decks_table_initialized = False
+_card_states_table_initialized = False
+
+
+def ensure_global_cheatsheet_decks_table() -> None:
+    """Initializes the global_cheatsheet_decks shared cache table idempotently."""
+    global _global_decks_table_initialized
+    if _global_decks_table_initialized:
+        return
+    conn = db.get_conn()
+    cur = conn.cursor()
+    try:
+        db.execute(
+            cur,
+            """
+            CREATE TABLE IF NOT EXISTS global_cheatsheet_decks(
+                tech_key TEXT PRIMARY KEY,
+                tech_name TEXT NOT NULL,
+                blueprint_json TEXT NOT NULL,
+                deck_json TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'ai_unreviewed',
+                updated_ts INTEGER NOT NULL
+            )
+            """,
+        )
+        conn.commit()
+        _global_decks_table_initialized = True
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("ensure_global_cheatsheet_decks_table deferred: %s", exc)
+    finally:
+        conn.close()
+
+
+def get_global_cheatsheet_deck(tech_key: str) -> Optional[dict[str, Any]]:
+    """Fetches a globally cached blueprint and deck for a custom technology."""
+    key = (tech_key or "").strip().lower()
+    if not key:
+        return None
+    ensure_global_cheatsheet_decks_table()
+    conn = db.get_conn()
+    cur = conn.cursor()
+    try:
+        db.execute(
+            cur,
+            "SELECT tech_name, blueprint_json, deck_json, status, updated_ts FROM global_cheatsheet_decks WHERE tech_key=?",
+            (key,),
+        )
+        row = cur.fetchone()
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("get_global_cheatsheet_deck failed: %s", exc)
+        row = None
+    finally:
+        conn.close()
+    if not row:
+        return None
+    try:
+        return {
+            "tech_name": row[0],
+            "blueprint": json.loads(row[1] or "{}"),
+            "deck": json.loads(row[2] or "{}"),
+            "status": row[3] or "ai_unreviewed",
+            "updated_ts": row[4],
+        }
+    except Exception:
+        return None
+
+
+def save_global_cheatsheet_deck(
+    tech_key: str,
+    tech_name: str,
+    blueprint: dict[str, Any],
+    deck: dict[str, Any],
+    status: str = "ai_unreviewed",
+) -> None:
+    """Upserts a validated blueprint and deck into the global shared cache."""
+    key = (tech_key or "").strip().lower()
+    if not key or not deck or not deck.get("cards"):
+        return
+    ensure_global_cheatsheet_decks_table()
+    conn = db.get_conn()
+    cur = conn.cursor()
+    now = int(time.time())
+    bp_json = json.dumps(blueprint or {})
+    dk_json = json.dumps(deck or {})
+    try:
+        db.execute(cur, "SELECT tech_key FROM global_cheatsheet_decks WHERE tech_key=?", (key,))
+        row = cur.fetchone()
+        if row:
+            db.execute(
+                cur,
+                "UPDATE global_cheatsheet_decks SET tech_name=?, blueprint_json=?, deck_json=?, status=?, updated_ts=? WHERE tech_key=?",
+                (tech_name, bp_json, dk_json, status, now, key),
+            )
+        else:
+            db.execute(
+                cur,
+                "INSERT INTO global_cheatsheet_decks (tech_key, tech_name, blueprint_json, deck_json, status, updated_ts) VALUES (?, ?, ?, ?, ?, ?)",
+                (key, tech_name, bp_json, dk_json, status, now),
+            )
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("save_global_cheatsheet_deck failed: %s", exc)
+    finally:
+        conn.close()
+
+
+def ensure_user_card_states_table() -> None:
+    """Initializes the user_card_states table for spaced repetition / study ratings."""
+    global _card_states_table_initialized
+    if _card_states_table_initialized:
+        return
+    conn = db.get_conn()
+    cur = conn.cursor()
+    id_col = db.id_pk_col()
+    try:
+        db.execute(
+            cur,
+            f"""
+            CREATE TABLE IF NOT EXISTS user_card_states(
+                id {id_col},
+                user_email TEXT NOT NULL,
+                tech_name TEXT NOT NULL,
+                states_json TEXT NOT NULL DEFAULT '{{}}',
+                updated_ts INTEGER NOT NULL
+            )
+            """,
+        )
+        conn.commit()
+        try:
+            db.execute(cur, "CREATE INDEX IF NOT EXISTS idx_user_card_states ON user_card_states(user_email, tech_name)")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+        _card_states_table_initialized = True
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("ensure_user_card_states_table deferred: %s", exc)
+    finally:
+        conn.close()
+
+
+def get_user_card_states(user_email: str, tech_name: str) -> dict[str, str]:
+    """Returns {card_id: rating} for a user and technology."""
+    email = (user_email or "").strip().lower()
+    t_name = (tech_name or "").strip()
+    if not email or not t_name:
+        return {}
+    ensure_user_card_states_table()
+    conn = db.get_conn()
+    cur = conn.cursor()
+    try:
+        db.execute(
+            cur,
+            "SELECT states_json FROM user_card_states WHERE user_email=? AND LOWER(tech_name)=LOWER(?)",
+            (email, t_name),
+        )
+        row = cur.fetchone()
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("get_user_card_states failed: %s", exc)
+        row = None
+    finally:
+        conn.close()
+    if not row:
+        return {}
+    try:
+        parsed = json.loads(row[0] or "{}")
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_user_card_states(user_email: str, tech_name: str, states: dict[str, str]) -> None:
+    """Upserts {card_id: rating} for a user and technology."""
+    email = (user_email or "").strip().lower()
+    t_name = (tech_name or "").strip()
+    if not email or not t_name:
+        return
+    ensure_user_card_states_table()
+    conn = db.get_conn()
+    cur = conn.cursor()
+    now = int(time.time())
+    states_json = json.dumps(states or {})
+    try:
+        db.execute(cur, "SELECT id FROM user_card_states WHERE user_email=? AND LOWER(tech_name)=LOWER(?)", (email, t_name))
+        row = cur.fetchone()
+        if row:
+            db.execute(cur, "UPDATE user_card_states SET states_json=?, updated_ts=? WHERE id=?", (states_json, now, row[0]))
+        else:
+            db.execute(
+                cur,
+                "INSERT INTO user_card_states (user_email, tech_name, states_json, updated_ts) VALUES (?, ?, ?, ?)",
+                (email, t_name, states_json, now),
+            )
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("save_user_card_states failed: %s", exc)
+    finally:
+        conn.close()
 
 
 def ensure_user_cheatsheets_table() -> None:

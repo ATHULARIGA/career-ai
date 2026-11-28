@@ -56,3 +56,35 @@ def test_build_plan_respects_time_level_and_tier():
         if t.get("level") == "senior"
     }
     assert not (set(short_plan) & senior_ids)
+
+
+def test_global_cache_and_rate_plan_endpoints():
+    from starlette.testclient import TestClient
+    from db.repositories.cheatsheets import get_global_cheatsheet_deck, save_global_cheatsheet_deck
+    from main import app
+
+    bp = load_blueprint("postgresql")
+    dk = load_deck("postgresql")
+    save_global_cheatsheet_deck("testcachetech", "TestCacheTech", bp, dk, status="ai_unreviewed")
+    cached = get_global_cheatsheet_deck("testcachetech")
+    assert cached is not None
+    assert cached["status"] == "ai_unreviewed"
+    assert len(cached["deck"]["cards"]) == len(dk["cards"])
+
+    client = TestClient(app)
+    rate_res = client.post(
+        "/api/interview/cheatsheet/rate",
+        json={"tech": "PostgreSQL", "card_id": dk["cards"][0]["id"], "card_index": 0, "rating": "got_it"},
+    )
+    assert rate_res.status_code == 200
+    rate_data = rate_res.json()
+    assert rate_data["success"] is True
+    assert rate_data["card_states"][dk["cards"][0]["id"]] == "got_it"
+
+    plan_res = client.post(
+        "/api/interview/cheatsheet/plan",
+        json={"tech": "PostgreSQL", "minutes_available": 25, "level": "mid"},
+    )
+    assert plan_res.status_code == 200
+    assert len(plan_res.json()["plan_ids"]) >= 1
+

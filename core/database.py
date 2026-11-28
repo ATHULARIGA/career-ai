@@ -360,7 +360,9 @@ def _ensure_interview_tables():
 from db.repositories.cheatsheets import (
     delete_user_cheatsheet,
     ensure_user_cheatsheets_table,
+    get_user_card_states,
     get_user_cheatsheets,
+    save_user_card_states,
     save_user_cheatsheet,
     update_cheatsheet_revised,
 )

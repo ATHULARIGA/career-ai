@@ -13,10 +13,13 @@ from fastapi.responses import (
 from core import *
 from core.database import (
     delete_user_cheatsheet,
+    get_user_card_states,
     get_user_cheatsheets,
+    save_user_card_states,
     save_user_cheatsheet,
     update_cheatsheet_revised,
 )
+from services.interview.blueprints import build_plan, load_blueprint
 from services.interview.cheatsheet_generator import (
     build_standalone_cheatsheet_html,
     compute_resume_hash,
@@ -1145,6 +1148,11 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
                 request.session[f"revised_{payload['tech_name'].lower()}"] = revised_indices
 
         payload["revised_indices"] = revised_indices
+        payload["card_states"] = (
+            get_user_card_states(user_email, payload["tech_name"])
+            if user_email
+            else request.session.get(f"study_{payload['tech_name'].lower()}", {})
+        )
         payload["selected_resume_id"] = selected_id
         return JSONResponse(payload)
     except Exception as e:
@@ -1269,6 +1277,94 @@ async def api_interview_cheatsheet_revise(request: Request):
     except Exception as e:
         logger.exception("api_interview_cheatsheet_revise failed: %s", e)
         return JSONResponse({"error": f"Failed to update revision status: {e!s}"}, status_code=500)
+
+
+@router.post("/api/interview/cheatsheet/rate", response_class=JSONResponse)
+async def api_interview_cheatsheet_rate(request: Request):
+    """Stores active-recall study rating (missed | shaky | got_it) per stable card_id."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    tech_name = str(body.get("tech", "")).strip()
+    card_id = str(body.get("card_id", "")).strip()
+    rating = str(body.get("rating", "")).strip().lower()
+    card_index = body.get("card_index")
+    if not tech_name or not card_id or rating not in ("missed", "shaky", "got_it"):
+        return JSONResponse({"error": "tech, card_id, and valid rating (missed|shaky|got_it) required"}, status_code=400)
+
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    if user_email:
+        states = get_user_card_states(user_email, tech_name)
+        states[card_id] = rating
+        save_user_card_states(user_email, tech_name, states)
+    else:
+        skey = f"study_{tech_name.lower()}"
+        states = dict(request.session.get(skey, {}))
+        states[card_id] = rating
+        request.session[skey] = states
+
+    # Keep legacy revised_indices synced for got_it
+    revised_indices = None
+    if card_index is not None:
+        try:
+            idx = int(card_index)
+            if user_email:
+                records = get_user_cheatsheets(user_email)
+                curr = []
+                found = False
+                for rec in records:
+                    if rec.get("tech_name", "").lower() == tech_name.lower():
+                        curr = list(rec.get("revised_indices", []))
+                        found = True
+                        break
+                if rating == "got_it" and idx not in curr:
+                    curr.append(idx)
+                elif rating != "got_it" and idx in curr:
+                    curr.remove(idx)
+                if found:
+                    update_cheatsheet_revised(user_email, tech_name, curr)
+                revised_indices = curr
+            else:
+                rkey = f"revised_{tech_name.lower()}"
+                curr = list(request.session.get(rkey, []))
+                if rating == "got_it" and idx not in curr:
+                    curr.append(idx)
+                elif rating != "got_it" and idx in curr:
+                    curr.remove(idx)
+                request.session[rkey] = curr
+                revised_indices = curr
+        except (ValueError, TypeError):
+            pass
+
+    return JSONResponse({"success": True, "card_states": states, "revised_indices": revised_indices})
+
+
+@router.post("/api/interview/cheatsheet/plan", response_class=JSONResponse)
+async def api_interview_cheatsheet_plan(request: Request):
+    """Builds a time-boxed study plan for a technology blueprint."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    tech_name = str(body.get("tech", "")).strip().lower()
+    minutes = max(10, min(600, int(body.get("minutes_available", 60))))
+    level = str(body.get("level", "senior")).strip().lower()
+    norm_key = re.sub(r"[^a-z0-9_]+", "", tech_name)
+    bp = load_blueprint(norm_key)
+    if not bp:
+        return JSONResponse({"plan_ids": [], "minutes_available": minutes, "level": level})
+
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    states = (
+        get_user_card_states(user_email, tech_name)
+        if user_email
+        else request.session.get(f"study_{tech_name}", {})
+    )
+    plan_ids = build_plan(bp, state=states, jd_weights={}, minutes_available=minutes, level=level)
+    return JSONResponse({"plan_ids": plan_ids, "minutes_available": minutes, "level": level})
 
 
 @router.delete("/api/interview/cheatsheet", response_class=JSONResponse)

@@ -1117,9 +1117,50 @@
 .cp:hover {
   background: rgba(255,255,255,0.25);
 }
+/* ── Blueprint Dashboard, Study Mode & Cram Mode ── */
+.cs-trust-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.cs-trust-badge { font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--cs-line); }
+.cs-trust-reviewed { background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.35); }
+.cs-trust-ai { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+.cs-coverage-meta { font-size: 0.78rem; color: var(--cs-mute); font-weight: 500; }
+
+.cs-readiness-box { margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--cs-line); background: var(--cs-card-subtle); }
+.cs-readiness-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.cs-readiness-score { font-size: 0.95rem; font-weight: 700; color: var(--cs-ink); }
+.cs-readiness-tiers { font-size: 0.78rem; color: var(--cs-mute); font-family: ui-monospace, Menlo, monospace; }
+.cs-area-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.cs-area-tile { padding: 7px 9px; border-radius: 8px; border: 1px solid var(--cs-line); background: var(--cs-card); }
+.cs-area-name { font-size: 0.74rem; font-weight: 600; color: var(--cs-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-area-bar { height: 4px; border-radius: 2px; background: var(--cs-line); margin-top: 5px; overflow: hidden; }
+.cs-area-bar i { display: block; height: 100%; background: var(--cs-ac); transition: width 0.25s; }
+.cs-area-count { font-size: 0.68rem; color: var(--cs-mute); margin-top: 3px; }
+
+.cs-mode-tabs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.cs-mode-btn { font-size: 0.82rem; font-weight: 600; padding: 6px 13px; border-radius: 8px; border: 1px solid var(--cs-line); background: var(--cs-card); color: var(--cs-ink); cursor: pointer; }
+.cs-mode-btn.active { background: var(--cs-ac); color: var(--cs-onac); border-color: var(--cs-ac); }
+
+.cs-tier-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.cs-tier-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--cs-line); }
+.cs-tier-must { background: rgba(239, 68, 68, 0.12); color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
+.cs-tier-common { background: rgba(59, 130, 246, 0.12); color: #3b82f6; border-color: rgba(59, 130, 246, 0.35); }
+.cs-tier-advanced { background: rgba(168, 85, 247, 0.12); color: #a855f7; border-color: rgba(168, 85, 247, 0.35); }
+
+.cs-rate-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.cs-rate-btn { font-size: 0.78rem; font-weight: 600; padding: 5px 11px; border-radius: 7px; border: 1px solid var(--cs-line); background: var(--cs-card); color: var(--cs-ink); cursor: pointer; }
+.cs-rate-btn.is-missed.active { background: rgba(239,68,68,0.16); color: #ef4444; border-color: #ef4444; }
+.cs-rate-btn.is-shaky.active { background: rgba(245,158,11,0.16); color: #f59e0b; border-color: #f59e0b; }
+.cs-rate-btn.is-got_it.active { background: rgba(16,185,129,0.16); color: #10b981; border-color: #10b981; }
+
+.cs-study-card { background: var(--cs-card); border: 1px solid var(--cs-line); border-radius: 12px; padding: 20px; margin-top: 12px; }
+.cs-study-q { font-size: 1.12rem; font-weight: 700; color: var(--cs-ink); margin: 10px 0 14px; line-height: 1.45; }
+.cs-study-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-top: 16px; }
+.cs-cram-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--cs-line); background: var(--cs-card-subtle); }
+
 .cs-sec-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   padding-top: 4px;
 }
 .dn {
@@ -1474,6 +1515,7 @@
             <p class="cs-subtitle" id="csSubText">
               {% if target_role %}Tailored for {{ target_role }} interviews. {% endif %}Tap a card to open it: interview answer, example, use case, and tip.
             </p>
+            <div class="cs-trust-row" id="csTrustRow"></div>
           </div>
           <div class="cs-controls-row">
             <button id="csExpandAll" class="cs-ctrl-btn" type="button" title="Expand all cards">Expand all</button>
@@ -1481,6 +1523,32 @@
             <button id="csRandomCard" class="cs-ctrl-btn" type="button" title="Jump to a random question">Random card</button>
             <button id="csExportHtml" class="cs-ctrl-btn" type="button" onclick="exportCurrentCheatsheet()" title="Download offline cheat sheet HTML">Export HTML</button>
           </div>
+        </div>
+
+        <!-- Readiness & Blueprint Coverage Dashboard -->
+        <div class="cs-readiness-box" id="csReadinessBox">
+          <div class="cs-readiness-top">
+            <span class="cs-readiness-score" id="csReadinessScore">Readiness: 0%</span>
+            <span class="cs-readiness-tiers" id="csReadinessTiers">must 0% · common 0% · adv 0%</span>
+          </div>
+          <div class="cs-area-tiles" id="csAreaTiles"></div>
+        </div>
+
+        <!-- Mode Switcher: Library | Study | Cram -->
+        <div class="cs-mode-tabs" role="tablist" aria-label="Cheatsheet study modes">
+          <button type="button" class="cs-mode-btn active" id="csModeLibrary" onclick="setCheatsheetMode('library')">Library</button>
+          <button type="button" class="cs-mode-btn" id="csModeStudy" onclick="setCheatsheetMode('study')">Study Mode</button>
+          <button type="button" class="cs-mode-btn" id="csModeCram" onclick="setCheatsheetMode('cram')">Cram (Must-Know)</button>
+        </div>
+
+        <!-- Cram Time-Box Controls -->
+        <div class="cs-cram-bar" id="csCramBar" style="display: none;">
+          <span class="cs-coverage-meta">Time-boxed cram plan:</span>
+          <button type="button" class="cs-ctrl-btn" onclick="applyCramPlan(20)">20 min</button>
+          <button type="button" class="cs-ctrl-btn" onclick="applyCramPlan(45)">45 min</button>
+          <button type="button" class="cs-ctrl-btn" onclick="applyCramPlan(90)">90 min</button>
+          <button type="button" class="cs-ctrl-btn" onclick="clearCramPlan()">All Must-Know</button>
+          <span class="cs-coverage-meta" id="csCramPlanInfo"></span>
         </div>
 
         <div class="cs-search-box">
@@ -1496,9 +1564,15 @@
           <i id="csProgressFill"></i>
         </div>
 
+        <!-- Tier Filter Chips -->
+        <div class="cs-tier-chips" id="csTierChips"></div>
+
         <!-- Category Chips -->
         <div class="cs-chips" id="csChips"></div>
       </div>
+
+      <!-- Study Mode Container -->
+      <div id="csStudyWrap" style="display: none;"></div>
 
       <!-- Cards Grid -->
       <div class="cs-grid" id="csGrid"></div>
@@ -2051,7 +2125,15 @@ const INITIAL_CHEATSHEET = {{ (initial_cheatsheet or {})|tojson }};
 
 let currentTech = INITIAL_TECH;
 let cheatsheetCards = (INITIAL_CHEATSHEET && INITIAL_CHEATSHEET.cards) || [];
+let structuredCards = (INITIAL_CHEATSHEET && INITIAL_CHEATSHEET.structured_cards) || [];
+let blueprintSummary = (INITIAL_CHEATSHEET && INITIAL_CHEATSHEET.blueprint_summary) || null;
+let cardStates = (INITIAL_CHEATSHEET && INITIAL_CHEATSHEET.card_states) || {};
 let activeCategory = 'All';
+let activeTier = 'all';
+let csMode = 'library';
+let cramPlanIds = null;
+let studyIdx = 0;
+let studyRevealed = false;
 let searchQuery = '';
 let revisedIndices = new Set((INITIAL_CHEATSHEET && INITIAL_CHEATSHEET.revised_indices) || []);
 
@@ -2096,13 +2178,261 @@ function switchMainTab(tab) {
   }
 }
 
+function getCardMeta(idx) {
+  return structuredCards[idx] || {};
+}
+
+function isCardMastered(idx) {
+  const meta = getCardMeta(idx);
+  const cid = meta.id || '';
+  if (cid && cardStates[cid]) return cardStates[cid] === 'got_it';
+  return revisedIndices.has(idx);
+}
+
+function renderDashboard() {
+  const trustRow = document.getElementById('csTrustRow');
+  const scoreEl = document.getElementById('csReadinessScore');
+  const tiersEl = document.getElementById('csReadinessTiers');
+  const tilesEl = document.getElementById('csAreaTiles');
+
+  const total = cheatsheetCards.length;
+  const bp = blueprintSummary || {};
+  const isReviewed = bp.status === 'reviewed';
+
+  if (trustRow) {
+    const mustCount = bp.must_count || structuredCards.filter(c => c.tier === 'must').length;
+    trustRow.innerHTML = `
+      <span class="cs-trust-badge ${isReviewed ? 'cs-trust-reviewed' : 'cs-trust-ai'}">
+        ${isReviewed ? 'Reviewed Syllabus' : 'AI-generated, unreviewed'}
+      </span>
+      <span class="cs-coverage-meta">Covers ${bp.total_topics || total} topics · ${mustCount} must-know</span>
+    `;
+  }
+
+  let wTotal = 0, wDone = 0;
+  const tierAgg = { must: [0, 0], common: [0, 0], advanced: [0, 0] };
+  cheatsheetCards.forEach((_, idx) => {
+    const m = getCardMeta(idx);
+    const tier = tierAgg[m.tier] ? m.tier : 'common';
+    const w = Number(m.weight || 5);
+    const done = isCardMastered(idx);
+    wTotal += w;
+    tierAgg[tier][1] += w;
+    if (done) {
+      wDone += w;
+      tierAgg[tier][0] += w;
+    }
+  });
+  const pct = wTotal ? Math.round((wDone / wTotal) * 100) : 0;
+  const tPct = (k) => tierAgg[k][1] ? Math.round((tierAgg[k][0] / tierAgg[k][1]) * 100) : 0;
+  if (scoreEl) scoreEl.textContent = `Readiness: ${pct}%`;
+  if (tiersEl) tiersEl.textContent = `must ${tPct('must')}% · common ${tPct('common')}% · adv ${tPct('advanced')}%`;
+
+  if (tilesEl) {
+    const areas = (bp.areas && bp.areas.length) ? bp.areas : [];
+    const byId = {};
+    cheatsheetCards.forEach((_, idx) => {
+      const m = getCardMeta(idx);
+      if (m.topic_id) byId[m.topic_id] = isCardMastered(idx);
+    });
+    tilesEl.innerHTML = areas.map(a => {
+      const tids = a.topic_ids || [];
+      const done = tids.filter(id => byId[id]).length;
+      const tot = tids.length || a.topic_count || 1;
+      const apct = Math.round((done / tot) * 100);
+      return `<div class="cs-area-tile">
+        <div class="cs-area-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</div>
+        <div class="cs-area-bar"><i style="width:${apct}%"></i></div>
+        <div class="cs-area-count">${done}/${tot} mastered</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderTierChips() {
+  const el = document.getElementById('csTierChips');
+  if (!el) return;
+  const tiers = [
+    ['all', 'All Tiers'],
+    ['must', 'Must-Know'],
+    ['common', 'Common'],
+    ['advanced', 'Advanced'],
+  ];
+  el.innerHTML = tiers.map(([val, lbl]) => `
+    <button type="button" class="cs-ch ${activeTier === val ? 'on' : ''}" onclick="filterTier('${val}')">${lbl}</button>
+  `).join('');
+}
+
+function filterTier(tier) {
+  activeTier = tier;
+  renderTierChips();
+  applyFilter();
+}
+
+function setCheatsheetMode(mode) {
+  csMode = mode;
+  document.getElementById('csModeLibrary')?.classList.toggle('active', mode === 'library');
+  document.getElementById('csModeStudy')?.classList.toggle('active', mode === 'study');
+  document.getElementById('csModeCram')?.classList.toggle('active', mode === 'cram');
+
+  const cramBar = document.getElementById('csCramBar');
+  const studyWrap = document.getElementById('csStudyWrap');
+  const grid = document.getElementById('csGrid');
+  if (cramBar) cramBar.style.display = mode === 'cram' ? 'flex' : 'none';
+  if (studyWrap) studyWrap.style.display = mode === 'study' ? 'block' : 'none';
+  if (grid) grid.style.display = mode === 'study' ? 'none' : 'grid';
+
+  if (mode === 'cram') {
+    activeTier = 'must';
+    renderTierChips();
+    applyFilter();
+    document.querySelectorAll('.cs-grid .card').forEach(c => { if (!c.hidden) c.open = true; });
+  } else if (mode === 'library') {
+    cramPlanIds = null;
+    if (activeTier === 'must') activeTier = 'all';
+    renderTierChips();
+    applyFilter();
+  } else if (mode === 'study') {
+    studyRevealed = false;
+    renderStudyCard();
+  }
+}
+
+async function applyCramPlan(minutes) {
+  try {
+    const res = await fetch('/api/interview/cheatsheet/plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tech: currentTech, minutes_available: minutes, level: 'senior' }),
+    });
+    const data = await res.json();
+    if (res.ok && Array.isArray(data.plan_ids) && data.plan_ids.length) {
+      cramPlanIds = new Set(data.plan_ids);
+      activeTier = 'all';
+      renderTierChips();
+      applyFilter();
+      const info = document.getElementById('csCramPlanInfo');
+      if (info) info.textContent = `Showing ${data.plan_ids.length} highest-yield cards for ${minutes} min`;
+    }
+  } catch (e) {
+    console.warn('Cram plan error:', e);
+  }
+}
+
+function clearCramPlan() {
+  cramPlanIds = null;
+  activeTier = 'must';
+  const info = document.getElementById('csCramPlanInfo');
+  if (info) info.textContent = '';
+  renderTierChips();
+  applyFilter();
+}
+
+async function rateCard(idx, rating) {
+  const meta = getCardMeta(idx);
+  const cid = meta.id || `idx-${idx}`;
+  cardStates[cid] = rating;
+  if (rating === 'got_it') revisedIndices.add(idx);
+  else revisedIndices.delete(idx);
+
+  renderDashboard();
+  updateProgress();
+  if (csMode === 'study') {
+    studyIdx = (studyIdx + 1) % Math.max(1, cheatsheetCards.length);
+    studyRevealed = false;
+    renderStudyCard();
+  } else {
+    renderCards();
+  }
+
+  try {
+    await fetch('/api/interview/cheatsheet/rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tech: currentTech, card_id: cid, card_index: idx, rating }),
+    });
+  } catch (e) {
+    console.warn('Rate persistence error:', e);
+  }
+}
+
+function renderStudyCard() {
+  const wrap = document.getElementById('csStudyWrap');
+  if (!wrap) return;
+  if (!cheatsheetCards.length) {
+    wrap.innerHTML = '<div class="cs-study-card">No cards available.</div>';
+    return;
+  }
+  if (studyIdx >= cheatsheetCards.length) studyIdx = 0;
+  const r = cheatsheetCards[studyIdx];
+  const m = getCardMeta(studyIdx);
+  const tier = m.tier || 'common';
+  const lvl = m.level || 'mid';
+  const cid = m.id || `idx-${studyIdx}`;
+  const state = cardStates[cid] || (revisedIndices.has(studyIdx) ? 'got_it' : 'new');
+
+  wrap.innerHTML = `
+    <div class="cs-study-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="tg">${escapeHtml(r[0])}</span>
+          <span class="cs-tier-badge cs-tier-${escapeHtml(tier)}">${escapeHtml(tier)}</span>
+          <span class="cs-coverage-meta">${escapeHtml(lvl)}</span>
+        </div>
+        <span class="cs-coverage-meta">Card ${studyIdx + 1} of ${cheatsheetCards.length} · Status: ${escapeHtml(state)}</span>
+      </div>
+      <div class="cs-study-q">${escapeHtml(r[1])}</div>
+      ${studyRevealed ? `
+        <div class="cs-sec cs-sec-def"><div class="cs-sec-label cs-label-def">30-Second Answer</div><p class="cs-sec-p">${escapeHtml(r[2])}</p></div>
+        ${r[3] ? `<div class="cs-sec cs-sec-code" style="margin-top:10px;"><div class="cw"><pre><code>${escapeHtml(r[3])}</code></pre></div></div>` : ''}
+        ${r[5] ? `<div class="cs-sec cs-sec-tip" style="margin-top:10px;"><div class="cs-sec-label cs-label-tip">Pro Tip</div><p class="cs-sec-p">${escapeHtml(r[5])}</p></div>` : ''}
+      ` : `
+        <button type="button" class="cs-btn-primary" onclick="studyRevealed = true; renderStudyCard();">Reveal 30-Second Answer (Space)</button>
+      `}
+      <div class="cs-study-actions">
+        <div class="cs-rate-row">
+          <button type="button" class="cs-rate-btn is-missed ${state === 'missed' ? 'active' : ''}" onclick="rateCard(${studyIdx}, 'missed')">1 · Missed</button>
+          <button type="button" class="cs-rate-btn is-shaky ${state === 'shaky' ? 'active' : ''}" onclick="rateCard(${studyIdx}, 'shaky')">2 · Shaky</button>
+          <button type="button" class="cs-rate-btn is-got_it ${state === 'got_it' ? 'active' : ''}" onclick="rateCard(${studyIdx}, 'got_it')">3 · Got it</button>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="cs-ctrl-btn" onclick="studyIdx = (studyIdx - 1 + cheatsheetCards.length) % cheatsheetCards.length; studyRevealed = false; renderStudyCard();">Prev</button>
+          <button type="button" class="cs-ctrl-btn" onclick="studyIdx = (studyIdx + 1) % cheatsheetCards.length; studyRevealed = false; renderStudyCard();">Next</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (csMode !== 'study') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (e.code === 'Space' && !studyRevealed) {
+    e.preventDefault();
+    studyRevealed = true;
+    renderStudyCard();
+  } else if (e.key === '1') {
+    rateCard(studyIdx, 'missed');
+  } else if (e.key === '2') {
+    rateCard(studyIdx, 'shaky');
+  } else if (e.key === '3') {
+    rateCard(studyIdx, 'got_it');
+  }
+});
+
 function renderCards() {
   const g = document.getElementById('csGrid');
   if (!g) return;
   const esc = s => (s || '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 
   g.innerHTML = cheatsheetCards.map((r, idx) => {
-    const isDone = revisedIndices.has(idx);
+    const m = getCardMeta(idx);
+    const tier = m.tier || 'common';
+    const lvl = m.level || 'mid';
+    const cid = m.id || `idx-${idx}`;
+    const cState = cardStates[cid] || '';
+    const isDone = isCardMastered(idx);
     const cat = esc(r[0]);
     const catSlug = (r[0] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const title = esc(r[1]);
@@ -2111,9 +2441,10 @@ function renderCards() {
     const projectExp = esc(r[4]);
     const tip = esc(r[5]);
 
-    return `<details class="card ${isDone ? 'done' : ''}" data-c="${cat}" data-idx="${idx}">
+    return `<details class="card ${isDone ? 'done' : ''}" data-c="${cat}" data-tier="${esc(tier)}" data-cid="${esc(cid)}" data-idx="${idx}">
       <summary>
         <span class="tg tg-${catSlug}">${cat}</span>
+        <span class="cs-tier-badge cs-tier-${esc(tier)}">${esc(tier)}</span>
         <b>${title}</b>
         ${isDone ? '<span class="cs-done-pill" title="Mastered"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Mastered</span>' : ''}
       </summary>
@@ -2164,8 +2495,13 @@ function renderCards() {
           <p class="cs-sec-p">${tip}</p>
         </div>` : ''}
 
-        <!-- Footer Revised Toggle -->
+        <!-- Footer Revised & Study Rating -->
         <div class="cs-sec-footer">
+          <div class="cs-rate-row">
+            <button type="button" class="cs-rate-btn is-missed ${cState === 'missed' ? 'active' : ''}" onclick="rateCard(${idx}, 'missed')">Missed</button>
+            <button type="button" class="cs-rate-btn is-shaky ${cState === 'shaky' ? 'active' : ''}" onclick="rateCard(${idx}, 'shaky')">Shaky</button>
+            <button type="button" class="cs-rate-btn is-got_it ${isDone ? 'active' : ''}" onclick="rateCard(${idx}, 'got_it')">Got it</button>
+          </div>
           <button type="button" class="dn" onclick="toggleRevised(${idx}, this)">
             ${isDone ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg> Revised' : 'Mark as revised'}
           </button>
@@ -2175,6 +2511,8 @@ function renderCards() {
     </details>`;
   }).join('');
 
+  renderDashboard();
+  renderTierChips();
   renderChips();
   applyFilter();
   updateProgress();
@@ -2206,8 +2544,10 @@ function applyFilter() {
 
   cards.forEach(c => {
     const matchesCat = (activeCategory === 'All' || c.dataset.c === activeCategory);
+    const matchesTier = (activeTier === 'all' || c.dataset.tier === activeTier);
+    const matchesPlan = (!cramPlanIds || cramPlanIds.has(c.dataset.cid));
     const matchesSearch = !searchQuery || c.textContent.toLowerCase().includes(searchQuery);
-    const visible = matchesCat && matchesSearch;
+    const visible = matchesCat && matchesTier && matchesPlan && matchesSearch;
     c.hidden = !visible;
     if (visible) {
       visibleCount++;
@@ -2339,8 +2679,15 @@ async function selectTechnology(tech, btn) {
 
     if (res.ok && data && data.cards) {
       cheatsheetCards = data.cards;
+      structuredCards = data.structured_cards || [];
+      blueprintSummary = data.blueprint_summary || null;
+      cardStates = data.card_states || {};
       revisedIndices = new Set(data.revised_indices || []);
       activeCategory = 'All';
+      activeTier = csMode === 'cram' ? 'must' : 'all';
+      cramPlanIds = null;
+      studyIdx = 0;
+      studyRevealed = false;
 
       const titleEl = document.getElementById('csTechTitle');
       const subEl = document.getElementById('csSubText');
@@ -2352,6 +2699,8 @@ async function selectTechnology(tech, btn) {
       }
 
       renderCards();
+      if (csMode === 'study') renderStudyCard();
+      if (csMode === 'cram') document.querySelectorAll('.cs-grid .card').forEach(c => { if (!c.hidden) c.open = true; });
     } else {
       const errMsg = (data && data.error) || 'Failed to load cheat sheet. Please try again.';
       showToast(errMsg, 'error');
