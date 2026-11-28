@@ -2909,9 +2909,16 @@ async function addCustomTechnology(e) {
 
       // Switch to the newly added tech
       cheatsheetCards = data.cards;
+      structuredCards = data.structured_cards || [];
+      blueprintSummary = data.blueprint_summary || null;
+      cardStates = data.card_states || {};
       revisedIndices = new Set(data.revised_indices || []);
       currentTech = data.tech_name;
       activeCategory = 'All';
+      activeTier = csMode === 'cram' ? 'must' : 'all';
+      cramPlanIds = null;
+      studyIdx = 0;
+      studyRevealed = false;
 
       const titleEl = document.getElementById('csTechTitle');
       const subEl = document.getElementById('csSubText');

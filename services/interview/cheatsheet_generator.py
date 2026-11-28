@@ -481,7 +481,10 @@ def _generate_custom_cards_via_ai(
     1) Discovers the exact high-signal interview topics for `tech_name`.
     2) Generates 22 to 28 production-grade cards covering EVERY discovered topic + Q&A.
     """
-    providers = get_ai_providers()
+    # Use a tight 8s timeout and at most 1 fast model per provider so custom decks
+    # never exceed Vercel's serverless function timeout.
+    raw_providers = get_ai_providers(timeout=8)
+    providers = [(cli, models[:1], name) for cli, models, name in raw_providers if models]
     if not providers:
         return _generate_deterministic_cards(tech_name, target_role)
 
@@ -915,11 +918,14 @@ def get_cheatsheet_for_technology(
 
     # Check global shared cache for non-curated technologies
     if not is_curated and not force_ai:
-        from db.repositories.cheatsheets import get_global_cheatsheet_deck
-        cached_global = get_global_cheatsheet_deck(norm_key)
-        if cached_global and cached_global.get("deck", {}).get("cards"):
-            blueprint = cached_global.get("blueprint")
-            deck = cached_global.get("deck")
+        try:
+            from db.repositories.cheatsheets import get_global_cheatsheet_deck
+            cached_global = get_global_cheatsheet_deck(norm_key)
+            if cached_global and cached_global.get("deck", {}).get("cards"):
+                blueprint = cached_global.get("blueprint")
+                deck = cached_global.get("deck")
+        except Exception:
+            pass
 
     # Check whether the user actually used this technology in their resume
     usage_info = check_tech_used_in_resume(resume_text, canonical_name) if resume_text else {
@@ -975,10 +981,13 @@ def get_cheatsheet_for_technology(
             gen_bp = {"tech": norm_key, "version": "ai-v1", "areas": list(areas_map.values())}
             gen_dk = {"tech": norm_key, "version": "ai-v1", "cards": deck_cards}
             if not validate_blueprint_and_deck(gen_bp, gen_dk):
-                from db.repositories.cheatsheets import save_global_cheatsheet_deck
                 blueprint = gen_bp
                 deck = gen_dk
-                save_global_cheatsheet_deck(norm_key, canonical_name, gen_bp, gen_dk, status="ai_unreviewed")
+                try:
+                    from db.repositories.cheatsheets import save_global_cheatsheet_deck
+                    save_global_cheatsheet_deck(norm_key, canonical_name, gen_bp, gen_dk, status="ai_unreviewed")
+                except Exception:
+                    pass
 
     base_structured: list[dict[str, Any]] = []
     # Fallback to blueprint JSON deck, curated deck, or domain-aware deterministic

@@ -1,11 +1,13 @@
 """Repository for user interview cheat sheet persistence and revision tracking."""
 
 import json
+import logging
 import time
 from typing import Any, Optional
 
 import db.backend as db
-from core.config import logger
+
+logger = logging.getLogger(__name__)
 
 _cheatsheet_table_initialized = False
 _global_decks_table_initialized = False
