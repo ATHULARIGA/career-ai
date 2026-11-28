@@ -135,15 +135,22 @@ Important: Keep your response concise and natural. Do NOT number your questions.
 
 def generate_opener(config: dict, persona: str = "Neutral") -> str:
     """Generate the structured interview intro + opener question."""
-    role = config.get("role", "Software Engineer")
-    company = config.get("company", "our company")
-    round_type = config.get("round_type", "technical")
+    role = (config.get("role") or "").strip() or "Software Engineer"
+    company = (config.get("company") or "").strip() or "our company"
+    round_type = (config.get("round_type") or "").strip() or "technical"
     persona_names = {
         "Friendly": "Jordan",
         "Neutral": "Alex",
         "Pressure Test": "Morgan",
     }
     interviewer_name = persona_names.get(persona, "Alex")
+
+    drill_q = (config.get("drill_question") or "").strip()
+    if drill_q:
+        return (
+            f"Hi, I'm {interviewer_name}. Let's drill this {round_type} topic directly:\n\n"
+            f"{drill_q}"
+        )
 
     if persona == "Friendly":
         intro = (

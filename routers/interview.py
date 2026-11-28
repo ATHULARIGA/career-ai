@@ -66,13 +66,14 @@ def interview_from_resume(request: Request, questions_json: str = Form("[]")):
     request.session["interview_config"] = {
         "topic": "Resume Focus",
         "role": "Role-based",
-        "company": "",
-        "round_type": "mixed",
+        "company": "our company",
+        "round_type": "technical",
         "difficulty": "intermediate",
         "red_team": False,
         "max_rounds": len(questions),
         "skill_gaps": [],
         "fixed_questions": True,
+        "drill_question": questions[0] if len(questions) == 1 else "",
     }
 
     return templates.TemplateResponse(request=request, name="interview.html", context=interview_context_payload(request))
