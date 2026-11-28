@@ -298,6 +298,13 @@
 .iv-panel-notes { text-align: left; margin-top: 16px; padding-left: 20px; }
 .iv-panel-notes li { font-size: 1.0rem; color: #1e293b; line-height: 1.6; }
 .iv-curiosity { margin-top: 12px; font-size: 1.0rem; color: #1e293b; background: var(--iv-bg-subtle); padding: 12px; border-radius: 6px; }
+.theme-dark .iv-verdict-title,
+.theme-dark .iv-verdict-score,
+.theme-dark .iv-silence { color: #cbd5e1; }
+.theme-dark .iv-verdict-badge,
+.theme-dark .iv-verdict-heading,
+.theme-dark .iv-panel-notes li,
+.theme-dark .iv-curiosity { color: #f1f5f9; }
 
 /* ── QA List ────────────────────────────────────────────── */
 .iv-qa-list { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; }
@@ -1809,6 +1816,8 @@ async function triggerFinish() {
 // ── Render verdict ─────────────────────────────────────────────
 function showVerdict(data) {
   document.getElementById('ivChat').style.display = 'none';
+  const setupEl = document.getElementById('ivSetup');
+  if (setupEl) setupEl.style.display = 'none';
   document.getElementById('ivVerdict').style.display = 'block';
 
   const hr = data.hiring_result || {};
