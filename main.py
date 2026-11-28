@@ -10,6 +10,10 @@ app.include_router(coding.router)
 app.include_router(admin.router)
 app.include_router(pages.router)
 
+for _route in app.routes:
+    if hasattr(_route, "methods") and _route.methods and "GET" in _route.methods and "HEAD" not in _route.methods:
+        _route.methods.add("HEAD")
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 

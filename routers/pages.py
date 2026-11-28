@@ -37,28 +37,34 @@ def healthz():
 def robots_txt():
     content = """User-agent: *
 Allow: /
-Allow: /resume
-Allow: /interview/new
-Allow: /coding/problems
-Allow: /career-map
-Allow: /roadmap
-Allow: /roadmap/
-Allow: /book-call
-Allow: /pricing
-Allow: /sitemap
-Allow: /admin-login
-Allow: /account
-Allow: /resume/compare
-Allow: /resume/compare/demo
-Allow: /resume/cover-letter/demo
-Allow: /resume/demo/cover-letter
-Allow: /resume/demo
-Allow: /resume/demo/fix
-Allow: /resume/1/fix
 Disallow: /admin/
 Disallow: /admin
-Disallow: /api/
+Disallow: /admin-login
 Disallow: /admin-delete/
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+Disallow: /account
+Disallow: /forgot-password
+Disallow: /reset-password
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
 
 Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
 """
@@ -67,83 +73,47 @@ Sitemap: https://career-ai-psi-dun.vercel.app/sitemap.xml
 
 @router.api_route("/sitemap.xml", methods=["GET", "HEAD"])
 def sitemap_xml():
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    import datetime
+    from services.roadmap.roadmap_tracks import get_all_tracks
+
+    lastmod = datetime.date.today().isoformat()
+    base = "https://career-ai-psi-dun.vercel.app"
+    static_urls = [
+        ("/", "weekly", "1.0"),
+        ("/resume", "weekly", "0.9"),
+        ("/roadmap", "weekly", "0.9"),
+        ("/career-map", "weekly", "0.8"),
+        ("/interview/new", "weekly", "0.8"),
+        ("/coding/problems", "weekly", "0.8"),
+        ("/book-call", "weekly", "0.8"),
+        ("/pricing", "monthly", "0.7"),
+        ("/privacy", "monthly", "0.3"),
+        ("/terms", "monthly", "0.3"),
+        ("/sitemap", "weekly", "0.5"),
+    ]
+    entries = []
+    seen = set()
+    for path, freq, prio in static_urls:
+        loc = f"{base}{path}"
+        seen.add(loc)
+        entries.append((loc, lastmod, freq, prio))
+
+    for track in get_all_tracks():
+        slug = track.get("slug", "").strip()
+        if not slug:
+            continue
+        loc = f"{base}/roadmap/{slug}"
+        if loc not in seen:
+            seen.add(loc)
+            entries.append((loc, lastmod, "weekly", "0.9"))
+
+    url_blocks = "\n".join(
+        f"  <url>\n    <loc>{loc}</loc>\n    <lastmod>{lm}</lastmod>\n    <changefreq>{freq}</changefreq>\n    <priority>{prio}</priority>\n  </url>"
+        for loc, lm, freq, prio in entries
+    )
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/resume</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/roadmap</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/roadmap/python-developer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/roadmap/react-frontend-engineer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/roadmap/data-scientist</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/roadmap/devops-engineer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/career-map</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/interview/new</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/coding/problems</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/book-call</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/pricing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/privacy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/terms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://career-ai-psi-dun.vercel.app/sitemap</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
+{url_blocks}
 </urlset>"""
     return Response(content=xml, media_type="application/xml")
 

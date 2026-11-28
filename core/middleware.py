@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from collections import defaultdict, deque
@@ -6,6 +7,7 @@ from fastapi import Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.routing import Match
 
 from core.config import APP_ENV, REQUESTS_PER_MINUTE, logger
 from core.security import _same_origin, get_client_geo, get_client_ip, is_admin_session
@@ -76,6 +78,14 @@ class AuthGateMiddleware(BaseHTTPMiddleware):
         if request.session.get("user_id") or is_admin_session(request):
             return await call_next(request)
 
+        # Let unknown paths fall through to FastAPI's real 404 instead of redirecting to /?auth=required
+        route_matched = any(
+            route.matches(request.scope)[0] != Match.NONE
+            for route in getattr(request.app, "routes", ())
+        )
+        if not route_matched:
+            return await call_next(request)
+
         if path.startswith("/admin"):
             return RedirectResponse("/admin-login", status_code=303)
 
@@ -121,6 +131,16 @@ class RequestGuardMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(self), camera=()"
+
+        normalized_path = path.rstrip("/") or "/"
+        host = (request.headers.get("host") or "").lower()
+        is_preview = os.getenv("VERCEL_ENV", "").lower() == "preview" or "career-ai-dev" in host
+        is_private_page = (
+            normalized_path in {"/login", "/signup", "/admin-login", "/forgot-password", "/reset-password", "/account"}
+            or path.startswith("/admin")
+        )
+        if is_preview or is_private_page:
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
 
         # Asynchronously record visitor traffic with real IP and geographic metadata
         if not (path.startswith("/healthz") or path.startswith("/readyz") or path in ("/favicon.ico", "/robots.txt", "/sitemap.xml")):
