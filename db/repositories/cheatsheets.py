@@ -10,6 +10,7 @@ from core.config import logger
 _cheatsheet_table_initialized = False
 _global_decks_table_initialized = False
 _card_states_table_initialized = False
+_feedback_table_initialized = False
 
 
 def ensure_global_cheatsheet_decks_table() -> None:
@@ -390,5 +391,66 @@ def delete_user_cheatsheet(user_email: str, tech_name: str) -> None:
     except Exception as exc:
         conn.rollback()
         logger.warning("delete_user_cheatsheet failed: %s", exc)
+    finally:
+        conn.close()
+
+
+def ensure_cheatsheet_feedback_table() -> None:
+    """Initializes the cheatsheet_feedback table for issue reports and 'this was asked' signals."""
+    global _feedback_table_initialized
+    if _feedback_table_initialized:
+        return
+    conn = db.get_conn()
+    cur = conn.cursor()
+    id_col = db.id_pk_col()
+    try:
+        db.execute(
+            cur,
+            f"""
+            CREATE TABLE IF NOT EXISTS cheatsheet_feedback(
+                id {id_col},
+                user_email TEXT NOT NULL DEFAULT 'anon',
+                tech_name TEXT NOT NULL,
+                card_id TEXT NOT NULL,
+                feedback_type TEXT NOT NULL,
+                note TEXT DEFAULT '',
+                created_ts INTEGER NOT NULL
+            )
+            """,
+        )
+        conn.commit()
+        _feedback_table_initialized = True
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("ensure_cheatsheet_feedback_table deferred: %s", exc)
+    finally:
+        conn.close()
+
+
+def save_card_feedback(
+    user_email: str,
+    tech_name: str,
+    card_id: str,
+    feedback_type: str,
+    note: str = "",
+) -> None:
+    """Records a user's 'issue' report or 'asked' signal for a cheat sheet card."""
+    ensure_cheatsheet_feedback_table()
+    conn = db.get_conn()
+    cur = conn.cursor()
+    now = int(time.time())
+    try:
+        db.execute(
+            cur,
+            """
+            INSERT INTO cheatsheet_feedback (user_email, tech_name, card_id, feedback_type, note, created_ts)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            ((user_email or "anon").strip().lower(), tech_name.strip(), card_id.strip(), feedback_type.strip(), (note or "")[:500], now),
+        )
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        logger.warning("save_card_feedback failed: %s", exc)
     finally:
         conn.close()

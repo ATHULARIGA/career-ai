@@ -15,11 +15,12 @@ from core.database import (
     delete_user_cheatsheet,
     get_user_card_states,
     get_user_cheatsheets,
+    save_card_feedback,
     save_user_card_states,
     save_user_cheatsheet,
     update_cheatsheet_revised,
 )
-from services.interview.blueprints import build_plan, load_blueprint
+from services.interview.blueprints import build_plan, load_blueprint, load_deck, score_jd_relevance
 from services.interview.cheatsheet_generator import (
     build_standalone_cheatsheet_html,
     compute_resume_hash,
@@ -1148,11 +1149,23 @@ def api_interview_cheatsheet(request: Request, tech: str = "", resume_id: str = 
                 request.session[f"revised_{payload['tech_name'].lower()}"] = revised_indices
 
         payload["revised_indices"] = revised_indices
-        payload["card_states"] = (
+        card_states = (
             get_user_card_states(user_email, payload["tech_name"])
             if user_email
-            else request.session.get(f"study_{payload['tech_name'].lower()}", {})
+            else dict(request.session.get(f"study_{payload['tech_name'].lower()}", {}))
         )
+        # Mock Interview -> Cheatsheet loop: flag cards matching past mock weaknesses as missed
+        if user_email:
+            weaknesses = [str(w).lower() for w in (get_user_weaknesses(user_email) or []) if w]
+            if weaknesses:
+                for sc in payload.get("structured_cards") or []:
+                    cid = sc.get("id", "")
+                    if not cid or card_states.get(cid) in ("got_it", "shaky"):
+                        continue
+                    hay = f"{sc.get('title', '')} {sc.get('category', '')}".lower()
+                    if any(w in hay for w in weaknesses):
+                        card_states[cid] = "missed"
+        payload["card_states"] = card_states
         payload["selected_resume_id"] = selected_id
         return JSONResponse(payload)
     except Exception as e:
@@ -1352,10 +1365,14 @@ async def api_interview_cheatsheet_plan(request: Request):
     tech_name = str(body.get("tech", "")).strip().lower()
     minutes = max(10, min(600, int(body.get("minutes_available", 60))))
     level = str(body.get("level", "senior")).strip().lower()
+    jd_text = str(body.get("jd_text", "")).strip()
     norm_key = re.sub(r"[^a-z0-9_]+", "", tech_name)
     bp = load_blueprint(norm_key)
     if not bp:
         return JSONResponse({"plan_ids": [], "minutes_available": minutes, "level": level})
+
+    dk = load_deck(norm_key)
+    jd_weights = score_jd_relevance((dk or {}).get("cards") or [], jd_text) if jd_text else {}
 
     user_email = (request.session.get("user_email") or "").strip().lower()
     states = (
@@ -1363,8 +1380,47 @@ async def api_interview_cheatsheet_plan(request: Request):
         if user_email
         else request.session.get(f"study_{tech_name}", {})
     )
-    plan_ids = build_plan(bp, state=states, jd_weights={}, minutes_available=minutes, level=level)
+    plan_ids = build_plan(bp, state=states, jd_weights=jd_weights, minutes_available=minutes, level=level)
     return JSONResponse({"plan_ids": plan_ids, "minutes_available": minutes, "level": level})
+
+
+@router.post("/api/interview/cheatsheet/jd", response_class=JSONResponse)
+async def api_interview_cheatsheet_jd(request: Request):
+    """Scores and ranks a technology's cards against a pasted job description."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    tech_name = str(body.get("tech", "")).strip()
+    jd_text = str(body.get("jd_text", "")).strip()
+    if not tech_name:
+        return JSONResponse({"error": "tech is required"}, status_code=400)
+
+    cs = get_cheatsheet_for_technology(tech_name)
+    jd_weights = score_jd_relevance(cs.get("structured_cards") or [], jd_text)
+    matched_ids = [cid for cid, w in jd_weights.items() if w > 1.0]
+    return JSONResponse({"jd_weights": jd_weights, "matched_ids": matched_ids})
+
+
+@router.post("/api/interview/cheatsheet/feedback", response_class=JSONResponse)
+async def api_interview_cheatsheet_feedback(request: Request):
+    """Records card-level feedback ('issue' or 'asked' in real interviews)."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    tech_name = str(body.get("tech", "")).strip()
+    card_id = str(body.get("card_id", "")).strip()
+    feedback_type = str(body.get("feedback_type", "")).strip().lower()
+    note = str(body.get("note", "")).strip()
+    if not tech_name or not card_id or feedback_type not in ("issue", "asked"):
+        return JSONResponse({"error": "tech, card_id, and feedback_type (issue|asked) required"}, status_code=400)
+
+    user_email = (request.session.get("user_email") or "").strip().lower()
+    save_card_feedback(user_email, tech_name, card_id, feedback_type, note=note)
+    return JSONResponse({"success": True, "card_id": card_id, "feedback_type": feedback_type})
 
 
 @router.delete("/api/interview/cheatsheet", response_class=JSONResponse)

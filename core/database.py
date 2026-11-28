@@ -362,6 +362,7 @@ from db.repositories.cheatsheets import (
     ensure_user_cheatsheets_table,
     get_user_card_states,
     get_user_cheatsheets,
+    save_card_feedback,
     save_user_card_states,
     save_user_cheatsheet,
     update_cheatsheet_revised,

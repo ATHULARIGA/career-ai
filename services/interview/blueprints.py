@@ -260,3 +260,35 @@ def build_plan(
         plan.append(tid)
         used += cost
     return plan
+
+
+_JD_STOP = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "using",
+    "will", "you", "your", "our", "are", "have", "has", "experience", "work",
+    "team", "skills", "role", "years", "required", "preferred", "ability",
+}
+
+
+def score_jd_relevance(cards: list[dict[str, Any]], jd_text: str) -> dict[str, float]:
+    """
+    Computes per-card JD relevance weights (2.0 for strong match, 1.0 default)
+    based on token overlap with the pasted job description.
+    """
+    jd_tokens = set(re.findall(r"[a-z0-9\+\#\.]{3,}", (jd_text or "").lower())) - _JD_STOP
+    if not jd_tokens:
+        return {}
+    weights: dict[str, float] = {}
+    for card in cards:
+        cid = str(card.get("id") or card.get("topic_id") or "")
+        if not cid:
+            continue
+        hay = f"{card.get('category', '')} {card.get('title', '')} {card.get('answer_30s', '')}".lower()
+        c_tokens = set(re.findall(r"[a-z0-9\+\#\.]{3,}", hay)) - _JD_STOP
+        overlap = len(jd_tokens & c_tokens)
+        if overlap >= 2:
+            weights[cid] = 2.0
+        elif overlap == 1:
+            weights[cid] = 1.4
+        else:
+            weights[cid] = 1.0
+    return weights

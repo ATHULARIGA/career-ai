@@ -88,3 +88,17 @@ def test_global_cache_and_rate_plan_endpoints():
     assert plan_res.status_code == 200
     assert len(plan_res.json()["plan_ids"]) >= 1
 
+    jd_res = client.post(
+        "/api/interview/cheatsheet/jd",
+        json={"tech": "PostgreSQL", "jd_text": "Looking for PostgreSQL MVCC, vacuum, and indexing optimization."},
+    )
+    assert jd_res.status_code == 200
+    assert len(jd_res.json()["matched_ids"]) >= 1
+
+    fb_res = client.post(
+        "/api/interview/cheatsheet/feedback",
+        json={"tech": "PostgreSQL", "card_id": dk["cards"][0]["id"], "feedback_type": "asked"},
+    )
+    assert fb_res.status_code == 200
+    assert fb_res.json()["success"] is True
+
