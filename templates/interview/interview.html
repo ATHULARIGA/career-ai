@@ -2387,7 +2387,7 @@ function renderStudyCard() {
         ${r[3] ? `<div class="cs-sec cs-sec-code" style="margin-top:10px;"><div class="cw"><pre><code>${escapeHtml(r[3])}</code></pre></div></div>` : ''}
         ${r[5] ? `<div class="cs-sec cs-sec-tip" style="margin-top:10px;"><div class="cs-sec-label cs-label-tip">Pro Tip</div><p class="cs-sec-p">${escapeHtml(r[5])}</p></div>` : ''}
       ` : `
-        <button type="button" class="cs-btn-primary" onclick="studyRevealed = true; renderStudyCard();">Reveal 30-Second Answer (Space)</button>
+        <button type="button" class="cs-btn-primary" onclick="revealStudyAnswer()">Reveal 30-Second Answer (Space)</button>
       `}
       <div class="cs-study-actions">
         <div class="cs-rate-row">
@@ -2396,12 +2396,24 @@ function renderStudyCard() {
           <button type="button" class="cs-rate-btn is-got_it ${state === 'got_it' ? 'active' : ''}" onclick="rateCard(${studyIdx}, 'got_it')">3 · Got it</button>
         </div>
         <div style="display:flex; gap:6px;">
-          <button type="button" class="cs-ctrl-btn" onclick="studyIdx = (studyIdx - 1 + cheatsheetCards.length) % cheatsheetCards.length; studyRevealed = false; renderStudyCard();">Prev</button>
-          <button type="button" class="cs-ctrl-btn" onclick="studyIdx = (studyIdx + 1) % cheatsheetCards.length; studyRevealed = false; renderStudyCard();">Next</button>
+          <button type="button" class="cs-ctrl-btn" onclick="stepStudyCard(-1)">Prev</button>
+          <button type="button" class="cs-ctrl-btn" onclick="stepStudyCard(1)">Next</button>
         </div>
       </div>
     </div>
   `;
+}
+
+function revealStudyAnswer() {
+  studyRevealed = true;
+  renderStudyCard();
+}
+
+function stepStudyCard(delta) {
+  if (!cheatsheetCards.length) return;
+  studyIdx = (studyIdx + delta + cheatsheetCards.length) % cheatsheetCards.length;
+  studyRevealed = false;
+  renderStudyCard();
 }
 
 document.addEventListener('keydown', (e) => {
@@ -3157,6 +3169,13 @@ window.exportCurrentCheatsheet = exportCurrentCheatsheet;
 window.copySnippet = copySnippet;
 window.toggleRevised = toggleRevised;
 window.filterCategory = filterCategory;
+window.filterTier = filterTier;
+window.setCheatsheetMode = setCheatsheetMode;
+window.applyCramPlan = applyCramPlan;
+window.clearCramPlan = clearCramPlan;
+window.rateCard = rateCard;
+window.revealStudyAnswer = revealStudyAnswer;
+window.stepStudyCard = stepStudyCard;
 window.onSetupResumeChange = onSetupResumeChange;
 window.switchCheatsheetResume = switchCheatsheetResume;
 window.triggerResumeUpload = triggerResumeUpload;
