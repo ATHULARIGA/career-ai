@@ -3,6 +3,73 @@
 {% block title %}ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap{% endblock %}
 {% block meta_desc %}Optimize your resume with ATS keyword alignment, practice realistic AI mock interviews, build your career roadmap, and master system design prep and coding practice with ResuMate.{% endblock %}
 
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does ResuMate improve ATS keyword alignment for my resume?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ResuMate parses your resume using industry-standard ATS extraction models, comparing your skills, experience bullets, and terminology against actual target job postings. It highlights missing critical keywords, flags parsing blockers like tables or unsupported fonts, and provides quantified scores and one-click bullet point enhancements."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What kind of AI mock interviews can I practice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can simulate realistic technical interview rounds, behavioral STAR-method scenarios, system design interviews, and role-specific domain assessments. Each session provides real-time follow-up questions and delivers an objective performance rubric evaluating technical accuracy, communication structure, and confidence."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do the personalized career roadmaps work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Our dynamic career roadmapping tool maps your existing technical background against your target milestone role (such as Senior Backend Engineer, Staff AI Specialist, or Engineering Manager). It produces an interactive graph outlining must-have competencies, recommended study materials, and actionable interview milestones."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What languages are supported in the hands-on coding practice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The interactive coding environment supports major software engineering languages including Python, JavaScript, TypeScript, Java, and C++. You can run test cases directly in your browser, analyze edge cases, and inspect algorithmic time and space complexity with automated feedback."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use ResuMate for both software engineering and non-engineering tech roles?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. While our coding practice and system design prep modules cater directly to software developers and engineering managers, our ATS resume optimization, AI mock interviews, and career roadmap generation support diverse tech positions including Product Management, Data Engineering, AI/ML Engineering, DevOps, and UX Architecture."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How frequently should I update my ATS resume review?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We recommend auditing your resume whenever you customize your application for a new role or company tier. Comparing your resume directly against specific job postings ensures maximum ATS keyword alignment and recruiter relevance."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my resume data and interview practice confidential?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. All uploaded resumes, transcripts, and practice sessions are encrypted in transit and at rest. We never sell your personal data or use your confidential interview recordings to train public foundation models without your explicit consent."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
 <!-- HERO SECTION (CLEAN ANIME.JS-INSPIRED GRID) -->

@@ -172,6 +172,42 @@ ResuMate helps software engineers and job seekers prepare for technical hiring, 
 - [Privacy Policy](https://career-ai-psi-dun.vercel.app/privacy): User privacy and data protection guidelines.
 - [Terms of Service](https://career-ai-psi-dun.vercel.app/terms): Terms governing platform usage.
 - [Sitemap](https://career-ai-psi-dun.vercel.app/sitemap.xml): Machine-readable index of all public routes.
+- [Full LLM Documentation](https://career-ai-psi-dun.vercel.app/llms-full.txt): Complete reference of all tools and career roadmap tracks.
+"""
+    return Response(content=content, media_type="text/plain; charset=utf-8")
+
+
+@router.api_route("/llms-full.txt", methods=["GET", "HEAD"])
+def llms_full_txt():
+    from services.roadmap.roadmap_tracks import get_all_tracks
+
+    base = "https://career-ai-psi-dun.vercel.app"
+    track_lines = "\n".join(
+        f"- [{t.get('title', t.get('slug', ''))}]({base}/roadmap/{t.get('slug', '')}): {t.get('tagline', t.get('description', 'Role-specific skill roadmap and interview milestones.'))}"
+        for t in get_all_tracks()
+        if t.get("slug")
+    )
+    content = f"""# ResuMate — Full Platform Reference
+
+> AI-powered career suite for ATS resume optimization, realistic mock interviews, technology cheat sheets, coding practice, and personalized career roadmaps.
+
+## Public Tools & Pages
+- [Home]({base}/): Overview of ResuMate career intelligence tools and FAQs.
+- [Resume Review]({base}/resume): Instant ATS resume audit, keyword gap analysis, and STAR/XYZ bullet rewrites.
+- [Mock Interviews]({base}/interview/new): Realistic technical and behavioral interview simulator with Friendly, Neutral, and Pressure Test personas, plus blueprint-driven technology cheat sheets with active-recall Study and Cram modes.
+- [Career Roadmaps]({base}/roadmap): Structured engineering skill trees, study guides, and interview milestones.
+- [Interactive Career Map]({base}/career-map): Visual career progression and role-transition canvas.
+- [Coding Practice]({base}/coding/problems): Multi-language algorithmic challenges (Python, JavaScript, TypeScript, Java, C++) with test execution and complexity feedback.
+- [Mentorship]({base}/book-call): 1-on-1 career strategy sessions with industry mentors.
+- [Pricing]({base}/pricing): Free and premium plans.
+
+## Career Roadmap Tracks
+{track_lines}
+
+## Machine-Readable Endpoints
+- [Sitemap XML]({base}/sitemap.xml)
+- [OpenAPI Spec]({base}/openapi.json)
+- [LLMs Index]({base}/llms.txt)
 """
     return Response(content=content, media_type="text/plain; charset=utf-8")
 

@@ -44,3 +44,18 @@ def test_auth_pages_have_noindex_header():
     for path in ("/login", "/signup", "/admin-login"):
         res = client.get(path, follow_redirects=False)
         assert "noindex" in res.headers.get("x-robots-tag", "").lower()
+
+
+def test_schema_and_llms_full_txt():
+    client = TestClient(app)
+    home = client.get("/")
+    assert home.status_code == 200
+    assert '"@type": "FAQPage"' in home.text
+
+    roadmap = client.get("/roadmap")
+    assert roadmap.status_code == 200
+    assert '"@type": "BreadcrumbList"' in roadmap.text
+
+    llms_full = client.get("/llms-full.txt")
+    assert llms_full.status_code == 200
+    assert "/roadmap/python-developer" in llms_full.text

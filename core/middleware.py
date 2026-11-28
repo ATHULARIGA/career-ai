@@ -36,6 +36,7 @@ PUBLIC_PATHS = {
     "/sitemap.xml",
     "/sitemap",
     "/llms.txt",
+    "/llms-full.txt",
     "/openapi.json",
     "/google0159a71a230a2359.html",
     "/resume",

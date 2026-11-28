@@ -18,8 +18,8 @@
   <meta property="og:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
   
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ResuMate | AI Resume Optimizer, Mock Interviews & Career Roadmap">
-  <meta name="twitter:description" content="AI-powered career suite for ATS resume optimization, realistic mock interviews, system design prep, coding practice, and personalized career roadmaps.">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ self.meta_desc() }}">
   <meta name="twitter:image" content="https://career-ai-psi-dun.vercel.app/static/hero-bg.png">
 
   <meta name="google-site-verification" content="google0159a71a230a2359">
@@ -60,6 +60,29 @@
     ]
   }
   </script>
+  {% if request.url.path and request.url.path != "/" %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://career-ai-psi-dun.vercel.app/"
+      }{% set _segs = request.url.path.strip('/').split('/') %}{% for _seg in _segs if _seg %},
+      {
+        "@type": "ListItem",
+        "position": {{ loop.index + 1 }},
+        "name": {{ _seg.replace('-', ' ').title() | tojson }},
+        "item": "https://career-ai-psi-dun.vercel.app/{{ _segs[:loop.index] | join('/') }}"
+      }{% endfor %}
+    ]
+  }
+  </script>
+  {% endif %}
+  {% block extra_schema %}{% endblock %}
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
