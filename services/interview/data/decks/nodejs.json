@@ -1,0 +1,351 @@
+{
+  "tech": "nodejs",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "nodejs-4fd50201b6",
+      "topic_id": "nodejs-4fd50201b6",
+      "category": "Architecture",
+      "title": "Event Loop Phases & Microtask Queues",
+      "question": "Explain Event Loop Phases & Microtask Queues",
+      "answer_30s": "Node.js runs JS on a single main thread via V8 + libuv. The Event Loop cycles through 6 phases: Timers (setTimeout/setInterval) -> Pending Callbacks -> Idle/Prepare -> Poll (I/O) -> Check (setImmediate) -> Close Callbacks. Between every phase, Node drains `process.nextTick()` first, then Promise microtasks.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "setTimeout(() => console.log('timeout'), 0);\nsetImmediate(() => console.log('immediate'));\nPromise.resolve().then(() => console.log('promise'));\nprocess.nextTick(() => console.log('nextTick'));"
+      },
+      "typical_use": "Predicting async execution order and avoiding microtask starvation.",
+      "pitfalls": [
+        "Recursive `process.nextTick()` starves the I/O Poll phase completely\u2014prefer `setImmediate()` when deferring work across ticks."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-96717ea3dd",
+      "topic_id": "nodejs-96717ea3dd",
+      "category": "Concurrency",
+      "title": "Libuv Thread Pool vs OS Async I/O",
+      "question": "Explain Libuv Thread Pool vs OS Async I/O",
+      "answer_30s": "Network I/O uses OS kernel async primitives (epoll/kqueue/IOCP) with zero thread-pool usage. Blocking operations without OS async support (fs file I/O, dns.lookup, crypto hashing, zlib) run on libuv's worker pool (default `UV_THREADPOOL_SIZE=4`, max 1024).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "UV_THREADPOOL_SIZE=16 node server.js"
+      },
+      "typical_use": "Debugging crypto/fs bottlenecks under high concurrency.",
+      "pitfalls": [
+        "Because `dns.lookup()` uses the thread pool whereas `dns.resolve()` uses async network, heavy DNS lookups can silently stall file I/O!"
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-f7b50bbd9b",
+      "topic_id": "nodejs-f7b50bbd9b",
+      "category": "Performance",
+      "title": "Streams & Backpressure Handling",
+      "question": "Explain Streams & Backpressure Handling",
+      "answer_30s": "Streams process large files/HTTP payloads chunk-by-chunk in constant memory instead of buffering whole payloads in V8 heap. `stream.pipeline()` automatically handles backpressure (pausing fast producers when slow consumers fill `highWaterMark`) and cleans up errors/file descriptors.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "import { pipeline } from 'node:stream/promises';\nawait pipeline(fs.createReadStream('in.csv'), zlib.createGzip(), fs.createWriteStream('in.csv.gz'));"
+      },
+      "typical_use": "Streaming multi-GB uploads/downloads without OOM crashes.",
+      "pitfalls": [
+        "Always prefer `stream.pipeline()` over `.pipe()` because `.pipe()` does not forward errors or destroy streams on failure."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-836510e8d5",
+      "topic_id": "nodejs-836510e8d5",
+      "category": "Concurrency",
+      "title": "Cluster Module vs Worker Threads",
+      "question": "Explain Cluster Module vs Worker Threads",
+      "answer_30s": "Cluster forks multiple OS processes (each with its own V8 isolate and memory) sharing one TCP port to utilize all CPU cores for HTTP scaling. Worker Threads run multiple JS threads inside one process sharing memory via `SharedArrayBuffer` for CPU-intensive tasks.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "import { Worker } from 'node:worker_threads';"
+      },
+      "typical_use": "Scaling Node APIs across multi-core CPUs vs offloading CPU-heavy image/JSON parsing.",
+      "pitfalls": [
+        "Never block the main event loop with heavy synchronous JSON parsing, regex backtracking (ReDoS), or crypto\u2014offload to Worker Threads."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-33d9c4ffd8",
+      "topic_id": "nodejs-33d9c4ffd8",
+      "category": "Reliability",
+      "title": "Error Handling, Graceful Shutdown & Process Managers",
+      "question": "Explain Error Handling, Graceful Shutdown & Process Managers",
+      "answer_30s": "Unhandled Promise rejections and uncaught exceptions can leave state corrupted. Register global handlers to log and exit cleanly, drain active HTTP connections on SIGTERM (`server.close()`), and close DB pools before exiting.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "process.on('SIGTERM', () => {\n  server.close(() => db.end().then(() => process.exit(0)));\n});"
+      },
+      "typical_use": "Preventing dropped in-flight requests during Kubernetes/PM2 restarts.",
+      "pitfalls": [
+        "Always attach `.catch()` or `try/catch` around `async/await` in Express/Fastify route handlers."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-a135ee795e",
+      "topic_id": "nodejs-a135ee795e",
+      "category": "Performance",
+      "title": "V8 Memory Model, GC & Memory Leak Debugging",
+      "question": "Explain V8 Memory Model, GC & Memory Leak Debugging",
+      "answer_30s": "V8 splits heap into New Space (Scavenger minor GC for short-lived objects) and Old Space (Mark-Sweep-Compact major GC). Common leaks come from global arrays, unclosed timers/listeners, and closures retaining large buffers\u2014diagnose via `--heap-snapshot` and Chrome DevTools.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "node --max-old-space-size=4096 --heapsnapshot-signal=SIGUSR2 app.js"
+      },
+      "typical_use": "Diagnosing steadily climbing RSS memory in production Node pods.",
+      "pitfalls": [
+        "Compare two heap snapshots taken 10 minutes apart under load to isolate retained object constructors."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-b11e8d24c3",
+      "topic_id": "nodejs-b11e8d24c3",
+      "category": "Security",
+      "title": "Event Loop Blocking (ReDoS), Prototype Pollution & Helmet",
+      "question": "Explain Event Loop Blocking (ReDoS), Prototype Pollution & Helmet",
+      "answer_30s": "Because Node is single-threaded, one catastrophic backtracking regex (ReDoS) or huge `JSON.parse` freezes every user. Guard against prototype pollution (`__proto__`), validate inputs with Zod, set security headers (`helmet`), and use `npm audit`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const safeObj = Object.create(null); // No prototype chain"
+      },
+      "typical_use": "Hardening public-facing Node.js APIs.",
+      "pitfalls": [
+        "Use `re2` for user-supplied regexes and limit Express/Fastify body parser sizes."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-97c43dd2bc",
+      "topic_id": "nodejs-97c43dd2bc",
+      "category": "Q&A",
+      "title": "Q: What is the exact execution order of nextTick, Promise, setTimeout(0), and setImmediate?",
+      "question": "Q: What is the exact execution order of nextTick, Promise, setTimeout(0), and setImmediate?",
+      "answer_30s": "A: Synchronous code runs first, then `process.nextTick`, then Promise microtasks. Inside an I/O callback, `setImmediate` ALWAYS runs before `setTimeout(..., 0)` because the Check phase follows Poll directly; at the top-level main module, `setTimeout(0)` vs `setImmediate` order is non-deterministic.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Inside fs.readFile callback: setImmediate ALWAYS fires before setTimeout(0)"
+      },
+      "typical_use": "Classic Node.js internals question.",
+      "pitfalls": [
+        "Knowing the I/O callback determinism distinction impresses Node interviewers."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-1873942e9f",
+      "topic_id": "nodejs-1873942e9f",
+      "category": "Q&A",
+      "title": "Q: Why does a single unhandled exception or blocked loop hurt Node more than Java/Go?",
+      "question": "Q: Why does a single unhandled exception or blocked loop hurt Node more than Java/Go?",
+      "answer_30s": "A: In a single-threaded event loop, one synchronous CPU task (e.g. a 2-second loop) stalls ALL concurrent users on that worker, and an unhandled crash terminates the entire process serving thousands of sockets. Mitigate with cluster/multiple pods, timeouts, worker threads, and strict async patterns.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Measure event loop lag via perf_hooks.monitorEventLoopDelay()"
+      },
+      "typical_use": "Understanding Node.js architectural trade-offs.",
+      "pitfalls": [
+        "Monitor event loop delay (`p99 < 20ms`) in Prometheus/Datadog."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-4d7a5fbb1f",
+      "topic_id": "nodejs-4d7a5fbb1f",
+      "category": "Q&A",
+      "title": "Q: How do Buffers work in Node.js and why can't you store raw binary in JS strings?",
+      "question": "Q: How do Buffers work in Node.js and why can't you store raw binary in JS strings?",
+      "answer_30s": "A: `Buffer` represents a fixed-size chunk of raw binary memory allocated outside V8's garbage-collected JS heap (in C++ slab allocators). JS strings are UTF-16 encoded and immutable, which would corrupt arbitrary binary bytes and waste 2x memory.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const buf = Buffer.from('hello', 'utf8');\nconst b64 = buf.toString('base64');"
+      },
+      "typical_use": "Working with file streams, crypto, TCP sockets, and binary protocols.",
+      "pitfalls": [
+        "Always use `Buffer.alloc(size)` (zero-filled) instead of the deprecated `new Buffer()` constructor; use `Buffer.allocUnsafe(size)` only when immediately overwriting all bytes (to avoid leaking old RAM)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-6e83cb0c64",
+      "topic_id": "nodejs-6e83cb0c64",
+      "category": "Q&A",
+      "title": "Q: CommonJS (`require`) vs ES Modules (`import`) \u2014 key differences?",
+      "question": "Q: CommonJS (`require`) vs ES Modules (`import`) \u2014 key differences?",
+      "answer_30s": "A: CommonJS loads modules synchronously at runtime and exports copies of values. ESM is asynchronous, statically analyzable (enabling tree-shaking), exports live bindings, supports top-level `await`, and uses `package.json` `\"type\": \"module\"`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// ESM supports static tree-shaking and top-level await"
+      },
+      "typical_use": "Modern Node.js module system question.",
+      "pitfalls": [
+        "Explain why mixing CJS and ESM (`require()` on an async ESM module) historically threw ERR_REQUIRE_ESM (though Node 22+ added experimental support for synchronous ESM)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-af91414a23",
+      "topic_id": "nodejs-af91414a23",
+      "category": "Q&A",
+      "title": "Q: How do you handle `Promise.all` vs `Promise.allSettled` vs `Promise.race`?",
+      "question": "Q: How do you handle `Promise.all` vs `Promise.allSettled` vs `Promise.race`?",
+      "answer_30s": "A: `Promise.all` fails fast as soon as ANY promise rejects. `Promise.allSettled` waits for all promises and returns `{status: 'fulfilled'|'rejected'}` for each. `Promise.race` settles with the first settled promise (great for timeouts). `Promise.any` resolves with the first fulfilled promise.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const results = await Promise.allSettled(urls.map(fetchJson));"
+      },
+      "typical_use": "Resilient concurrent fan-out calls in Node.js.",
+      "pitfalls": [
+        "Use `Promise.race` with an AbortController timeout to enforce strict deadlines on external APIs."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-19a223db88",
+      "topic_id": "nodejs-19a223db88",
+      "category": "Q&A",
+      "title": "Q: What is AsyncLocalStorage and when do you use it?",
+      "question": "Q: What is AsyncLocalStorage and when do you use it?",
+      "answer_30s": "A: `AsyncLocalStorage` (from `node:async_hooks`) provides async-safe thread-local-like context propagation across Promises, timers, and callbacks without passing `req`/`traceId` down every function signature.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const ctx = new AsyncLocalStorage();\nctx.run({ traceId }, () => handleRequest());"
+      },
+      "typical_use": "Propagating correlation IDs, user context, and DB transactions cleanly.",
+      "pitfalls": [
+        "It is the Node.js equivalent of Go's `context.Context` or Python's `contextvars`."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-0dd1b37cdc",
+      "topic_id": "nodejs-0dd1b37cdc",
+      "category": "Q&A",
+      "title": "Q: How do you prevent memory leaks from EventEmitters and Timers?",
+      "question": "Q: How do you prevent memory leaks from EventEmitters and Timers?",
+      "answer_30s": "A: Always remove listeners (`off`/`removeListener`) or use `.once()` when attaching to long-lived emitters (like `process` or shared buses), clear `setInterval`/`setTimeout` on shutdown/cleanup, and watch for Node's `MaxListenersExceededWarning` (default 10).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "emitter.once('ready', onReady);"
+      },
+      "typical_use": "Debugging long-running Node.js worker leaks.",
+      "pitfalls": [
+        "Don't just raise `setMaxListeners(100)` to silence the warning\u2014verify you aren't leaking listeners per request!"
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "nodejs-4ece85b823",
+      "topic_id": "nodejs-4ece85b823",
+      "category": "Q&A",
+      "title": "Q: How do you scale a Node.js backend to 100k concurrent connections?",
+      "question": "Q: How do you scale a Node.js backend to 100k concurrent connections?",
+      "answer_30s": "A: Run one Node process per CPU core behind an L7 load balancer (or Kubernetes HPA), keep the event loop non-blocking, use HTTP keep-alive and Redis for shared session/cache state, stream large payloads instead of buffering, and offload heavy compute to worker queues.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Stateless Node workers + Redis + Load Balancer + Worker Threads for CPU"
+      },
+      "typical_use": "Node.js system design scaling summary.",
+      "pitfalls": [
+        "Highlight raising OS file descriptor limits (`ulimit -n`) for high socket counts."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

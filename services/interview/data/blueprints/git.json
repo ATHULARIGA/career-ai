@@ -1,0 +1,148 @@
+{
+  "tech": "git",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "git-38c76b0f58",
+          "title": "Git Object Model (Blob, Tree, Commit, Tag)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "git-10895ad89e",
+          "title": "Merge vs Rebase vs Squash",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "git-fed16f6997",
+          "title": "Interactive Rebase, Cherry-Pick & Stash",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "git-0f1f127cc3",
+          "title": "Reset (Soft, Mixed, Hard) vs Revert",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "name": "Operations",
+      "topics": [
+        {
+          "id": "git-42726f7c58",
+          "title": "Git Reflog & Disaster Recovery",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "git-42dcc6e2c5",
+          "title": "Git Bisect for Binary-Searching Regressions",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "git-74426ad457",
+          "title": "Q: What is the difference between `git fetch` and `git pull`?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "git-fe827a09f4",
+          "title": "Q: Why use `git push --force-with-lease` instead of `git push --force`?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "git-468d4d55f2",
+          "title": "Q: What is a Detached HEAD state and how do you fix it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "git-9312eaa8cd",
+          "title": "Q: How do you remove a secret or huge binary accidentally committed to Git?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "git-7e2f4df695",
+          "title": "Q: Trunk-Based Development vs GitFlow \u2014 when do you use each?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "git-58f085cda3",
+          "title": "Q: How do you resolve a complex merge conflict cleanly?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "git-df25bf5b3b",
+          "title": "Q: How do `git diff`, `git diff --staged`, and `git diff main...HEAD` differ?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "git-876d1640ab",
+          "title": "Q: How do you revert a bad merge commit?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

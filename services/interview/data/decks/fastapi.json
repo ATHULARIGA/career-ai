@@ -1,0 +1,397 @@
+{
+  "tech": "fastapi",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "fastap-58c37e0557",
+      "topic_id": "fastap-58c37e0557",
+      "category": "Basics",
+      "title": "App and running",
+      "question": "Explain App and running",
+      "answer_30s": "FastAPI is a modern, high-performance Python framework for building APIs. It is built on Starlette for the web routing and middleware layer, and Pydantic for data validation. It leverages standard Python type hints for automatic request validation, serialization, and interactive OpenAPI documentation at /docs. I run it with Uvicorn, an ASGI server.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import FastAPI\napp = FastAPI(title=\"Shop API\")\n\n@app.get(\"/\")\ndef root():\n    return {\"msg\": \"hello\"}\n\n# run: uvicorn main:app --reload"
+      },
+      "typical_use": "Any JSON/REST backend: microservices, ML model serving, mobile backends.",
+      "pitfalls": [
+        "Stack architecture: Uvicorn (ASGI server) -> Starlette (routing, middleware) -> Pydantic (data parsing). FastAPI adds dependency injection and OpenAPI on top."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-eb60749f4a",
+      "topic_id": "fastap-eb60749f4a",
+      "category": "Basics",
+      "title": "HTTP methods",
+      "question": "Explain HTTP methods",
+      "answer_30s": "A path operation is a URL path plus an HTTP method plus the function that handles it. I use GET to read, POST to create, PUT to replace, PATCH to update part of a resource, and DELETE to remove it. In FastAPI each is declared via a decorator like @app.get or @app.post.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "@app.post(\"/items\", status_code=201)\ndef create(item: Item): ...\n\n@app.put(\"/items/{id}\")\ndef replace(id: int, item: Item): ...\n\n@app.delete(\"/items/{id}\", status_code=204)\ndef remove(id: int): ..."
+      },
+      "typical_use": "CRUD endpoints for any REST resource.",
+      "pitfalls": [
+        "PUT is an idempotent full replacement; PATCH is partial (use model_dump(exclude_unset=True))."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-71cc3a892e",
+      "topic_id": "fastap-71cc3a892e",
+      "category": "Requests",
+      "title": "Path parameters",
+      "question": "Explain Path parameters",
+      "answer_30s": "Path parameters are variables embedded inside the URL path, like /users/{user_id}. Declaring type hints automatically parses and validates them, returning a 422 Unprocessable Entity if invalid. I use Path() to add constraints like gt=0.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import Path\n\n@app.get(\"/users/{user_id}\")\ndef get_user(user_id: int = Path(gt=0)):\n    return {\"id\": user_id}"
+      },
+      "typical_use": "Identifying a specific resource, e.g. /users/42.",
+      "pitfalls": [
+        "Always declare static routes like /users/me before dynamic routes like /users/{user_id}, otherwise 'me' will be parsed as an id."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-46ec0b099e",
+      "topic_id": "fastap-46ec0b099e",
+      "category": "Requests",
+      "title": "Query parameters",
+      "question": "Explain Query parameters",
+      "answer_30s": "Query parameters follow the question mark in URLs, like ?limit=10. Any function argument not declared in the path or as a Pydantic model is treated as a query parameter. Defaults make them optional. Query() adds validation like min_length.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import Query\n\n@app.get(\"/search\")\ndef search(q: str = Query(min_length=2),\n           limit: int = 10,\n           tags: list[str] = Query([])):\n    return {\"q\": q, \"limit\": limit}"
+      },
+      "typical_use": "Filtering, sorting, and pagination across collections.",
+      "pitfalls": [
+        "Path identifies a resource; Query filters or modulates it."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-4f1734fe2c",
+      "topic_id": "fastap-4f1734fe2c",
+      "category": "Requests",
+      "title": "Request body & Pydantic",
+      "question": "Explain Request body & Pydantic",
+      "answer_30s": "The request body is JSON sent by the client. I define its structure using a Pydantic model declared as a parameter. FastAPI parses the body, validates every field against type hints, and auto-documents the schema in /docs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from pydantic import BaseModel\n\nclass Item(BaseModel):\n    name: str\n    price: float\n    tax: float | None = None\n\n@app.post(\"/items\")\ndef create(item: Item):\n    return item"
+      },
+      "typical_use": "Creating or updating resources with structured JSON payloads.",
+      "pitfalls": [
+        "Rule of thumb: name in path -> path param; Pydantic model -> body; primitive type -> query param."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-aacf8a77f1",
+      "topic_id": "fastap-aacf8a77f1",
+      "category": "Validation",
+      "title": "Pydantic V2 validation",
+      "question": "Explain Pydantic V2 validation",
+      "answer_30s": "Pydantic validates input using type hints. In Pydantic v2, rules are configured via Field() and custom validators using @field_validator. Validation errors automatically return detailed 422 JSON errors pinpointing exact field locations.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from pydantic import BaseModel, Field, field_validator\n\nclass User(BaseModel):\n    name: str = Field(min_length=3)\n    age: int = Field(ge=18, le=100)\n    email: str\n\n    @field_validator(\"email\")\n    @classmethod\n    def chk_email(cls, v):\n        if \"@\" not in v:\n            raise ValueError(\"invalid email\")\n        return v.lower()"
+      },
+      "typical_use": "Enforcing business invariants before endpoint execution.",
+      "pitfalls": [
+        "Key v1 to v2 differences: @validator -> @field_validator, .dict() -> .model_dump(), and orm_mode -> from_attributes."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-04b2ebba2e",
+      "topic_id": "fastap-04b2ebba2e",
+      "category": "Validation",
+      "title": "Response model filtering",
+      "question": "Explain Response model filtering",
+      "answer_30s": "response_model tells FastAPI the expected output schema. FastAPI filters the outgoing data, validates it, and generates the OpenAPI response schema. This prevents accidental leakage of internal fields like hashed passwords.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "class UserIn(BaseModel):\n    name: str\n    password: str\n\nclass UserOut(BaseModel):\n    name: str\n\n@app.post(\"/users\", response_model=UserOut)\ndef create(user: UserIn):\n    return user  # password stripped automatically"
+      },
+      "typical_use": "Protecting sensitive database fields and guaranteeing API contracts.",
+      "pitfalls": [
+        "Separate In, Out, and DB schemas. Use response_model_exclude_unset to avoid emitting unassigned defaults."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-f4399431fe",
+      "topic_id": "fastap-f4399431fe",
+      "category": "Errors",
+      "title": "Status codes & HTTPException",
+      "question": "Explain Status codes & HTTPException",
+      "answer_30s": "I set successful status codes with status_code on the path decorator. When business logic fails, I raise HTTPException with a numeric status code and a descriptive detail, terminating function execution cleanly.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import HTTPException\n\n@app.get(\"/items/{id}\")\ndef read(id: int):\n    if id not in db:\n        raise HTTPException(status_code=404, detail=\"Item not found\")\n    return db[id]"
+      },
+      "typical_use": "404 for missing resources, 403 for forbidden actions, 409 for unique conflicts.",
+      "pitfalls": [
+        "Memorize common codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 500 Internal Error."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-e100cbf322",
+      "topic_id": "fastap-e100cbf322",
+      "category": "Structure",
+      "title": "Dependency injection (Depends)",
+      "question": "Explain Dependency injection (Depends)",
+      "answer_30s": "Dependency injection allows FastAPI to resolve shared resources before invoking endpoint handlers. I use Depends() for database sessions, authentication, and query parsing. Using yield enables cleanup after the request completes.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import Depends\n\ndef get_db():\n    db = SessionLocal()\n    try:\n        yield db\n    finally:\n        db.close()\n\n@app.get(\"/users\")\ndef list_users(db=Depends(get_db)):\n    return db.query(User).all()"
+      },
+      "typical_use": "Managing database transactions, scoped auth credentials, and shared configurations.",
+      "pitfalls": [
+        "Top interview concept: DI dramatically simplifies unit tests because app.dependency_overrides allows mocking database sessions effortlessly."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-5ea87839d8",
+      "topic_id": "fastap-5ea87839d8",
+      "category": "Structure",
+      "title": "APIRouter modularization",
+      "question": "Explain APIRouter modularization",
+      "answer_30s": "APIRouter splits monolithic applications into modular sub-routers, each with distinct URL prefixes, tags, and dependencies. Routers are registered on the root app via app.include_router().",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "# routers/users.py\nrouter = APIRouter(prefix=\"/users\", tags=[\"users\"])\n\n@router.get(\"/\")\ndef list_users(): ...\n\n# main.py\napp.include_router(router)"
+      },
+      "typical_use": "Structuring scalable production codebases into domain services.",
+      "pitfalls": [
+        "Similar to Blueprints in Flask. Router-level dependencies=[Depends(auth)] protect entire resource groups with a single declaration."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-60eb3ddac0",
+      "topic_id": "fastap-60eb3ddac0",
+      "category": "Security",
+      "title": "OAuth2 and JWT tokens",
+      "question": "Explain OAuth2 and JWT tokens",
+      "answer_30s": "For authentication, I use OAuth2 with Bearer JWT tokens. The client posts credentials to /token, the server returns an HMAC-SHA256 signed JWT with an expiry timestamp, and client requests include it in the Authorization header.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi.security import OAuth2PasswordBearer\nimport jwt\n\noauth2 = OAuth2PasswordBearer(tokenUrl=\"token\")\n\ndef get_current_user(token: str = Depends(oauth2)):\n    try:\n        payload = jwt.decode(token, SECRET, algorithms=[\"HS256\"])\n        return payload[\"sub\"]\n    except jwt.PyJWTError:\n        raise HTTPException(status_code=401, detail=\"Invalid credentials\")"
+      },
+      "typical_use": "Securing microservices and single-page application backends.",
+      "pitfalls": [
+        "Always store passwords hashed with bcrypt or argon2. Never store sensitive roles or credentials inside raw unverified JWT payloads."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-92af515131",
+      "topic_id": "fastap-92af515131",
+      "category": "Async",
+      "title": "async def vs def concurrency",
+      "question": "Explain async def vs def concurrency",
+      "answer_30s": "async def endpoints execute directly on the asyncio event loop and require await for non-blocking I/O. Standard def endpoints run inside a separate AnyIO worker threadpool, preventing blocking third-party calls from stalling the main event loop.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "@app.get(\"/async\")\nasync def async_fetch():\n    async with httpx.AsyncClient() as client:\n        resp = await client.get(\"https://api.example.com\")\n        return resp.json()\n\n@app.get(\"/sync\")\ndef sync_worker():\n    return time.sleep(1) # runs safely in threadpool"
+      },
+      "typical_use": "Choosing between async non-blocking drivers vs legacy synchronous libraries.",
+      "pitfalls": [
+        "Classic interview trap: Never call blocking I/O (like requests.get or time.sleep) directly inside an async def function, as it freezes the entire event loop."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-2582ced0ab",
+      "topic_id": "fastap-2582ced0ab",
+      "category": "Async",
+      "title": "BackgroundTasks",
+      "question": "Explain BackgroundTasks",
+      "answer_30s": "BackgroundTasks allows deferring secondary operations until after the HTTP response has been sent to the client. This keeps response latency low for tasks like sending confirmation emails or audit logs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi import BackgroundTasks\n\ndef send_welcome(email: str):\n    # email delivery logic\n    pass\n\n@app.post(\"/register\")\ndef register(email: str, bg: BackgroundTasks):\n    bg.add_task(send_welcome, email)\n    return {\"status\": \"registered\"}"
+      },
+      "typical_use": "Sending emails, updating search indexes, or logging audit trails.",
+      "pitfalls": [
+        "BackgroundTasks runs in-process. For critical, retry-sensitive, or long-running jobs, use dedicated distributed queues like Celery, BullMQ, or Kafka."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-833af0ae58",
+      "topic_id": "fastap-833af0ae58",
+      "category": "Test and deploy",
+      "title": "Testing with TestClient & pytest",
+      "question": "Explain Testing with TestClient & pytest",
+      "answer_30s": "FastAPI applications are tested using Starlette's TestClient powered by HTTPX. TestClient executes in-process without binding a network port, allowing sub-second test execution. Dependencies are swapped via app.dependency_overrides.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from fastapi.testclient import TestClient\nfrom main import app, get_db\n\nclient = TestClient(app)\n\ndef test_read_main():\n    response = client.get(\"/\")\n    assert response.status_code == 200\n    assert response.json() == {\"msg\": \"hello\"}"
+      },
+      "typical_use": "Unit testing, integration testing, and CI/CD pipelines.",
+      "pitfalls": [
+        "For testing async endpoints or WebSockets with pytest-asyncio, use httpx.AsyncClient with ASGITransport."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-5888f6fca0",
+      "topic_id": "fastap-5888f6fca0",
+      "category": "Q&A",
+      "title": "Why is FastAPI so fast?",
+      "question": "Explain Why is FastAPI so fast?",
+      "answer_30s": "FastAPI runs on ASGI with Starlette and Uvicorn, which process asynchronous I/O concurrently on Python's event loop. In addition, Pydantic v2 executes all schema parsing and validation in compiled Rust, achieving high throughput with minimal overhead.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": ""
+      },
+      "typical_use": "Explaining framework performance trade-offs to senior interviewers.",
+      "pitfalls": [
+        "Performance gains are fully realized when underlying database drivers and HTTP clients are truly non-blocking (e.g. asyncpg, httpx)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-fb6467f133",
+      "topic_id": "fastap-fb6467f133",
+      "category": "Q&A",
+      "title": "FastAPI vs Flask vs Django?",
+      "question": "Explain FastAPI vs Flask vs Django?",
+      "answer_30s": "Flask is a minimal, synchronous microframework where developers must add validation and API documentation manually. Django is a batteries-included full-stack framework with an integrated ORM and admin interface. FastAPI is purpose-built for APIs: it is async-native, validates inputs via type hints, and automatically generates interactive OpenAPI documentation.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": ""
+      },
+      "typical_use": "System architectural reviews and technology selection discussions.",
+      "pitfalls": [
+        "Highlight when to choose each: FastAPI for APIs and microservices, Django for monolithic apps needing admin panels and auth out of the box, Flask for simple scripts."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "fastap-61977765bd",
+      "topic_id": "fastap-61977765bd",
+      "category": "Q&A",
+      "title": "How do you handle database sessions per request?",
+      "question": "Explain How do you handle database sessions per request?",
+      "answer_30s": "I implement a dependency generator with yield that instantiates a scoped session, yields it to the route handler, and closes it inside a finally block. This ensures that every HTTP request has an isolated session that closes even if an unhandled exception occurs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": ""
+      },
+      "typical_use": "Data access patterns and resource lifecycle management.",
+      "pitfalls": [
+        "In modern async FastAPI, use AsyncSession with SQLAlchemy 2.0 and asyncpg for optimal concurrency."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

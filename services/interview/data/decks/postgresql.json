@@ -1,0 +1,374 @@
+{
+  "tech": "postgresql",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "postgr-7faeb87394",
+      "topic_id": "postgr-7faeb87394",
+      "category": "Architecture",
+      "title": "ACID, WAL & MVCC Internals",
+      "question": "Explain ACID, WAL & MVCC Internals",
+      "answer_30s": "PostgreSQL guarantees ACID durability via Write-Ahead Logging (WAL): changes are appended sequentially to WAL before modifying heap pages. MVCC (Multi-Version Concurrency Control) tags each row tuple with xmin/xmax transaction IDs so readers never block writers and writers never block readers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;\nSELECT balance FROM accounts WHERE id = 1;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nCOMMIT;"
+      },
+      "typical_use": "Financial ledgers, inventory reservations, and concurrent order processing.",
+      "pitfalls": [
+        "Know the four SQL isolation levels and which anomalies PostgreSQL prevents: Read Committed (default) allows non-repeatable reads; Repeatable Read prevents phantom reads too via snapshot isolation; Serializable uses SSI."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-e39194a39d",
+      "topic_id": "postgr-e39194a39d",
+      "category": "Performance",
+      "title": "Indexing Strategies (B-Tree, GIN, GiST, BRIN, Partial)",
+      "question": "Explain Indexing Strategies (B-Tree, GIN, GiST, BRIN, Partial)",
+      "answer_30s": "B-Tree handles equality, range, and sorting; GIN indexes composite values like JSONB, arrays, and full-text search; GiST supports geometric and range exclusion constraints; BRIN stores min/max per block range for massive append-only time-series tables at a fraction of B-Tree size.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "CREATE INDEX CONCURRENTLY idx_orders_cust_date ON orders (customer_id, created_at DESC);\nCREATE INDEX idx_audit_meta ON audit_logs USING GIN (metadata);\nCREATE INDEX idx_active_users ON users (email) WHERE deleted_at IS NULL;"
+      },
+      "typical_use": "Speeding up multi-million-row queries while keeping write amplification low.",
+      "pitfalls": [
+        "Always mention CREATE INDEX CONCURRENTLY in production so writes are not blocked during index creation."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-ad2fa61a55",
+      "topic_id": "postgr-ad2fa61a55",
+      "category": "Performance",
+      "title": "EXPLAIN (ANALYZE, BUFFERS) Query Tuning",
+      "question": "Explain EXPLAIN (ANALYZE, BUFFERS) Query Tuning",
+      "answer_30s": "EXPLAIN ANALYZE executes the query and compares planner row estimates against actual rows and timing. BUFFERS shows shared hit (RAM cache) vs shared read (disk I/O), helping spot sequential scans, bad join orders (Nested Loop vs Hash Join), and disk spills.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "EXPLAIN (ANALYZE, BUFFERS)\nSELECT o.id, o.total FROM orders o\nWHERE o.customer_id = 42\nORDER BY o.created_at DESC LIMIT 20;"
+      },
+      "typical_use": "Diagnosing slow queries and eliminating unexpected sequential scans.",
+      "pitfalls": [
+        "Large gaps between estimated and actual rows mean stale planner statistics\u2014run ANALYZE table_name or increase default_statistics_target."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-3ede2be403",
+      "topic_id": "postgr-3ede2be403",
+      "category": "Reliability",
+      "title": "VACUUM, Dead Tuples & Transaction ID Wraparound",
+      "question": "Explain VACUUM, Dead Tuples & Transaction ID Wraparound",
+      "answer_30s": "Because MVCC creates new tuple versions on UPDATE and leaves old ones on DELETE, dead tuples accumulate and bloat tables/indexes. Autovacuum reclaims dead tuple space (FSM) and freezes old XIDs to prevent 32-bit transaction ID wraparound.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT relname, n_dead_tup, n_live_tup, last_autovacuum\nFROM pg_stat_user_tables\nORDER BY n_dead_tup DESC LIMIT 10;"
+      },
+      "typical_use": "Preventing table bloat and latency spikes in write-heavy workloads.",
+      "pitfalls": [
+        "Never disable autovacuum; instead tune autovacuum_vacuum_scale_factor (e.g. 0.02) on high-churn tables."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-5daff758c5",
+      "topic_id": "postgr-5daff758c5",
+      "category": "Performance",
+      "title": "Connection Pooling & PgBouncer",
+      "question": "Explain Connection Pooling & PgBouncer",
+      "answer_30s": "Each PostgreSQL connection spawns a separate OS backend process (~5-10MB RAM + context-switching overhead). PgBouncer multiplexes thousands of short-lived app/serverless connections onto a small pool of persistent DB backends using transaction pooling.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "[pgbouncer]\npool_mode = transaction\nmax_client_conn = 1000\ndefault_pool_size = 25\nreserve_pool_size = 5"
+      },
+      "typical_use": "Scaling microservices and serverless functions without exhausting max_connections.",
+      "pitfalls": [
+        "In transaction pooling mode, session-level features (SET local vs SET, temp tables, LISTEN/NOTIFY) reset after each transaction."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-11ae9458a8",
+      "topic_id": "postgr-11ae9458a8",
+      "category": "Concurrency",
+      "title": "Explicit Locking, SELECT FOR UPDATE & SKIP LOCKED",
+      "question": "Explain Explicit Locking, SELECT FOR UPDATE & SKIP LOCKED",
+      "answer_30s": "While MVCC handles normal reads/writes, concurrent updates to the same row still serialize on row locks. SELECT ... FOR UPDATE locks selected rows pessimistically, and FOR UPDATE SKIP LOCKED lets worker queues claim jobs without waiting on locked rows.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "BEGIN;\nSELECT id, payload FROM job_queue\nWHERE status = 'pending'\nORDER BY created_at\nFOR UPDATE SKIP LOCKED LIMIT 1;\n-- process and mark done\nCOMMIT;"
+      },
+      "typical_use": "Implementing reliable PostgreSQL-backed job queues and preventing double-spending.",
+      "pitfalls": [
+        "SKIP LOCKED is a favorite senior interview pattern for queue workers without adding a separate broker."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-4042f3183c",
+      "topic_id": "postgr-4042f3183c",
+      "category": "Architecture",
+      "title": "Table Partitioning & Sharding Trade-offs",
+      "question": "Explain Table Partitioning & Sharding Trade-offs",
+      "answer_30s": "Declarative partitioning (RANGE, LIST, HASH) splits a large logical table into smaller physical child tables on one node, enabling partition pruning and instant DROP TABLE cleanup for time-series retention. Sharding (e.g., Citus) distributes partitions across multiple servers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "CREATE TABLE events (\n    id BIGINT, created_at TIMESTAMPTZ NOT NULL, payload JSONB\n) PARTITION BY RANGE (created_at);\nCREATE TABLE events_2026_11 PARTITION OF events\nFOR VALUES FROM ('2026-11-01') TO ('2026-12-01');"
+      },
+      "typical_use": "Managing multi-billion-row event/audit tables with fast retention purging.",
+      "pitfalls": [
+        "Partitioning improves maintenance and pruning on one host; only shard across nodes when single-node vertical/read-replica scaling is exhausted."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-86b348e951",
+      "topic_id": "postgr-86b348e951",
+      "category": "Reliability",
+      "title": "Streaming Replication, Failover & Read Replicas",
+      "question": "Explain Streaming Replication, Failover & Read Replicas",
+      "answer_30s": "Primary nodes stream WAL records to standby replicas asynchronously (low latency, tiny RPO window) or synchronously (zero data loss, higher write latency). Tools like Patroni + etcd automate health checks and leader election on primary failure.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT client_addr, state, sync_state,\n       pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes\nFROM pg_stat_replication;"
+      },
+      "typical_use": "Scaling read-heavy workloads and achieving multi-AZ high availability.",
+      "pitfalls": [
+        "Always address read-your-own-writes consistency: route critical post-write reads to the primary or track LSN."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-537c6e01f5",
+      "topic_id": "postgr-537c6e01f5",
+      "category": "Security",
+      "title": "Row-Level Security (RLS), Roles & TLS",
+      "question": "Explain Row-Level Security (RLS), Roles & TLS",
+      "answer_30s": "PostgreSQL supports least-privilege role hierarchies, SCRAM-SHA-256 authentication, TLS with sslmode=verify-full, and Row-Level Security (RLS) policies that enforce tenant isolation directly inside the database engine.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;\nCREATE POLICY tenant_isolation ON invoices\nUSING (tenant_id = current_setting('app.current_tenant')::uuid);"
+      },
+      "typical_use": "Enforcing multi-tenant SaaS data isolation as defense-in-depth.",
+      "pitfalls": [
+        "Always use parameterized queries ($1, %s) rather than string formatting to eliminate SQL injection."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-7af2b26f78",
+      "topic_id": "postgr-7af2b26f78",
+      "category": "Basics",
+      "title": "JSONB vs Relational Normalization",
+      "question": "Explain JSONB vs Relational Normalization",
+      "answer_30s": "JSONB stores binary parsed JSON supporting GIN indexing, path operators (->>, @>), and partial updates without re-parsing text on every read. Use relational columns for core entities, foreign keys, and frequent joins, and JSONB for sparse or evolving metadata.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT id, metadata->>'plan' AS plan\nFROM accounts\nWHERE metadata @> '{\"tier\": \"enterprise\"}';"
+      },
+      "typical_use": "Storing dynamic webhook payloads, user preferences, and audit attributes alongside relational data.",
+      "pitfalls": [
+        "Relational constraints (FOREIGN KEY, NOT NULL, CHECK) give stronger guarantees than schemaless JSONB for core billing/auth data."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-23d272af9f",
+      "topic_id": "postgr-23d272af9f",
+      "category": "Q&A",
+      "title": "Q: What happens under the hood when you run UPDATE in PostgreSQL?",
+      "question": "Q: What happens under the hood when you run UPDATE in PostgreSQL?",
+      "answer_30s": "A: PostgreSQL does not overwrite the row in place. It marks the old tuple's xmax with the current transaction ID, inserts a new tuple version with xmin = current XID, writes the change to WAL, and updates any affected indexes (unless HOT\u2014Heap-Only Tuple\u2014update applies when no indexed columns changed and free space exists on the same page).",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- HOT updates occur when indexed columns are untouched and page fillfactor < 100\nALTER TABLE sessions SET (fillfactor = 80);"
+      },
+      "typical_use": "Explaining why update-heavy tables experience index bloat and why fillfactor helps.",
+      "pitfalls": [
+        "Mentioning HOT (Heap-Only Tuple) updates immediately signals deep PostgreSQL internals knowledge."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-d9cd0c8e5a",
+      "topic_id": "postgr-d9cd0c8e5a",
+      "category": "Q&A",
+      "title": "Q: How do you prevent and resolve deadlocks in PostgreSQL?",
+      "question": "Q: How do you prevent and resolve deadlocks in PostgreSQL?",
+      "answer_30s": "A: Deadlocks happen when Transaction A locks row 1 and waits for row 2 while Transaction B locks row 2 and waits for row 1. PostgreSQL detects cycles via deadlock_timeout (default 1s) and aborts one transaction. Prevent them by locking rows in a consistent deterministic order (e.g., ORDER BY id ASC), keeping transactions short, and setting lock_timeout.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SET lock_timeout = '2s';\nSET statement_timeout = '5s';\nSELECT * FROM accounts WHERE id IN (10, 25) ORDER BY id ASC FOR UPDATE;"
+      },
+      "typical_use": "Eliminating random transaction aborts during concurrent batch updates.",
+      "pitfalls": [
+        "Also set idle_in_transaction_session_timeout to kill clients that open a transaction and crash/hang."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-2ae0ce177c",
+      "topic_id": "postgr-2ae0ce177c",
+      "category": "Q&A",
+      "title": "Q: B-Tree vs Hash vs GIN vs BRIN \u2014 when do you use each?",
+      "question": "Q: B-Tree vs Hash vs GIN vs BRIN \u2014 when do you use each?",
+      "answer_30s": "A: Use B-Tree (default) for almost everything (=, <, >, BETWEEN, ORDER BY, prefix LIKE 'abc%'). Use GIN for multi-value columns (JSONB, arrays, tsvector). Use BRIN for huge, physically sorted append-only tables (timestamps/logs). Hash indexes only support equality (=) and are rarely needed since modern B-Trees are nearly as fast.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "CREATE INDEX idx_logs_ts_brin ON logs USING BRIN (created_at) WITH (pages_per_range = 64);"
+      },
+      "typical_use": "Choosing the optimal index type in system design and schema review interviews.",
+      "pitfalls": [
+        "Explain leftmost prefix rule for composite B-Tree indexes (a, b, c): supports (a), (a,b), (a,b,c), not (b) alone."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-ccc1dcc33c",
+      "topic_id": "postgr-ccc1dcc33c",
+      "category": "Q&A",
+      "title": "Q: Why is OFFSET pagination slow on large tables and how do you fix it?",
+      "question": "Q: Why is OFFSET pagination slow on large tables and how do you fix it?",
+      "answer_30s": "A: OFFSET N forces PostgreSQL to scan and discard N rows before returning the next page, degrading to O(N) as page depth grows. Fix it with keyset (cursor) pagination using an indexed (created_at, id) tuple so every page executes in O(log N) time.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- Keyset pagination (O(log N) regardless of page depth)\nSELECT id, created_at FROM orders\nWHERE (created_at, id) < ('2026-11-25T10:00:00Z', 98421)\nORDER BY created_at DESC, id DESC LIMIT 25;"
+      },
+      "typical_use": "Building fast infinite scroll feeds and large admin tables.",
+      "pitfalls": [
+        "Mention that keyset pagination also avoids duplicate/skipped rows when new items are inserted while paging."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-bca7f00fda",
+      "topic_id": "postgr-bca7f00fda",
+      "category": "Q&A",
+      "title": "Q: What is the difference between UNION and UNION ALL, and CTEs vs Subqueries?",
+      "question": "Q: What is the difference between UNION and UNION ALL, and CTEs vs Subqueries?",
+      "answer_30s": "A: UNION deduplicates results using an expensive sort/hash step, whereas UNION ALL concatenates results directly in O(N) without deduplication. Since PostgreSQL 12, non-recursive CTEs are inlined by default (like subqueries) unless explicitly marked AS MATERIALIZED.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "WITH recent_orders AS NOT MATERIALIZED (\n  SELECT * FROM orders WHERE created_at >= NOW() - INTERVAL '7 days'\n)\nSELECT customer_id, COUNT(*) FROM recent_orders GROUP BY customer_id;"
+      },
+      "typical_use": "Optimizing complex analytical queries and avoiding accidental optimization fences.",
+      "pitfalls": [
+        "Knowing that PostgreSQL 12+ changed CTEs from optimization fences to inline-by-default is a classic senior differentiator."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "postgr-e051d6439d",
+      "topic_id": "postgr-e051d6439d",
+      "category": "Q&A",
+      "title": "Q: How do you perform zero-downtime schema migrations in PostgreSQL?",
+      "question": "Q: How do you perform zero-downtime schema migrations in PostgreSQL?",
+      "answer_30s": "A: Never run operations that hold an ACCESS EXCLUSIVE lock for long. Use CREATE INDEX CONCURRENTLY, add nullable columns first (instant metadata-only in PG 11+ even with constant defaults), backfill in small batches, add constraints as NOT VALID then VALIDATE CONSTRAINT (uses ShareUpdateExclusiveLock), and use expand-and-contract for renames/drops.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "ALTER TABLE users ADD CONSTRAINT chk_age CHECK (age >= 0) NOT VALID;\nALTER TABLE users VALIDATE CONSTRAINT chk_age;"
+      },
+      "typical_use": "Deploying schema changes to production databases serving live traffic.",
+      "pitfalls": [
+        "Always set lock_timeout before running migrations so a blocked DDL doesn't queue behind a long query and stall all subsequent reads/writes."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "senior",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

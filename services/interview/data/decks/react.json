@@ -1,0 +1,374 @@
+{
+  "tech": "react",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "react-52a05e8881",
+      "topic_id": "react-52a05e8881",
+      "category": "Architecture",
+      "title": "React Fiber & Concurrent Rendering",
+      "question": "Explain React Fiber & Concurrent Rendering",
+      "answer_30s": "React Fiber is a linked-list tree representation of UI work that lets React pause, prioritize, abort, and resume rendering in small units across frames. Concurrent features like useTransition mark non-urgent updates (filtering a huge list) as interruptible so urgent updates (typing) stay at 60 FPS.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const [isPending, startTransition] = useTransition();\nfunction onSearch(val) {\n  setInput(val); // Urgent\n  startTransition(() => setFiltered(heavyFilter(val))); // Interruptible\n}"
+      },
+      "typical_use": "Keeping input fields and animations responsive during heavy client-side filtering.",
+      "pitfalls": [
+        "Compare useTransition (wraps state setter) vs useDeferredValue (defers a derived value)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-f5caeb3ec8",
+      "topic_id": "react-f5caeb3ec8",
+      "category": "Performance",
+      "title": "useMemo, useCallback & React.memo",
+      "question": "Explain useMemo, useCallback & React.memo",
+      "answer_30s": "React.memo skips re-rendering a child when props are shallowly equal. useCallback memoizes function references, and useMemo memoizes expensive computed values so prop references stay stable across parent renders.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const Row = React.memo(({ item, onSelect }) => (\n  <button onClick={() => onSelect(item.id)}>{item.name}</button>\n));\nconst handleSelect = useCallback((id) => setSelected(id), []);"
+      },
+      "typical_use": "Preventing cascading re-renders in large tables and virtualized lists.",
+      "pitfalls": [
+        "Don't wrap everything blindly in useMemo/useCallback\u2014profile with React DevTools Profiler first; React Compiler also automates memoization."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-e01d1911d7",
+      "topic_id": "react-e01d1911d7",
+      "category": "Basics",
+      "title": "Virtual DOM, Reconciliation & the `key` Prop",
+      "question": "Explain Virtual DOM, Reconciliation & the `key` Prop",
+      "answer_30s": "When state changes, React builds a new element tree and diffs it against the previous Fiber tree in O(n) heuristics (different element types tear down subtrees; lists match siblings by `key`). Using array indices as keys breaks state and animations when items reorder or insert.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "{items.map(item => <TodoRow key={item.id} item={item} />)}"
+      },
+      "typical_use": "Ensuring stateful list items (inputs, checkboxes, animations) stay tied to the right data.",
+      "pitfalls": [
+        "Changing a component's `key` intentionally is also a clean React pattern to force-reset its internal state."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-eb2b97560f",
+      "topic_id": "react-eb2b97560f",
+      "category": "Concurrency",
+      "title": "useEffect Lifecycle, Cleanup & Race Conditions",
+      "question": "Explain useEffect Lifecycle, Cleanup & Race Conditions",
+      "answer_30s": "useEffect runs after commit/paint and should synchronize React state with external systems (subscriptions, timers, fetches). Returning a cleanup function cancels stale subscriptions or aborts in-flight fetch requests via AbortController to prevent race conditions.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "useEffect(() => {\n  const controller = new AbortController();\n  fetch(`/api/user/${id}`, { signal: controller.signal })\n    .then(r => r.json()).then(setUser).catch(() => {});\n  return () => controller.abort();\n}, [id]);"
+      },
+      "typical_use": "Preventing out-of-order API responses from overwriting newer UI state.",
+      "pitfalls": [
+        "In React 18/19 StrictMode (dev), effects mount, unmount, and remount once intentionally to expose missing cleanups."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-6c71545eef",
+      "topic_id": "react-6c71545eef",
+      "category": "Architecture",
+      "title": "State Colocation, Split Context & External Stores",
+      "question": "Explain State Colocation, Split Context & External Stores",
+      "answer_30s": "Keep state as close as possible to where it is used. React Context re-renders every consumer when its value changes; split State and Dispatch contexts or use selector-based stores (Zustand, Redux Toolkit) and server-state caches (TanStack Query) for high-frequency updates.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const StateCtx = createContext(null);\nconst DispatchCtx = createContext(null);\n// Components that only dispatch never re-render on state changes"
+      },
+      "typical_use": "Eliminating full-tree re-render bottlenecks in complex dashboards.",
+      "pitfalls": [
+        "Distinguish client UI state (modals, form drafts) from server cache state (TanStack Query/SWR with stale-while-revalidate)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-50ff494aa1",
+      "topic_id": "react-50ff494aa1",
+      "category": "Performance",
+      "title": "Code Splitting, Lazy Loading & Virtualization",
+      "question": "Explain Code Splitting, Lazy Loading & Virtualization",
+      "answer_30s": "React.lazy and dynamic import() split large route/modal bundles into on-demand chunks to shrink initial JS parse/eval time. Windowing/virtualization (react-window, TanStack Virtual) renders only visible DOM nodes for 10,000+ row lists.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const AnalyticsChart = React.lazy(() => import('./AnalyticsChart'));\n<Suspense fallback={<Spinner />}><AnalyticsChart /></Suspense>"
+      },
+      "typical_use": "Improving Largest Contentful Paint (LCP) and Interaction to Next Paint (INP).",
+      "pitfalls": [
+        "Mention bundle analysis (source-map-explorer / webpack-bundle-analyzer) to catch accidental heavy imports like full lodash or moment."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-a88d059adf",
+      "topic_id": "react-a88d059adf",
+      "category": "Reliability",
+      "title": "Error Boundaries & Suspense",
+      "question": "Explain Error Boundaries & Suspense",
+      "answer_30s": "Error Boundaries catch rendering and lifecycle errors in child component trees and render fallback UIs instead of crashing the whole app. Suspense declaratively coordinates loading states for lazy components and async data.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "class ErrorBoundary extends React.Component {\n  state = { hasError: false };\n  static getDerivedStateFromError() { return { hasError: true }; }\n  render() { return this.state.hasError ? <Fallback /> : this.props.children; }\n}"
+      },
+      "typical_use": "Isolating widget failures in production dashboards so one broken panel doesn't blank the page.",
+      "pitfalls": [
+        "Error Boundaries do NOT catch errors in event handlers, async callbacks, or SSR\u2014use try/catch there."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-671f9a9b81",
+      "topic_id": "react-671f9a9b81",
+      "category": "System Design",
+      "title": "CSR vs SSR vs SSG vs ISR & React Server Components",
+      "question": "Explain CSR vs SSR vs SSG vs ISR & React Server Components",
+      "answer_30s": "CSR renders in the browser (good for private interactive apps, slower FCP). SSR renders HTML per request (dynamic + SEO). SSG pre-builds HTML at build time; ISR revalidates stale pages in the background. React Server Components (RSC) run exclusively on the server with zero client bundle JS.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Server Component (zero client JS shipped for DB/markdown deps)\nexport default async function ProductPage({ id }) {\n  const product = await db.products.findUnique({ where: { id } });\n  return <ProductView product={product} />;\n}"
+      },
+      "typical_use": "Choosing rendering strategies in Next.js for e-commerce, SaaS, and marketing sites.",
+      "pitfalls": [
+        "Explain hydration: SSR sends HTML for fast first paint, then React attaches event listeners on the client."
+      ],
+      "follow_ups": [],
+      "tier": "advanced",
+      "level": "mid",
+      "weight": 5,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-c87a15c8cf",
+      "topic_id": "react-c87a15c8cf",
+      "category": "Security",
+      "title": "XSS Prevention & Safe Rendering in React",
+      "question": "Explain XSS Prevention & Safe Rendering in React",
+      "answer_30s": "React escapes JSX text expressions by default, blocking most XSS vectors. Vulnerabilities still arise from `dangerouslySetInnerHTML`, unsanitized `javascript:` URLs in `href`, or third-party scripts\u2014always sanitize with DOMPurify and validate URL protocols.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "import DOMPurify from 'dompurify';\n<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />"
+      },
+      "typical_use": "Safely rendering user-generated rich text or markdown.",
+      "pitfalls": [
+        "Also note HttpOnly cookies for auth tokens instead of localStorage to protect against token theft if XSS occurs."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-31ee0ddeb4",
+      "topic_id": "react-31ee0ddeb4",
+      "category": "Basics",
+      "title": "Custom Hooks & Controlled vs Uncontrolled Inputs",
+      "question": "Explain Custom Hooks & Controlled vs Uncontrolled Inputs",
+      "answer_30s": "Custom hooks (`useDebounce`, `useFetch`) extract reusable stateful logic without wrapper hell. Controlled inputs store value in React state (instant validation); uncontrolled inputs use refs/DOM state (better for huge forms or file inputs).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "function useDebounce(value, delay = 300) {\n  const [debounced, setDebounced] = useState(value);\n  useEffect(() => {\n    const t = setTimeout(() => setDebounced(value), delay);\n    return () => clearTimeout(t);\n  }, [value, delay]);\n  return debounced;\n}"
+      },
+      "typical_use": "Building reusable search inputs and performant forms.",
+      "pitfalls": [
+        "Mention React 19 `useActionState` and `useOptimistic` for form mutations."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-7aab4d8524",
+      "topic_id": "react-7aab4d8524",
+      "category": "Q&A",
+      "title": "Q: Why must Hooks follow the Rules of Hooks (top-level only, no conditionals)?",
+      "question": "Q: Why must Hooks follow the Rules of Hooks (top-level only, no conditionals)?",
+      "answer_30s": "A: React tracks hook state per component instance as an ordered linked list (hook indices 0, 1, 2...) inside its Fiber node, not by variable name. Calling a hook inside an `if` or loop shifts the call order across renders and corrupts state associations.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Wrong: if (cond) { useState(0); }\n// Right: call useState at top level, guard logic inside useEffect or JSX"
+      },
+      "typical_use": "One of the most classic React internals questions.",
+      "pitfalls": [
+        "Mention eslint-plugin-react-hooks enforces this statically at build time."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-348b9e2e08",
+      "topic_id": "react-348b9e2e08",
+      "category": "Q&A",
+      "title": "Q: What is a stale closure in React Hooks and how do you fix it?",
+      "question": "Q: What is a stale closure in React Hooks and how do you fix it?",
+      "answer_30s": "A: A stale closure happens when an effect, timer, or callback captures state/props from an earlier render because its dependency array omitted them. Fix it by including all dependencies, using functional state updates `setCount(c => c + 1)`, or storing mutable latest values in `useRef`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "useEffect(() => {\n  const id = setInterval(() => setCount(c => c + 1), 1000);\n  return () => clearInterval(id);\n}, []);"
+      },
+      "typical_use": "Debugging counters, WebSocket handlers, and event listeners that read outdated state.",
+      "pitfalls": [
+        "Functional updater `c => c + 1` removes `count` from the dependency array cleanly."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-e8768380ca",
+      "topic_id": "react-e8768380ca",
+      "category": "Q&A",
+      "title": "Q: Why does useEffect run twice in development in React 18+?",
+      "question": "Q: Why does useEffect run twice in development in React 18+?",
+      "answer_30s": "A: React StrictMode intentionally mounts, unmounts (runs cleanup), and remounts components in development to stress-test effect idempotency and catch missing cleanups (e.g., unclosed WebSockets, duplicate timers, or un-aborted fetches). It only happens once in production.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Always return cleanup from effects so double-mount is safe"
+      },
+      "typical_use": "Common interview question checking React 18+ hands-on experience.",
+      "pitfalls": [
+        "State clearly: don't remove StrictMode to 'fix' it\u2014fix the missing cleanup or abort logic."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-eaed915723",
+      "topic_id": "react-eaed915723",
+      "category": "Q&A",
+      "title": "Q: How do you decide when to use Context vs Redux/Zustand vs TanStack Query?",
+      "question": "Q: How do you decide when to use Context vs Redux/Zustand vs TanStack Query?",
+      "answer_30s": "A: Use Context for low-frequency global values (theme, locale, auth user). Use Zustand or Redux Toolkit for complex, frequently changing client state needing selective subscriptions and devtools. Use TanStack Query/SWR for server/async data (caching, deduplication, background refetch, optimistic updates).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// TanStack Query handles caching, retries, and stale-while-revalidate automatically"
+      },
+      "typical_use": "Demonstrating mature frontend architecture judgment.",
+      "pitfalls": [
+        "Avoid putting server-fetched lists into Redux manually when TanStack Query eliminates 80% of boilerplate."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-6b8f79c7fd",
+      "topic_id": "react-6b8f79c7fd",
+      "category": "Q&A",
+      "title": "Q: How do you debug and fix a slow React page?",
+      "question": "Q: How do you debug and fix a slow React page?",
+      "answer_30s": "A: Open React DevTools Profiler and Chrome Performance tab to find wasted renders or long main-thread tasks. Fix by moving state down (colocation), wrapping children with React.memo + stable callbacks, virtualizing long lists, code-splitting heavy routes, and debouncing expensive inputs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Check 'Highlight updates when components render' in React DevTools"
+      },
+      "typical_use": "Structured performance debugging answer interviewers look for.",
+      "pitfalls": [
+        "Measure before and after (e.g. reduced commit duration from 180ms to 12ms)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "react-1421c42470",
+      "topic_id": "react-1421c42470",
+      "category": "Q&A",
+      "title": "Q: What is the difference between useEffect and useLayoutEffect?",
+      "question": "Q: What is the difference between useEffect and useLayoutEffect?",
+      "answer_30s": "A: useEffect runs asynchronously after the browser has painted the screen, preventing visual blocking. useLayoutEffect runs synchronously after DOM mutations but before browser paint\u2014use it only when measuring DOM layout (getBoundingClientRect) or adjusting scroll/tooltip positions to prevent flicker.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "useLayoutEffect(() => {\n  const rect = ref.current.getBoundingClientRect();\n  setTooltipTop(rect.bottom + 8);\n}, []);"
+      },
+      "typical_use": "Preventing UI flicker in custom popovers and dynamic measurements.",
+      "pitfalls": [
+        "In SSR, useLayoutEffect warns on the server because there is no DOM\u2014guard or prefer useEffect unless layout measurement is required."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

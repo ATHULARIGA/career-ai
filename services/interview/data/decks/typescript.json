@@ -1,0 +1,351 @@
+{
+  "tech": "typescript",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "typesc-d5fa94b210",
+      "topic_id": "typesc-d5fa94b210",
+      "category": "Basics",
+      "title": "Structural Typing vs Nominal Typing",
+      "question": "Explain Structural Typing vs Nominal Typing",
+      "answer_30s": "TypeScript uses structural typing (duck typing at compile time): two types are compatible if their shapes match, regardless of explicit class/interface names. Branded types (`type UserId = string & { readonly __brand: unique symbol }`) simulate nominal typing for IDs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "type UserId = string & { readonly __brand: 'UserId' };\nconst toUserId = (id: string) => id as UserId;"
+      },
+      "typical_use": "Preventing accidental swapping of `userId` and `orderId` strings in function calls.",
+      "pitfalls": [
+        "Remember TypeScript types are completely erased at runtime\u2014always validate external API/JSON payloads with Zod or Valibot."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-8bcc0f9028",
+      "topic_id": "typesc-8bcc0f9028",
+      "category": "Basics",
+      "title": "`unknown` vs `any` vs `never`",
+      "question": "Explain `unknown` vs `any` vs `never`",
+      "answer_30s": "`any` disables type checking entirely (unsafe). `unknown` is the type-safe top type: you must narrow it with type guards before using it. `never` is the bottom type for functions that never return (throw/infinite loop) or exhaustive union checks.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "function assertNever(x: never): never {\n  throw new Error(`Unhandled case: ${x}`);\n}"
+      },
+      "typical_use": "Writing type-safe error catch blocks (`catch (err: unknown)`) and exhaustive switches.",
+      "pitfalls": [
+        "Enable `strict: true` and `noUncheckedIndexedAccess: true` in `tsconfig.json` for real production safety."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-4f1f474161",
+      "topic_id": "typesc-4f1f474161",
+      "category": "Architecture",
+      "title": "Discriminated Unions & Exhaustiveness Checking",
+      "question": "Explain Discriminated Unions & Exhaustiveness Checking",
+      "answer_30s": "A discriminated union combines object types sharing a common literal discriminant property (e.g. `status: 'loading' | 'success' | 'error'`). TypeScript narrows the exact fields available inside `switch`/`if` blocks, and `never` ensures compile-time errors if a new variant is missed.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "type ApiState =\n  | { status: 'loading' }\n  | { status: 'ok'; data: string[] }\n  | { status: 'err'; error: Error };"
+      },
+      "typical_use": "Modeling API states, Redux actions, and AST nodes cleanly without impossible boolean flags.",
+      "pitfalls": [
+        "Prefer discriminated unions over `{ loading: boolean; data?: T; error?: Error }` (making illegal states unrepresentable)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-c0128941b4",
+      "topic_id": "typesc-c0128941b4",
+      "category": "Basics",
+      "title": "Generics, Constraints (`extends`) & `keyof`",
+      "question": "Explain Generics, Constraints (`extends`) & `keyof`",
+      "answer_30s": "Generics parameterize types for reusable functions and containers without losing type safety. Constraints (`T extends object`) restrict type arguments, and `K extends keyof T` guarantees property keys actually exist on `T`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "function pickProp<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}"
+      },
+      "typical_use": "Building type-safe API clients, table components, and state helpers.",
+      "pitfalls": [
+        "Mention `infer` inside conditional types to extract return types or array element types dynamically."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-3fd8754f9f",
+      "topic_id": "typesc-3fd8754f9f",
+      "category": "Basics",
+      "title": "Utility Types (Partial, Required, Pick, Omit, Record, ReturnType)",
+      "question": "Explain Utility Types (Partial, Required, Pick, Omit, Record, ReturnType)",
+      "answer_30s": "Built-in mapped utility types transform existing types cleanly without duplication: `Partial<T>` for PATCH updates, `Omit<T, 'password'>` for public DTOs, `Pick<T, K>` for subsets, and `Record<K, V>` for typed dictionaries.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "interface User { id: string; email: string; passwordHash: string; }\ntype PublicUser = Omit<User, 'passwordHash'>;\ntype UserPatch = Partial<Pick<User, 'email'>>;"
+      },
+      "typical_use": "Sharing single-source-of-truth domain types across backend DTOs and frontend forms.",
+      "pitfalls": [
+        "Prefer `Omit` / `Pick` over re-declaring duplicate interfaces that drift out of sync."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-6d248d4dce",
+      "topic_id": "typesc-6d248d4dce",
+      "category": "Architecture",
+      "title": "Type Narrowing, Type Predicates & Assertion Functions",
+      "question": "Explain Type Narrowing, Type Predicates & Assertion Functions",
+      "answer_30s": "TypeScript narrows union types via `typeof`, `instanceof`, `in`, and truthiness checks. Custom type predicates (`val is User`) and assertion functions (`asserts val is User`) teach the compiler custom runtime validation.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "function isError(val: unknown): val is { message: string } {\n  return typeof val === 'object' && val !== null && 'message' in val;\n}"
+      },
+      "typical_use": "Safely narrowing untyped JSON responses and `unknown` catch errors.",
+      "pitfalls": [
+        "Be careful with type predicates: TypeScript trusts your boolean return value, so write the runtime check accurately."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-269d748948",
+      "topic_id": "typesc-269d748948",
+      "category": "Architecture",
+      "title": "Mapped Types, Conditional Types & Template Literal Types",
+      "question": "Explain Mapped Types, Conditional Types & Template Literal Types",
+      "answer_30s": "Mapped types iterate over union keys (`[K in keyof T]`), conditional types branch on type relationships (`T extends U ? X : Y`), and template literal types compose string unions (`on${Capitalize<Event>}`).",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "type EventHandlers<T extends string> = {\n  [K in T as `on${Capitalize<K>}`]: () => void;\n};"
+      },
+      "typical_use": "Building strongly-typed SDKs, ORM query builders, and route/event systems.",
+      "pitfalls": [
+        "Mention distributive conditional types: `T extends U ? X : Y` distributes over unions unless wrapped in tuples `[T] extends [U]`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-02d2d48704",
+      "topic_id": "typesc-02d2d48704",
+      "category": "Q&A",
+      "title": "Q: `interface` vs `type` \u2014 when should you use each?",
+      "question": "Q: `interface` vs `type` \u2014 when should you use each?",
+      "answer_30s": "A: Both describe object shapes, but `type` can also alias primitives, unions, tuples, and mapped/conditional types. `interface` supports declaration merging (useful for library augmentation) and slightly faster compiler caching on large object hierarchies. Standard rule: `interface` for public object contracts, `type` for unions/utilities.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "type Result = Success | Failure; // Only possible with type"
+      },
+      "typical_use": "One of the most common TypeScript interview questions.",
+      "pitfalls": [
+        "Note that `interface` cannot express union types or conditional types."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-7545fbf41f",
+      "topic_id": "typesc-7545fbf41f",
+      "category": "Q&A",
+      "title": "Q: Why does TypeScript need runtime validation (Zod) if it already checks types?",
+      "question": "Q: Why does TypeScript need runtime validation (Zod) if it already checks types?",
+      "answer_30s": "A: TypeScript performs static type checking ONLY at compile time and erases all types in emitted JS. External inputs (HTTP bodies, env vars, `localStorage`, third-party APIs) can still violate those types at runtime\u2014tools like Zod parse/validate at runtime and infer the TS type (`z.infer<typeof Schema>`) from one source of truth.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "const UserSchema = z.object({ id: z.string().uuid(), age: z.number().int() });\ntype User = z.infer<typeof UserSchema>;"
+      },
+      "typical_use": "Connecting compile-time safety with runtime reliability.",
+      "pitfalls": [
+        "Using Zod as a single source of truth eliminates type/validator drift."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-dea03982ac",
+      "topic_id": "typesc-dea03982ac",
+      "category": "Q&A",
+      "title": "Q: What does the `satisfies` operator do compared to `as` or type annotations?",
+      "question": "Q: What does the `satisfies` operator do compared to `as` or type annotations?",
+      "answer_30s": "A: `as` forcefully casts (unsafe). A `: Type` annotation widens the inferred type (losing literal keys). `satisfies Type` validates that a value conforms to `Type` WHILE preserving its narrower inferred literal types.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "const routes = { home: '/', docs: '/docs' } satisfies Record<string, string>;\n// routes.home is still '/' (not widened to string) AND typos are caught!"
+      },
+      "typical_use": "Typed configuration objects and route maps.",
+      "pitfalls": [
+        "Introduced in TS 4.9\u2014great signal of modern TypeScript fluency."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-bdc22158b8",
+      "topic_id": "typesc-bdc22158b8",
+      "category": "Q&A",
+      "title": "Q: What are `const` assertions (`as const`) and `readonly`?",
+      "question": "Q: What are `const` assertions (`as const`) and `readonly`?",
+      "answer_30s": "A: `as const` marks an object/array deeply `readonly` and narrows all properties/elements to their exact literal types instead of `string`/`number`\u2014essential for deriving union types from config arrays.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "const ROLES = ['admin', 'editor', 'viewer'] as const;\ntype Role = typeof ROLES[number]; // 'admin' | 'editor' | 'viewer'"
+      },
+      "typical_use": "Deriving union types and runtime validation arrays from one constant.",
+      "pitfalls": [
+        "Remember `readonly` is compile-time only; use `Object.freeze()` if runtime immutability is also needed."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-9f43348e62",
+      "topic_id": "typesc-9f43348e62",
+      "category": "Q&A",
+      "title": "Q: What is `noUncheckedIndexedAccess` and why do teams enable it?",
+      "question": "Q: What is `noUncheckedIndexedAccess` and why do teams enable it?",
+      "answer_30s": "A: By default, `arr[0]` or `dict[key]` has type `T`, even though out-of-bounds/missing keys return `undefined` at runtime. Enabling `noUncheckedIndexedAccess` types indexed lookups as `T | undefined`, catching countless subtle `Cannot read properties of undefined` bugs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "// With noUncheckedIndexedAccess: const first = items[0]; // T | undefined"
+      },
+      "typical_use": "Hardening strict TypeScript codebases.",
+      "pitfalls": [
+        "Pair with `strictNullChecks`, `noImplicitAny`, and `exactOptionalPropertyTypes`."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-d207ab01cd",
+      "topic_id": "typesc-d207ab01cd",
+      "category": "Q&A",
+      "title": "Q: How do you type a React component or generic hook cleanly in TypeScript?",
+      "question": "Q: How do you type a React component or generic hook cleanly in TypeScript?",
+      "answer_30s": "A: Prefer plain function props (`function Button({ label }: ButtonProps)`) over `React.FC` (which historically injected implicit `children`). Use `ComponentPropsWithoutRef<'button'>` to extend native HTML attributes cleanly.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "type BtnProps = React.ComponentPropsWithoutRef<'button'> & { variant?: 'primary' | 'ghost' };"
+      },
+      "typical_use": "Practical React + TypeScript component authoring.",
+      "pitfalls": [
+        "Knowing why teams moved away from `React.FC` shows real-world TS+React experience."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-46d5c001c3",
+      "topic_id": "typesc-46d5c001c3",
+      "category": "Q&A",
+      "title": "Q: How do Covariance and Contravariance apply to TypeScript functions?",
+      "question": "Q: How do Covariance and Contravariance apply to TypeScript functions?",
+      "answer_30s": "A: With `strictFunctionTypes` enabled, function return types are covariant (a subtype return is valid), while function parameters are contravariant (a callback expecting a broader supertype parameter is safe where a subtype is passed). This prevents unsafe array/callback mutations.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "// Animal[] accepts Dog, Dog[] cannot safely be passed where Animal[] is mutated with Cat"
+      },
+      "typical_use": "Advanced type-system question for senior roles.",
+      "pitfalls": [
+        "Mention `in` and `out` variance annotations (`interface Producer<out T>`) added in TS 4.7."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "typesc-d6e68628f1",
+      "topic_id": "typesc-d6e68628f1",
+      "category": "Q&A",
+      "title": "Q: Enum vs Union of String Literals \u2014 which is better?",
+      "question": "Q: Enum vs Union of String Literals \u2014 which is better?",
+      "answer_30s": "A: Prefer `as const` objects or string literal unions (`'asc' | 'desc'`) over TS `enum`. String literal unions produce zero runtime JS code, tree-shake cleanly, and work naturally with JSON. Numeric TS enums also allow invalid numbers unless carefully guarded.",
+      "deep_dive": "",
+      "code": {
+        "lang": "typescript",
+        "body": "const Status = { Active: 'active', Paused: 'paused' } as const;\ntype Status = typeof Status[keyof typeof Status];"
+      },
+      "typical_use": "Clean bundle optimization and idiomatic TypeScript.",
+      "pitfalls": [
+        "Only use `enum` if an existing codebase or generated schema already standardizes on it."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

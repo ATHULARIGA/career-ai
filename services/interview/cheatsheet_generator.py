@@ -11,6 +11,12 @@ import json
 import re
 from typing import Any, Optional
 
+from services.interview.blueprints import (
+    card_to_legacy_row,
+    load_blueprint,
+    load_deck,
+    summarize_blueprint,
+)
 from services.interview.cheatsheet_decks import (
     EXTRA_CURATED_DECKS,
     build_domain_deterministic_cards,
@@ -913,7 +919,9 @@ def get_cheatsheet_for_technology(
 
     # Check if AI provider is present
     providers = get_ai_providers()
-    is_curated = norm_key in CURATED_DECKS
+    blueprint = load_blueprint(norm_key)
+    deck = load_deck(norm_key)
+    is_curated = bool(deck and deck.get("cards")) or (norm_key in CURATED_DECKS)
 
     # Check whether the user actually used this technology in their resume
     usage_info = check_tech_used_in_resume(resume_text, canonical_name) if resume_text else {
@@ -931,9 +939,13 @@ def get_cheatsheet_for_technology(
         except Exception:
             raw_cards = []
 
-    # Fallback to curated deck if available, else domain-aware deterministic
+    base_structured: list[dict[str, Any]] = []
+    # Fallback to blueprint JSON deck, curated deck, or domain-aware deterministic
     if not raw_cards or len(raw_cards) < 4:
-        if is_curated:
+        if deck and deck.get("cards"):
+            base_structured = [dict(c) for c in deck["cards"]]
+            raw_cards = [card_to_legacy_row(c) for c in base_structured]
+        elif norm_key in CURATED_DECKS:
             raw_cards = [list(c) for c in CURATED_DECKS[norm_key]]
         else:
             raw_cards = _generate_deterministic_cards(canonical_name, target_role)
@@ -948,12 +960,60 @@ def get_cheatsheet_for_technology(
     )
 
     categories = ["All"] + list(dict.fromkeys(c[0] for c in tailored_cards if c[0]))
-    card_ids = [compute_card_id(c[0], c[1]) for c in tailored_cards]
+    card_ids = [
+        base_structured[i]["id"] if i < len(base_structured) else compute_card_id(c[0], c[1])
+        for i, c in enumerate(tailored_cards)
+    ]
+
+    structured_cards: list[dict[str, Any]] = []
+    for i, c in enumerate(tailored_cards):
+        base_c = dict(base_structured[i]) if i < len(base_structured) else {
+            "id": card_ids[i],
+            "topic_id": card_ids[i],
+            "category": c[0],
+            "title": c[1],
+            "question": c[1] if str(c[1]).startswith("Q:") else f"Explain {c[1]}",
+            "answer_30s": c[2],
+            "deep_dive": "",
+            "code": {"lang": "text", "body": c[3]},
+            "pitfalls": [c[5]] if c[5] else [],
+            "follow_ups": [],
+            "tier": "common",
+            "level": "mid",
+            "weight": 5,
+            "reviewed_on": "",
+            "status": "ai_unreviewed",
+        }
+        use_val = c[4]
+        if str(use_val).startswith(("In ", "Listed in", "Not listed")):
+            base_c["your_story"] = use_val
+        else:
+            base_c["typical_use"] = use_val
+        if c[5]:
+            base_c["pitfalls"] = [c[5]]
+        structured_cards.append(base_c)
+
+    blueprint_summary = (
+        summarize_blueprint(blueprint, deck)
+        if blueprint
+        else {
+            "tech": norm_key,
+            "version": "",
+            "total_topics": len(structured_cards),
+            "must_count": 0,
+            "common_count": len(structured_cards),
+            "advanced_count": 0,
+            "areas": [],
+            "status": "ai_unreviewed",
+        }
+    )
 
     return {
         "tech_name": canonical_name,
         "cards": tailored_cards,
         "card_ids": card_ids,
+        "structured_cards": structured_cards,
+        "blueprint_summary": blueprint_summary,
         "categories": categories,
         "total_cards": len(tailored_cards),
         "target_role": target_role or "Software Engineer",

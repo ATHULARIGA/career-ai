@@ -1,0 +1,182 @@
+{
+  "tech": "react",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "react-52a05e8881",
+          "title": "React Fiber & Concurrent Rendering",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "react-6c71545eef",
+          "title": "State Colocation, Split Context & External Stores",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "react-f5caeb3ec8",
+          "title": "useMemo, useCallback & React.memo",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "react-50ff494aa1",
+          "title": "Code Splitting, Lazy Loading & Virtualization",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "react-e01d1911d7",
+          "title": "Virtual DOM, Reconciliation & the `key` Prop",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "react-31ee0ddeb4",
+          "title": "Custom Hooks & Controlled vs Uncontrolled Inputs",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "react-eb2b97560f",
+          "title": "useEffect Lifecycle, Cleanup & Race Conditions",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "react-a88d059adf",
+          "title": "Error Boundaries & Suspense",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "system-design",
+      "name": "System Design",
+      "topics": [
+        {
+          "id": "react-671f9a9b81",
+          "title": "CSR vs SSR vs SSG vs ISR & React Server Components",
+          "tier": "advanced",
+          "level": "mid",
+          "weight": 5,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "react-c87a15c8cf",
+          "title": "XSS Prevention & Safe Rendering in React",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "react-7aab4d8524",
+          "title": "Q: Why must Hooks follow the Rules of Hooks (top-level only, no conditionals)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "react-348b9e2e08",
+          "title": "Q: What is a stale closure in React Hooks and how do you fix it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "react-e8768380ca",
+          "title": "Q: Why does useEffect run twice in development in React 18+?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "react-eaed915723",
+          "title": "Q: How do you decide when to use Context vs Redux/Zustand vs TanStack Query?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "react-6b8f79c7fd",
+          "title": "Q: How do you debug and fix a slow React page?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "react-1421c42470",
+          "title": "Q: What is the difference between useEffect and useLayoutEffect?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

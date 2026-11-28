@@ -1,0 +1,146 @@
+{
+  "tech": "django",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "django-be7dc12aad",
+          "title": "MVT Architecture & Request-Response Lifecycle",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "django-7fa72985c0",
+          "title": "Migrations & Zero-Downtime Schema Changes",
+          "tier": "must",
+          "level": "senior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "django-7ba52f816c",
+          "title": "ORM Lazy Evaluation, `select_related` & `prefetch_related`",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "django-7674687157",
+          "title": "`F()` Expressions, `select_for_update()` & `transaction.atomic()`",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "django-5d10e9a113",
+          "title": "CSRF, XSS, SQLi & DRF Permissions",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "django-c2cea102e9",
+          "title": "Celery Async Tasks & `transaction.on_commit()`",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "django-bffb925263",
+          "title": "Q: `select_related` vs `prefetch_related` \u2014 how do they work under the hood?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "django-92c98fb11c",
+          "title": "Q: What is the difference between `null=True` and `blank=True`?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "django-3cbe384fd0",
+          "title": "Q: Signals vs Overriding `save()` vs Service Layer \u2014 which do you prefer?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "django-3530fe1142",
+          "title": "Q: `len(qs)` vs `qs.count()` vs `qs.exists()`?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "django-1821b472fc",
+          "title": "Q: How does Django REST Framework handle throttling, pagination, and serialization?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "django-0d307cf426",
+          "title": "Q: How do you test Django views and DB queries effectively?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "django-a934d3b82e",
+          "title": "Q: WSGI (Gunicorn) vs ASGI (Uvicorn/Daphne) in Django?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

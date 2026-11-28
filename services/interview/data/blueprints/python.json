@@ -1,0 +1,176 @@
+{
+  "tech": "python",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "python-e83d7a8c84",
+          "title": "Global Interpreter Lock (GIL)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "python-fef8c1c544",
+          "title": "Memory Management & Garbage Collection",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "python-38059d8b01",
+          "title": "Context Managers & Resource Lifecycle",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "python-53a35fb5b7",
+          "title": "Descriptors, Properties & Metaclasses",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "python-a4cd0cbcbb",
+          "title": "Asyncio Event Loop & Coroutines",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "python-6befd2dcad",
+          "title": "Generators, Iterators & Lazy Evaluation",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "python-8899c94381",
+          "title": "Decorators, Closures & functools.wraps",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "python-72903ba28e",
+          "title": "Data Structure Complexities",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "python-fc930dbe7e",
+          "title": "Testing, Fixtures & Monkeypatching with Pytest",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "python-782c48c7a1",
+          "title": "Secure Serialization, Subprocess & Input Handling",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "python-afe56fed3c",
+          "title": "Q: Why does a mutable default argument cause bugs in Python?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "python-8299d1f366",
+          "title": "Q: What is the difference between == and is, and shallow vs deep copy?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "python-0efcb2cfdf",
+          "title": "Q: How do *args, **kwargs, and late-binding closures work?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "python-328838068c",
+          "title": "Q: How does Python's MRO (Method Resolution Order) work with multiple inheritance?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "python-54811b48cf",
+          "title": "Q: How do you diagnose and fix a memory leak in a long-running Python service?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "python-148db136f9",
+          "title": "Q: When should you choose Python over Go or Rust, and how do you scale Python?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

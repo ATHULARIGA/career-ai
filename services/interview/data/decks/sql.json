@@ -1,0 +1,328 @@
+{
+  "tech": "sql",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "sql-0327cdda51",
+      "topic_id": "sql-0327cdda51",
+      "category": "Basics",
+      "title": "Logical SQL Query Execution Order",
+      "question": "Explain Logical SQL Query Execution Order",
+      "answer_30s": "SQL is written SELECT-first, but executed logically as: FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT (and window functions) -> DISTINCT -> ORDER BY -> LIMIT/OFFSET. This explains why column aliases from SELECT cannot be used in WHERE or GROUP BY.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT dept_id, COUNT(*) AS emp_count\nFROM employees\nWHERE active = TRUE\nGROUP BY dept_id\nHAVING COUNT(*) >= 5\nORDER BY emp_count DESC LIMIT 10;"
+      },
+      "typical_use": "Writing bug-free analytical queries and debugging alias/filtering errors.",
+      "pitfalls": [
+        "Remind interviewers: WHERE filters individual rows BEFORE grouping; HAVING filters aggregated groups AFTER GROUP BY."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-e1c418d2fc",
+      "topic_id": "sql-e1c418d2fc",
+      "category": "Basics",
+      "title": "JOIN Types & Anti-Joins",
+      "question": "Explain JOIN Types & Anti-Joins",
+      "answer_30s": "INNER JOIN returns matching pairs; LEFT JOIN preserves all left rows (NULLs on non-matching right); FULL OUTER JOIN preserves both; CROSS JOIN produces a Cartesian product. An anti-join (`LEFT JOIN ... WHERE right.id IS NULL` or `NOT EXISTS`) finds rows with no match.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- Safe anti-join (handles NULLs properly unlike NOT IN)\nSELECT u.id FROM users u\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id);"
+      },
+      "typical_use": "Finding inactive users, orphaned records, and combining normalized tables.",
+      "pitfalls": [
+        "Always prefer `NOT EXISTS` over `NOT IN` because a single NULL in the subquery causes `NOT IN` to return zero rows."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-fcf7b26f20",
+      "topic_id": "sql-fcf7b26f20",
+      "category": "Architecture",
+      "title": "Window Functions (ROW_NUMBER, RANK, DENSE_RANK, LAG/LEAD)",
+      "question": "Explain Window Functions (ROW_NUMBER, RANK, DENSE_RANK, LAG/LEAD)",
+      "answer_30s": "Window functions compute values across a set of rows related to the current row (`OVER (PARTITION BY ... ORDER BY ...)`) without collapsing rows like GROUP BY does. ROW_NUMBER assigns unique sequential ints; RANK leaves gaps on ties; DENSE_RANK has no gaps.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT user_id, amount, created_at,\n       SUM(amount) OVER (PARTITION BY user_id ORDER BY created_at) AS running_total,\n       ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY amount DESC) AS rn\nFROM transactions;"
+      },
+      "typical_use": "Top-N per group, running totals, cohort retention, and sessionization.",
+      "pitfalls": [
+        "Top-N per group with a CTE + ROW_NUMBER() is one of the most tested SQL interview patterns."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-f7c39ec375",
+      "topic_id": "sql-f7c39ec375",
+      "category": "Basics",
+      "title": "CTEs (Common Table Expressions) vs Subqueries vs Temp Tables",
+      "question": "Explain CTEs (Common Table Expressions) vs Subqueries vs Temp Tables",
+      "answer_30s": "CTEs (`WITH ...`) improve readability and support recursion (`WITH RECURSIVE`) for hierarchical trees/graphs. Subqueries inline directly; temporary tables persist for a session and can have their own indexes when intermediate datasets are huge.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "WITH RECURSIVE org_tree AS (\n  SELECT id, manager_id, name, 1 AS lvl FROM emp WHERE manager_id IS NULL\n  UNION ALL\n  SELECT e.id, e.manager_id, e.name, t.lvl + 1 FROM emp e JOIN org_tree t ON e.manager_id = t.id\n)\nSELECT * FROM org_tree;"
+      },
+      "typical_use": "Traversing org charts, category trees, and multi-step ETL transformations.",
+      "pitfalls": [
+        "Use `WITH RECURSIVE` for hierarchies and multi-step CTEs for clean, modular SQL."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-08c3624a55",
+      "topic_id": "sql-08c3624a55",
+      "category": "Performance",
+      "title": "Indexing, SARGable Queries & Covering Indexes",
+      "question": "Explain Indexing, SARGable Queries & Covering Indexes",
+      "answer_30s": "A query is SARGable (Search ARGument-able) when the planner can use an index. Wrapping an indexed column in a function (e.g. `EXTRACT(YEAR FROM created_at) = 2026` in PostgreSQL or `YEAR(created_at) = 2026` in MySQL) disables the index; rewrite as a range (`created_at >= '2026-01-01'`). Covering indexes (`INCLUDE` in PostgreSQL) satisfy queries directly from the index without heap lookups.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- SARGable range filter + covering index\nCREATE INDEX idx_orders_date_cov ON orders (created_at) INCLUDE (total, status);\nSELECT total, status FROM orders WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01';"
+      },
+      "typical_use": "Eliminating full table scans and achieving fast Index-Only Scans.",
+      "pitfalls": [
+        "Avoid leading wildcards `LIKE '%term'` on B-Tree indexes\u2014use full-text search or trigram GIN indexes instead."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-430f18b084",
+      "topic_id": "sql-430f18b084",
+      "category": "Architecture",
+      "title": "Normalization (1NF-3NF) vs Denormalization",
+      "question": "Explain Normalization (1NF-3NF) vs Denormalization",
+      "answer_30s": "Normalization removes redundancy and update anomalies: 1NF (atomic values), 2NF (no partial dependency on composite key), 3NF (no transitive dependencies). Denormalization intentionally duplicates data (e.g. storing order_total or star-schema fact/dimension tables) to eliminate expensive joins in OLAP/read-heavy systems.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- OLTP: normalized foreign keys | OLAP: star schema fact + dimensions"
+      },
+      "typical_use": "Designing OLTP transactional schemas vs analytical data warehouses.",
+      "pitfalls": [
+        "Normalize by default for OLTP correctness; denormalize selectively based on measured read bottlenecks."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-9977b90c32",
+      "topic_id": "sql-9977b90c32",
+      "category": "Concurrency",
+      "title": "ACID Transactions & Isolation Anomalies",
+      "question": "Explain ACID Transactions & Isolation Anomalies",
+      "answer_30s": "SQL defines 4 isolation levels against 3 classic anomalies: Dirty Reads (reading uncommitted data), Non-Repeatable Reads (same row changes between reads), and Phantom Reads (new matching rows appear). Read Committed prevents dirty reads; Repeatable Read prevents non-repeatable reads; Serializable prevents all three.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "BEGIN;\nUPDATE inventory SET qty = qty - 1 WHERE sku = 'A1' AND qty >= 1;\nCOMMIT;"
+      },
+      "typical_use": "Preventing overselling inventory and double-booking.",
+      "pitfalls": [
+        "Atomic conditional UPDATE (`WHERE qty >= 1`) often beats read-then-write locking."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-fcacd84204",
+      "topic_id": "sql-fcacd84204",
+      "category": "Q&A",
+      "title": "Q: Write a SQL query to find the 2nd highest salary (or Top-N per department).",
+      "question": "Q: Write a SQL query to find the 2nd highest salary (or Top-N per department).",
+      "answer_30s": "A: Use DENSE_RANK() inside a CTE so ties are handled cleanly without skipping ranks, and return NULL/empty cleanly if fewer than 2 distinct salaries exist.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "WITH ranked AS (\n  SELECT name, department_id, salary,\n         DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rnk\n  FROM employees\n)\nSELECT name, department_id, salary FROM ranked WHERE rnk <= 2;"
+      },
+      "typical_use": "Classic live-coding SQL question.",
+      "pitfalls": [
+        "Always clarify with the interviewer how ties should be handled (RANK vs DENSE_RANK vs ROW_NUMBER)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-a2902f7e52",
+      "topic_id": "sql-a2902f7e52",
+      "category": "Q&A",
+      "title": "Q: How do you find and remove duplicate rows in SQL?",
+      "question": "Q: How do you find and remove duplicate rows in SQL?",
+      "answer_30s": "A: Use ROW_NUMBER() partitioned by the natural key columns and delete where rn > 1, or group by the key with HAVING COUNT(*) > 1 to inspect duplicates first.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "WITH dups AS (\n  SELECT id, ROW_NUMBER() OVER (PARTITION BY email ORDER BY created_at ASC, id ASC) AS rn\n  FROM users\n)\nDELETE FROM users WHERE id IN (SELECT id FROM dups WHERE rn > 1);"
+      },
+      "typical_use": "Data cleaning and adding unique constraints to legacy tables.",
+      "pitfalls": [
+        "After deduplicating, add a UNIQUE constraint/index so duplicates cannot re-enter."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-909d0d3f46",
+      "topic_id": "sql-909d0d3f46",
+      "category": "Q&A",
+      "title": "Q: What is the difference between WHERE and HAVING, and COUNT(*) vs COUNT(col)?",
+      "question": "Q: What is the difference between WHERE and HAVING, and COUNT(*) vs COUNT(col)?",
+      "answer_30s": "A: WHERE filters rows before grouping (cannot reference aggregates); HAVING filters groups after GROUP BY. COUNT(*) counts all rows including NULLs, whereas COUNT(col) counts only non-NULL values in that column (and COUNT(DISTINCT col) counts unique non-NULL values).",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT status, COUNT(*) AS total, COUNT(shipped_at) AS shipped\nFROM orders GROUP BY status HAVING COUNT(*) > 10;"
+      },
+      "typical_use": "Avoiding subtle off-by-NULL bugs in reporting queries.",
+      "pitfalls": [
+        "Remind interviewers that `SUM` and `AVG` also ignore NULLs\u2014`COALESCE(col, 0)` changes AVG denominator!"
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-295ba18e7a",
+      "topic_id": "sql-295ba18e7a",
+      "category": "Q&A",
+      "title": "Q: What is the difference between DELETE, TRUNCATE, and DROP?",
+      "question": "Q: What is the difference between DELETE, TRUNCATE, and DROP?",
+      "answer_30s": "A: DELETE removes specific rows via WHERE, logs every row deletion, fires triggers, and can be rolled back. TRUNCATE deallocates all table pages/data in O(1) without scanning rows (resetting identity sequences if requested). DROP removes both data and table schema/indexes completely.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- PostgreSQL: resets sequences atomically\nTRUNCATE TABLE temp_staging RESTART IDENTITY;"
+      },
+      "typical_use": "Clearing large staging tables safely without bloating transaction logs.",
+      "pitfalls": [
+        "Note that in PostgreSQL, even TRUNCATE and DROP are transactional and can be rolled back inside a BEGIN/ROLLBACK block."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-2ddd2b7891",
+      "topic_id": "sql-2ddd2b7891",
+      "category": "Q&A",
+      "title": "Q: How does SQL handle NULL in comparisons and joins?",
+      "question": "Q: How does SQL handle NULL in comparisons and joins?",
+      "answer_30s": "A: NULL represents unknown, not zero or empty string. Any arithmetic or comparison with NULL (`col = NULL`, `col != NULL`) evaluates to UNKNOWN, which WHERE treats as false. Always use `IS NULL`, `IS NOT NULL`, `IS DISTINCT FROM`, or `COALESCE()`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT * FROM users WHERE deleted_at IS NULL;\n-- NULL-safe equality:\nSELECT * FROM t WHERE a IS DISTINCT FROM b;"
+      },
+      "typical_use": "Preventing silent data loss in filters and anti-joins.",
+      "pitfalls": [
+        "In GROUP BY and UNIQUE constraints, NULLs are grouped together (and in SQL standard, distinct NULLs don't violate UNIQUE unless NULLS NOT DISTINCT is set)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-fc6eb35385",
+      "topic_id": "sql-fc6eb35385",
+      "category": "Q&A",
+      "title": "Q: How do you optimize a slow SQL query step by step?",
+      "question": "Q: How do you optimize a slow SQL query step by step?",
+      "answer_30s": "A: 1) Run EXPLAIN ANALYZE to locate full table scans, high-cost nested loops, or bad row estimates. 2) Add missing composite/covering indexes matching WHERE/JOIN/ORDER BY. 3) Make predicates SARGable and avoid SELECT *. 4) Replace deep OFFSET with keyset pagination. 5) Pre-aggregate or partition massive tables.",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "-- PostgreSQL syntax\nEXPLAIN ANALYZE SELECT id FROM events WHERE user_id = 12 AND created_at > NOW() - INTERVAL '7 days';"
+      },
+      "typical_use": "End-to-end query optimization walkthrough.",
+      "pitfalls": [
+        "Always mention checking index selectivity and avoiding unnecessary `DISTINCT` or `ORDER BY` on huge intermediate sets."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "sql-c740715196",
+      "topic_id": "sql-c740715196",
+      "category": "Q&A",
+      "title": "Q: What is the N+1 query problem and how do you solve it in SQL/ORMs?",
+      "question": "Q: What is the N+1 query problem and how do you solve it in SQL/ORMs?",
+      "answer_30s": "A: N+1 happens when code runs 1 query to fetch N parent records and then executes N separate queries in a loop to fetch each parent's children. Fix by using a single JOIN, `WHERE parent_id IN (...)`, or ORM eager loading (`select_related` / `joinedload` / DataLoader).",
+      "deep_dive": "",
+      "code": {
+        "lang": "sql",
+        "body": "SELECT u.id, u.name, o.id AS order_id, o.total\nFROM users u LEFT JOIN orders o ON o.user_id = u.id\nWHERE u.id IN (1, 2, 3, 4);"
+      },
+      "typical_use": "Eliminating 100x latency amplification in API endpoints.",
+      "pitfalls": [
+        "Mention that ORMs hide N+1 queries behind lazy attribute access\u2014enable SQL query logging in dev/tests to catch them."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

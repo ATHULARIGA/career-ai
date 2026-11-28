@@ -1,0 +1,154 @@
+{
+  "tech": "docker",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "docker-13ba7fc831",
+          "title": "Containers vs Virtual Machines (Namespaces & cgroups)",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "docker-65c12efda4",
+          "title": "Union Filesystem (OverlayFS) & Copy-on-Write",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-4006a985f3",
+          "title": "Docker Networking Modes (Bridge, Host, None, Overlay)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "docker-c3e20f7e07",
+          "title": "Multi-Stage Builds & Layer Caching",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "docker-62e04a08d1",
+          "title": "Non-Root Users, Capabilities & Image Scanning",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "docker-7fc5be7b1c",
+          "title": "Volumes vs Bind Mounts vs tmpfs",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-18da85ff86",
+          "title": "PID 1, Signals (SIGTERM) & Graceful Shutdown",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-d5a00e60a8",
+          "title": "Healthchecks & Compose Dependency Ordering",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "docker-ed95b2dcb1",
+          "title": "Q: What is the difference between COPY and ADD, and CMD vs ENTRYPOINT?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-f2c495f576",
+          "title": "Q: What does Exit Code 137 or 139 mean when a container crashes?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-008fe455ae",
+          "title": "Q: Why did my Docker image end up 1.2GB even though I deleted temp files?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-2bed4f9b23",
+          "title": "Q: How do you debug a container that crashes immediately or lacks shell tools?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-5af4dc90db",
+          "title": "Q: How does Docker BuildKit improve builds and handle build-time secrets safely?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "docker-891fffb42a",
+          "title": "Q: What is the difference between `docker run`, `docker compose`, and Kubernetes?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

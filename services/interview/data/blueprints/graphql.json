@@ -1,0 +1,132 @@
+{
+  "tech": "graphql",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "graphq-70c02ceaff",
+          "title": "Schema-First SDL, Types, Queries, Mutations & Subscriptions",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "graphq-49652ef81f",
+          "title": "The N+1 Problem & DataLoader Batching",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-07ae903a43",
+          "title": "GraphQL Caching & Persisted Queries",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "graphq-23d7639ec6",
+          "title": "Cursor-Based Pagination (Relay Connections)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-cf038c4886",
+          "title": "GraphQL Federation & Schema Stitching",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "graphq-ab16cb5f21",
+          "title": "Query Depth Limiting, Complexity Analysis & Introspection",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "graphq-08b8e17118",
+          "title": "Q: GraphQL vs REST vs gRPC \u2014 when do you choose each?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-997c6c2266",
+          "title": "Q: How does GraphQL handle errors vs HTTP status codes?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-a23d5367a8",
+          "title": "Q: How do you handle authentication and field-level authorization in GraphQL?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-d9b83003ed",
+          "title": "Q: Why must DataLoader be created per-request rather than globally?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-873753ea7a",
+          "title": "Q: How do you handle file uploads in GraphQL?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "graphq-dcf0bc5cbb",
+          "title": "Q: How do you evolve a GraphQL schema without breaking old mobile clients?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

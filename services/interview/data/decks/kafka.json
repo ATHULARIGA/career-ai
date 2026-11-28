@@ -1,0 +1,351 @@
+{
+  "tech": "kafka",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "kafka-5d951dbc80",
+      "topic_id": "kafka-5d951dbc80",
+      "category": "Basics",
+      "title": "Commit Log Architecture, Topics, Partitions & Offsets",
+      "question": "Explain Commit Log Architecture, Topics, Partitions & Offsets",
+      "answer_30s": "Kafka is a distributed, append-only commit log. Topics are split into ordered, immutable Partitions spread across brokers; each record within a partition gets a sequential 64-bit Offset. Consumers track their own offsets, allowing independent replay and multiple consumer groups reading at different speeds.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "kafka-topics.sh --create --topic orders --partitions 12 --replication-factor 3 --bootstrap-server localhost:9092"
+      },
+      "typical_use": "Event-driven microservices, CDC pipelines, and high-throughput telemetry.",
+      "pitfalls": [
+        "Strict ordering is guaranteed ONLY within a single partition, never across partitions."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-80843a40b1",
+      "topic_id": "kafka-80843a40b1",
+      "category": "Reliability",
+      "title": "Producers: acks, Retries & Idempotent Delivery",
+      "question": "Explain Producers: acks, Retries & Idempotent Delivery",
+      "answer_30s": "`acks=0` (fire-and-forget), `acks=1` (leader wrote), `acks=all` (-1, all In-Sync Replicas wrote). Enabling `enable.idempotence=true` assigns producer IDs and sequence numbers so broker retries never create duplicate records on network blips.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "acks=all\nenable.idempotence=true\nretries=2147483647\nmin.insync.replicas=2"
+      },
+      "typical_use": "Zero-data-loss financial and order-processing pipelines.",
+      "pitfalls": [
+        "`acks=all` + `replication.factor=3` + `min.insync.replicas=2` is the gold-standard durability triad."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-b8098022c4",
+      "topic_id": "kafka-b8098022c4",
+      "category": "Architecture",
+      "title": "Consumer Groups & Cooperative Sticky Rebalancing",
+      "question": "Explain Consumer Groups & Cooperative Sticky Rebalancing",
+      "answer_30s": "Within a Consumer Group, each partition is assigned to exactly one consumer instance, capping max parallelism at the partition count. CooperativeStickyAssignor performs incremental rebalances without stop-the-world pauses across unaffected partitions.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "group.id=billing-workers\nenable.auto.commit=false\npartition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+      },
+      "typical_use": "Scaling consumers horizontally without losing per-key ordering.",
+      "pitfalls": [
+        "Disable `enable.auto.commit` and commit offsets manually AFTER downstream DB/API writes succeed."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-4297adbe7b",
+      "topic_id": "kafka-4297adbe7b",
+      "category": "Performance",
+      "title": "Zero-Copy (sendfile), OS Page Cache & Batching",
+      "question": "Explain Zero-Copy (sendfile), OS Page Cache & Batching",
+      "answer_30s": "Kafka achieves massive throughput by appending sequentially to disk and relying on the Linux OS Page Cache instead of JVM heap. When serving consumers, `sendfile()` transfers bytes directly from kernel page cache to NIC socket buffer with zero user-space copies.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "compression.type=zstd\nbatch.size=65536\nlinger.ms=20"
+      },
+      "typical_use": "Streaming millions of events per second on commodity hardware.",
+      "pitfalls": [
+        "Batching (`linger.ms` + `batch.size`) + `lz4`/`zstd` compression drastically cuts broker CPU and network I/O."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-5b0706532e",
+      "topic_id": "kafka-5b0706532e",
+      "category": "Reliability",
+      "title": "ISR, Leader Election & Unclean Leader Election",
+      "question": "Explain ISR, Leader Election & Unclean Leader Election",
+      "answer_30s": "Each partition has one leader (handles all reads/writes) and N-1 followers. Followers staying caught up form the In-Sync Replicas (ISR) set. Keeping `unclean.leader.election.enable=false` prevents an out-of-sync follower from becoming leader and silently dropping committed data.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "unclean.leader.election.enable=false\nmin.insync.replicas=2"
+      },
+      "typical_use": "Preventing split-brain data loss during broker hardware failures.",
+      "pitfalls": [
+        "If fewer than `min.insync.replicas` are alive, `acks=all` producers fail fast with NotEnoughReplicasException rather than risking data loss."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-cfe3d276b1",
+      "topic_id": "kafka-cfe3d276b1",
+      "category": "Reliability",
+      "title": "Retry Topics, Dead Letter Queues (DLQ) & Poison Pills",
+      "question": "Explain Retry Topics, Dead Letter Queues (DLQ) & Poison Pills",
+      "answer_30s": "Blocking a consumer thread on a failing poison-pill message stalls the entire partition. Production consumers route transient errors to exponential-backoff retry topics and permanent schema/business failures to a Dead Letter Queue (DLQ) before advancing the offset.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "try:\n    process(msg)\nexcept TransientError:\n    send_to_retry_topic(msg)\nexcept PermanentError:\n    send_to_dlq(msg)\nconsumer.commit(msg)"
+      },
+      "typical_use": "Keeping streaming pipelines unblocked when malformed events arrive.",
+      "pitfalls": [
+        "Preserve original headers (error reason, stacktrace, retry count, original offset) in DLQ records for replay."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-095810e0f7",
+      "topic_id": "kafka-095810e0f7",
+      "category": "Architecture",
+      "title": "Schema Registry & Evolution (Avro / Protobuf)",
+      "question": "Explain Schema Registry & Evolution (Avro / Protobuf)",
+      "answer_30s": "Schema Registry stores versioned schemas outside message payloads, embedding only a 4-byte schema ID per record. Enforcing BACKWARD or FULL compatibility prevents producers from breaking downstream consumers on schema changes.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Safe backward-compatible change: add optional field with a default value"
+      },
+      "typical_use": "Decoupling producer and consumer deployments across large engineering orgs.",
+      "pitfalls": [
+        "Prefer Avro or Protobuf over raw JSON for compact wire size and strict contract enforcement."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-ca29af2f4f",
+      "topic_id": "kafka-ca29af2f4f",
+      "category": "Q&A",
+      "title": "Q: Why can't you have more active consumers than partitions in a group?",
+      "question": "Q: Why can't you have more active consumers than partitions in a group?",
+      "answer_30s": "A: Because Kafka guarantees ordered processing by assigning each partition to at most one consumer in a group. Extra consumers sit idle as hot standbys. To scale beyond current partition count, increase partitions (note: changing partition count alters hash(key) % N routing).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "kafka-topics.sh --alter --topic orders --partitions 24"
+      },
+      "typical_use": "Classic Kafka scaling question.",
+      "pitfalls": [
+        "Over-partitioning too aggressively increases open file handles, metadata overhead, and failover time\u2014aim for balanced partition counts."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-e213f932ee",
+      "topic_id": "kafka-e213f932ee",
+      "category": "Q&A",
+      "title": "Q: What causes Consumer Lag and how do you diagnose/fix it?",
+      "question": "Q: What causes Consumer Lag and how do you diagnose/fix it?",
+      "answer_30s": "A: Consumer lag = Log-End Offset minus Committed Offset. Diagnose by checking: 1) Slow downstream DB/API sinks, 2) Frequent rebalance storms (`max.poll.interval.ms` exceeded), 3) Hot partition key skew, or 4) Under-provisioned consumers. Fix by batching sink writes, tuning `max.poll.records`, fixing partition keys, or scaling consumers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "kafka-consumer-groups.sh --describe --group billing-workers --bootstrap-server localhost:9092"
+      },
+      "typical_use": "Most common Kafka production debugging interview question.",
+      "pitfalls": [
+        "If `max.poll.interval.ms` is exceeded during slow processing, the broker kicks the consumer out, triggering endless rebalances."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-385c6e310c",
+      "topic_id": "kafka-385c6e310c",
+      "category": "Q&A",
+      "title": "Q: How does Kafka achieve Exactly-Once Semantics (EOS)?",
+      "question": "Q: How does Kafka achieve Exactly-Once Semantics (EOS)?",
+      "answer_30s": "A: EOS combines three pieces: 1) Idempotent producers (`enable.idempotence=true`) to prevent broker duplicates, 2) Kafka Transactions (`initTransactions`, `sendOffsetsToTransaction`) for atomic read-process-write across Kafka topics, and 3) Idempotent/transactional writes when sinking to external DBs (e.g. upsert by event_id).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Note: EOS across Kafka -> External DB still requires idempotent DB upserts or outbox"
+      },
+      "typical_use": "Separates candidates who repeat buzzwords from those who understand distributed systems.",
+      "pitfalls": [
+        "Always clarify: Kafka transactions only cover Kafka-to-Kafka; external DBs still need idempotency keys!"
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-dc75ec813e",
+      "topic_id": "kafka-dc75ec813e",
+      "category": "Q&A",
+      "title": "Q: Kafka vs RabbitMQ vs SQS \u2014 when do you choose Kafka?",
+      "question": "Q: Kafka vs RabbitMQ vs SQS \u2014 when do you choose Kafka?",
+      "answer_30s": "A: Choose Kafka for high-throughput event streaming, event sourcing, multiple independent consumer groups, and replayable retention logs. Choose RabbitMQ/SQS for traditional task queues with per-message ACKs, complex routing exchanges, or delayed/priority jobs where messages are deleted once processed.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Kafka = durable replayable log | RabbitMQ/SQS = smart broker, destructive queue"
+      },
+      "typical_use": "System design technology selection question.",
+      "pitfalls": [
+        "Note Kafka's pull-based consumer model allows consumers to control their own backpressure rate."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-d93e297969",
+      "topic_id": "kafka-d93e297969",
+      "category": "Q&A",
+      "title": "Q: What is Log Compaction and when do you use it?",
+      "question": "Q: What is Log Compaction and when do you use it?",
+      "answer_30s": "A: Standard retention deletes segments by time or size. Log compaction (`cleanup.policy=compact`) retains at least the latest value for every message key indefinitely, acting like a changelog table for stateful caches, CDC, or user profile snapshots.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "kafka-topics.sh --alter --topic user-state --config cleanup.policy=compact"
+      },
+      "typical_use": "Rebuilding service state or materialized views from a Kafka topic.",
+      "pitfalls": [
+        "Send a `null` value (tombstone) for a key to delete it during compaction."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-7d68d83fb4",
+      "topic_id": "kafka-7d68d83fb4",
+      "category": "Q&A",
+      "title": "Q: What is a Hot Partition and how do you fix it?",
+      "question": "Q: What is a Hot Partition and how do you fix it?",
+      "answer_30s": "A: If a high-volume key (e.g. `merchant_id=amazon` or `null` in older clients) hashes to one partition, that partition and its consumer get overloaded while others sit idle. Fix by choosing a higher-cardinality composite key (`merchant_id:shard_0..9`) or round-robin when strict global entity ordering isn't required.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Composite key distributes load across 10 partitions while keeping sub-shard order"
+      },
+      "typical_use": "Practical skew mitigation in streaming systems.",
+      "pitfalls": [
+        "Mention that Kafka 2.4+'s StickyPartitioner batches key-less records efficiently instead of pure round-robin."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-20955f85fe",
+      "topic_id": "kafka-20955f85fe",
+      "category": "Q&A",
+      "title": "Q: What is the Outbox Pattern with Kafka (CDC / Debezium)?",
+      "question": "Q: What is the Outbox Pattern with Kafka (CDC / Debezium)?",
+      "answer_30s": "A: Writing to PostgreSQL and publishing to Kafka in two separate calls can fail halfway (dual-write problem). Instead, insert the domain row AND an outbox event row in the SAME local DB transaction, then let Debezium stream the DB WAL/outbox table reliably to Kafka.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "BEGIN; INSERT INTO orders ...; INSERT INTO outbox_events ...; COMMIT;"
+      },
+      "typical_use": "Guaranteeing atomic state + event publication without 2PC.",
+      "pitfalls": [
+        "This is the industry-standard solution to the dual-write consistency problem."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kafka-9062d46fee",
+      "topic_id": "kafka-9062d46fee",
+      "category": "Q&A",
+      "title": "Q: How does KRaft replace ZooKeeper in modern Kafka?",
+      "question": "Q: How does KRaft replace ZooKeeper in modern Kafka?",
+      "answer_30s": "A: Historically Kafka used ZooKeeper for cluster metadata, controller election, and topic configs, creating two systems to operate. KRaft embeds a Raft consensus quorum directly inside Kafka brokers, enabling faster controller failover and scaling to millions of partitions.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Modern Kafka 3.3+ / 4.0 runs ZooKeeper-less in KRaft mode"
+      },
+      "typical_use": "Shows up-to-date Kafka architecture knowledge.",
+      "pitfalls": [
+        "KRaft eliminates metadata synchronization lag between ZooKeeper and brokers."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

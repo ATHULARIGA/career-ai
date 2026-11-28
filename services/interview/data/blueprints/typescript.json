@@ -1,0 +1,144 @@
+{
+  "tech": "typescript",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "typesc-d5fa94b210",
+          "title": "Structural Typing vs Nominal Typing",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-8bcc0f9028",
+          "title": "`unknown` vs `any` vs `never`",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-c0128941b4",
+          "title": "Generics, Constraints (`extends`) & `keyof`",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-3fd8754f9f",
+          "title": "Utility Types (Partial, Required, Pick, Omit, Record, ReturnType)",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "typesc-4f1f474161",
+          "title": "Discriminated Unions & Exhaustiveness Checking",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-6d248d4dce",
+          "title": "Type Narrowing, Type Predicates & Assertion Functions",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-269d748948",
+          "title": "Mapped Types, Conditional Types & Template Literal Types",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "typesc-02d2d48704",
+          "title": "Q: `interface` vs `type` \u2014 when should you use each?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-7545fbf41f",
+          "title": "Q: Why does TypeScript need runtime validation (Zod) if it already checks types?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-dea03982ac",
+          "title": "Q: What does the `satisfies` operator do compared to `as` or type annotations?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-bdc22158b8",
+          "title": "Q: What are `const` assertions (`as const`) and `readonly`?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-9f43348e62",
+          "title": "Q: What is `noUncheckedIndexedAccess` and why do teams enable it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-d207ab01cd",
+          "title": "Q: How do you type a React component or generic hook cleanly in TypeScript?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-46d5c001c3",
+          "title": "Q: How do Covariance and Contravariance apply to TypeScript functions?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "typesc-d6e68628f1",
+          "title": "Q: Enum vs Union of String Literals \u2014 which is better?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "tech": "nodejs",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "nodejs-4fd50201b6",
+          "title": "Event Loop Phases & Microtask Queues",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "nodejs-96717ea3dd",
+          "title": "Libuv Thread Pool vs OS Async I/O",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-836510e8d5",
+          "title": "Cluster Module vs Worker Threads",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "nodejs-f7b50bbd9b",
+          "title": "Streams & Backpressure Handling",
+          "tier": "must",
+          "level": "senior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-a135ee795e",
+          "title": "V8 Memory Model, GC & Memory Leak Debugging",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "nodejs-33d9c4ffd8",
+          "title": "Error Handling, Graceful Shutdown & Process Managers",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "nodejs-b11e8d24c3",
+          "title": "Event Loop Blocking (ReDoS), Prototype Pollution & Helmet",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "nodejs-97c43dd2bc",
+          "title": "Q: What is the exact execution order of nextTick, Promise, setTimeout(0), and setImmediate?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-1873942e9f",
+          "title": "Q: Why does a single unhandled exception or blocked loop hurt Node more than Java/Go?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-4d7a5fbb1f",
+          "title": "Q: How do Buffers work in Node.js and why can't you store raw binary in JS strings?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-6e83cb0c64",
+          "title": "Q: CommonJS (`require`) vs ES Modules (`import`) \u2014 key differences?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-af91414a23",
+          "title": "Q: How do you handle `Promise.all` vs `Promise.allSettled` vs `Promise.race`?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-19a223db88",
+          "title": "Q: What is AsyncLocalStorage and when do you use it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-0dd1b37cdc",
+          "title": "Q: How do you prevent memory leaks from EventEmitters and Timers?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "nodejs-4ece85b823",
+          "title": "Q: How do you scale a Node.js backend to 100k concurrent connections?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

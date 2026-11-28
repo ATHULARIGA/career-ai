@@ -1,0 +1,134 @@
+{
+  "tech": "mongodb",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "mongod-24e880f9d9",
+          "title": "Document Model, BSON & WiredTiger Storage Engine",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-51c12ba34f",
+          "title": "Schema Design: Embedding vs Referencing",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-0e3499d2b3",
+          "title": "Sharding & Shard Key Selection",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "mongod-6a7765c190",
+          "title": "Indexing: Compound (ESR Rule), Multikey, TTL & Partial",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-29da7b8c01",
+          "title": "Aggregation Pipeline Optimization",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "mongod-5ce2032fa9",
+          "title": "Replica Sets, Oplog & Read/Write Concerns",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "mongod-a9a81a6838",
+          "title": "Q: What is the ESR rule for MongoDB compound indexes?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-933656aa0c",
+          "title": "Q: Does MongoDB support ACID multi-document transactions, and when should you use them?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-ff5e852d3a",
+          "title": "Q: MongoDB vs PostgreSQL \u2014 how do you choose?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-a1945180c5",
+          "title": "Q: What is inside a MongoDB `ObjectId`?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-bbd82a5cb4",
+          "title": "Q: How do you prevent unbounded array growth in MongoDB?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-331ab44095",
+          "title": "Q: What is `COLLSCAN` vs `IXSCAN` vs `Covered Query`?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "mongod-c0f73d0e2f",
+          "title": "Q: How do you handle Change Streams in MongoDB?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

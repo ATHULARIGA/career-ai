@@ -1,0 +1,176 @@
+{
+  "tech": "postgresql",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "postgr-7faeb87394",
+          "title": "ACID, WAL & MVCC Internals",
+          "tier": "must",
+          "level": "senior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-4042f3183c",
+          "title": "Table Partitioning & Sharding Trade-offs",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "postgr-e39194a39d",
+          "title": "Indexing Strategies (B-Tree, GIN, GiST, BRIN, Partial)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-ad2fa61a55",
+          "title": "EXPLAIN (ANALYZE, BUFFERS) Query Tuning",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-5daff758c5",
+          "title": "Connection Pooling & PgBouncer",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "postgr-3ede2be403",
+          "title": "VACUUM, Dead Tuples & Transaction ID Wraparound",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-86b348e951",
+          "title": "Streaming Replication, Failover & Read Replicas",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "postgr-11ae9458a8",
+          "title": "Explicit Locking, SELECT FOR UPDATE & SKIP LOCKED",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "postgr-537c6e01f5",
+          "title": "Row-Level Security (RLS), Roles & TLS",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "postgr-7af2b26f78",
+          "title": "JSONB vs Relational Normalization",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "postgr-23d272af9f",
+          "title": "Q: What happens under the hood when you run UPDATE in PostgreSQL?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-d9cd0c8e5a",
+          "title": "Q: How do you prevent and resolve deadlocks in PostgreSQL?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-2ae0ce177c",
+          "title": "Q: B-Tree vs Hash vs GIN vs BRIN \u2014 when do you use each?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-ccc1dcc33c",
+          "title": "Q: Why is OFFSET pagination slow on large tables and how do you fix it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-bca7f00fda",
+          "title": "Q: What is the difference between UNION and UNION ALL, and CTEs vs Subqueries?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "postgr-e051d6439d",
+          "title": "Q: How do you perform zero-downtime schema migrations in PostgreSQL?",
+          "tier": "common",
+          "level": "senior",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

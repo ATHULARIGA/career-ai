@@ -1,0 +1,374 @@
+{
+  "tech": "python",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "python-e83d7a8c84",
+      "topic_id": "python-e83d7a8c84",
+      "category": "Architecture",
+      "title": "Global Interpreter Lock (GIL)",
+      "question": "Explain Global Interpreter Lock (GIL)",
+      "answer_30s": "The GIL is a mutex in CPython that allows only one native thread to execute Python bytecode at a time, simplifying C-extension memory management. It limits CPU-bound multi-threading to a single core, while I/O-bound threads release the GIL during blocking OS calls.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor\n\n# CPU-bound: bypasses GIL with separate processes\nwith ProcessPoolExecutor() as pool:\n    results = list(pool.map(heavy_compute, items))\n\n# I/O-bound: threads release GIL while waiting on network\nwith ThreadPoolExecutor(max_workers=20) as pool:\n    responses = list(pool.map(fetch_url, urls))"
+      },
+      "typical_use": "Choosing between multiprocessing, threading, and asyncio in backend services.",
+      "pitfalls": [
+        "Mention that Python 3.13 introduced experimental free-threaded builds (--disable-gil), and libraries like NumPy release the GIL inside C routines."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-a4cd0cbcbb",
+      "topic_id": "python-a4cd0cbcbb",
+      "category": "Concurrency",
+      "title": "Asyncio Event Loop & Coroutines",
+      "question": "Explain Asyncio Event Loop & Coroutines",
+      "answer_30s": "Asyncio enables cooperative single-threaded concurrency using an event loop that schedules coroutines when they yield control at await points. It excels at high-concurrency I/O-bound workloads like HTTP clients, WebSockets, and async DB drivers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import asyncio\n\nasync def fetch_all(urls):\n    sem = asyncio.Semaphore(10)\n    async def bounded_fetch(u):\n        async with sem:\n            return await fetch_one(u)\n    tasks = [bounded_fetch(u) for u in urls]\n    return await asyncio.gather(*tasks, return_exceptions=True)"
+      },
+      "typical_use": "Handling thousands of concurrent API or database calls without thread-pool overhead.",
+      "pitfalls": [
+        "Never call blocking synchronous functions (like time.sleep or requests.get) inside an async def coroutine; use asyncio.to_thread() to offload them."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-6befd2dcad",
+      "topic_id": "python-6befd2dcad",
+      "category": "Basics",
+      "title": "Generators, Iterators & Lazy Evaluation",
+      "question": "Explain Generators, Iterators & Lazy Evaluation",
+      "answer_30s": "Iterators implement __iter__ and __next__ to yield items on demand. Generators use the yield keyword to pause execution and preserve local stack state, processing massive datasets in O(1) memory instead of materializing full lists.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "def stream_large_log(path):\n    with open(path, 'r', encoding='utf-8') as f:\n        for line in f:\n            if 'ERROR' in line:\n                yield line.strip()"
+      },
+      "typical_use": "Streaming multi-gigabyte files, ETL pipelines, and paginated API responses.",
+      "pitfalls": [
+        "Distinguish generator expressions (x for x in seq) from list comprehensions [x for x in seq] when memory efficiency matters."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-8899c94381",
+      "topic_id": "python-8899c94381",
+      "category": "Basics",
+      "title": "Decorators, Closures & functools.wraps",
+      "question": "Explain Decorators, Closures & functools.wraps",
+      "answer_30s": "A closure captures variables from its enclosing lexical scope even after the outer function returns. Decorators wrap functions or classes to add cross-cutting behavior like logging, caching, or auth checks; functools.wraps preserves the original __name__ and __doc__.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from functools import wraps\nimport time\n\ndef timed(fn):\n    @wraps(fn)\n    def wrapper(*args, **kwargs):\n        t0 = time.perf_counter()\n        try:\n            return fn(*args, **kwargs)\n        finally:\n            print(f'{fn.__name__} took {time.perf_counter() - t0:.3f}s')\n    return wrapper"
+      },
+      "typical_use": "Implementing retry logic, rate limiting, auth guards, and telemetry instrumentation.",
+      "pitfalls": [
+        "Forgetting @wraps breaks FastAPI/pytest introspection and hides the wrapped function's signature."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-72903ba28e",
+      "topic_id": "python-72903ba28e",
+      "category": "Performance",
+      "title": "Data Structure Complexities",
+      "question": "Explain Data Structure Complexities",
+      "answer_30s": "Lists are dynamic arrays with O(1) random access and amortized append, but O(n) insert/pop at index 0. Dicts and sets use open-addressed hash tables with O(1) average lookup. collections.deque provides O(1) append and popleft at both ends.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from collections import deque, Counter\n\nq = deque(maxlen=100)\nq.append(1)\nq.popleft()  # O(1) vs list.pop(0) O(n)\ncounts = Counter(['a', 'b', 'a'])"
+      },
+      "typical_use": "Optimizing hot loops, sliding windows, and membership checks.",
+      "pitfalls": [
+        "In Python 3.7+, dict preserves insertion order by language specification. Membership checks (x in set_or_dict) are O(1) vs O(n) for lists."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-fef8c1c544",
+      "topic_id": "python-fef8c1c544",
+      "category": "Architecture",
+      "title": "Memory Management & Garbage Collection",
+      "question": "Explain Memory Management & Garbage Collection",
+      "answer_30s": "CPython uses immediate reference counting for deterministic deallocation when an object's refcount hits zero, paired with a generational cyclic garbage collector (generations 0, 1, 2) to detect and free reference cycles.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import gc\n\nclass Node:\n    __slots__ = ('val', 'next')  # Eliminates per-instance __dict__, saves RAM\n    def __init__(self, val):\n        self.val = val\n        self.next = None"
+      },
+      "typical_use": "Reducing memory footprint by 40-60% in data-intensive services with millions of objects.",
+      "pitfalls": [
+        "Explain __slots__ trade-offs: prevents dynamic attribute assignment and weakens multiple inheritance, but drastically cuts memory per instance."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-38059d8b01",
+      "topic_id": "python-38059d8b01",
+      "category": "Architecture",
+      "title": "Context Managers & Resource Lifecycle",
+      "question": "Explain Context Managers & Resource Lifecycle",
+      "answer_30s": "Context managers implement __enter__ and __exit__ (or use @contextmanager) to guarantee setup and deterministic cleanup even when exceptions occur. They prevent leaked file descriptors, locks, and database connections.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from contextlib import contextmanager\n\n@contextmanager\ndef db_transaction(conn):\n    try:\n        yield conn\n        conn.commit()\n    except Exception:\n        conn.rollback()\n        raise"
+      },
+      "typical_use": "Managing DB transactions, distributed locks, temporary files, and HTTP sessions.",
+      "pitfalls": [
+        "Mention async context managers (__aenter__ / __aexit__) used with async with for async DB pools and httpx clients."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-53a35fb5b7",
+      "topic_id": "python-53a35fb5b7",
+      "category": "Architecture",
+      "title": "Descriptors, Properties & Metaclasses",
+      "question": "Explain Descriptors, Properties & Metaclasses",
+      "answer_30s": "Descriptors implement __get__, __set__, or __delete__ to customize attribute access (powering @property, classmethod, and ORM fields). Metaclasses (type subclasses) control class creation itself, enabling registration or validation at import time.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "class PositiveInt:\n    def __set_name__(self, owner, name):\n        self.name = name\n    def __set__(self, instance, value):\n        if value <= 0:\n            raise ValueError(f'{self.name} must be positive')\n        instance.__dict__[self.name] = value"
+      },
+      "typical_use": "Understanding how Django ORM models, SQLAlchemy columns, and Pydantic validators work internally.",
+      "pitfalls": [
+        "Quote Tim Peters: if you wonder whether you need a metaclass, you don't\u2014prefer __init_subclass__ or class decorators for simpler hooks."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-fc930dbe7e",
+      "topic_id": "python-fc930dbe7e",
+      "category": "Reliability",
+      "title": "Testing, Fixtures & Monkeypatching with Pytest",
+      "question": "Explain Testing, Fixtures & Monkeypatching with Pytest",
+      "answer_30s": "Pytest uses dependency-injected fixtures with scoped lifecycles (function, module, session), parametrized test matrices, and monkeypatch/unittest.mock to isolate external I/O and verify edge cases cleanly.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import pytest\n\n@pytest.mark.parametrize('payload,expected', [({'a': 1}, 200), ({}, 400)])\ndef test_endpoint(client, payload, expected):\n    res = client.post('/items', json=payload)\n    assert res.status_code == expected"
+      },
+      "typical_use": "Maintaining fast, deterministic CI pipelines without hitting live external APIs.",
+      "pitfalls": [
+        "Always mock at the boundary where the dependency is imported, not where it is defined."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-782c48c7a1",
+      "topic_id": "python-782c48c7a1",
+      "category": "Security",
+      "title": "Secure Serialization, Subprocess & Input Handling",
+      "question": "Explain Secure Serialization, Subprocess & Input Handling",
+      "answer_30s": "Never unpickle untrusted data because pickle can execute arbitrary code via __reduce__. Use json or Pydantic schemas, avoid shell=True in subprocess calls, and load secrets from environment managers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import subprocess, json\n\n# Safe: argument list without shell interpolation\nsubprocess.run(['ls', '-la', safe_dir], check=True, shell=False)\ndata = json.loads(raw_body)"
+      },
+      "typical_use": "Hardening Python microservices against RCE and command injection.",
+      "pitfalls": [
+        "Highlight yaml.safe_load() over yaml.load(), and secrets.compare_digest() for constant-time token comparison."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-afe56fed3c",
+      "topic_id": "python-afe56fed3c",
+      "category": "Q&A",
+      "title": "Q: Why does a mutable default argument cause bugs in Python?",
+      "question": "Q: Why does a mutable default argument cause bugs in Python?",
+      "answer_30s": "A: Default argument values are evaluated once at function definition time (def), not on each call. Using a mutable object like [] or {} causes every call without that argument to mutate the same shared object. Fix it by defaulting to None and initializing inside the function body.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "def append_item(val, target=None):\n    if target is None:\n        target = []\n    target.append(val)\n    return target"
+      },
+      "typical_use": "Preventing subtle cross-request state leakage in shared helpers.",
+      "pitfalls": [
+        "Note that dataclass fields have the same trap\u2014use field(default_factory=list) there."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-8299d1f366",
+      "topic_id": "python-8299d1f366",
+      "category": "Q&A",
+      "title": "Q: What is the difference between == and is, and shallow vs deep copy?",
+      "question": "Q: What is the difference between == and is, and shallow vs deep copy?",
+      "answer_30s": "A: == checks value equality (__eq__), while is checks object identity (same memory address via id()). Shallow copy (copy.copy / list.copy) creates a new outer container referencing the same nested objects; copy.deepcopy recursively copies all nested objects.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import copy\na = [[1, 2], [3, 4]]\nshallow = copy.copy(a)\nshallow[0].append(99)  # Mutates a[0] too!\ndeep = copy.deepcopy(a)"
+      },
+      "typical_use": "Avoiding accidental mutation of shared nested config dictionaries.",
+      "pitfalls": [
+        "Always use 'is None' (not '== None') because custom __eq__ implementations can override ==."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-0efcb2cfdf",
+      "topic_id": "python-0efcb2cfdf",
+      "category": "Q&A",
+      "title": "Q: How do *args, **kwargs, and late-binding closures work?",
+      "question": "Q: How do *args, **kwargs, and late-binding closures work?",
+      "answer_30s": "A: *args packs positional arguments into a tuple and **kwargs packs keyword arguments into a dict. Late-binding closures look up loop variables when the inner function is called, not when it is created; bind the loop variable via a default argument (lambda x=i: x) to capture the current value.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "# Fixing late-binding closure in a loop\nfuncs = [lambda i=i: i * 2 for i in range(3)]\nassert [f() for f in funcs] == [0, 2, 4]"
+      },
+      "typical_use": "Debugging callback factories and dynamic event handlers.",
+      "pitfalls": [
+        "This late-binding closure trap is one of the most common senior Python live-coding questions."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-328838068c",
+      "topic_id": "python-328838068c",
+      "category": "Q&A",
+      "title": "Q: How does Python's MRO (Method Resolution Order) work with multiple inheritance?",
+      "question": "Q: How does Python's MRO (Method Resolution Order) work with multiple inheritance?",
+      "answer_30s": "A: Python uses C3 Linearization to compute a deterministic, monotonic MRO (__mro__) that preserves local precedence and ensures parent classes are searched after their children. super() delegates to the next class in the MRO, enabling cooperative multiple inheritance.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "class A: pass\nclass B(A): pass\nclass C(A): pass\nclass D(B, C): pass\nprint([cls.__name__ for cls in D.__mro__])  # D, B, C, A, object"
+      },
+      "typical_use": "Designing clean mixin hierarchies in Django/FastAPI class utilities.",
+      "pitfalls": [
+        "Explain the diamond problem and why super() does not just mean 'my direct parent'\u2014it means 'next in MRO'."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-54811b48cf",
+      "topic_id": "python-54811b48cf",
+      "category": "Q&A",
+      "title": "Q: How do you diagnose and fix a memory leak in a long-running Python service?",
+      "question": "Q: How do you diagnose and fix a memory leak in a long-running Python service?",
+      "answer_30s": "A: Use tracemalloc to snapshot and diff allocations over time, objgraph or gc.get_objects() to find growing reference types, and check common culprits: unbounded in-memory caches (missing maxsize on lru_cache), global lists, circular references with __del__, or unclosed file/DB handles.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "import tracemalloc\ntracemalloc.start()\nsnap1 = tracemalloc.take_snapshot()\n# ... run workload ...\nsnap2 = tracemalloc.take_snapshot()\nfor stat in snap2.compare_to(snap1, 'lineno')[:5]:\n    print(stat)"
+      },
+      "typical_use": "Resolving OOMKills in production worker pods and API servers.",
+      "pitfalls": [
+        "Always mention @functools.lru_cache(maxsize=1024) or cachetools.TTLCache instead of unbounded dicts."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "python-148db136f9",
+      "topic_id": "python-148db136f9",
+      "category": "Q&A",
+      "title": "Q: When should you choose Python over Go or Rust, and how do you scale Python?",
+      "question": "Q: When should you choose Python over Go or Rust, and how do you scale Python?",
+      "answer_30s": "A: Choose Python for rapid iteration, rich data/ML ecosystems, and I/O-bound APIs where developer velocity dominates. Scale it horizontally behind load balancers using multiple Uvicorn/Gunicorn workers (one per core), async I/O, Redis caching, Celery/worker queues for background tasks, and C/Rust extensions (Polars, Pydantic v2, NumPy) for hot paths.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+      },
+      "typical_use": "System design and architectural trade-off discussions.",
+      "pitfalls": [
+        "Highlight that Pydantic v2 moved core validation to Rust (pydantic-core), giving 5-50x speedups while keeping Python ergonomics."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

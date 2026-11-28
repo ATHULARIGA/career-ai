@@ -1,0 +1,156 @@
+{
+  "tech": "kafka",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "kafka-5d951dbc80",
+          "title": "Commit Log Architecture, Topics, Partitions & Offsets",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "kafka-80843a40b1",
+          "title": "Producers: acks, Retries & Idempotent Delivery",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-5b0706532e",
+          "title": "ISR, Leader Election & Unclean Leader Election",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-cfe3d276b1",
+          "title": "Retry Topics, Dead Letter Queues (DLQ) & Poison Pills",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "kafka-b8098022c4",
+          "title": "Consumer Groups & Cooperative Sticky Rebalancing",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-095810e0f7",
+          "title": "Schema Registry & Evolution (Avro / Protobuf)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "kafka-4297adbe7b",
+          "title": "Zero-Copy (sendfile), OS Page Cache & Batching",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "kafka-ca29af2f4f",
+          "title": "Q: Why can't you have more active consumers than partitions in a group?",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-e213f932ee",
+          "title": "Q: What causes Consumer Lag and how do you diagnose/fix it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-385c6e310c",
+          "title": "Q: How does Kafka achieve Exactly-Once Semantics (EOS)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-dc75ec813e",
+          "title": "Q: Kafka vs RabbitMQ vs SQS \u2014 when do you choose Kafka?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-d93e297969",
+          "title": "Q: What is Log Compaction and when do you use it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-7d68d83fb4",
+          "title": "Q: What is a Hot Partition and how do you fix it?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-20955f85fe",
+          "title": "Q: What is the Outbox Pattern with Kafka (CDC / Debezium)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kafka-9062d46fee",
+          "title": "Q: How does KRaft replace ZooKeeper in modern Kafka?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

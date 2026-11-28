@@ -1,0 +1,170 @@
+{
+  "tech": "aws",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "aws-f190256674",
+          "title": "IAM Policies, Roles, STS & Least Privilege",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-ba6d7c7805",
+          "title": "KMS Encryption, Secrets Manager & Parameter Store",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "aws-8ae22f43b8",
+          "title": "VPC, Subnets, Route Tables, NAT & Security Groups vs NACLs",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-e811638d55",
+          "title": "S3 Consistency, Storage Classes & Presigned URLs",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-1538672d01",
+          "title": "RDS / Aurora vs DynamoDB",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "aws-cc1c9307ee",
+          "title": "Compute Choices: EC2 vs ECS/Fargate vs EKS vs Lambda",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "aws-90e206597c",
+          "title": "Messaging: SQS vs SNS vs EventBridge",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "aws-1df488f8af",
+          "title": "CloudFront, ALB & Auto Scaling",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "aws-3e8c15e771",
+          "title": "Q: How do you design a highly available, fault-tolerant web app on AWS?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-735f1aea39",
+          "title": "Q: Security Group vs Network ACL \u2014 what are the exact differences?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-7905def2a1",
+          "title": "Q: How do you reduce AWS costs without sacrificing reliability?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-65a2bf4446",
+          "title": "Q: How do you prevent Lambda cold starts and timeouts in production?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-3ff3f41a20",
+          "title": "Q: What is SQS Visibility Timeout and how do you handle poison-pill messages?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-501db2913f",
+          "title": "Q: How does S3 handle hot prefixes and high request rates today?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-739429d84b",
+          "title": "Q: Cross-Account Access: IAM Role Assumption vs Resource-Based Policy?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "aws-776745c589",
+          "title": "Q: How do you observe and debug a distributed request across AWS services?",
+          "tier": "common",
+          "level": "senior",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

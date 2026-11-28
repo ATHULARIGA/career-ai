@@ -1,0 +1,148 @@
+{
+  "tech": "sql",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "sql-0327cdda51",
+          "title": "Logical SQL Query Execution Order",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-e1c418d2fc",
+          "title": "JOIN Types & Anti-Joins",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-f7c39ec375",
+          "title": "CTEs (Common Table Expressions) vs Subqueries vs Temp Tables",
+          "tier": "must",
+          "level": "junior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "sql-fcf7b26f20",
+          "title": "Window Functions (ROW_NUMBER, RANK, DENSE_RANK, LAG/LEAD)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-430f18b084",
+          "title": "Normalization (1NF-3NF) vs Denormalization",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "sql-08c3624a55",
+          "title": "Indexing, SARGable Queries & Covering Indexes",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "sql-9977b90c32",
+          "title": "ACID Transactions & Isolation Anomalies",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "sql-fcacd84204",
+          "title": "Q: Write a SQL query to find the 2nd highest salary (or Top-N per department).",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-a2902f7e52",
+          "title": "Q: How do you find and remove duplicate rows in SQL?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-909d0d3f46",
+          "title": "Q: What is the difference between WHERE and HAVING, and COUNT(*) vs COUNT(col)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-295ba18e7a",
+          "title": "Q: What is the difference between DELETE, TRUNCATE, and DROP?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-2ddd2b7891",
+          "title": "Q: How does SQL handle NULL in comparisons and joins?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-fc6eb35385",
+          "title": "Q: How do you optimize a slow SQL query step by step?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "sql-c740715196",
+          "title": "Q: What is the N+1 query problem and how do you solve it in SQL/ORMs?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

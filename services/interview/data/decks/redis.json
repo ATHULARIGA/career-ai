@@ -1,0 +1,351 @@
+{
+  "tech": "redis",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "redis-ef7432e153",
+      "topic_id": "redis-ef7432e153",
+      "category": "Architecture",
+      "title": "Single-Threaded Event Loop & I/O Multiplexing",
+      "question": "Explain Single-Threaded Event Loop & I/O Multiplexing",
+      "answer_30s": "Redis executes commands on a single main thread using an I/O multiplexed event loop (epoll/kqueue) entirely in RAM, avoiding lock contention and thread context switches. Redis 6+ added multi-threaded socket I/O for parsing/writing network payloads while keeping command execution atomic.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "redis-cli INFO stats\nredis-cli SLOWLOG GET 10"
+      },
+      "typical_use": "Achieving 100k+ ops/sec with sub-millisecond p99 latency.",
+      "pitfalls": [
+        "Because command execution is single-threaded, O(N) commands like KEYS * or huge HGETALL block every client\u2014use SCAN, HSCAN, and pagination."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-b678e37ac1",
+      "topic_id": "redis-b678e37ac1",
+      "category": "Basics",
+      "title": "Core Data Structures (Strings, Hashes, ZSets, HyperLogLog, Streams)",
+      "question": "Explain Core Data Structures (Strings, Hashes, ZSets, HyperLogLog, Streams)",
+      "answer_30s": "Redis goes far beyond key-value strings: Hashes store objects compactly; Lists/Streams power queues; Sets handle unique tags; Sorted Sets (ZSet, skip list + hash table) rank items in O(log N); HyperLogLog estimates cardinality in 12KB.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "ZADD leaderboard 2450 \"user:42\"\nZREVRANGE leaderboard 0 9 WITHSCORES\nPFADD daily_uv:2026-11-25 \"user:42\""
+      },
+      "typical_use": "Real-time leaderboards, sliding-window rate limiters, and unique visitor counting.",
+      "pitfalls": [
+        "Know that Sorted Sets are backed by a skip list + hash table, giving O(log N) range queries and O(1) score lookups."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-0228a1e114",
+      "topic_id": "redis-0228a1e114",
+      "category": "Performance",
+      "title": "Caching Patterns: Cache-Aside, Write-Through, Write-Behind",
+      "question": "Explain Caching Patterns: Cache-Aside, Write-Through, Write-Behind",
+      "answer_30s": "In Cache-Aside (lazy loading), the app checks Redis first, falls back to DB on miss, and populates Redis with a TTL. Write-Through updates cache and DB synchronously (consistent, slower writes). Write-Behind buffers writes in cache and flushes asynchronously to DB (fast writes, risk of data loss).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "def get_profile(uid):\n    val = r.get(f'user:{uid}')\n    if val:\n        return json.loads(val)\n    row = db.fetch_user(uid)\n    r.setex(f'user:{uid}', 3600, json.dumps(row))\n    return row"
+      },
+      "typical_use": "Cutting database read load by 80-95% in read-heavy APIs.",
+      "pitfalls": [
+        "Always set TTLs with slight random jitter so keys don't expire simultaneously."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-55429f13b2",
+      "topic_id": "redis-55429f13b2",
+      "category": "Reliability",
+      "title": "Persistence: RDB Snapshots vs AOF (Append-Only File)",
+      "question": "Explain Persistence: RDB Snapshots vs AOF (Append-Only File)",
+      "answer_30s": "RDB forks a child process to write compact point-in-time binary snapshots (fast restarts, potential minutes of data loss). AOF logs every write command (with appendfsync everysec losing at most ~1s). Production deployments typically enable both RDB + AOF.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# redis.conf\nsave 900 1\nappendonly yes\nappendfsync everysec"
+      },
+      "typical_use": "Balancing sub-millisecond write speed with durable crash recovery.",
+      "pitfalls": [
+        "BGSAVE and BGREWRITEAOF use OS copy-on-write fork(); ensure host has sufficient RAM headroom during heavy writes."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-5ab46208a7",
+      "topic_id": "redis-5ab46208a7",
+      "category": "Concurrency",
+      "title": "Distributed Locks, Atomic Lua Scripts & SET NX PX",
+      "question": "Explain Distributed Locks, Atomic Lua Scripts & SET NX PX",
+      "answer_30s": "Redis executes Lua scripts atomically as a single unit. A safe distributed lock uses `SET key token NX PX 10000` (atomic set-if-not-exists with expiry) and releases via a Lua script that verifies the caller's unique token before calling DEL.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "-- Safe lock release in Lua\nif redis.call('get', KEYS[1]) == ARGV[1] then\n  return redis.call('del', KEYS[1])\nelse\n  return 0\nend"
+      },
+      "typical_use": "Preventing duplicate cron jobs, payment double-charges, and distributed race conditions.",
+      "pitfalls": [
+        "Explain why checking token before DEL matters: if GC paused Client A past TTL, Client B acquired the lock, and Client A must not delete B's lock."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-5692751872",
+      "topic_id": "redis-5692751872",
+      "category": "Performance",
+      "title": "Eviction Policies (LRU, LFU) & Memory Limits",
+      "question": "Explain Eviction Policies (LRU, LFU) & Memory Limits",
+      "answer_30s": "When memory hits `maxmemory`, Redis applies `maxmemory-policy`: `allkeys-lru` evicts least recently used keys, `allkeys-lfu` evicts least frequently used keys (best for skewed hot-key caches), `volatile-ttl` evicts expiring keys first, and `noeviction` errors on writes.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "CONFIG SET maxmemory 4gb\nCONFIG SET maxmemory-policy allkeys-lfu"
+      },
+      "typical_use": "Keeping Redis caches stable without OOM crashes.",
+      "pitfalls": [
+        "For pure caches, prefer allkeys-lfu or allkeys-lru; for queues/session stores where data loss isn't acceptable, use noeviction + alerts."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-225233bff6",
+      "topic_id": "redis-225233bff6",
+      "category": "Architecture",
+      "title": "High Availability: Replication, Sentinel & Redis Cluster",
+      "question": "Explain High Availability: Replication, Sentinel & Redis Cluster",
+      "answer_30s": "Primary-replica replication scales reads asynchronously. Redis Sentinel monitors primaries and performs automated quorum-based failover. Redis Cluster shards data horizontally across 16,384 hash slots (`CRC16(key) % 16384`) across multiple primaries.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Hash tags force related keys onto the same cluster slot\nSET user:{42}:profile \"...\"\nSET user:{42}:prefs \"...\""
+      },
+      "typical_use": "Scaling beyond single-node RAM limits and surviving node failures.",
+      "pitfalls": [
+        "Multi-key commands (MGET, Lua scripts) fail across different Cluster slots unless you group keys with `{hash_tag}`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-6c4b7a96fa",
+      "topic_id": "redis-6c4b7a96fa",
+      "category": "Performance",
+      "title": "Pipelining & Rate Limiting Patterns",
+      "question": "Explain Pipelining & Rate Limiting Patterns",
+      "answer_30s": "Pipelining batches multiple commands into a single TCP round-trip, avoiding N network RTTs. Sliding-window or token-bucket rate limiters combine ZSet/Hash operations inside atomic Lua scripts.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "pipe = r.pipeline(transaction=False)\nfor uid in user_ids:\n    pipe.get(f'user:{uid}')\nresults = pipe.execute()"
+      },
+      "typical_use": "Fetching 500 cached items in 1ms instead of 50ms of sequential RTTs.",
+      "pitfalls": [
+        "Distinguish pipeline (batches network RTTs) from MULTI/EXEC (queues commands for atomic execution)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-1663d7e5ef",
+      "topic_id": "redis-1663d7e5ef",
+      "category": "Security",
+      "title": "ACLs, TLS & Network Isolation",
+      "question": "Explain ACLs, TLS & Network Isolation",
+      "answer_30s": "Never expose Redis to the public internet. Bind to private VPC subnets, require TLS in transit, disable/rename dangerous commands (`FLUSHALL`, `CONFIG`) via Redis 6+ ACLs, and enforce per-service least-privilege users.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "ACL SETUSER app_api on >StrongPass ~app:* +get +set +del -flushall"
+      },
+      "typical_use": "Hardening production cache clusters against unauthorized data exfiltration.",
+      "pitfalls": [
+        "Note that Redis's extreme speed means brute-forcing weak passwords is trivial\u2014use high-entropy passwords and ACLs."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-631674663b",
+      "topic_id": "redis-631674663b",
+      "category": "Q&A",
+      "title": "Q: What are Cache Stampede, Cache Penetration, and Cache Avalanche?",
+      "question": "Q: What are Cache Stampede, Cache Penetration, and Cache Avalanche?",
+      "answer_30s": "A: Stampede (Thundering Herd): one hot key expires and 1,000 requests hit the DB simultaneously\u2014fix with singleflight/mutex locks or probabilistic early refresh. Penetration: requests for non-existent IDs bypass cache repeatedly\u2014fix with Bloom filters or caching short-TTL null markers. Avalanche: many keys expire at once or Redis crashes\u2014fix with randomized TTL jitter and circuit breakers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "ttl = 3600 + random.randint(0, 300)  # Jitter prevents cache avalanche"
+      },
+      "typical_use": "One of the most frequently asked caching system design questions.",
+      "pitfalls": [
+        "Covering all three failure modes clearly with their exact mitigations is an instant senior-level signal."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-7d7782ad54",
+      "topic_id": "redis-7d7782ad54",
+      "category": "Q&A",
+      "title": "Q: Why is Redis fast despite being single-threaded?",
+      "question": "Q: Why is Redis fast despite being single-threaded?",
+      "answer_30s": "A: 1) Data lives in RAM (nanosecond access vs millisecond disk). 2) Single-threaded execution avoids mutexes, deadlocks, and OS thread context switching. 3) Non-blocking I/O multiplexing (epoll/kqueue) handles tens of thousands of sockets efficiently. 4) Specialized C data structures (ziplist/listpack, skip list).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "redis-benchmark -t set,get -n 100000 -q"
+      },
+      "typical_use": "Classic backend fundamentals question.",
+      "pitfalls": [
+        "Contrast with Memcached (multi-threaded, simple key-value only, no persistence or rich data types)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-8ae654106e",
+      "topic_id": "redis-8ae654106e",
+      "category": "Q&A",
+      "title": "Q: How do you keep Redis and PostgreSQL consistent on writes?",
+      "question": "Q: How do you keep Redis and PostgreSQL consistent on writes?",
+      "answer_30s": "A: Prefer updating the DB first and then deleting (invalidating) the cache key rather than updating the cache, preventing concurrent write races from leaving stale values. For strict consistency, use outbox/CDC (Debezium) to invalidate cache asynchronously on committed WAL events.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "db.update_user(uid, data)\nr.delete(f'user:{uid}')  # Invalidate rather than set"
+      },
+      "typical_use": "Preventing stale cache bugs under concurrent updates.",
+      "pitfalls": [
+        "Mention the Cache-Aside race condition and why short TTLs act as a safety net."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-061355f3f6",
+      "topic_id": "redis-061355f3f6",
+      "category": "Q&A",
+      "title": "Q: Pub/Sub vs Redis Streams \u2014 which should you use for messaging?",
+      "question": "Q: Pub/Sub vs Redis Streams \u2014 which should you use for messaging?",
+      "answer_30s": "A: Pub/Sub is fire-and-forget with no persistence, no consumer groups, and dropped messages if a subscriber disconnects. Redis Streams is an append-only persistent log with consumer groups, message IDs, ACKs (XACK), and pending-entry recovery\u2014use Streams for reliable queues and Pub/Sub only for ephemeral live broadcasts.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "XADD events * type order_created id 42\nXREADGROUP GROUP workers w1 COUNT 10 STREAMS events >"
+      },
+      "typical_use": "Choosing the right Redis messaging primitive.",
+      "pitfalls": [
+        "Compare Redis Streams with Kafka: Streams fits lightweight/medium throughput when Redis is already in stack; Kafka fits massive multi-TB durable logs."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-4d759ad6b0",
+      "topic_id": "redis-4d759ad6b0",
+      "category": "Q&A",
+      "title": "Q: What happens if a Redis single-threaded command takes 500ms (e.g. KEYS *)?",
+      "question": "Q: What happens if a Redis single-threaded command takes 500ms (e.g. KEYS *)?",
+      "answer_30s": "A: Every other client connection queues up behind that command, causing cluster-wide latency spikes and health-check timeouts. Replace `KEYS *` with cursor-based `SCAN 0 MATCH prefix:* COUNT 100`, break huge `DEL` into `UNLINK` (async background free), and monitor `SLOWLOG`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "UNLINK huge_set_key  # Non-blocking async memory reclamation"
+      },
+      "typical_use": "Preventing self-inflicted production outages in Redis.",
+      "pitfalls": [
+        "UNLINK vs DEL is a great practical tip\u2014UNLINK removes the key reference in O(1) and frees memory on a background thread."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "redis-f56b458956",
+      "topic_id": "redis-f56b458956",
+      "category": "Q&A",
+      "title": "Q: How do you handle hot keys in a Redis Cluster?",
+      "question": "Q: How do you handle hot keys in a Redis Cluster?",
+      "answer_30s": "A: A single hot key hashes to one shard, saturating its CPU/NIC. Mitigate by: 1) Adding a small in-process local cache (L1) in app pods with 1-5s TTL, 2) Replicating the hot key across N shards (`key#1..#N`) and reading a random replica, or 3) Using Redis 6 client-side tracking.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "shard = random.randint(1, 4)\nval = r.get(f'config:global#{shard}')"
+      },
+      "typical_use": "Solving skewed traffic bottlenecks in distributed caching.",
+      "pitfalls": [
+        "L1 in-memory cache + L2 Redis is the standard multi-tier caching pattern."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

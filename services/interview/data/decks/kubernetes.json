@@ -1,0 +1,351 @@
+{
+  "tech": "kubernetes",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "kubern-0fc997b80d",
+      "topic_id": "kubern-0fc997b80d",
+      "category": "Architecture",
+      "title": "Control Plane vs Worker Node Components",
+      "question": "Explain Control Plane vs Worker Node Components",
+      "answer_30s": "The Control Plane manages cluster state: API Server (REST gateway), etcd (distributed key-value store for cluster state), Scheduler (assigns Pods to nodes), and Controller Manager (reconciliation loops). Worker nodes run kubelet (node agent), kube-proxy (Service networking), and a CRI container runtime (containerd).",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl get --raw='/readyz?verbose'\nkubectl get nodes -o wide"
+      },
+      "typical_use": "Explaining how Kubernetes declarative reconciliation works end-to-end.",
+      "pitfalls": [
+        "Every component talks only to the API Server\u2014nothing talks directly to etcd except the API Server."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-6ae083241d",
+      "topic_id": "kubern-6ae083241d",
+      "category": "Basics",
+      "title": "Pods, ReplicaSets, Deployments & DaemonSets",
+      "question": "Explain Pods, ReplicaSets, Deployments & DaemonSets",
+      "answer_30s": "A Pod is the smallest deployable unit (1+ tightly coupled containers sharing network/IPC namespaces). ReplicaSets maintain N identical Pods; Deployments manage ReplicaSets for declarative rolling updates and rollbacks; DaemonSets run one Pod per node (e.g. log/metric agents).",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl rollout status deployment/api-server\nkubectl rollout undo deployment/api-server"
+      },
+      "typical_use": "Managing stateless services and zero-downtime releases.",
+      "pitfalls": [
+        "Never deploy bare Pods in production\u2014always wrap them in Deployments, StatefulSets, or Jobs."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-fe42c9350f",
+      "topic_id": "kubern-fe42c9350f",
+      "category": "Architecture",
+      "title": "Services (ClusterIP, NodePort, LoadBalancer) & Ingress",
+      "question": "Explain Services (ClusterIP, NodePort, LoadBalancer) & Ingress",
+      "answer_30s": "Pod IPs are ephemeral. Services provide a stable virtual IP and DNS name (`svc.ns.svc.cluster.local`) load-balanced across matching Pod labels. ClusterIP is internal-only; NodePort exposes a port on every node; LoadBalancer provisions a cloud LB; Ingress/Gateway API routes L7 HTTP host/path traffic.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "apiVersion: v1\nkind: Service\nmetadata:\n  name: api-svc\nspec:\n  type: ClusterIP\n  selector:\n    app: api\n  ports:\n    - port: 80\n      targetPort: 8000"
+      },
+      "typical_use": "Exposing internal microservices and routing external HTTPS traffic.",
+      "pitfalls": [
+        "Know that kube-proxy programs iptables/IPVS rules on nodes to route ClusterIP traffic to healthy Endpoints/EndpointSlices."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-8fe7707737",
+      "topic_id": "kubern-8fe7707737",
+      "category": "Reliability",
+      "title": "Startup, Readiness & Liveness Probes",
+      "question": "Explain Startup, Readiness & Liveness Probes",
+      "answer_30s": "Startup probes wait for slow-booting apps before activating other probes. Readiness probes control whether a Pod receives Service traffic (removes Pod from Endpoints on failure). Liveness probes restart a deadlocked container.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "readinessProbe:\n  httpGet:\n    path: /health/ready\n    port: 8000\n  periodSeconds: 5\nlivenessProbe:\n  httpGet:\n    path: /health/live\n    port: 8000\n  failureThreshold: 3"
+      },
+      "typical_use": "Preventing traffic from hitting initializing or overloaded Pods.",
+      "pitfalls": [
+        "Never include external DB checks inside a livenessProbe\u2014if the DB blips, Kubernetes will restart all your API Pods simultaneously!"
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-57282a348d",
+      "topic_id": "kubern-57282a348d",
+      "category": "Performance",
+      "title": "Resource Requests, Limits, QoS & HPA",
+      "question": "Explain Resource Requests, Limits, QoS & HPA",
+      "answer_30s": "Requests reserve CPU/memory for kube-scheduler placement; Limits cap cgroup usage (CPU gets throttled; exceeding memory triggers OOMKill). Equal requests and limits yield `Guaranteed` QoS (last to be evicted). HorizontalPodAutoscaler (HPA) scales replicas on CPU/custom metrics.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "resources:\n  requests:\n    cpu: \"250m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1000m\"\n    memory: \"512Mi\""
+      },
+      "typical_use": "Preventing noisy-neighbor starvation and autoscaling under traffic spikes.",
+      "pitfalls": [
+        "Many teams omit CPU limits (keeping CPU requests) to avoid CFS throttling while strictly enforcing memory limits."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-5937a7b2a2",
+      "topic_id": "kubern-5937a7b2a2",
+      "category": "Security",
+      "title": "RBAC, Pod Security & NetworkPolicies",
+      "question": "Explain RBAC, Pod Security & NetworkPolicies",
+      "answer_30s": "RBAC restricts API actions via Role/ClusterRole and RoleBinding. Pod Security Standards enforce `runAsNonRoot`, `readOnlyRootFilesystem`, and `drop: [ALL]` capabilities. NetworkPolicies act as L3/L4 firewalls restricting Pod-to-Pod ingress/egress.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: db-allow-api\nspec:\n  podSelector:\n    matchLabels: { app: postgres }\n  ingress:\n    - from: [{ podSelector: { matchLabels: { app: api } } }]"
+      },
+      "typical_use": "Enforcing zero-trust lateral movement boundaries inside multi-tenant clusters.",
+      "pitfalls": [
+        "Remember Kubernetes Secrets are base64-encoded by default, not encrypted\u2014enable etcd encryption at rest or use External Secrets Operator."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-d5f0ce7764",
+      "topic_id": "kubern-d5f0ce7764",
+      "category": "Architecture",
+      "title": "StatefulSets, Headless Services & PersistentVolumeClaims",
+      "question": "Explain StatefulSets, Headless Services & PersistentVolumeClaims",
+      "answer_30s": "StatefulSets give Pods stable network identities (`db-0`, `db-1`), ordered deployment/scaling, and dedicated PersistentVolumeClaims (PVCs) that survive Pod rescheduling\u2014ideal for databases and Kafka.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "spec:\n  serviceName: \"postgres-headless\"\n  replicas: 3\n  volumeClaimTemplates:\n    - metadata: { name: data }\n      spec:\n        accessModes: [\"ReadWriteOnce\"]\n        resources: { requests: { storage: 50Gi } }"
+      },
+      "typical_use": "Running stateful distributed systems cleanly on Kubernetes.",
+      "pitfalls": [
+        "A Headless Service (`clusterIP: None`) returns individual Pod IPs via DNS instead of load-balancing behind a single VIP."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-884319fb63",
+      "topic_id": "kubern-884319fb63",
+      "category": "Reliability",
+      "title": "Rolling Updates, Graceful Shutdown & PodDisruptionBudgets",
+      "question": "Explain Rolling Updates, Graceful Shutdown & PodDisruptionBudgets",
+      "answer_30s": "Deployments control rollout velocity with `maxSurge` and `maxUnavailable`. PodDisruptionBudgets (PDBs) guarantee a minimum number of available Pods during voluntary node drains. Pair `preStop` sleep hooks with SIGTERM handling so kube-proxy removes the Pod before the app stops accepting requests.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "lifecycle:\n  preStop:\n    exec:\n      command: [\"/bin/sh\", \"-c\", \"sleep 5\"]"
+      },
+      "typical_use": "Achieving zero dropped requests during deployments and node upgrades.",
+      "pitfalls": [
+        "A short `preStop` sleep solves the async race between Endpoint removal and SIGTERM delivery."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-1f9352e17a",
+      "topic_id": "kubern-1f9352e17a",
+      "category": "Q&A",
+      "title": "Q: How do you troubleshoot a Pod stuck in Pending, ImagePullBackOff, or CrashLoopBackOff?",
+      "question": "Q: How do you troubleshoot a Pod stuck in Pending, ImagePullBackOff, or CrashLoopBackOff?",
+      "answer_30s": "A: Run `kubectl describe pod <name>` to read Events first. `Pending` means insufficient CPU/RAM, node taints, or unbound PVCs. `ImagePullBackOff` means wrong image tag, private registry auth missing (`imagePullSecrets`), or network block. `CrashLoopBackOff` means the app starts and exits\u2014check `kubectl logs <name> --previous` and exit codes (137 = OOMKilled).",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl describe pod <pod>\nkubectl logs <pod> --previous"
+      },
+      "typical_use": "Most common Kubernetes operational troubleshooting question.",
+      "pitfalls": [
+        "Always mention `--previous` for CrashLoopBackOff to see the logs from the crashed container."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-88fdf5adc0",
+      "topic_id": "kubern-88fdf5adc0",
+      "category": "Q&A",
+      "title": "Q: What happens step by step when `kubectl apply` creates a Deployment?",
+      "question": "Q: What happens step by step when `kubectl apply` creates a Deployment?",
+      "answer_30s": "A: kubectl sends the manifest to the API Server -> AuthN/AuthZ/Admission Controllers validate/mutate it -> API Server persists it to etcd -> Deployment Controller creates a ReplicaSet -> ReplicaSet Controller creates Pod objects -> Scheduler binds each Pod to a Node -> Kubelet on that node pulls images via CRI, sets up CNI networking, mounts volumes, and starts containers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl apply -f deployment.yaml --dry-run=server"
+      },
+      "typical_use": "Demonstrating mastery of Kubernetes control-loop architecture.",
+      "pitfalls": [
+        "Highlight that controllers follow a level-triggered reconciliation loop (compare desired state vs actual state)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-a967d5adcf",
+      "topic_id": "kubern-a967d5adcf",
+      "category": "Q&A",
+      "title": "Q: Deployment vs StatefulSet vs DaemonSet vs Job \u2014 when do you use each?",
+      "question": "Q: Deployment vs StatefulSet vs DaemonSet vs Job \u2014 when do you use each?",
+      "answer_30s": "A: Deployment for stateless interchangeable web/API Pods. StatefulSet for stateful workloads needing stable hostnames, ordered startup, and persistent per-Pod storage. DaemonSet for node-level infrastructure agents (FluentBit, Prometheus node-exporter). Job/CronJob for finite batch tasks that run to completion.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl create job --from=cronjob/nightly-etl manual-run-1"
+      },
+      "typical_use": "Choosing the right workload controller.",
+      "pitfalls": [
+        "Mention `ttlSecondsAfterFinished` on Jobs to clean up completed Pod clutter automatically."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-ca7fb9ede5",
+      "topic_id": "kubern-ca7fb9ede5",
+      "category": "Q&A",
+      "title": "Q: How do Taints/Tolerations differ from Node Affinity?",
+      "question": "Q: How do Taints/Tolerations differ from Node Affinity?",
+      "answer_30s": "A: Taints live on Nodes and repel Pods unless the Pod has a matching Toleration (used for GPU nodes or dedicated workloads). Node Affinity lives on Pods and attracts them to Nodes with matching labels (`requiredDuringScheduling` vs `preferredDuringScheduling`).",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl taint nodes gpu-node-1 dedicated=ml:NoSchedule"
+      },
+      "typical_use": "Controlling workload placement on heterogeneous node pools.",
+      "pitfalls": [
+        "Tolerations allow a Pod to be scheduled onto a tainted node, they don't guarantee it will go there\u2014combine with Node Affinity to isolate workloads."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-c05be67dca",
+      "topic_id": "kubern-c05be67dca",
+      "category": "Q&A",
+      "title": "Q: What is the difference between a Service and an Ingress (or Gateway API)?",
+      "question": "Q: What is the difference between a Service and an Ingress (or Gateway API)?",
+      "answer_30s": "A: A Service provides stable L4 TCP/UDP load balancing inside/into the cluster. An Ingress (or newer Gateway API) operates at L7 HTTP/HTTPS, providing host/path routing, TLS termination, rate limiting, and virtual hosting backed by a controller (NGINX, Envoy, AWS ALB).",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "kubectl get ingress -A"
+      },
+      "typical_use": "Explaining Kubernetes traffic ingress architecture.",
+      "pitfalls": [
+        "Note that Gateway API is the modern successor to Ingress with role-oriented HTTPRoute resources."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-fb973cd3c3",
+      "topic_id": "kubern-fb973cd3c3",
+      "category": "Q&A",
+      "title": "Q: How do you achieve zero-downtime deployments and safe rollbacks?",
+      "question": "Q: How do you achieve zero-downtime deployments and safe rollbacks?",
+      "answer_30s": "A: Configure Readiness probes, `maxUnavailable: 0` with `maxSurge: 25%`, a PodDisruptionBudget, a `preStop` sleep hook, and graceful SIGTERM handling inside the app. Keep `revisionHistoryLimit` so `kubectl rollout undo` reverts instantaneously if metrics degrade.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "strategy:\n  type: RollingUpdate\n  rollingUpdate:\n    maxSurge: 1\n    maxUnavailable: 0"
+      },
+      "typical_use": "Production release engineering in Kubernetes.",
+      "pitfalls": [
+        "Mention canary/blue-green rollouts with Argo Rollouts or Flagger for automated metric-based promotion."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "senior",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "kubern-793a882c1c",
+      "topic_id": "kubern-793a882c1c",
+      "category": "Q&A",
+      "title": "Q: How does Kubernetes DNS and Pod-to-Pod networking work?",
+      "question": "Q: How does Kubernetes DNS and Pod-to-Pod networking work?",
+      "answer_30s": "A: Every Pod gets its own unique IP from the CNI plugin (Calico, Cilium, VPC CNI) and can reach any other Pod IP without NAT. CoreDNS resolves Service names (`svc.namespace.svc.cluster.local`) to ClusterIPs, which kube-proxy (or eBPF in Cilium) load-balances to healthy Pod endpoints.",
+      "deep_dive": "",
+      "code": {
+        "lang": "yaml",
+        "body": "nslookup api-svc.prod.svc.cluster.local"
+      },
+      "typical_use": "Debugging microservice DNS and connectivity issues.",
+      "pitfalls": [
+        "Mention `ndots:5` in `/etc/resolv.conf` can cause extra DNS lookups for external domains unless trailing dots or `ndots:2` are configured."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

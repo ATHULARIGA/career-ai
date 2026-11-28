@@ -1,0 +1,164 @@
+{
+  "tech": "system_design",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "system-13088d5bab",
+          "title": "Load Balancing (L4 vs L7, Health Checks, Algorithms)",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "system-1c4d0422f8",
+          "title": "CAP & PACELC Theorems",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "system-7792151839",
+          "title": "Consistent Hashing & Virtual Nodes",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "system-91b07ff83b",
+          "title": "Database Scaling: Read Replicas, Partitioning & Sharding",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "system-f3ad42b47b",
+          "title": "Distributed Transactions: 2PC vs Saga Pattern",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "system-327a1cbf15",
+          "title": "Multi-Tier Caching & CDN Strategies",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "system-c53f878995",
+          "title": "Rate Limiting Algorithms (Token Bucket, Sliding Window)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "system-5124310dfe",
+          "title": "Idempotency Keys & Retries with Backoff + Jitter",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "system-9278ef7de6",
+          "title": "Circuit Breakers, Bulkheads & Backpressure",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "system-5ba7cd45a9",
+          "title": "Q: How do you approach a System Design interview in 45 minutes?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-e4356996bf",
+          "title": "Q: Design a URL Shortener (e.g. TinyURL) \u2014 key decisions?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-2a6274a398",
+          "title": "Q: Push (Fan-out on Write) vs Pull (Fan-out on Read) for a Social Feed?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-20f565a9c6",
+          "title": "Q: WebSockets vs SSE vs Long Polling \u2014 how do you choose for real-time updates?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-4244bb5457",
+          "title": "Q: How do you generate unique, sortable distributed IDs without a single DB bottleneck?",
+          "tier": "common",
+          "level": "senior",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-5472661195",
+          "title": "Q: What is the difference between Availability and Reliability, and SLA vs SLO vs SLI?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "system-b242fd9105",
+          "title": "Q: How do you design a distributed Notification / Webhook delivery system?",
+          "tier": "common",
+          "level": "senior",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

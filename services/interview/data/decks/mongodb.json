@@ -1,0 +1,305 @@
+{
+  "tech": "mongodb",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "mongod-24e880f9d9",
+      "topic_id": "mongod-24e880f9d9",
+      "category": "Architecture",
+      "title": "Document Model, BSON & WiredTiger Storage Engine",
+      "question": "Explain Document Model, BSON & WiredTiger Storage Engine",
+      "answer_30s": "MongoDB stores flexible schema documents as BSON (Binary JSON, supporting types like Date, ObjectId, Decimal128; max 16MB per document). WiredTiger provides document-level concurrency control, Snappy/Zstd compression, and WAL-style journaling + checkpoints.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "# Max document size is 16MB; use GridFS or S3 for large binaries"
+      },
+      "typical_use": "Storing polymorphic catalogs, CMS content, and event logs.",
+      "pitfalls": [
+        "Flexible schema does not mean no schema\u2014enforce JSON Schema `$jsonSchema` validators at the collection level."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-51c12ba34f",
+      "topic_id": "mongod-51c12ba34f",
+      "category": "Architecture",
+      "title": "Schema Design: Embedding vs Referencing",
+      "question": "Explain Schema Design: Embedding vs Referencing",
+      "answer_30s": "Embed subdocuments when data is read/written together, has bounded cardinality (1-to-few), and needs single-document atomic updates. Reference by `_id` when arrays grow unboundedly (1-to-millions) or subdocuments are shared across parents.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Embed bounded addresses; reference unbounded audit_logs"
+      },
+      "typical_use": "Avoiding the 16MB document limit and array-growth index rewrites.",
+      "pitfalls": [
+        "Rule of thumb: data accessed together should be stored together."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-6a7765c190",
+      "topic_id": "mongod-6a7765c190",
+      "category": "Performance",
+      "title": "Indexing: Compound (ESR Rule), Multikey, TTL & Partial",
+      "question": "Explain Indexing: Compound (ESR Rule), Multikey, TTL & Partial",
+      "answer_30s": "Follow the ESR (Equality, Sort, Range) rule when ordering compound index fields. Multikey indexes index array elements; TTL indexes auto-expire documents via a background thread; Partial indexes save RAM by indexing only matching documents.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "db.orders.createIndex({ status: 1, createdAt: -1, total: 1 }); // E-S-R"
+      },
+      "typical_use": "Eliminating COLLSCAN and in-memory blocking sorts.",
+      "pitfalls": [
+        "Use `.explain('executionStats')` and aim for `IXSCAN` where `totalDocsExamined` is close to `nReturned`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-29da7b8c01",
+      "topic_id": "mongod-29da7b8c01",
+      "category": "Performance",
+      "title": "Aggregation Pipeline Optimization",
+      "question": "Explain Aggregation Pipeline Optimization",
+      "answer_30s": "Aggregations stream documents through stages (`$match`, `$group`, `$lookup`, `$project`). Place `$match` and `$sort` as early as possible so they leverage indexes, and `$project`/`$limit` early to shrink memory passed downstream (100MB stage limit unless `allowDiskUse: true`).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "db.orders.aggregate([\n  { $match: { status: 'paid' } },\n  { $group: { _id: '$customerId', spent: { $sum: '$total' } } }\n]);"
+      },
+      "typical_use": "Real-time analytics and server-side rollups.",
+      "pitfalls": [
+        "Avoid `$lookup` across massive sharded collections\u2014pre-join or denormalize critical fields."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-5ce2032fa9",
+      "topic_id": "mongod-5ce2032fa9",
+      "category": "Reliability",
+      "title": "Replica Sets, Oplog & Read/Write Concerns",
+      "question": "Explain Replica Sets, Oplog & Read/Write Concerns",
+      "answer_30s": "A Replica Set has 1 Primary and N Secondaries replicating via the capped `oplog.rs`. `w: 'majority'` ensures writes survive primary failover; `readConcern: 'majority'` prevents dirty/rolled-back reads.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "db.orders.insertOne(doc, { writeConcern: { w: 'majority', j: true } });"
+      },
+      "typical_use": "Guaranteeing durability during automatic Raft-style leader elections.",
+      "pitfalls": [
+        "Wait for `w: 'majority'` on financial/critical writes; `w: 1` risks rollback if the primary crashes before replication."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-0e3499d2b3",
+      "topic_id": "mongod-0e3499d2b3",
+      "category": "Architecture",
+      "title": "Sharding & Shard Key Selection",
+      "question": "Explain Sharding & Shard Key Selection",
+      "answer_30s": "Sharding distributes collections across shards via `mongos` routers and Config Servers using range or hashed shard keys. A good shard key has high cardinality, even write distribution, and aligns with common query filters (targeted vs scatter-gather).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "sh.shardCollection('app.events', { tenantId: 'hashed' });"
+      },
+      "typical_use": "Scaling writes and multi-TB datasets horizontally.",
+      "pitfalls": [
+        "Never use a monotonically increasing field (like timestamp or ObjectId) for ranged sharding\u2014it sends 100% of writes to a single hot chunk!"
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-a9a81a6838",
+      "topic_id": "mongod-a9a81a6838",
+      "category": "Q&A",
+      "title": "Q: What is the ESR rule for MongoDB compound indexes?",
+      "question": "Q: What is the ESR rule for MongoDB compound indexes?",
+      "answer_30s": "A: Order compound index keys as Equality fields first, Sort fields second, and Range filter fields last. Putting a Range field before Sort forces MongoDB to perform an expensive in-memory sort (`SORT` stage capped at 100MB).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Query: status == 'open' AND amount > 50 ORDER BY createdAt DESC -> { status: 1, createdAt: -1, amount: 1 }"
+      },
+      "typical_use": "Most important MongoDB indexing interview question.",
+      "pitfalls": [
+        "Remember the 3-letter acronym ESR and explain why Range before Sort breaks index ordering."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-933656aa0c",
+      "topic_id": "mongod-933656aa0c",
+      "category": "Q&A",
+      "title": "Q: Does MongoDB support ACID multi-document transactions, and when should you use them?",
+      "question": "Q: Does MongoDB support ACID multi-document transactions, and when should you use them?",
+      "answer_30s": "A: Yes, since 4.0/4.2 across replica sets and sharded clusters. However, single-document updates are already atomic and much faster\u2014if you constantly need multi-document transactions, reconsider your document embedding or consider PostgreSQL.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Model data so 90% of writes mutate a single document atomically"
+      },
+      "typical_use": "Pragmatic data-modeling judgment.",
+      "pitfalls": [
+        "Transactions carry lock/cache overhead in WiredTiger; keep them short."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-ff5e852d3a",
+      "topic_id": "mongod-ff5e852d3a",
+      "category": "Q&A",
+      "title": "Q: MongoDB vs PostgreSQL \u2014 how do you choose?",
+      "question": "Q: MongoDB vs PostgreSQL \u2014 how do you choose?",
+      "answer_30s": "A: Choose PostgreSQL for complex relational joins, strict referential integrity, financial transactions, and rich SQL analytics (noting PG JSONB also handles semi-structured data well). Choose MongoDB for rapid polymorphic schemas, huge write-sharded document workloads, and hierarchical objects mapped cleanly to documents.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// PG JSONB covers many simple document cases without a second DB"
+      },
+      "typical_use": "Classic database selection interview question.",
+      "pitfalls": [
+        "Avoid saying 'MongoDB is always faster'\u2014benchmarks depend entirely on schema, indexing, and access patterns."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-a1945180c5",
+      "topic_id": "mongod-a1945180c5",
+      "category": "Q&A",
+      "title": "Q: What is inside a MongoDB `ObjectId`?",
+      "question": "Q: What is inside a MongoDB `ObjectId`?",
+      "answer_30s": "A: A 12-byte identifier: 4-byte Unix timestamp (seconds), 5-byte random value per process, and 3-byte incrementing counter. Because it starts with a timestamp, ObjectIds are roughly time-sortable and embed creation time without an extra field.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "ObjectId().getTimestamp()"
+      },
+      "typical_use": "Quick internals check.",
+      "pitfalls": [
+        "Note that because it leads with timestamp, ranged sharding on `_id` creates hot shards\u2014use hashed `_id` or a better shard key."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-bbd82a5cb4",
+      "topic_id": "mongod-bbd82a5cb4",
+      "category": "Q&A",
+      "title": "Q: How do you prevent unbounded array growth in MongoDB?",
+      "question": "Q: How do you prevent unbounded array growth in MongoDB?",
+      "answer_30s": "A: Unbounded arrays hit the 16MB limit and force WiredTiger to rewrite the entire document and update every multikey index entry on each push. Fix using the Bucket Pattern (group N events per document) or Subset Pattern (embed latest 10 items, store full history in another collection).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Subset Pattern: embed recent 5 reviews on Product, full reviews in Reviews collection"
+      },
+      "typical_use": "Senior MongoDB schema design pattern.",
+      "pitfalls": [
+        "Naming the Bucket Pattern and Subset Pattern demonstrates real MongoDB expertise."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-331ab44095",
+      "topic_id": "mongod-331ab44095",
+      "category": "Q&A",
+      "title": "Q: What is `COLLSCAN` vs `IXSCAN` vs `Covered Query`?",
+      "question": "Q: What is `COLLSCAN` vs `IXSCAN` vs `Covered Query`?",
+      "answer_30s": "A: `COLLSCAN` reads every document on disk/RAM (bad). `IXSCAN` traverses a B-Tree index then fetches matching docs (`FETCH`). A Covered Query satisfies both filter and projection solely from index keys (`totalDocsExamined: 0`, zero heap fetch).",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "// Covered query: project only indexed fields and exclude _id: { _id: 0, email: 1 }"
+      },
+      "typical_use": "Query tuning with `.explain('executionStats')`.",
+      "pitfalls": [
+        "Remember `_id` is returned by default\u2014you must explicitly pass `_id: 0` if it's not in the index for a covered query."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "mongod-c0f73d0e2f",
+      "topic_id": "mongod-c0f73d0e2f",
+      "category": "Q&A",
+      "title": "Q: How do you handle Change Streams in MongoDB?",
+      "question": "Q: How do you handle Change Streams in MongoDB?",
+      "answer_30s": "A: Change Streams (`collection.watch()`) tail the replica set oplog in real time using resume tokens, enabling reactive cache invalidation, audit logs, and event-driven syncing without polling.",
+      "deep_dive": "",
+      "code": {
+        "lang": "javascript",
+        "body": "const stream = db.collection('orders').watch([{ $match: { operationType: 'insert' } }]);"
+      },
+      "typical_use": "Building real-time CDC pipelines with MongoDB.",
+      "pitfalls": [
+        "Persist the `_id` resume token so consumers resume from the exact event after restarts."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

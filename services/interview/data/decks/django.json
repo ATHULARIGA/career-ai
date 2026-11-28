@@ -1,0 +1,305 @@
+{
+  "tech": "django",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "django-be7dc12aad",
+      "topic_id": "django-be7dc12aad",
+      "category": "Architecture",
+      "title": "MVT Architecture & Request-Response Lifecycle",
+      "question": "Explain MVT Architecture & Request-Response Lifecycle",
+      "answer_30s": "Django follows Model-View-Template (MVT): an HTTP request enters WSGI/ASGI -> Request Middleware -> URL Resolver -> View (controller logic) -> ORM Models / Templates -> Response Middleware -> Client.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "# urls.py -> views.py -> models.py / serializers.py"
+      },
+      "typical_use": "Structuring modular Django apps cleanly.",
+      "pitfalls": [
+        "Keep business logic in services/models rather than bloated views ('fat models/services, thin views')."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-7ba52f816c",
+      "topic_id": "django-7ba52f816c",
+      "category": "Performance",
+      "title": "ORM Lazy Evaluation, `select_related` & `prefetch_related`",
+      "question": "Explain ORM Lazy Evaluation, `select_related` & `prefetch_related`",
+      "answer_30s": "Django QuerySets are lazy\u2014they hit the DB only when evaluated (iteration, `list()`, `len()`). Prevent N+1 queries using `select_related()` (SQL JOIN for ForeignKey/OneToOne) and `prefetch_related()` (separate IN query + Python join for ManyToMany/reverse FK).",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "orders = Order.objects.select_related('customer').prefetch_related('items__product').all()"
+      },
+      "typical_use": "Eliminating N+1 bottlenecks in Django REST Framework endpoints.",
+      "pitfalls": [
+        "Use `only()`/`defer()` or `values()`/`values_list()` when fetching a few columns from wide tables."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-7fa72985c0",
+      "topic_id": "django-7fa72985c0",
+      "category": "Architecture",
+      "title": "Migrations & Zero-Downtime Schema Changes",
+      "question": "Explain Migrations & Zero-Downtime Schema Changes",
+      "answer_30s": "`makemigrations` diffs model definitions into versioned migration files; `migrate` applies them transactionally (on PostgreSQL). Always separate schema additions from destructive column drops across releases so rolling pods don't crash.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "python manage.py makemigrations --check --dry-run"
+      },
+      "typical_use": "Safe CI/CD database deployments in Django.",
+      "pitfalls": [
+        "Add `makemigrations --check` to CI so unmigrated model edits fail PRs immediately."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-7674687157",
+      "topic_id": "django-7674687157",
+      "category": "Concurrency",
+      "title": "`F()` Expressions, `select_for_update()` & `transaction.atomic()`",
+      "question": "Explain `F()` Expressions, `select_for_update()` & `transaction.atomic()`",
+      "answer_30s": "Reading a model field in Python, incrementing it, and calling `.save()` causes lost updates under concurrency. Use `F()` expressions for atomic SQL-level updates, or `transaction.atomic()` + `select_for_update()` for multi-step invariants.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from django.db.models import F\nAccount.objects.filter(id=1, balance__gte=100).update(balance=F('balance') - 100)"
+      },
+      "typical_use": "Preventing race conditions in counters, wallets, and inventory.",
+      "pitfalls": [
+        "Also use `bulk_create()` and `bulk_update()` for batch writes instead of looping `.save()`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-5d10e9a113",
+      "topic_id": "django-5d10e9a113",
+      "category": "Security",
+      "title": "CSRF, XSS, SQLi & DRF Permissions",
+      "question": "Explain CSRF, XSS, SQLi & DRF Permissions",
+      "answer_30s": "Django protects against SQLi via parameterized ORM queries, XSS via auto-escaped templates, and CSRF via `CsrfViewMiddleware` tokens on unsafe methods. In DRF, combine `IsAuthenticated` with custom object-level `has_object_permission` checks.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "class IsOwner(BasePermission):\n    def has_object_permission(self, request, view, obj):\n        return obj.owner_id == request.user.id"
+      },
+      "typical_use": "Securing multi-user APIs against IDOR and CSRF.",
+      "pitfalls": [
+        "Never use `mark_safe()` on untrusted strings or raw SQL string formatting with `extra()` / `RawSQL()`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-c2cea102e9",
+      "topic_id": "django-c2cea102e9",
+      "category": "Reliability",
+      "title": "Celery Async Tasks & `transaction.on_commit()`",
+      "question": "Explain Celery Async Tasks & `transaction.on_commit()`",
+      "answer_30s": "Offload slow emails, PDFs, and webhooks to Celery workers. Always enqueue tasks inside `transaction.on_commit(lambda: task.delay(id))` so the worker never wakes up before the DB transaction commits!",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "from django.db import transaction\nwith transaction.atomic():\n    order = Order.objects.create(...)\n    transaction.on_commit(lambda: send_receipt.delay(order.id))"
+      },
+      "typical_use": "Fixing intermittent 'ObjectDoesNotExist' race conditions in Celery workers.",
+      "pitfalls": [
+        "`transaction.on_commit` is a classic senior Django production insight."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-bffb925263",
+      "topic_id": "django-bffb925263",
+      "category": "Q&A",
+      "title": "Q: `select_related` vs `prefetch_related` \u2014 how do they work under the hood?",
+      "question": "Q: `select_related` vs `prefetch_related` \u2014 how do they work under the hood?",
+      "answer_30s": "A: `select_related` performs a single SQL INNER/LEFT JOIN (best for single-valued ForeignKey/OneToOne). `prefetch_related` runs a second query (`WHERE id IN (...)`) and joins in Python (needed for ManyToMany and reverse ForeignKey to avoid massive row multiplication).",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "# Use Prefetch() object to filter or order prefetched querysets"
+      },
+      "typical_use": "Most asked Django ORM performance question.",
+      "pitfalls": [
+        "Calling `.filter()` on a prefetched relation later still triggers a new query unless you use `Prefetch(to_attr=...)`."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-92c98fb11c",
+      "topic_id": "django-92c98fb11c",
+      "category": "Q&A",
+      "title": "Q: What is the difference between `null=True` and `blank=True`?",
+      "question": "Q: What is the difference between `null=True` and `blank=True`?",
+      "answer_30s": "A: `null=True` is database-level (allows SQL NULL). `blank=True` is validation/form-level (allows empty input in forms/DRF serializers). For string fields (`CharField`/`TextField`), Django convention uses `blank=True, default=''` without `null=True` to avoid two representations of 'empty'.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "bio = models.TextField(blank=True, default='')"
+      },
+      "typical_use": "Classic Django model design question.",
+      "pitfalls": [
+        "Exception: if a `CharField` has `unique=True` and is optional, you DO need `null=True, blank=True` so multiple empty strings don't collide on UNIQUE."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-3cbe384fd0",
+      "topic_id": "django-3cbe384fd0",
+      "category": "Q&A",
+      "title": "Q: Signals vs Overriding `save()` vs Service Layer \u2014 which do you prefer?",
+      "question": "Q: Signals vs Overriding `save()` vs Service Layer \u2014 which do you prefer?",
+      "answer_30s": "A: Signals (`post_save`) create hidden implicit side effects, make tracing/testing harder, and don't fire on bulk operations (`QuerySet.update()`/`bulk_create()`). Prefer explicit service-layer functions (or `transaction.on_commit`) for business workflows.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "# Signals do NOT fire on Model.objects.filter(...).update(...)"
+      },
+      "typical_use": "Code maintainability and architectural judgment.",
+      "pitfalls": [
+        "Knowing that `bulk_create` and `.update()` bypass `save()` and signals is a great practical catch."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-3530fe1142",
+      "topic_id": "django-3530fe1142",
+      "category": "Q&A",
+      "title": "Q: `len(qs)` vs `qs.count()` vs `qs.exists()`?",
+      "question": "Q: `len(qs)` vs `qs.count()` vs `qs.exists()`?",
+      "answer_30s": "A: `len(qs)` fetches and instantiates EVERY matching model object into Python memory. `qs.count()` runs `SELECT COUNT(*)`. `qs.exists()` runs `SELECT 1 ... LIMIT 1` (fastest for existence checks). Exception: if you already need to iterate the queryset anyway, `len(qs)` reuses the cached result.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "if Order.objects.filter(user=u).exists(): ..."
+      },
+      "typical_use": "Avoiding accidental full-table loads in views.",
+      "pitfalls": [
+        "Similarly, `if queryset:` evaluates the whole queryset\u2014use `if queryset.exists():` if you don't need the rows."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-1821b472fc",
+      "topic_id": "django-1821b472fc",
+      "category": "Q&A",
+      "title": "Q: How does Django REST Framework handle throttling, pagination, and serialization?",
+      "question": "Q: How does Django REST Framework handle throttling, pagination, and serialization?",
+      "answer_30s": "A: DRF provides `Serializer`/`ModelSerializer` for validation and JSON rendering, `PageNumber`/`CursorPagination` for bounded responses, and `AnonRateThrottle`/`UserRateThrottle` backed by Redis cache for rate limiting.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "REST_FRAMEWORK = {'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination', 'PAGE_SIZE': 25}"
+      },
+      "typical_use": "Production DRF API configuration.",
+      "pitfalls": [
+        "Prefer `CursorPagination` over `PageNumberPagination` on large tables."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-0d307cf426",
+      "topic_id": "django-0d307cf426",
+      "category": "Q&A",
+      "title": "Q: How do you test Django views and DB queries effectively?",
+      "question": "Q: How do you test Django views and DB queries effectively?",
+      "answer_30s": "A: Use `pytest-django` or `TestCase` (wraps each test in a rolled-back transaction), `assertNumQueries(N)` to catch N+1 regressions automatically in CI, and `override_settings` for isolated config tests.",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "with self.assertNumQueries(2):\n    res = self.client.get('/api/orders/')"
+      },
+      "typical_use": "Preventing performance regressions in CI.",
+      "pitfalls": [
+        "`assertNumQueries` is one of Django's best built-in testing tools."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "django-a934d3b82e",
+      "topic_id": "django-a934d3b82e",
+      "category": "Q&A",
+      "title": "Q: WSGI (Gunicorn) vs ASGI (Uvicorn/Daphne) in Django?",
+      "question": "Q: WSGI (Gunicorn) vs ASGI (Uvicorn/Daphne) in Django?",
+      "answer_30s": "A: WSGI is synchronous (one thread/worker per request). ASGI supports async views, WebSockets (Django Channels), and concurrent non-blocking I/O\u2014though mixing sync ORM calls in async views requires `sync_to_async` or Django 4.1+/5.x async ORM methods (`aget`, `acreate`).",
+      "deep_dive": "",
+      "code": {
+        "lang": "python",
+        "body": "async for obj in Order.objects.filter(active=True): ..."
+      },
+      "typical_use": "Modern async Django architecture.",
+      "pitfalls": [
+        "Remember Django's `async` ORM still uses sync drivers underneath unless configured carefully."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

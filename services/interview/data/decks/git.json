@@ -1,0 +1,328 @@
+{
+  "tech": "git",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "git-38c76b0f58",
+      "topic_id": "git-38c76b0f58",
+      "category": "Architecture",
+      "title": "Git Object Model (Blob, Tree, Commit, Tag)",
+      "question": "Explain Git Object Model (Blob, Tree, Commit, Tag)",
+      "answer_30s": "Git is a content-addressable filesystem where every object is keyed by its SHA-1/SHA-256 hash. Blobs store file contents; Trees store directory structures and filenames; Commits point to a root Tree, parent commit(s), and author metadata; Branches are simply 41-byte files pointing to a commit hash.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git cat-file -p HEAD\ngit rev-parse HEAD"
+      },
+      "typical_use": "Understanding why branching, switching, and verifying history integrity are nearly instant.",
+      "pitfalls": [
+        "Because branches are just lightweight pointers, deleting a merged branch does not delete commits."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-10895ad89e",
+      "topic_id": "git-10895ad89e",
+      "category": "Basics",
+      "title": "Merge vs Rebase vs Squash",
+      "question": "Explain Merge vs Rebase vs Squash",
+      "answer_30s": "`git merge` creates a merge commit preserving true branching chronology. `git rebase` replays your feature commits onto a new base commit for a clean linear history. `git merge --squash` collapses a messy feature branch into a single commit on main.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git fetch origin\ngit rebase origin/main"
+      },
+      "typical_use": "Keeping team commit history readable and bisectable.",
+      "pitfalls": [
+        "Golden Rule of Rebasing: NEVER rebase commits that have already been pushed to a shared public branch."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-0f1f127cc3",
+      "topic_id": "git-0f1f127cc3",
+      "category": "Reliability",
+      "title": "Reset (Soft, Mixed, Hard) vs Revert",
+      "question": "Explain Reset (Soft, Mixed, Hard) vs Revert",
+      "answer_30s": "`git reset` moves the branch pointer backward: `--soft` keeps changes staged, `--mixed` (default) keeps them in working dir unstaged, `--hard` discards all changes. `git revert` creates a NEW inverse commit, safely undoing changes on shared branches without rewriting history.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git revert <bad-commit-sha>\ngit reset --soft HEAD~1"
+      },
+      "typical_use": "Safely rolling back bad merges on main vs tidying local unpushed commits.",
+      "pitfalls": [
+        "Use `git revert` on shared branches (`main`); use `git reset` only on local unpushed work."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-42726f7c58",
+      "topic_id": "git-42726f7c58",
+      "category": "Operations",
+      "title": "Git Reflog & Disaster Recovery",
+      "question": "Explain Git Reflog & Disaster Recovery",
+      "answer_30s": "Git records every movement of HEAD and branch tips locally in the reflog (default retention 90 days). Even after a bad `git reset --hard` or botched rebase, you can recover lost commits by checking `git reflog` and resetting or branching back to the old SHA.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git reflog\ngit checkout -b recovered-work HEAD@{2}"
+      },
+      "typical_use": "Recovering 'lost' commits after an accidental hard reset or rebase.",
+      "pitfalls": [
+        "Note that reflog is strictly local\u2014uncommitted changes that were never `git add`/`git commit`-ted cannot be recovered from reflog."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-42dcc6e2c5",
+      "topic_id": "git-42dcc6e2c5",
+      "category": "Operations",
+      "title": "Git Bisect for Binary-Searching Regressions",
+      "question": "Explain Git Bisect for Binary-Searching Regressions",
+      "answer_30s": "`git bisect` performs O(log N) binary search across commit history to pinpoint the exact commit that introduced a bug, and can even run an automated test script via `git bisect run`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git bisect start\ngit bisect bad HEAD\ngit bisect good v1.4.0\ngit bisect run pytest tests/test_auth.py"
+      },
+      "typical_use": "Isolating subtle regressions across hundreds of commits in minutes.",
+      "pitfalls": [
+        "Clean, atomic, passing commits make `git bisect` dramatically more effective."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-fed16f6997",
+      "topic_id": "git-fed16f6997",
+      "category": "Basics",
+      "title": "Interactive Rebase, Cherry-Pick & Stash",
+      "question": "Explain Interactive Rebase, Cherry-Pick & Stash",
+      "answer_30s": "`git rebase -i` lets you reorder, squash, fixup, reword, or drop local commits before opening a PR. `git cherry-pick` copies a specific commit (e.g., a hotfix) onto another branch. `git stash` temporarily shelves uncommitted work.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git rebase -i HEAD~4\ngit cherry-pick <hotfix-sha>"
+      },
+      "typical_use": "Preparing clean PRs and backporting urgent fixes to release branches.",
+      "pitfalls": [
+        "Use `git push --force-with-lease` instead of `--force` after rebasing a PR branch so you don't overwrite a teammate's commits."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-74426ad457",
+      "topic_id": "git-74426ad457",
+      "category": "Q&A",
+      "title": "Q: What is the difference between `git fetch` and `git pull`?",
+      "question": "Q: What is the difference between `git fetch` and `git pull`?",
+      "answer_30s": "A: `git fetch` downloads remote commits and updates remote-tracking refs (`origin/main`) without touching your working directory or local branch. `git pull` runs `git fetch` followed immediately by `git merge` (or `git rebase` with `--rebase`).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git pull --rebase origin main"
+      },
+      "typical_use": "Classic Git fundamentals interview question.",
+      "pitfalls": [
+        "Using `git fetch` first lets you inspect incoming changes (`git diff HEAD..origin/main`) before integrating."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-fe827a09f4",
+      "topic_id": "git-fe827a09f4",
+      "category": "Q&A",
+      "title": "Q: Why use `git push --force-with-lease` instead of `git push --force`?",
+      "question": "Q: Why use `git push --force-with-lease` instead of `git push --force`?",
+      "answer_30s": "A: `--force` unconditionally overwrites the remote branch, destroying any commits pushed by teammates since your last fetch. `--force-with-lease` aborts if the remote branch tip doesn't match what you expect locally.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git push --force-with-lease origin feature/auth"
+      },
+      "typical_use": "Safe force-pushing after interactive rebases on PR branches.",
+      "pitfalls": [
+        "Always recommend `--force-with-lease` in team workflows."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-468d4d55f2",
+      "topic_id": "git-468d4d55f2",
+      "category": "Q&A",
+      "title": "Q: What is a Detached HEAD state and how do you fix it?",
+      "question": "Q: What is a Detached HEAD state and how do you fix it?",
+      "answer_30s": "A: Detached HEAD means HEAD points directly to a commit SHA rather than a branch name (common after `git checkout <sha>` or tag). Commits made there aren't on any branch and will eventually be garbage-collected unless you create a branch with `git switch -c fix-branch`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git switch -c saved-from-detached"
+      },
+      "typical_use": "Recovering work committed while inspecting an old tag or commit.",
+      "pitfalls": [
+        "Creating a branch immediately saves all commits made in detached HEAD."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-9312eaa8cd",
+      "topic_id": "git-9312eaa8cd",
+      "category": "Q&A",
+      "title": "Q: How do you remove a secret or huge binary accidentally committed to Git?",
+      "question": "Q: How do you remove a secret or huge binary accidentally committed to Git?",
+      "answer_30s": "A: Simply deleting the file in a new commit leaves the secret in Git history. You must rewrite history across all commits using `git filter-repo` (replacing legacy filter-branch/BFG), force-push, and MOST IMPORTANTLY rotate/revoke the leaked secret immediately.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git filter-repo --path .env --invert-paths"
+      },
+      "typical_use": "Security incident response for leaked API keys.",
+      "pitfalls": [
+        "Interviewers test whether you remember step #1: rotate the credential immediately\u2014history rewriting alone doesn't un-leak a pushed key."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-7e2f4df695",
+      "topic_id": "git-7e2f4df695",
+      "category": "Q&A",
+      "title": "Q: Trunk-Based Development vs GitFlow \u2014 when do you use each?",
+      "question": "Q: Trunk-Based Development vs GitFlow \u2014 when do you use each?",
+      "answer_30s": "A: Trunk-Based Development uses short-lived feature branches merged daily into `main` with CI/CD and feature flags\u2014ideal for SaaS/web teams shipping continuously. GitFlow uses long-lived `develop`, `release`, and `hotfix` branches\u2014better suited for versioned, packaged, or regulated software with scheduled releases.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Trunk-based: short branches + feature flags + automated CI gates"
+      },
+      "typical_use": "Engineering workflow and CI/CD culture question.",
+      "pitfalls": [
+        "Trunk-based development correlates strongly with higher deployment frequency and fewer merge conflicts."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-58f085cda3",
+      "topic_id": "git-58f085cda3",
+      "category": "Q&A",
+      "title": "Q: How do you resolve a complex merge conflict cleanly?",
+      "question": "Q: How do you resolve a complex merge conflict cleanly?",
+      "answer_30s": "A: Inspect conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`), understand both intents (`git log -p -n 3`), resolve manually or via 3-way merge tool (`git mergetool`), run the test suite, and complete with `git add` + `git commit` (or `git rebase --continue`). Enable `git rerere` to auto-reuse resolutions.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git config --global rerere.enabled true"
+      },
+      "typical_use": "Handling long-lived branch conflicts and repetitive rebases.",
+      "pitfalls": [
+        "Mentioning `git rerere` (Reuse Recorded Resolution) is a pro tip interviewers love."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-df25bf5b3b",
+      "topic_id": "git-df25bf5b3b",
+      "category": "Q&A",
+      "title": "Q: How do `git diff`, `git diff --staged`, and `git diff main...HEAD` differ?",
+      "question": "Q: How do `git diff`, `git diff --staged`, and `git diff main...HEAD` differ?",
+      "answer_30s": "A: `git diff` compares working tree vs staging area (index). `git diff --staged` compares staging area vs HEAD. Triple-dot `main...HEAD` shows changes on your branch since it diverged from `main` (the exact PR diff), whereas double-dot `main..HEAD` compares the two tips directly.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git diff main...HEAD --stat"
+      },
+      "typical_use": "Reviewing exact PR changes cleanly.",
+      "pitfalls": [
+        "GitHub/GitLab PR diffs use triple-dot (`...`) semantics."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "git-876d1640ab",
+      "topic_id": "git-876d1640ab",
+      "category": "Q&A",
+      "title": "Q: How do you revert a bad merge commit?",
+      "question": "Q: How do you revert a bad merge commit?",
+      "answer_30s": "A: A merge commit has two parents, so `git revert <merge-sha>` requires `-m 1` to specify which parent (`1` = mainline target branch) to keep. Note that reverting a merge doesn't erase the feature commits, so if you re-merge the same branch later you must revert the revert first.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "git revert -m 1 <merge-commit-sha>"
+      },
+      "typical_use": "Emergency production rollback after merging a broken PR.",
+      "pitfalls": [
+        "Knowing the `-m 1` flag and the 'revert the revert' gotcha is a classic senior Git question."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

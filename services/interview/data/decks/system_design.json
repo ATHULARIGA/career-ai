@@ -1,0 +1,374 @@
+{
+  "tech": "system_design",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "system-13088d5bab",
+      "topic_id": "system-13088d5bab",
+      "category": "Basics",
+      "title": "Load Balancing (L4 vs L7, Health Checks, Algorithms)",
+      "question": "Explain Load Balancing (L4 vs L7, Health Checks, Algorithms)",
+      "answer_30s": "L4 load balancers route TCP/UDP packets using IP/port without inspecting payloads (ultra-fast). L7 load balancers terminate TLS and inspect HTTP headers, cookies, and URLs for smart routing. Algorithms include Round Robin, Least Connections, and Consistent Hashing.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# L7: path routing (/api -> API pool, /static -> CDN), TLS termination, rate limiting"
+      },
+      "typical_use": "Distributing traffic across stateless app tiers with zero-downtime health checks.",
+      "pitfalls": [
+        "Mention active vs passive health checks and graceful connection draining."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-1c4d0422f8",
+      "topic_id": "system-1c4d0422f8",
+      "category": "Architecture",
+      "title": "CAP & PACELC Theorems",
+      "question": "Explain CAP & PACELC Theorems",
+      "answer_30s": "CAP states a distributed store under a Network Partition (P) must choose Consistency (CP: linearizable reads, may reject writes) or Availability (AP: always responds, may serve stale data). PACELC extends CAP: even Else (no partition), systems trade off Latency (L) vs Consistency (C).",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# CP: ZooKeeper, etcd, HBase | AP: DynamoDB (default), Cassandra | CA doesn't exist in distributed networks"
+      },
+      "typical_use": "Justifying database choices in distributed system designs.",
+      "pitfalls": [
+        "Bringing up PACELC shows deeper systems maturity than CAP alone."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-7792151839",
+      "topic_id": "system-7792151839",
+      "category": "Architecture",
+      "title": "Consistent Hashing & Virtual Nodes",
+      "question": "Explain Consistent Hashing & Virtual Nodes",
+      "answer_30s": "Modulo hashing (`hash(key) % N`) remaps nearly all keys when a cache/shard node is added or removed. Consistent hashing maps nodes and keys onto a 0..2^32-1 ring so adding/removing a node only moves ~1/N keys. Virtual nodes prevent uneven load distribution.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Virtual nodes (e.g. 150 vnodes per physical server) smooth hot spots on the hash ring"
+      },
+      "typical_use": "Partitioning distributed caches (Redis/Memcached) and NoSQL shards.",
+      "pitfalls": [
+        "Explain how consistent hashing minimizes cache misses during autoscaling."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-327a1cbf15",
+      "topic_id": "system-327a1cbf15",
+      "category": "Performance",
+      "title": "Multi-Tier Caching & CDN Strategies",
+      "question": "Explain Multi-Tier Caching & CDN Strategies",
+      "answer_30s": "Layer caches from edge to storage: Browser Cache-Control -> CDN Edge -> API Gateway/L1 In-Memory -> Distributed L2 (Redis) -> DB Buffer Pool. Use Cache-Aside for general reads, Write-Through for consistency, and Randomized TTLs + Singleflight to prevent stampedes.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "Cache-Control: public, max-age=60, stale-while-revalidate=300"
+      },
+      "typical_use": "Scaling read-heavy systems from 1k to 100k+ QPS.",
+      "pitfalls": [
+        "Always quantify cache hit ratio impact on DB QPS during back-of-the-envelope math."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-91b07ff83b",
+      "topic_id": "system-91b07ff83b",
+      "category": "Architecture",
+      "title": "Database Scaling: Read Replicas, Partitioning & Sharding",
+      "question": "Explain Database Scaling: Read Replicas, Partitioning & Sharding",
+      "answer_30s": "Scale reads with Read Replicas; scale single-node tables with vertical scaling + Partitioning; scale writes horizontally with Sharding (hash, range, or directory-based). Sharding introduces cross-shard join/transaction complexity and hot-shard risks\u2014delay sharding until truly needed.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Shard key choice is critical: shard by tenant_id or user_id to keep user queries on 1 shard"
+      },
+      "typical_use": "Designing multi-terabyte, high-write-throughput data tiers.",
+      "pitfalls": [
+        "Always address cross-shard queries, resharding pain, and replication lag."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-c53f878995",
+      "topic_id": "system-c53f878995",
+      "category": "Reliability",
+      "title": "Rate Limiting Algorithms (Token Bucket, Sliding Window)",
+      "question": "Explain Rate Limiting Algorithms (Token Bucket, Sliding Window)",
+      "answer_30s": "Rate limiters protect APIs from abuse and cascading overload. Token Bucket allows controlled bursts; Leaky Bucket smooths output rate; Fixed Window has boundary spikes; Sliding Window Log/Counter (in Redis) gives accurate rolling limits.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Distributed Token Bucket via atomic Redis Lua script keyed by user_id / IP"
+      },
+      "typical_use": "Protecting login, AI inference, and public APIs.",
+      "pitfalls": [
+        "Return `429 Too Many Requests` with `Retry-After` and `X-RateLimit-Remaining` headers."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-5124310dfe",
+      "topic_id": "system-5124310dfe",
+      "category": "Reliability",
+      "title": "Idempotency Keys & Retries with Backoff + Jitter",
+      "question": "Explain Idempotency Keys & Retries with Backoff + Jitter",
+      "answer_30s": "Networks fail ambiguously; retries can cause duplicate payments or orders. Clients send a unique `Idempotency-Key` header stored atomically by the server so retries return the original result. Always pair retries with exponential backoff AND jitter to prevent thundering herds.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "sleep = min(cap, base * (2 ** attempt)) * random.uniform(0.5, 1.0)"
+      },
+      "typical_use": "Payment gateways, webhook consumers, and resilient microservice RPCs.",
+      "pitfalls": [
+        "Combine Idempotency-Key with a DB unique constraint for ironclad protection."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-9278ef7de6",
+      "topic_id": "system-9278ef7de6",
+      "category": "Reliability",
+      "title": "Circuit Breakers, Bulkheads & Backpressure",
+      "question": "Explain Circuit Breakers, Bulkheads & Backpressure",
+      "answer_30s": "A Circuit Breaker (Closed -> Open -> Half-Open) fails fast when a downstream service is degraded, preventing thread-pool exhaustion. Bulkheads isolate resources per dependency; Backpressure (bounded queues, 429/503) stops producers from overwhelming consumers.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Closed (normal) -> Open (fail fast for 30s) -> Half-Open (probe 1-3 requests)"
+      },
+      "typical_use": "Preventing single-service brownouts from cascading across the whole platform.",
+      "pitfalls": [
+        "Mention adaptive concurrency limits and load shedding as advanced resilience tools."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-f3ad42b47b",
+      "topic_id": "system-f3ad42b47b",
+      "category": "Architecture",
+      "title": "Distributed Transactions: 2PC vs Saga Pattern",
+      "question": "Explain Distributed Transactions: 2PC vs Saga Pattern",
+      "answer_30s": "Two-Phase Commit (2PC) blocks locks across services and hurts availability at scale. The Saga pattern breaks a distributed workflow into local transactions paired with compensating actions on failure (via Choreography events or Orchestration state machines like Temporal).",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Order Saga: Reserve Inventory -> Charge Card -> (if fail: Release Inventory)"
+      },
+      "typical_use": "Managing cross-service workflows in e-commerce and travel booking.",
+      "pitfalls": [
+        "Highlight that Saga provides eventual consistency (ACD, not full isolation), so design for semantic locks/pending states."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "senior",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-5ba7cd45a9",
+      "topic_id": "system-5ba7cd45a9",
+      "category": "Q&A",
+      "title": "Q: How do you approach a System Design interview in 45 minutes?",
+      "question": "Q: How do you approach a System Design interview in 45 minutes?",
+      "answer_30s": "A: 1) Clarify functional & non-functional requirements (scale, QPS, latency, consistency) in 5 mins. 2) Back-of-the-envelope capacity math (storage, bandwidth, QPS). 3) High-level API & architecture diagram. 4) Deep dive into bottlenecks, data model, caching, partitioning, and failure modes. 5) Observability & trade-offs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Always drive the conversation and verify requirements before drawing boxes"
+      },
+      "typical_use": "Meta-framework for acing any system design round.",
+      "pitfalls": [
+        "Never jump straight into Kubernetes/Kafka without justifying WHY the scale requires them."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-e4356996bf",
+      "topic_id": "system-e4356996bf",
+      "category": "Q&A",
+      "title": "Q: Design a URL Shortener (e.g. TinyURL) \u2014 key decisions?",
+      "question": "Q: Design a URL Shortener (e.g. TinyURL) \u2014 key decisions?",
+      "answer_30s": "A: Read-heavy (100:1). Generate 7-char Base62 IDs from distributed counters (Snowflake/ZooKeeper ranges) or hash+collision check (no collisions with pre-allocated counter ranges). Store in KV/NoSQL or sharded SQL, cache hot URLs in Redis, return 301 (browser-cached, lower server load) vs 302 (tracks analytics).",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# 62^7 = 3.5 trillion unique short URLs"
+      },
+      "typical_use": "Classic warmup system design problem.",
+      "pitfalls": [
+        "301 vs 302 redirect trade-off is almost always asked as a follow-up."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-2a6274a398",
+      "topic_id": "system-2a6274a398",
+      "category": "Q&A",
+      "title": "Q: Push (Fan-out on Write) vs Pull (Fan-out on Read) for a Social Feed?",
+      "question": "Q: Push (Fan-out on Write) vs Pull (Fan-out on Read) for a Social Feed?",
+      "answer_30s": "A: Fan-out on Write pushes new posts to followers' precomputed feed caches (O(1) fast reads, expensive for celebrities with 10M followers). Fan-out on Read queries followed users' posts at read time (cheap writes, slower reads). Use a Hybrid: push for normal users, pull/merge at read time for celebrities.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# Hybrid Fan-out: Fan-out on write (<10k followers) + Fan-out on read (celebrities)"
+      },
+      "typical_use": "Core architecture for Twitter/Instagram/LinkedIn feeds.",
+      "pitfalls": [
+        "The Hybrid approach is the canonical expected answer."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-20f565a9c6",
+      "topic_id": "system-20f565a9c6",
+      "category": "Q&A",
+      "title": "Q: WebSockets vs SSE vs Long Polling \u2014 how do you choose for real-time updates?",
+      "question": "Q: WebSockets vs SSE vs Long Polling \u2014 how do you choose for real-time updates?",
+      "answer_30s": "A: Long Polling is simple HTTP fallback (higher overhead). Server-Sent Events (SSE) provide lightweight unidirectional server-to-client streaming over HTTP with auto-reconnect (great for AI streaming, notifications, live feeds). WebSockets provide full-duplex bidirectional low-latency TCP (chat, multiplayer games, collaborative editing).",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# AI token streaming & notifications -> SSE | Chat & gaming -> WebSockets"
+      },
+      "typical_use": "Real-time communication architecture question.",
+      "pitfalls": [
+        "Explain how stateful WebSocket servers scale behind L7 load balancers using Redis Pub/Sub for cross-pod message routing."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-4244bb5457",
+      "topic_id": "system-4244bb5457",
+      "category": "Q&A",
+      "title": "Q: How do you generate unique, sortable distributed IDs without a single DB bottleneck?",
+      "question": "Q: How do you generate unique, sortable distributed IDs without a single DB bottleneck?",
+      "answer_30s": "A: Use 64-bit Snowflake IDs (41 bits timestamp + 10 bits machine/datacenter ID + 12 bits per-ms sequence) for time-ordered, index-friendly IDs at millions/sec with zero coordination, or UUIDv7 (time-ordered) instead of random UUIDv4 which causes B-Tree page fragmentation.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# UUIDv7 / Snowflake > UUIDv4 for B-Tree primary key insert performance"
+      },
+      "typical_use": "Database & distributed systems design detail.",
+      "pitfalls": [
+        "Pointing out that random UUIDv4 fragments B-Tree indexes while UUIDv7/Snowflake keeps inserts sequential is a great senior insight."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "senior",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-5472661195",
+      "topic_id": "system-5472661195",
+      "category": "Q&A",
+      "title": "Q: What is the difference between Availability and Reliability, and SLA vs SLO vs SLI?",
+      "question": "Q: What is the difference between Availability and Reliability, and SLA vs SLO vs SLI?",
+      "answer_30s": "A: SLI is the measured metric (e.g. p99 latency < 200ms). SLO is the internal target (99.9% of requests meet SLI over 30 days, leaving a 0.1% error budget). SLA is the external customer contract with penalties. Availability is uptime; Reliability is performing correctly without data loss or corruption.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# 99.9% availability = ~43.8 mins downtime/month; 99.99% = ~4.38 mins/month"
+      },
+      "typical_use": "SRE and production architecture fundamentals.",
+      "pitfalls": [
+        "Explain error budgets: when budget is healthy, ship features fast; when exhausted, freeze features and fix reliability."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "system-b242fd9105",
+      "topic_id": "system-b242fd9105",
+      "category": "Q&A",
+      "title": "Q: How do you design a distributed Notification / Webhook delivery system?",
+      "question": "Q: How do you design a distributed Notification / Webhook delivery system?",
+      "answer_30s": "A: Decouple ingestion behind an API + SQS/Kafka partitioned by tenant. Workers deliver with strict per-endpoint timeouts, exponential backoff + jitter, circuit breakers for dead customer endpoints, HMAC-SHA256 payload signatures for authenticity, and DLQs + delivery logs for debugging.",
+      "deep_dive": "",
+      "code": {
+        "lang": "text",
+        "body": "# X-Signature-256: hmac_sha256(secret, timestamp + '.' + body)"
+      },
+      "typical_use": "Common practical backend system design prompt.",
+      "pitfalls": [
+        "Mention noisy-neighbor isolation: one slow customer webhook must not starve delivery queues for other customers."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "senior",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

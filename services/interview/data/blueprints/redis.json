@@ -1,0 +1,168 @@
+{
+  "tech": "redis",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "redis-ef7432e153",
+          "title": "Single-Threaded Event Loop & I/O Multiplexing",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-225233bff6",
+          "title": "High Availability: Replication, Sentinel & Redis Cluster",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "redis-b678e37ac1",
+          "title": "Core Data Structures (Strings, Hashes, ZSets, HyperLogLog, Streams)",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "redis-0228a1e114",
+          "title": "Caching Patterns: Cache-Aside, Write-Through, Write-Behind",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-5692751872",
+          "title": "Eviction Policies (LRU, LFU) & Memory Limits",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-6c4b7a96fa",
+          "title": "Pipelining & Rate Limiting Patterns",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "redis-55429f13b2",
+          "title": "Persistence: RDB Snapshots vs AOF (Append-Only File)",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "topics": [
+        {
+          "id": "redis-5ab46208a7",
+          "title": "Distributed Locks, Atomic Lua Scripts & SET NX PX",
+          "tier": "must",
+          "level": "senior",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "redis-1663d7e5ef",
+          "title": "ACLs, TLS & Network Isolation",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "redis-631674663b",
+          "title": "Q: What are Cache Stampede, Cache Penetration, and Cache Avalanche?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-7d7782ad54",
+          "title": "Q: Why is Redis fast despite being single-threaded?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-8ae654106e",
+          "title": "Q: How do you keep Redis and PostgreSQL consistent on writes?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-061355f3f6",
+          "title": "Q: Pub/Sub vs Redis Streams \u2014 which should you use for messaging?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-4d759ad6b0",
+          "title": "Q: What happens if a Redis single-threaded command takes 500ms (e.g. KEYS *)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "redis-f56b458956",
+          "title": "Q: How do you handle hot keys in a Redis Cluster?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

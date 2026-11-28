@@ -1,0 +1,328 @@
+{
+  "tech": "docker",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "docker-13ba7fc831",
+      "topic_id": "docker-13ba7fc831",
+      "category": "Basics",
+      "title": "Containers vs Virtual Machines (Namespaces & cgroups)",
+      "question": "Explain Containers vs Virtual Machines (Namespaces & cgroups)",
+      "answer_30s": "VMs virtualize hardware and run a full guest OS via a hypervisor, taking minutes to boot and gigabytes of RAM. Docker containers share the host Linux kernel, isolating what a process can see via namespaces (PID, NET, MNT, UTS, IPC, USER) and limiting what it can consume via cgroups (CPU, memory, I/O).",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker run -d --name api-svc --cpus=\"1.5\" --memory=\"512m\" -p 8000:8000 api:latest"
+      },
+      "typical_use": "Packaging reproducible services across local dev, CI, and production clusters.",
+      "pitfalls": [
+        "Clearly state: namespaces = isolation/visibility; cgroups = resource accounting and limits."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-65c12efda4",
+      "topic_id": "docker-65c12efda4",
+      "category": "Architecture",
+      "title": "Union Filesystem (OverlayFS) & Copy-on-Write",
+      "question": "Explain Union Filesystem (OverlayFS) & Copy-on-Write",
+      "answer_30s": "Docker images consist of immutable read-only layers stacked via OverlayFS (lowerdir). When a container starts, Docker adds one thin writable layer (upperdir) on top; modifying an existing file triggers Copy-on-Write (CoW) into the writable layer, while container restarts wipe ephemeral writes unless mounted to a volume.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker history my-image:latest\ndocker system df -v"
+      },
+      "typical_use": "Understanding why containers share base layers on disk and why writable layers shouldn't store persistent state.",
+      "pitfalls": [
+        "Deleting a large file in a later RUN layer does not shrink image size because the file still exists in the lower read-only layer\u2014chain commands in one RUN or use multi-stage builds."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-c3e20f7e07",
+      "topic_id": "docker-c3e20f7e07",
+      "category": "Performance",
+      "title": "Multi-Stage Builds & Layer Caching",
+      "question": "Explain Multi-Stage Builds & Layer Caching",
+      "answer_30s": "Multi-stage builds compile dependencies in a builder image and copy only runtime artifacts into a slim/distroless final image, cutting image size by 80-90%. Ordering instructions from least-changed (dependencies) to most-changed (source code) maximizes build cache hits.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "FROM python:3.11-slim AS builder\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir --prefix=/install -r requirements.txt\n\nFROM python:3.11-slim\nWORKDIR /app\nCOPY --from=builder /install /usr/local\nCOPY . .\nUSER 10001\nCMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\"]"
+      },
+      "typical_use": "Slashing CI/CD build times and container pull latency during autoscaling.",
+      "pitfalls": [
+        "Always include a .dockerignore file (.git, node_modules, __pycache__, .env) to keep build context small and avoid leaking secrets."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-62e04a08d1",
+      "topic_id": "docker-62e04a08d1",
+      "category": "Security",
+      "title": "Non-Root Users, Capabilities & Image Scanning",
+      "question": "Explain Non-Root Users, Capabilities & Image Scanning",
+      "answer_30s": "Containers run as root (UID 0) by default, which increases blast radius on container escape. Production Dockerfiles must create and switch to a non-root USER, drop unnecessary Linux capabilities, use minimal/distroless bases, and run Trivy/Snyk CVE scans in CI.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "RUN addgroup --system app && adduser --system --group app\nUSER app\n# Run with read-only rootfs:\n# docker run --read-only --cap-drop=ALL --security-opt=no-new-privileges my-img"
+      },
+      "typical_use": "Hardening production workloads for SOC2/PCI compliance.",
+      "pitfalls": [
+        "Never bake secrets via ENV or ARG in a Dockerfile\u2014they remain visible in `docker history` and image manifests."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-4006a985f3",
+      "topic_id": "docker-4006a985f3",
+      "category": "Architecture",
+      "title": "Docker Networking Modes (Bridge, Host, None, Overlay)",
+      "question": "Explain Docker Networking Modes (Bridge, Host, None, Overlay)",
+      "answer_30s": "Default bridge networks isolate containers on a virtual subnet with NAT; user-defined bridges add automatic DNS resolution by container name. Host mode shares the host network stack (zero NAT overhead, no port isolation); overlay networks span multiple Docker Swarm/cluster hosts.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker network create --driver bridge app-net\ndocker run -d --network app-net --name db postgres:16\ndocker run -d --network app-net --name api my-api:latest"
+      },
+      "typical_use": "Connecting multi-container local stacks cleanly by service name.",
+      "pitfalls": [
+        "The default `bridge` network does NOT support automatic DNS name resolution between containers\u2014always create a user-defined bridge or use Docker Compose."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-7fc5be7b1c",
+      "topic_id": "docker-7fc5be7b1c",
+      "category": "Reliability",
+      "title": "Volumes vs Bind Mounts vs tmpfs",
+      "question": "Explain Volumes vs Bind Mounts vs tmpfs",
+      "answer_30s": "Named volumes are managed by Docker (/var/lib/docker/volumes), portable, and optimal for persistent DB data. Bind mounts map a specific host path (great for local hot-reload dev). tmpfs mounts store sensitive/ephemeral data strictly in host RAM.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker run -d -v pg_data:/var/lib/postgresql/data postgres:16\ndocker run -d --mount type=tmpfs,destination=/app/tmp my-app"
+      },
+      "typical_use": "Persisting database state across container recreations and keeping dev hot-reload fast.",
+      "pitfalls": [
+        "On macOS/Windows, large bind mounts (like node_modules) can be slow across the VM boundary; use named volumes or cached mounts."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-18da85ff86",
+      "topic_id": "docker-18da85ff86",
+      "category": "Reliability",
+      "title": "PID 1, Signals (SIGTERM) & Graceful Shutdown",
+      "question": "Explain PID 1, Signals (SIGTERM) & Graceful Shutdown",
+      "answer_30s": "The container entrypoint runs as PID 1, which in Linux does not get default signal handlers for SIGTERM/SIGINT unless explicitly registered, and must reap zombie child processes. Using exec-form CMD/ENTRYPOINT or `--init` (tini) ensures SIGTERM reaches the app for graceful connection draining.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "STOPSIGNAL SIGTERM\nENTRYPOINT [\"tini\", \"--\", \"python\", \"main.py\"]"
+      },
+      "typical_use": "Eliminating 502 errors and dropped requests during rolling deployments.",
+      "pitfalls": [
+        "Shell-form `CMD python main.py` wraps the process in `/bin/sh -c`, which may swallow SIGTERM and force a 10s wait before SIGKILL (exit 137)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-d5a00e60a8",
+      "topic_id": "docker-d5a00e60a8",
+      "category": "Reliability",
+      "title": "Healthchecks & Compose Dependency Ordering",
+      "question": "Explain Healthchecks & Compose Dependency Ordering",
+      "answer_30s": "Docker HEALTHCHECK periodically runs a command inside the container to mark it healthy or unhealthy. In Docker Compose, `depends_on` with `condition: service_healthy` ensures the API waits until PostgreSQL or Redis is actually accepting connections, not just started.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "services:\n  db:\n    image: postgres:16\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U postgres\"]\n      interval: 5s\n      retries: 5\n  api:\n    depends_on:\n      db:\n        condition: service_healthy"
+      },
+      "typical_use": "Preventing race-condition crashes on startup in multi-service stacks.",
+      "pitfalls": [
+        "Healthcheck commands should verify process readiness cheaply without creating heavy DB load."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-ed95b2dcb1",
+      "topic_id": "docker-ed95b2dcb1",
+      "category": "Q&A",
+      "title": "Q: What is the difference between COPY and ADD, and CMD vs ENTRYPOINT?",
+      "question": "Q: What is the difference between COPY and ADD, and CMD vs ENTRYPOINT?",
+      "answer_30s": "A: COPY simply copies local files into the image; ADD also auto-extracts local tarballs and can fetch URLs (less predictable, so prefer COPY). ENTRYPOINT sets the fixed executable, while CMD provides default arguments that can be overridden via `docker run <image> <args>`.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "ENTRYPOINT [\"python\", \"cli.py\"]\nCMD [\"--env\", \"prod\"]"
+      },
+      "typical_use": "Building flexible CLI and microservice images.",
+      "pitfalls": [
+        "Recommend COPY over ADD in almost all cases for transparency and cache predictability."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-f2c495f576",
+      "topic_id": "docker-f2c495f576",
+      "category": "Q&A",
+      "title": "Q: What does Exit Code 137 or 139 mean when a container crashes?",
+      "question": "Q: What does Exit Code 137 or 139 mean when a container crashes?",
+      "answer_30s": "A: Exit code = 128 + signal number. 137 (128+9) means SIGKILL, almost always triggered by the Linux OOM Killer exceeding the container's cgroup memory limit (or `docker stop` timing out after 10s). 139 (128+11) means SIGSEGV (segmentation fault in native code). 143 (128+15) means clean SIGTERM.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker inspect <container> --format '{{.State.OOMKilled}} {{.State.ExitCode}}'"
+      },
+      "typical_use": "Rapidly triaging crashing containers in production.",
+      "pitfalls": [
+        "Always check `State.OOMKilled` first when seeing exit code 137."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-008fe455ae",
+      "topic_id": "docker-008fe455ae",
+      "category": "Q&A",
+      "title": "Q: Why did my Docker image end up 1.2GB even though I deleted temp files?",
+      "question": "Q: Why did my Docker image end up 1.2GB even though I deleted temp files?",
+      "answer_30s": "A: Each RUN instruction creates an immutable layer. Deleting files in a subsequent RUN only adds a whiteout marker in the new layer; the original bytes remain in the previous layer. Fix by chaining `apt-get install && rm -rf /var/lib/apt/lists/*` in a single RUN, using `--no-cache-dir`, and using multi-stage builds.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "RUN apt-get update && apt-get install -y --no-install-recommends gcc \\\n    && rm -rf /var/lib/apt/lists/*"
+      },
+      "typical_use": "Optimizing container image size and security footprint.",
+      "pitfalls": [
+        "Also mention BuildKit cache mounts (`RUN --mount=type=cache,target=/root/.cache/pip`) to speed up builds without bloating layers."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-2bed4f9b23",
+      "topic_id": "docker-2bed4f9b23",
+      "category": "Q&A",
+      "title": "Q: How do you debug a container that crashes immediately or lacks shell tools?",
+      "question": "Q: How do you debug a container that crashes immediately or lacks shell tools?",
+      "answer_30s": "A: Check `docker logs --tail 200 <id>` and `docker inspect <id>`. Override the entrypoint with `docker run --rm -it --entrypoint /bin/sh <image>` to inspect the filesystem/env. For distroless images without a shell, use `docker debug` or `kubectl debug` ephemeral sidecar containers sharing the PID/network namespace.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker run --rm -it --entrypoint /bin/sh my-image:latest"
+      },
+      "typical_use": "Troubleshooting startup failures and distroless production containers.",
+      "pitfalls": [
+        "Mention `docker exec -it` only works on running containers, whereas `--entrypoint` starts a fresh debug container."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-5af4dc90db",
+      "topic_id": "docker-5af4dc90db",
+      "category": "Q&A",
+      "title": "Q: How does Docker BuildKit improve builds and handle build-time secrets safely?",
+      "question": "Q: How does Docker BuildKit improve builds and handle build-time secrets safely?",
+      "answer_30s": "A: BuildKit builds independent stages in parallel, uses content-addressable caching, and supports `--mount=type=secret` so private SSH keys or npm/pip tokens are mounted temporarily during a RUN step and never persisted in any image layer.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci"
+      },
+      "typical_use": "Accessing private package registries securely in CI/CD pipelines.",
+      "pitfalls": [
+        "This directly answers how to use private repos in Docker without leaking credentials in image history."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "docker-891fffb42a",
+      "topic_id": "docker-891fffb42a",
+      "category": "Q&A",
+      "title": "Q: What is the difference between `docker run`, `docker compose`, and Kubernetes?",
+      "question": "Q: What is the difference between `docker run`, `docker compose`, and Kubernetes?",
+      "answer_30s": "A: `docker run` manages a single container on one host. `docker compose` declaratively orchestrates multi-container stacks on a single host (great for local dev and simple deployments). Kubernetes orchestrates containers across a cluster of nodes with automated scheduling, self-healing, rolling updates, service discovery, and horizontal autoscaling.",
+      "deep_dive": "",
+      "code": {
+        "lang": "dockerfile",
+        "body": "docker compose up -d --build"
+      },
+      "typical_use": "Explaining container orchestration boundaries in system design interviews.",
+      "pitfalls": [
+        "Keep it pragmatic: don't over-engineer with Kubernetes if a single-host Compose or managed PaaS meets scale."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

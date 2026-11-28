@@ -1,0 +1,162 @@
+{
+  "tech": "kubernetes",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "topics": [
+        {
+          "id": "kubern-0fc997b80d",
+          "title": "Control Plane vs Worker Node Components",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-fe42c9350f",
+          "title": "Services (ClusterIP, NodePort, LoadBalancer) & Ingress",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-d5f0ce7764",
+          "title": "StatefulSets, Headless Services & PersistentVolumeClaims",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "kubern-6ae083241d",
+          "title": "Pods, ReplicaSets, Deployments & DaemonSets",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "topics": [
+        {
+          "id": "kubern-8fe7707737",
+          "title": "Startup, Readiness & Liveness Probes",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-884319fb63",
+          "title": "Rolling Updates, Graceful Shutdown & PodDisruptionBudgets",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "topics": [
+        {
+          "id": "kubern-57282a348d",
+          "title": "Resource Requests, Limits, QoS & HPA",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "kubern-5937a7b2a2",
+          "title": "RBAC, Pod Security & NetworkPolicies",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "kubern-1f9352e17a",
+          "title": "Q: How do you troubleshoot a Pod stuck in Pending, ImagePullBackOff, or CrashLoopBackOff?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-88fdf5adc0",
+          "title": "Q: What happens step by step when `kubectl apply` creates a Deployment?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-a967d5adcf",
+          "title": "Q: Deployment vs StatefulSet vs DaemonSet vs Job \u2014 when do you use each?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-ca7fb9ede5",
+          "title": "Q: How do Taints/Tolerations differ from Node Affinity?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-c05be67dca",
+          "title": "Q: What is the difference between a Service and an Ingress (or Gateway API)?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-fb973cd3c3",
+          "title": "Q: How do you achieve zero-downtime deployments and safe rollbacks?",
+          "tier": "common",
+          "level": "senior",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "kubern-793a882c1c",
+          "title": "Q: How does Kubernetes DNS and Pod-to-Pod networking work?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "tech": "graphql",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "graphq-70c02ceaff",
+      "topic_id": "graphq-70c02ceaff",
+      "category": "Basics",
+      "title": "Schema-First SDL, Types, Queries, Mutations & Subscriptions",
+      "question": "Explain Schema-First SDL, Types, Queries, Mutations & Subscriptions",
+      "answer_30s": "GraphQL exposes a strongly-typed Schema Definition Language (SDL) over a single endpoint: Queries read data, Mutations write data (executed sequentially at top level), and Subscriptions push real-time events over WebSockets/SSE.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "type Query { user(id: ID!): User }\ntype Mutation { createPost(input: PostInput!): Post! }"
+      },
+      "typical_use": "Unifying mobile, web, and BFF clients without over-fetching or under-fetching.",
+      "pitfalls": [
+        "Always wrap mutation arguments in a single `input` object type for cleaner backwards-compatible evolution."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-49652ef81f",
+      "topic_id": "graphq-49652ef81f",
+      "category": "Performance",
+      "title": "The N+1 Problem & DataLoader Batching",
+      "question": "Explain The N+1 Problem & DataLoader Batching",
+      "answer_30s": "Because nested field resolvers execute per parent item, fetching 50 posts and each post's `author` fires 1 + 50 DB queries. DataLoader batches all keys requested within a single event-loop tick into one `WHERE id IN (...)` query and deduplicates via per-request caching.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "const userLoader = new DataLoader(ids => db.users.findManyByIds(ids));\n// Crucial: instantiate a fresh DataLoader per HTTP request!"
+      },
+      "typical_use": "Eliminating 50x DB latency amplification in GraphQL APIs.",
+      "pitfalls": [
+        "Never share a DataLoader instance globally across requests\u2014that leaks cached user data between requests!"
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-23d7639ec6",
+      "topic_id": "graphq-23d7639ec6",
+      "category": "Architecture",
+      "title": "Cursor-Based Pagination (Relay Connections)",
+      "question": "Explain Cursor-Based Pagination (Relay Connections)",
+      "answer_30s": "Relay-style Connections (`edges { node, cursor }`, `pageInfo { hasNextPage, endCursor }`) provide stable cursor pagination that doesn't drift when new items are inserted, unlike offset pagination.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "query { posts(first: 20, after: \"cursor123\") { edges { node { id title } } pageInfo { hasNextPage endCursor } } }"
+      },
+      "typical_use": "Scalable infinite-scroll feeds in GraphQL.",
+      "pitfalls": [
+        "Encode cursors opaquely (Base64) so clients don't couple to internal DB column formats."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-ab16cb5f21",
+      "topic_id": "graphq-ab16cb5f21",
+      "category": "Security",
+      "title": "Query Depth Limiting, Complexity Analysis & Introspection",
+      "question": "Explain Query Depth Limiting, Complexity Analysis & Introspection",
+      "answer_30s": "Malicious clients can craft deeply nested cyclic queries (`user { friends { friends { ... } } }`) to DoS servers. Enforce max query depth, weighted query complexity limits, persisted queries (APQ/allowlists), and disable introspection in production.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "// Enforce maxDepth: 7 and maxComplexity: 500 in validationRules"
+      },
+      "typical_use": "Hardening public GraphQL endpoints against DoS.",
+      "pitfalls": [
+        "Also put timeouts and rate limiting at the gateway/cost layer rather than simple request-count limits."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-07ae903a43",
+      "topic_id": "graphq-07ae903a43",
+      "category": "Performance",
+      "title": "GraphQL Caching & Persisted Queries",
+      "question": "Explain GraphQL Caching & Persisted Queries",
+      "answer_30s": "Because GraphQL typically uses POST `/graphql`, standard HTTP CDN caching doesn't work out of the box. Solve this with Automatic Persisted Queries (APQ) sent as GET with a query hash, normalized client caches (Apollo/Relay using `id`), and server-side DataLoader/Redis caching.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "# GET /graphql?extensions={\"persistedQuery\":{\"sha256Hash\":\"...\"}}"
+      },
+      "typical_use": "Enabling CDN edge caching and shrinking mobile upload bandwidth.",
+      "pitfalls": [
+        "Persisted query allowlists also block arbitrary ad-hoc queries in production."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-cf038c4886",
+      "topic_id": "graphq-cf038c4886",
+      "category": "Architecture",
+      "title": "GraphQL Federation & Schema Stitching",
+      "question": "Explain GraphQL Federation & Schema Stitching",
+      "answer_30s": "Apollo Federation lets independent microservice teams own separate subgraphs (`users`, `orders`, `billing`) composed into a single supergraph gateway using `@key` entity references.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "type User @key(fields: \"id\") { id: ID! name: String! }"
+      },
+      "typical_use": "Scaling GraphQL across dozens of backend teams.",
+      "pitfalls": [
+        "Keep federation gateways focused on composition and auth; avoid putting heavy business logic in the router."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-08b8e17118",
+      "topic_id": "graphq-08b8e17118",
+      "category": "Q&A",
+      "title": "Q: GraphQL vs REST vs gRPC \u2014 when do you choose each?",
+      "question": "Q: GraphQL vs REST vs gRPC \u2014 when do you choose each?",
+      "answer_30s": "A: Use REST for simple public APIs, resource caching, and file uploads. Use GraphQL when multiple clients (mobile/web) need flexible, nested data shapes from aggregated sources without over-fetching. Use gRPC for high-throughput, low-latency internal service-to-service RPC with strict Protobuf contracts.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "// External BFF -> GraphQL | Public CRUD -> REST | Internal microservices -> gRPC"
+      },
+      "typical_use": "Classic API architecture comparison question.",
+      "pitfalls": [
+        "Acknowledge GraphQL's added complexity (caching, N+1, rate limiting) rather than pitching it as a silver bullet."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-997c6c2266",
+      "topic_id": "graphq-997c6c2266",
+      "category": "Q&A",
+      "title": "Q: How does GraphQL handle errors vs HTTP status codes?",
+      "question": "Q: How does GraphQL handle errors vs HTTP status codes?",
+      "answer_30s": "A: GraphQL typically returns `200 OK` with `{ data: ..., errors: [...] }` for partial failures so healthy fields still render. For critical domain errors, senior teams model typed union results in the schema (e.g. `CreateOrderResult = Order | OutOfStockError`) alongside HTTP 401/429 at the gateway.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "union LoginResult = AuthSuccess | InvalidCredentialsError | AccountLockedError"
+      },
+      "typical_use": "Designing ergonomic error contracts in GraphQL.",
+      "pitfalls": [
+        "Modeling expected business errors as GraphQL union types makes client handling type-safe."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-a23d5367a8",
+      "topic_id": "graphq-a23d5367a8",
+      "category": "Q&A",
+      "title": "Q: How do you handle authentication and field-level authorization in GraphQL?",
+      "question": "Q: How do you handle authentication and field-level authorization in GraphQL?",
+      "answer_30s": "A: Authenticate the token once in HTTP middleware and attach `currentUser` to the GraphQL `context`. Enforce coarse-grained checks in resolvers/directives (`@auth(requires: ADMIN)`) or inside the underlying service layer so business rules aren't duplicated.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "// Always pass context.user down to service/domain authorization"
+      },
+      "typical_use": "Securing sensitive fields like `user.email` or `order.internalNotes`.",
+      "pitfalls": [
+        "Enforcing auth in the service layer ensures REST, GraphQL, and background jobs share the same security rules."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-d9b83003ed",
+      "topic_id": "graphq-d9b83003ed",
+      "category": "Q&A",
+      "title": "Q: Why must DataLoader be created per-request rather than globally?",
+      "question": "Q: Why must DataLoader be created per-request rather than globally?",
+      "answer_30s": "A: DataLoader caches loaded results in memory by key. A global DataLoader would serve stale data forever, grow unboundedly into an OOM leak, and leak private records across different users' requests.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "// Create loaders inside context factory: context: ({ req }) => ({ loaders: createLoaders() })"
+      },
+      "typical_use": "Critical DataLoader gotcha tested in almost every GraphQL interview.",
+      "pitfalls": [
+        "Pair per-request DataLoader with Redis for cross-request caching if needed."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-873753ea7a",
+      "topic_id": "graphq-873753ea7a",
+      "category": "Q&A",
+      "title": "Q: How do you handle file uploads in GraphQL?",
+      "question": "Q: How do you handle file uploads in GraphQL?",
+      "answer_30s": "A: Avoid streaming large binaries through GraphQL multipart requests. Instead, use a GraphQL mutation `createUploadUrl` to return a short-lived S3 Presigned URL, let the client upload directly to object storage, and pass the resulting file key to a follow-up mutation.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "mutation { requestAvatarUpload(mimeType: \"image/webp\") { uploadUrl fileKey } }"
+      },
+      "typical_use": "Clean architecture for media-heavy GraphQL apps.",
+      "pitfalls": [
+        "Presigned URLs keep GraphQL servers fast and stateless."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "graphq-dcf0bc5cbb",
+      "topic_id": "graphq-dcf0bc5cbb",
+      "category": "Q&A",
+      "title": "Q: How do you evolve a GraphQL schema without breaking old mobile clients?",
+      "question": "Q: How do you evolve a GraphQL schema without breaking old mobile clients?",
+      "answer_30s": "A: GraphQL avoids `/v1`/`/v2` URL versioning. Instead, add new fields/types additively, mark old fields `@deprecated(reason: \"Use fullName\")`, monitor field usage telemetry, and remove deprecated fields only after old client versions drop to zero.",
+      "deep_dive": "",
+      "code": {
+        "lang": "graphql",
+        "body": "name: String @deprecated(reason: \"Use displayName instead\")"
+      },
+      "typical_use": "API lifecycle management in GraphQL.",
+      "pitfalls": [
+        "Never make a nullable field non-nullable or remove an enum value without checking client telemetry."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

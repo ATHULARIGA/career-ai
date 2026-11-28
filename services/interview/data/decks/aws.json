@@ -1,0 +1,374 @@
+{
+  "tech": "aws",
+  "version": "2026-11",
+  "cards": [
+    {
+      "id": "aws-f190256674",
+      "topic_id": "aws-f190256674",
+      "category": "Security",
+      "title": "IAM Policies, Roles, STS & Least Privilege",
+      "question": "Explain IAM Policies, Roles, STS & Least Privilege",
+      "answer_30s": "IAM authenticates and authorizes AWS API calls via explicit Deny > Allow evaluation. Never store long-lived IAM access keys in code; assign IAM Roles to EC2/ECS/Lambda/EKS (IRSA) using temporary STS credentials, and apply least-privilege resource ARNs and condition keys.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "{\n  \"Effect\": \"Allow\",\n  \"Action\": [\"s3:GetObject\", \"s3:PutObject\"],\n  \"Resource\": \"arn:aws:s3:::app-uploads-prod/*\"\n}"
+      },
+      "typical_use": "Securing microservice access to S3, RDS, and SQS without static credentials.",
+      "pitfalls": [
+        "Explicit Deny ALWAYS overrides any Allow across IAM, SCPs, and Resource Policies."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-8ae22f43b8",
+      "topic_id": "aws-8ae22f43b8",
+      "category": "Architecture",
+      "title": "VPC, Subnets, Route Tables, NAT & Security Groups vs NACLs",
+      "question": "Explain VPC, Subnets, Route Tables, NAT & Security Groups vs NACLs",
+      "answer_30s": "A VPC isolates your cloud network. Public subnets route `0.0.0.0/0` to an Internet Gateway; private subnets (for APIs/DBs) route outbound traffic through a NAT Gateway. Security Groups are stateful instance-level allowlists; Network ACLs are stateless subnet-level allow/deny rules.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Stateful SG: allowing inbound 443 automatically allows outbound response\n# Stateless NACL: must explicitly allow ephemeral return ports 1024-65535"
+      },
+      "typical_use": "Designing multi-tier, multi-AZ production network topologies.",
+      "pitfalls": [
+        "Use VPC Gateway/Interface Endpoints (PrivateLink) so S3/DynamoDB traffic stays on the AWS backbone and avoids NAT Gateway data charges."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-cc1c9307ee",
+      "topic_id": "aws-cc1c9307ee",
+      "category": "Basics",
+      "title": "Compute Choices: EC2 vs ECS/Fargate vs EKS vs Lambda",
+      "question": "Explain Compute Choices: EC2 vs ECS/Fargate vs EKS vs Lambda",
+      "answer_30s": "EC2 gives full OS control for stateful/specialized workloads. ECS with Fargate runs serverless containers without managing EC2 nodes. EKS provides managed Kubernetes. Lambda executes event-driven functions up to 15 minutes with scale-to-zero and per-ms billing.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Lambda best for bursty/event-driven (<15m); Fargate for long-running APIs/workers"
+      },
+      "typical_use": "Selecting cost-effective, low-ops compute architectures.",
+      "pitfalls": [
+        "Address Lambda cold starts (VPC ENIs used to be slow, now Hyperplane; Provisioned Concurrency or SnapStart mitigates JVM/runtime cold starts)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "junior",
+      "weight": 9,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-e811638d55",
+      "topic_id": "aws-e811638d55",
+      "category": "Architecture",
+      "title": "S3 Consistency, Storage Classes & Presigned URLs",
+      "question": "Explain S3 Consistency, Storage Classes & Presigned URLs",
+      "answer_30s": "S3 offers 11 nines (99.999999999%) durability and strong read-after-write consistency for all PUT/DELETE operations. Use Intelligent-Tiering/Lifecycle rules to transition cold objects to Glacier, and Presigned URLs to let clients upload/download directly to S3 without proxying bytes through your API.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "url = s3_client.generate_presigned_url(\n    'put_object', Params={'Bucket': 'uploads', 'Key': key}, ExpiresIn=300\n)"
+      },
+      "typical_use": "Offloading large file uploads/downloads from backend servers.",
+      "pitfalls": [
+        "Always block public bucket access at the account level and serve static assets via CloudFront with Origin Access Control (OAC)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-1538672d01",
+      "topic_id": "aws-1538672d01",
+      "category": "Architecture",
+      "title": "RDS / Aurora vs DynamoDB",
+      "question": "Explain RDS / Aurora vs DynamoDB",
+      "answer_30s": "RDS/Aurora provides managed relational SQL with ACID joins, multi-AZ synchronous failover, and read replicas. DynamoDB is a serverless NoSQL key-value/document store offering single-digit ms latency at any scale when modeled around known access patterns using Partition + Sort keys.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# DynamoDB single-table access pattern: PK='USER#42', SK='ORDER#2026-11-25'"
+      },
+      "typical_use": "Choosing between relational flexibility and predictable massive-scale NoSQL.",
+      "pitfalls": [
+        "Mention DynamoDB Global Secondary Indexes (GSI), DAX caching, and On-Demand vs Provisioned capacity."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-90e206597c",
+      "topic_id": "aws-90e206597c",
+      "category": "Reliability",
+      "title": "Messaging: SQS vs SNS vs EventBridge",
+      "question": "Explain Messaging: SQS vs SNS vs EventBridge",
+      "answer_30s": "SQS is a pull-based durable message queue (Standard = at-least-once, unordered; FIFO = exactly-once, ordered) with Visibility Timeout and DLQs. SNS is push-based pub/sub fan-out. EventBridge is a serverless event bus with content-based schema filtering and SaaS/AWS service routing.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Fan-out pattern: SNS Topic -> Multiple SQS Queues -> Independent Worker Services"
+      },
+      "typical_use": "Decoupling microservices and absorbing traffic spikes gracefully.",
+      "pitfalls": [
+        "Pair SNS + SQS so multiple consumers receive every event independently with durable retries and DLQs."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-1df488f8af",
+      "topic_id": "aws-1df488f8af",
+      "category": "Performance",
+      "title": "CloudFront, ALB & Auto Scaling",
+      "question": "Explain CloudFront, ALB & Auto Scaling",
+      "answer_30s": "CloudFront caches static/dynamic content at global edge locations and terminates TLS close to users. Application Load Balancers (ALB) route L7 HTTP/gRPC traffic to Target Groups across AZs. Auto Scaling Groups / ECS Service Auto Scaling adjust capacity via target tracking policies.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# CloudFront -> WAF -> ALB (public subnets) -> ECS/EC2 (private subnets) -> RDS (isolated)"
+      },
+      "typical_use": "Building globally fast, resilient web architectures.",
+      "pitfalls": [
+        "Distinguish ALB (L7 HTTP, path/host routing, WebSockets) from NLB (L4 TCP/UDP, ultra-low latency, static IPs)."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-ba6d7c7805",
+      "topic_id": "aws-ba6d7c7805",
+      "category": "Security",
+      "title": "KMS Encryption, Secrets Manager & Parameter Store",
+      "question": "Explain KMS Encryption, Secrets Manager & Parameter Store",
+      "answer_30s": "AWS KMS manages envelope encryption keys (CMKs) for EBS, S3, RDS, and Secrets Manager. Secrets Manager provides automated rotation (e.g. RDS credentials), while SSM Parameter Store offers free/low-cost hierarchical configuration.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "resp = secrets_client.get_secret_value(SecretId='prod/db/credentials')"
+      },
+      "typical_use": "Eliminating plaintext credentials and meeting compliance audits.",
+      "pitfalls": [
+        "Cache Secrets Manager values in memory with TTL rather than calling the API on every HTTP request."
+      ],
+      "follow_ups": [],
+      "tier": "must",
+      "level": "mid",
+      "weight": 8,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-3e8c15e771",
+      "topic_id": "aws-3e8c15e771",
+      "category": "Q&A",
+      "title": "Q: How do you design a highly available, fault-tolerant web app on AWS?",
+      "question": "Q: How do you design a highly available, fault-tolerant web app on AWS?",
+      "answer_30s": "A: Deploy stateless compute across at least 2-3 Availability Zones in private subnets behind an ALB + CloudFront + WAF. Use Multi-AZ RDS/Aurora for synchronous database failover, ElastiCache for hot reads, S3 + CloudFront for static assets, and SQS/DLQs for async jobs.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Multi-AZ != Multi-Region: Multi-AZ protects against datacenter failure; Multi-Region protects against regional outage"
+      },
+      "typical_use": "The quintessential AWS system design interview question.",
+      "pitfalls": [
+        "Clarify RTO (Recovery Time Objective) and RPO (Recovery Point Objective) before proposing active-passive vs active-active Multi-Region."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-735f1aea39",
+      "topic_id": "aws-735f1aea39",
+      "category": "Q&A",
+      "title": "Q: Security Group vs Network ACL \u2014 what are the exact differences?",
+      "question": "Q: Security Group vs Network ACL \u2014 what are the exact differences?",
+      "answer_30s": "A: Security Groups attach to ENIs/instances, are stateful (return traffic is automatically allowed), and only support Allow rules. NACLs attach to subnets, are stateless (must explicitly configure both inbound and outbound rules including ephemeral ports), and evaluate numbered Allow/Deny rules in order.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Use SGs for 95% of firewalling; use NACLs only for explicit IP blocklists at subnet perimeter"
+      },
+      "typical_use": "Guaranteed AWS networking screening question.",
+      "pitfalls": [
+        "SGs can also reference other SGs as sources (e.g. DB SG allows port 5432 only from API SG)."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-7905def2a1",
+      "topic_id": "aws-7905def2a1",
+      "category": "Q&A",
+      "title": "Q: How do you reduce AWS costs without sacrificing reliability?",
+      "question": "Q: How do you reduce AWS costs without sacrificing reliability?",
+      "answer_30s": "A: Rightsize instances with Compute Optimizer, use Savings Plans/Reserved Instances for baseline load and Spot Instances for fault-tolerant batch/worker workloads, switch S3 to Intelligent-Tiering, use VPC Endpoints to avoid NAT Gateway data transfer fees, and enable CloudWatch log retention limits.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "aws ce get-cost-and-usage --time-period Start=2026-11-01,End=2026-11-25 --granularity MONTHLY --metrics UnblendedCost"
+      },
+      "typical_use": "Demonstrating FinOps awareness in senior/staff interviews.",
+      "pitfalls": [
+        "NAT Gateway egress and cross-AZ data transfer are common hidden cost surprises!"
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-65a2bf4446",
+      "topic_id": "aws-65a2bf4446",
+      "category": "Q&A",
+      "title": "Q: How do you prevent Lambda cold starts and timeouts in production?",
+      "question": "Q: How do you prevent Lambda cold starts and timeouts in production?",
+      "answer_30s": "A: Keep deployment packages lean, reuse DB/HTTP clients outside the handler (execution context reuse), use ARM64 (Graviton2) for better price/perf, enable Provisioned Concurrency for latency-sensitive endpoints, and use RDS Proxy / PgBouncer to avoid connection exhaustion.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Initialize client outside handler so warm invocations reuse TCP/TLS connections\ns3 = boto3.client('s3')\ndef handler(event, context): ..."
+      },
+      "typical_use": "Practical serverless production engineering.",
+      "pitfalls": [
+        "Always mention RDS Proxy when connecting Lambda to PostgreSQL/MySQL."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-3ff3f41a20",
+      "topic_id": "aws-3ff3f41a20",
+      "category": "Q&A",
+      "title": "Q: What is SQS Visibility Timeout and how do you handle poison-pill messages?",
+      "question": "Q: What is SQS Visibility Timeout and how do you handle poison-pill messages?",
+      "answer_30s": "A: Visibility Timeout hides an in-flight message from other consumers while a worker processes it. If the worker crashes or exceeds the timeout without deleting it, the message becomes visible again. Configure `maxReceiveCount` on a Redrive Policy to move repeatedly failing messages to a Dead Letter Queue (DLQ).",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# Set Visibility Timeout >= 6x Lambda timeout or extend via ChangeMessageVisibility"
+      },
+      "typical_use": "Reliable distributed queue processing.",
+      "pitfalls": [
+        "Because Standard SQS guarantees at-least-once delivery, consumers must always be idempotent."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-501db2913f",
+      "topic_id": "aws-501db2913f",
+      "category": "Q&A",
+      "title": "Q: How does S3 handle hot prefixes and high request rates today?",
+      "question": "Q: How does S3 handle hot prefixes and high request rates today?",
+      "answer_30s": "A: S3 automatically scales to 3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD requests per second per partitioned prefix. Today S3 auto-partitions prefixes transparently, so date-based prefixes (`2026/11/25/...`) no longer bottleneck like they used to, though CloudFront in front further boosts read scale.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "# S3 Prefix throughput: 5,500 GET/s per prefix + CloudFront edge caching"
+      },
+      "typical_use": "Shows up-to-date AWS knowledge (old advice required random hash prefixes).",
+      "pitfalls": [
+        "Mention Multipart Upload for objects > 100MB to parallelize uploads and resume failed chunks."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-739429d84b",
+      "topic_id": "aws-739429d84b",
+      "category": "Q&A",
+      "title": "Q: Cross-Account Access: IAM Role Assumption vs Resource-Based Policy?",
+      "question": "Q: Cross-Account Access: IAM Role Assumption vs Resource-Based Policy?",
+      "answer_30s": "A: With IAM Role Assumption (`sts:AssumeRole`), the caller swaps its permissions for the target role's permissions. With Resource-Based Policies (on S3, SQS, KMS), the caller keeps its own permissions and accesses the resource directly without switching roles.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "aws sts assume-role --role-arn arn:aws:iam::123456789012:role/DeployRole --role-session-name ci"
+      },
+      "typical_use": "Managing multi-account AWS Organizations setups.",
+      "pitfalls": [
+        "Always use `ExternalId` when granting third-party SaaS vendors cross-account AssumeRole to prevent the confused deputy problem."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "mid",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    },
+    {
+      "id": "aws-776745c589",
+      "topic_id": "aws-776745c589",
+      "category": "Q&A",
+      "title": "Q: How do you observe and debug a distributed request across AWS services?",
+      "question": "Q: How do you observe and debug a distributed request across AWS services?",
+      "answer_30s": "A: Propagate a correlation/trace ID across API Gateway, Lambda/ECS, and SQS using AWS X-Ray or OpenTelemetry, emit structured JSON logs to CloudWatch Logs Insights, and set CloudWatch Alarms on p99 latency, 5xx rates, and DLQ depth.",
+      "deep_dive": "",
+      "code": {
+        "lang": "bash",
+        "body": "fields @timestamp, @message | filter level = 'ERROR' | sort @timestamp desc | limit 50"
+      },
+      "typical_use": "Operational excellence and production incident response.",
+      "pitfalls": [
+        "Structured JSON logs make CloudWatch Logs Insights queries 10x faster and easier than regex on plain text."
+      ],
+      "follow_ups": [],
+      "tier": "common",
+      "level": "senior",
+      "weight": 6,
+      "reviewed_on": "2026-11-28",
+      "status": "reviewed"
+    }
+  ]
+}

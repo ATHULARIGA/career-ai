@@ -1,0 +1,196 @@
+{
+  "tech": "fastapi",
+  "version": "2026-11",
+  "areas": [
+    {
+      "id": "basics",
+      "name": "Basics",
+      "topics": [
+        {
+          "id": "fastap-58c37e0557",
+          "title": "App and running",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-eb60749f4a",
+          "title": "HTTP methods",
+          "tier": "must",
+          "level": "junior",
+          "weight": 9,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "requests",
+      "name": "Requests",
+      "topics": [
+        {
+          "id": "fastap-71cc3a892e",
+          "title": "Path parameters",
+          "tier": "must",
+          "level": "mid",
+          "weight": 9,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-46ec0b099e",
+          "title": "Query parameters",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-4f1734fe2c",
+          "title": "Request body & Pydantic",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "name": "Validation",
+      "topics": [
+        {
+          "id": "fastap-aacf8a77f1",
+          "title": "Pydantic V2 validation",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-04b2ebba2e",
+          "title": "Response model filtering",
+          "tier": "must",
+          "level": "mid",
+          "weight": 8,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "errors",
+      "name": "Errors",
+      "topics": [
+        {
+          "id": "fastap-f4399431fe",
+          "title": "Status codes & HTTPException",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "structure",
+      "name": "Structure",
+      "topics": [
+        {
+          "id": "fastap-e100cbf322",
+          "title": "Dependency injection (Depends)",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-5ea87839d8",
+          "title": "APIRouter modularization",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "topics": [
+        {
+          "id": "fastap-60eb3ddac0",
+          "title": "OAuth2 and JWT tokens",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "async",
+      "name": "Async",
+      "topics": [
+        {
+          "id": "fastap-92af515131",
+          "title": "async def vs def concurrency",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-2582ced0ab",
+          "title": "BackgroundTasks",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "test-and-deploy",
+      "name": "Test and deploy",
+      "topics": [
+        {
+          "id": "fastap-833af0ae58",
+          "title": "Testing with TestClient & pytest",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "id": "q-a",
+      "name": "Q&A",
+      "topics": [
+        {
+          "id": "fastap-5888f6fca0",
+          "title": "Why is FastAPI so fast?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-fb6467f133",
+          "title": "FastAPI vs Flask vs Django?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        },
+        {
+          "id": "fastap-61977765bd",
+          "title": "How do you handle database sessions per request?",
+          "tier": "common",
+          "level": "mid",
+          "weight": 6,
+          "follow_ups": []
+        }
+      ]
+    }
+  ]
+}
